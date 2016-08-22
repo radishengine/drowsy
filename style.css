@@ -4,7 +4,6 @@
 }
 
 #drop-zone {
-  height: 5ex;
   text-align: center;
 }
 
@@ -13,6 +12,8 @@
   display: inline-block;
   margin: 0 auto;
   color: silver;
+  margin: 1em;
+  font-weight: bold;
 }
 
 #drop-zone.drop-target {
