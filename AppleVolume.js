@@ -55,7 +55,7 @@ define(['ByteSource'], function(ByteSource) {
             if (dataAreaBlockCount > 0) {
               partitionInfo.dataArea = {
                 blockCount: dataAreaBlockCount,
-                blockOffset: dv.getInt32(80, false);
+                blockOffset: dv.getInt32(80, false),
               };
             }
             var bootCodeByteLength = dv.getInt32(96, false);
