@@ -169,8 +169,11 @@ define(['ByteSource'], function(ByteSource) {
           }
           self.readBTreeHeaderNode(
             byteSource.slice(
-              PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset,
-              PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset + 512),
+              PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset
+                + volumeInfo.allocationBlockByteLength * volumeInfo.catalogFileExtentRecord[0].offset,
+              PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset
+                + volumeInfo.allocationBlockByteLength * volumeInfo.catalogFileExtentRecord[0].offset
+                + 512),
             {
               onheaderrecord: function(headerRecord) {
                 console.log(headerRecord);
