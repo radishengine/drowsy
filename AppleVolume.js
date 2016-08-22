@@ -213,7 +213,7 @@ define(['ByteSource'], function(ByteSource) {
           if (typeof reader.onnodestart === 'function') {
             reader.onnodestart(descriptor);
           }
-          byteSource.slice(-descriptor.recordCount * 2).read({
+          byteSource.slice(-2 * (descriptor.recordCount + 1)).read({
             onbytes: function(offsets) {
               var offsetsDV = new DataView(offsets.buffer, offsets.byteOffset, offsets.byteLength);
               for (var i = 0; i < descriptor.recordCount; i++) {
