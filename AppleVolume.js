@@ -161,7 +161,7 @@ define(['ByteSource'], function(ByteSource) {
             extentsOverflowFileByteLength: dv.getInt32(130, false),
             extentsOverflowFileExtentRecord: extentDataRecord(dv, 134),
             catalogFileByteLength: dv.getInt32(146, false),
-            catalogFileExtentRecord: extentDataRecord(dv, 160),
+            catalogFileExtentRecord: extentDataRecord(dv, 150),
           };
           if (typeof reader.onvolumestart === 'function') {
             reader.onvolumestart(volumeInfo);
