@@ -92,9 +92,11 @@ define(['ByteSource'], function(ByteSource) {
             if (processorType) partitionInfo.processorType = processorType;
             switch (partitionInfo.type) {
               case 'Apple_HFS':
-                self.readHFS(byteSource.slice(
-                  PHYSICAL_BLOCK_BYTES * partitionInfo.blockOffset,
-                  PHYSICAL_BLOCK_BYTES * (partitionInfo.blockOffset + partitionInfo.blockCount)));
+                self.readHFS(
+                  byteSource.slice(
+                    PHYSICAL_BLOCK_BYTES * partitionInfo.blockOffset,
+                    PHYSICAL_BLOCK_BYTES * (partitionInfo.blockOffset + partitionInfo.blockCount)),
+                  reader);
                 break;
             }
             if (typeof reader.onpartition === 'function') {
