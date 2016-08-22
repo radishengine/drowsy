@@ -169,6 +169,35 @@ define(['ByteSource'], function(ByteSource) {
         }
       });
     },
+    readNodeDescriptor: function(byteSource, reader) {
+      byteSource.read({
+        onbytes: function(bytes) {
+          var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+          var descriptor = {
+            forwardLink: dv.getInt32(0, false),
+            backwardLink: dv.getInt32(4, false),
+            type: (function(b) {
+              switch(b) {
+                case 0: return 'index';
+                case 1: return 'header';
+                case 2: return 'map';
+                case 0xFF: return 'leaf';
+                default:
+                  console.error('unknown node descriptor type: ' + b);
+                  return b;
+              }
+            })(bytes[8]),
+            depth: bytes[9],
+            recordCount: dv.getUint16(10, false),
+            // reserved: dv.getUint16(12, false),
+          };
+          if (typeof reader.ondescriptor === 'function') {
+            reader.ondescriptor(descriptor);
+          }
+          return descriptor;
+        },
+      });
+    },
   };
   
   return AppleVolume;
