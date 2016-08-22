@@ -35,8 +35,9 @@ define(['ByteSource'], function(ByteSource) {
   }
   AppleVolume.prototype = {
     read: function(reader) {
+      var byteSource = this.byteSource;
       function doPartition(n) {
-        this.byteSource.slice(PHYSICAL_BLOCK_BYTES * n, PHYSICAL_BLOCK_BYTES * (n+1)).read({
+        byteSource.slice(PHYSICAL_BLOCK_BYTES * n, PHYSICAL_BLOCK_BYTES * (n+1)).read({
           onbytes: function(bytes) {
             if (macintoshRoman(bytes, 0, 4) !== 'PM\0\0') {
               console.error('invalid partition map signature');
