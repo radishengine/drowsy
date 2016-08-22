@@ -22,6 +22,9 @@ define([], function() {
           reader.oncomplete();
         }
       });
+      fr.addEventListener('error', function(e) {
+        console.error(e.error);
+      });
       fr.readAsArrayBuffer(this.blob);
     };
   })(ByteSourceFromBlob.prototype = new ByteSource);
