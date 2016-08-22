@@ -44,12 +44,11 @@ define(['ByteSource'], function(ByteSource) {
               return;
             }
             var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+            var mapBlockCount = dv.getInt32(4, false);
             var partitionInfo = {
-              mapBlockCount: dv.getInt32(4, false),
               blockOffset: dv.getInt32(8, false),
               blockCount: dv.getInt32(12, false),
-              partitionName: nullTerminate(macintoshRoman(bytes, 16, 32)),
-              partitionType: nullTerminate(macintoshRoman(bytes, 48, 32)),
+              type: nullTerminate(macintoshRoman(bytes, 48, 32)),
               dataAreaBlockOffset: dv.getInt32(80, false),
               dataAreaBlockCount: dv.getInt32(84, false),
               status: dv.getInt32(88, false),
@@ -58,12 +57,15 @@ define(['ByteSource'], function(ByteSource) {
               bootCodeLoadAddress: dv.getInt32(100, false),
               bootCodeEntryPoint: dv.getInt32(108, false),
               bootCodeChecksum: dv.getInt32(116, false),
-              processorType: nullTerminate(macintoshRoman(bytes, 124, 16)),
             };
+            var partitionName = nullTerminate(macintoshRoman(bytes, 16, 32));
+            if (partitionName) partitionInfo.name = partitionName;
+            var processorType = nullTerminate(macintoshRoman(bytes, 124, 16));
+            if (processorType) partitionInfo.processorType = processorType;
             if (typeof reader.onpartition === 'function') {
               reader.onpartition(partitionInfo);
             }
-            if (n < partitionInfo.mapBlockCount) {
+            if (n < mapBlockCount) {
               doPartition(n + 1);
             }
           },
