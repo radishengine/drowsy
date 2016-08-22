@@ -38,6 +38,9 @@ require(['ByteSource', 'AppleVolume'], function(ByteSource, AppleVolume) {
     var byteSource = ByteSource.from(droppedFile);
     var appleVolume = new AppleVolume(byteSource);
     appleVolume.read({
+      onpartition: function(partition) {
+        console.log(partition);
+      }
     });
 
   });
