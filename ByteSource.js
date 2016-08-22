@@ -10,7 +10,7 @@ define([], function() {
   }
   (function(proto) {
     proto.slice = function() {
-      return new BlobByteSource(this.blob.slice.apply(this.blob, arguments));
+      return new ByteSourceFromBlob(this.blob.slice.apply(this.blob, arguments));
     };
     proto.read = function(reader) {
       var fr = new FileReader();
