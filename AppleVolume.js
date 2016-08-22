@@ -131,7 +131,7 @@ define(['ByteSource'], function(ByteSource) {
             bitmapBlockOffset: dv.getUint16(14, false), // always 3?
             nextAllocationSearch: dv.getUint16(16, false), // used internally
             allocationBlockCount: dv.getUint16(18, false),
-            allocationBlocksByteLength: dv.getInt32(20, false), // always multiple of 512
+            allocationBlockByteLength: dv.getInt32(20, false), // size of one block, always multiple of 512
             defaultClumpSize: dv.getInt32(24, false),
             allocationBlocksOffset: dv.getUint16(28, false),
             nextUnusedCatalogNodeId: dv.getInt32(30, false), // catalog node: file or folder
