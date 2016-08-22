@@ -2,3 +2,31 @@
 * {
   font-family: sans-serif;
 }
+
+#drop-zone .help-label {
+  visibility: hidden;
+  width: 50%;
+  margin: 0 auto;
+}
+
+#drop-zone.drop-target {
+  border: 3px dashed silver;
+  background: #ddd;
+}
+
+#drop-zone.drop-target .help-label {
+  visibility: visible;
+}
+
+#drop-zone {
+  height: 5ex;
+}
+
+#drop-zone.dropping {
+  background: white;
+  border: 3px dashed red;
+}
+
+#drop-zone.dropping .help-label {
+  visibility: hidden;
+}
