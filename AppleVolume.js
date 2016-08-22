@@ -40,8 +40,8 @@ define(['ByteSource'], function(ByteSource) {
     var record = [];
     for (var i = 0; i < 3; i++) {
       record.push({
-        offset: dv.getInt16(offset + i*4, false),
-        length: dv.getInt16(offset + i*4 + 2, false),
+        offset: dv.getUint16(offset + i*4, false),
+        length: dv.getUint16(offset + i*4 + 2, false),
       });
     }
     return record;
@@ -126,23 +126,23 @@ define(['ByteSource'], function(ByteSource) {
           var volumeInfo = {
             createdAt: macintoshDate(dv, 2),
             lastModifiedAt: macintoshDate(dv, 6),
-            attributes: dv.getInt16(10, false),
-            rootFileCount: dv.getInt16(12, false),
-            bitmapBlockOffset: dv.getInt16(14, false),
-            nextAllocationSearch: dv.getInt16(16, false),
-            allocationBlockCount: dv.getInt16(18, false),
+            attributes: dv.getUint16(10, false),
+            rootFileCount: dv.getUint16(12, false),
+            bitmapBlockOffset: dv.getUint16(14, false),
+            nextAllocationSearch: dv.getUint16(16, false),
+            allocationBlockCount: dv.getUint16(18, false),
             allocationBlocksByteLength: dv.getInt32(20, false),
             defaultClumpSize: dv.getInt32(24, false),
-            allocationBlocksOffset: dv.getInt16(28, false),
+            allocationBlocksOffset: dv.getUint16(28, false),
             nextUnusedCatalogNodeId: dv.getInt32(30, false),
-            unusedAllocationBlockCount: dv.getInt16(34, false),
+            unusedAllocationBlockCount: dv.getUint16(34, false),
             name: nullTerminate(macintoshRoman(bytes, 36 + 1, bytes[36])),
             lastBackupAt: macintoshDate(dv, 64),
-            backupSequenceNumber: dv.getInt16(68, false),
+            backupSequenceNumber: dv.getUint16(68, false),
             writeCount: dv.getInt32(70, false),
             extentsOverflowFileClumpSize: dv.getInt32(74, false),
             catalogFileClumpSize: dv.getInt32(78, false),
-            rootFolderCount: dv.getInt16(82, false),
+            rootFolderCount: dv.getUint16(82, false),
             fileCount: dv.getInt32(84, false),
             folderCount: dv.getInt32(88, false),
             finderInfo: [
@@ -155,9 +155,9 @@ define(['ByteSource'], function(ByteSource) {
               dv.getInt32(140, false),
               dv.getInt32(148, false),
             ],
-            cacheBlockCount: dv.getInt16(156, false),
-            bitmapCacheBlockCount: dv.getInt16(158, false),
-            commonCacheBlockCount: dv.getInt16(160, false),
+            cacheBlockCount: dv.getUint16(156, false),
+            bitmapCacheBlockCount: dv.getUint16(158, false),
+            commonCacheBlockCount: dv.getUint16(160, false),
             extentsOverflowFileByteLength: dv.getInt32(162, false),
             extentsOverflowFileExtentRecord: extentDataRecord(dv, 166),
             catalogFileByteLength: dv.getInt32(178, false),
