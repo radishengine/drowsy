@@ -120,7 +120,7 @@ define(['ByteSource'], function(ByteSource) {
           }
           var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
           var volumeInfo = {
-            createdAt: macintoshDate(dv, 2);
+            createdAt: macintoshDate(dv, 2),
             lastModifiedAt: macintoshDate(dv, 6),
             attributes: dv.readInt16(10, false),
             rootFileCount: dv.readInt16(12, false),
