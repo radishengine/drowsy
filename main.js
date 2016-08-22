@@ -1,5 +1,5 @@
 
-require([], function() {
+require([ByteSource], function(ByteSource) {
   
   'use strict';
   
@@ -34,7 +34,15 @@ require([], function() {
   }
   
   makeFileDrop('drop-zone', function(droppedFile) {
-    console.log(droppedFile);
+    
+    var byteSource = ByteSource.from(droppedFile);
+    
+    byteSource.read({
+      onbytes: function(bytes) {
+        console.log(bytes.length, bytes);
+      },
+    });
+    
   });
   
 });
