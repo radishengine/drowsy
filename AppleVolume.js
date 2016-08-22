@@ -147,21 +147,21 @@ define(['ByteSource'], function(ByteSource) {
             folderCount: dv.getInt32(88, false),
             finderInfo: [
               dv.getInt32(92, false),
+              dv.getInt32(96, false),
               dv.getInt32(100, false),
+              dv.getInt32(104, false),
               dv.getInt32(108, false),
+              dv.getInt32(112, false),
               dv.getInt32(116, false),
-              dv.getInt32(124, false),
-              dv.getInt32(132, false),
-              dv.getInt32(140, false),
-              dv.getInt32(148, false),
+              dv.getInt32(120, false),
             ],
-            cacheBlockCount: dv.getUint16(156, false), // used internally
-            bitmapCacheBlockCount: dv.getUint16(158, false), // used internally
-            commonCacheBlockCount: dv.getUint16(160, false), // used internally
-            extentsOverflowFileByteLength: dv.getInt32(162, false),
-            extentsOverflowFileExtentRecord: extentDataRecord(dv, 166),
-            catalogFileByteLength: dv.getInt32(178, false),
-            catalogFileExtentRecord: extentDataRecord(dv, 182),
+            cacheBlockCount: dv.getUint16(124, false), // used internally
+            bitmapCacheBlockCount: dv.getUint16(126, false), // used internally
+            commonCacheBlockCount: dv.getUint16(128, false), // used internally
+            extentsOverflowFileByteLength: dv.getInt32(130, false),
+            extentsOverflowFileExtentRecord: extentDataRecord(dv, 134),
+            catalogFileByteLength: dv.getInt32(146, false),
+            catalogFileExtentRecord: extentDataRecord(dv, 160),
           };
           if (typeof reader.onvolumestart === 'function') {
             reader.onvolumestart(volumeInfo);
