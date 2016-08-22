@@ -1,5 +1,5 @@
 
-require(['ByteSource'], function(ByteSource) {
+require(['ByteSource', 'AppleVolume'], function(ByteSource, AppleVolume) {
   
   'use strict';
   
@@ -36,13 +36,10 @@ require(['ByteSource'], function(ByteSource) {
   makeFileDrop('drop-zone', function(droppedFile) {
     
     var byteSource = ByteSource.from(droppedFile);
-    
-    byteSource.read({
-      onbytes: function(bytes) {
-        console.log(bytes.length, bytes);
-      },
+    var appleVolume = new AppleVolume(byteSource);
+    appleVolume.read({
     });
-    
+
   });
   
 });
