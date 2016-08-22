@@ -27,7 +27,7 @@ define(['ByteSource'], function(ByteSource) {
   }
   
   function macintoshDate(dv, offset) {
-    return new Date(new Date(1904, 0).getTime() + dv.getInt32(offset, false) * 1000);
+    return new Date(new Date(1904, 0).getTime() + dv.getUint32(offset, false) * 1000);
   }
   
   function nullTerminate(str) {
