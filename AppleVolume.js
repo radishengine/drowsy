@@ -167,25 +167,56 @@ define(['ByteSource'], function(ByteSource) {
           if (typeof reader.onvolumestart === 'function') {
             reader.onvolumestart(volumeInfo);
           }
-          self.readBTreeNode(
+          self.readBTreeHeaderNode(
             byteSource.slice(
               PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset,
               PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset + 512),
             {
-              onnodestart: function(descriptor) {
-                console.log('start node', descriptor);
-              },
-              onnoderecord: function(record) {
-                console.log('node record', record);
-              },
-              onnodeend: function() {
-                console.log('node end');
-                if (typeof reader.onvolumeend === 'function') {
-                  reader.onvolumeend();
-                }
+              onheaderrecord: function(headerRecord) {
+                console.log(headerRecord);
               },
             });
         }
+      });
+    },
+    readBTreeHeaderNode: function(byteSource, reader) {
+      var records = [];
+      this.readBTreeNode(byteSource, {
+        onnodestart: function(descriptor) {
+          if (descriptor.type !== 'header') {
+            console.error('expected header node, got type: ' + descriptor.type);
+          }
+        },
+        onnoderecord: function(record) {
+          records.push(record);
+        },
+        onnodeend: function() {
+          if (records.length !== 3) {
+            console.error('expected 3 records in header node, got ' + records.length);
+            return;
+          }
+          var headerRecord = records[0], mapRecord = records[2];
+          headerRecord.slice(0, 30).read({
+            onbytes: function(recordBytes) {
+              var recordDV = new DataView(recordBytes.buffer, recordBytes.byteOffset, recordBytes.byteLength);
+              var recordInfo = {
+                treeDepth: recordDV.getUint16(0, false),
+                rootNodeNumber: recordDV.getUint32(2, false),
+                leafRecordCount: recordDV.getUint32(6, false),
+                firstLeaf: recordDV.getUint32(10, false),
+                lastLeaf: recordDV.getUint32(14, false),
+                nodeByteLength: recordDV.getUint16(18, false), // always 512?
+                maxKeyByteLength: recordDV.getUint16(20, false),
+                nodeCount: recordDV.getUint32(22, false),
+                freeNodeCount: recordDV.getUint32(26, false),
+                // ...76 reserved bytes
+              };
+              if (typeof reader.onheaderrecord === 'function') {
+                reader.onheaderrecord(recordInfo);
+              }
+            },
+          });
+        },
       });
     },
     readBTreeNode: function(byteSource, reader) {
