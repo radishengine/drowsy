@@ -51,7 +51,7 @@ define(['ByteSource'], function(ByteSource) {
               type: nullTerminate(macintoshRoman(bytes, 48, 32)),
               status: dv.getInt32(88, false),
             };
-            var dataAreaBlockCount: dv.getInt32(84, false);
+            var dataAreaBlockCount = dv.getInt32(84, false);
             if (dataAreaBlockCount > 0) {
               partitionInfo.dataArea = {
                 blockCount: dataAreaBlockCount,
