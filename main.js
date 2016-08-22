@@ -1,5 +1,5 @@
 
-require([ByteSource], function(ByteSource) {
+require(['ByteSource'], function(ByteSource) {
   
   'use strict';
   
