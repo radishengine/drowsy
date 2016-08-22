@@ -114,6 +114,7 @@ define(['ByteSource'], function(ByteSource) {
       doPartition(1);
     },
     readHFS: function(byteSource, reader) {
+      var self = this;
       // first 2 blocks are boot blocks
       var masterDirectoryBlock = byteSource.slice(PHYSICAL_BLOCK_BYTES * 2, PHYSICAL_BLOCK_BYTES * (2+1));
       masterDirectoryBlock.read({
@@ -166,11 +167,29 @@ define(['ByteSource'], function(ByteSource) {
           if (typeof reader.onvolumestart === 'function') {
             reader.onvolumestart(volumeInfo);
           }
+          self.readBTreeNode(
+            byteSource.slice(
+              PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset,
+              PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset + 512),
+            {
+              onnodestart: function(descriptor) {
+                console.log('start node', descriptor);
+              },
+              onnoderecord: function(record) {
+                console.log('node record', record);
+              },
+              onnodeend: function() {
+                console.log('node end');
+                if (typeof reader.onvolumeend === 'function') {
+                  reader.onvolumeend();
+                }
+              },
+            });
         }
       });
     },
-    readNodeDescriptor: function(byteSource, reader) {
-      byteSource.read({
+    readBTreeNode: function(byteSource, reader) {
+      byteSource.slice(0, 12).read({
         onbytes: function(bytes) {
           var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
           var descriptor = {
@@ -191,11 +210,25 @@ define(['ByteSource'], function(ByteSource) {
             recordCount: dv.getUint16(10, false),
             // reserved: dv.getUint16(12, false),
           };
-          if (typeof reader.ondescriptor === 'function') {
-            reader.ondescriptor(descriptor);
+          if (typeof reader.onnodestart === 'function') {
+            reader.onnodestart(descriptor);
           }
-          return descriptor;
-        },
+          byteSource.slice(-descriptor.recordCount * 2).read({
+            onbytes: function(offsets) {
+              var offsetsDV = new DataView(offsets.buffer, offsets.byteOffset, offsets.byteLength);
+              for (var i = 0; i < descriptor.recordCount; i++) {
+                var offset = offsetsDV.getUint16(offsets.length - 2*i, false);
+                var length = offsetsDV.getUint16(offsets.length - 2*(i+1), false);
+                if (typeof reader.onnoderecord === 'function') {
+                  reader.onnoderecord(byteSource.slice(offset, length));
+                }
+              }
+              if (typeof reader.onnodeend === 'function') {
+                reader.onnodeend();
+              }
+            }
+          });
+        }
       });
     },
   };
