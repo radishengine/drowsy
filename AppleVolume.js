@@ -128,17 +128,17 @@ define(['ByteSource'], function(ByteSource) {
             lastModifiedAt: macintoshDate(dv, 6),
             attributes: dv.getUint16(10, false),
             rootFileCount: dv.getUint16(12, false),
-            bitmapBlockOffset: dv.getUint16(14, false),
-            nextAllocationSearch: dv.getUint16(16, false),
+            bitmapBlockOffset: dv.getUint16(14, false), // always 3?
+            nextAllocationSearch: dv.getUint16(16, false), // used internally
             allocationBlockCount: dv.getUint16(18, false),
-            allocationBlocksByteLength: dv.getInt32(20, false),
+            allocationBlocksByteLength: dv.getInt32(20, false), // always multiple of 512
             defaultClumpSize: dv.getInt32(24, false),
             allocationBlocksOffset: dv.getUint16(28, false),
-            nextUnusedCatalogNodeId: dv.getInt32(30, false),
+            nextUnusedCatalogNodeId: dv.getInt32(30, false), // catalog node: file or folder
             unusedAllocationBlockCount: dv.getUint16(34, false),
             name: nullTerminate(macintoshRoman(bytes, 36 + 1, bytes[36])),
             lastBackupAt: macintoshDate(dv, 64),
-            backupSequenceNumber: dv.getUint16(68, false),
+            backupSequenceNumber: dv.getUint16(68, false), // used internally
             writeCount: dv.getInt32(70, false),
             extentsOverflowFileClumpSize: dv.getInt32(74, false),
             catalogFileClumpSize: dv.getInt32(78, false),
@@ -155,9 +155,9 @@ define(['ByteSource'], function(ByteSource) {
               dv.getInt32(140, false),
               dv.getInt32(148, false),
             ],
-            cacheBlockCount: dv.getUint16(156, false),
-            bitmapCacheBlockCount: dv.getUint16(158, false),
-            commonCacheBlockCount: dv.getUint16(160, false),
+            cacheBlockCount: dv.getUint16(156, false), // used internally
+            bitmapCacheBlockCount: dv.getUint16(158, false), // used internally
+            commonCacheBlockCount: dv.getUint16(160, false), // used internally
             extentsOverflowFileByteLength: dv.getInt32(162, false),
             extentsOverflowFileExtentRecord: extentDataRecord(dv, 166),
             catalogFileByteLength: dv.getInt32(178, false),
