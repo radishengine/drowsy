@@ -63,7 +63,7 @@ define(['ByteSource'], function(ByteSource) {
             if (typeof reader.onpartition === 'function') {
               reader.onpartition(partitionInfo);
             }
-            if (n <= partitionInfo.mapBlockCount) {
+            if (n < partitionInfo.mapBlockCount) {
               doPartition(n + 1);
             }
           },
