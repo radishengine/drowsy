@@ -27,7 +27,7 @@ define(['ByteSource'], function(ByteSource) {
   }
   
   function macintoshDate(dv, offset) {
-    return new Date(new Date(1904, 0).getTime() + dv.readInt32(offset, false) * 1000);
+    return new Date(new Date(1904, 0).getTime() + dv.getInt32(offset, false) * 1000);
   }
   
   function nullTerminate(str) {
@@ -127,36 +127,36 @@ define(['ByteSource'], function(ByteSource) {
             bitmapBlockOffset: dv.readInt16(14, false),
             nextAllocationSearch: dv.readInt16(16, false),
             allocationBlockCount: dv.readInt16(18, false),
-            allocationBlocksByteLength: dv.readInt32(20, false),
-            defaultClumpSize: dv.readInt32(24, false),
+            allocationBlocksByteLength: dv.getInt32(20, false),
+            defaultClumpSize: dv.getInt32(24, false),
             allocationBlocksOffset: dv.readInt16(28, false),
-            nextUnusedCatalogNodeId: dv.readInt32(30, false),
+            nextUnusedCatalogNodeId: dv.getInt32(30, false),
             unusedAllocationBlockCount: dv.readInt16(34, false),
             name: nullTerminate(macintoshRoman(bytes, 36 + 1, bytes[36])),
             lastBackupAt: macintoshDate(dv, 64),
             backupSequenceNumber: dv.readInt16(68, false),
-            writeCount: dv.readInt32(70, false),
-            extentsOverflowFileClumpSize: dv.readInt32(74, false),
-            catalogFileClumpSize: dv.readInt32(78, false),
+            writeCount: dv.getInt32(70, false),
+            extentsOverflowFileClumpSize: dv.getInt32(74, false),
+            catalogFileClumpSize: dv.getInt32(78, false),
             rootFolderCount: dv.readInt16(82, false),
-            fileCount: dv.readInt32(84, false),
-            folderCount: dv.readInt32(88, false),
+            fileCount: dv.getInt32(84, false),
+            folderCount: dv.getInt32(88, false),
             finderInfo: [
-              dv.readInt32(92, false),
-              dv.readInt32(100, false),
-              dv.readInt32(108, false),
-              dv.readInt32(116, false),
-              dv.readInt32(124, false),
-              dv.readInt32(132, false),
-              dv.readInt32(140, false),
-              dv.readInt32(148, false),
+              dv.getInt32(92, false),
+              dv.getInt32(100, false),
+              dv.getInt32(108, false),
+              dv.getInt32(116, false),
+              dv.getInt32(124, false),
+              dv.getInt32(132, false),
+              dv.getInt32(140, false),
+              dv.getInt32(148, false),
             ],
             cacheBlockCount: dv.readInt16(156, false),
             bitmapCacheBlockCount: dv.readInt16(158, false),
             commonCacheBlockCount: dv.readInt16(160, false),
-            extentsOverflowFileByteLength: dv.readInt32(162, false),
+            extentsOverflowFileByteLength: dv.getInt32(162, false),
             extentsOverflowFileExtentRecord: extentsRecord(dv, 166),
-            catalogFileByteLength: dv.readInt32(178, false),
+            catalogFileByteLength: dv.getInt32(178, false),
             catalogFileExtentRecord: extentRecord(dv, 182),
           };
           if (typeof reader.onvolumestart === 'function') {
