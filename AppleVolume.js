@@ -217,8 +217,8 @@ define(['ByteSource'], function(ByteSource) {
             onbytes: function(offsets) {
               var offsetsDV = new DataView(offsets.buffer, offsets.byteOffset, offsets.byteLength);
               for (var i = 0; i < descriptor.recordCount; i++) {
-                var offset = offsetsDV.getUint16(offsets.length - 2*i, false);
-                var length = offsetsDV.getUint16(offsets.length - 2*(i+1), false);
+                var offset = offsetsDV.getUint16(offsets.length - 2*(i+1), false);
+                var length = offsetsDV.getUint16(offsets.length - 2*(i+2), false) - offset;
                 if (typeof reader.onnoderecord === 'function') {
                   reader.onnoderecord(byteSource.slice(offset, length));
                 }
