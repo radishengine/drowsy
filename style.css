@@ -12,6 +12,7 @@
   visibility: hidden;
   display: inline-block;
   margin: 0 auto;
+  color: silver;
 }
 
 #drop-zone.drop-target {
