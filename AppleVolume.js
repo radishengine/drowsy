@@ -49,15 +49,25 @@ define(['ByteSource'], function(ByteSource) {
               blockOffset: dv.getInt32(8, false),
               blockCount: dv.getInt32(12, false),
               type: nullTerminate(macintoshRoman(bytes, 48, 32)),
-              dataAreaBlockOffset: dv.getInt32(80, false),
-              dataAreaBlockCount: dv.getInt32(84, false),
               status: dv.getInt32(88, false),
-              bootCodeBlockOffset: dv.getInt32(92, false),
-              bootCodeByteLength: dv.getInt32(96, false),
-              bootCodeLoadAddress: dv.getInt32(100, false),
-              bootCodeEntryPoint: dv.getInt32(108, false),
-              bootCodeChecksum: dv.getInt32(116, false),
             };
+            var dataAreaBlockCount: dv.getInt32(84, false);
+            if (dataAreaBlockCount > 0) {
+              partitionInfo.dataArea = {
+                blockCount: dataAreaBlockCount,
+                blockOffset: dv.getInt32(80, false);
+              };
+            }
+            var bootCodeByteLength = dv.getInt32(96, false);
+            if (bootCodeByteLength > 0) {
+              partitionInfo.bootCode = {
+                byteLength: bootCodeByteLength,
+                blockOffset: dv.getInt32(92, false),
+                loadAddress: dv.getInt32(100, false),
+                entryPoint: dv.getInt32(108, false),
+                checksum: dv.getInt32(116, false),
+              };
+            }
             var partitionName = nullTerminate(macintoshRoman(bytes, 16, 32));
             if (partitionName) partitionInfo.name = partitionName;
             var processorType = nullTerminate(macintoshRoman(bytes, 124, 16));
