@@ -26,8 +26,23 @@ define(['ByteSource'], function(ByteSource) {
       });
   }
   
+  function macintoshDate(dv, offset) {
+    return new Date(new Date(1904, 0).getTime() + dv.readInt32(offset, false) * 1000);
+  }
+  
   function nullTerminate(str) {
     return str.replace(/\0.*/, '');
+  }
+  
+  function extentDataRecord(dv, offset) {
+    var record = [];
+    for (var i = 0; i < 3; i++) {
+      record.push({
+        offset: dv.getInt16(offset + i*4, false),
+        length: dv.getInt16(offset + i*4 + 2, false),
+      });
+    }
+    return record;
   }
   
   function AppleVolume(byteSource) {
@@ -35,7 +50,10 @@ define(['ByteSource'], function(ByteSource) {
   }
   AppleVolume.prototype = {
     read: function(reader) {
-      var byteSource = this.byteSource;
+      this.readPartitions(this.byteSource, reader);
+    },
+    readPartitions: function(byteSource, reader) {
+      var self = this;
       function doPartition(n) {
         byteSource.slice(PHYSICAL_BLOCK_BYTES * n, PHYSICAL_BLOCK_BYTES * (n+1)).read({
           onbytes: function(bytes) {
@@ -72,6 +90,13 @@ define(['ByteSource'], function(ByteSource) {
             if (partitionName) partitionInfo.name = partitionName;
             var processorType = nullTerminate(macintoshRoman(bytes, 124, 16));
             if (processorType) partitionInfo.processorType = processorType;
+            switch (partitionInfo.type) {
+              case 'Apple_HFS':
+                self.readHFS(byteSource.slice(
+                  PHYSICAL_BLOCK_BYTES * partitionInfo.blockOffset,
+                  PHYSICAL_BLOCK_BYTES * (partitionInfo.blockOffset + partitionInfo.blockCount)));
+                break;
+            }
             if (typeof reader.onpartition === 'function') {
               reader.onpartition(partitionInfo);
             }
@@ -83,6 +108,62 @@ define(['ByteSource'], function(ByteSource) {
         
       }
       doPartition(1);
+    },
+    readHFS: function(byteSource, reader) {
+      // first 2 blocks are boot blocks
+      var masterDirectoryBlock = byteSource.slice(PHYSICAL_BLOCK_BYTES * 2, PHYSICAL_BLOCK_BYTES * (2+1));
+      masterDirectoryBlock.read({
+        onbytes: function(bytes) {
+          if (macintoshRoman(bytes, 0, 2) !== 'BD') {
+            console.error('HFS master directory block signature not found');
+            return;
+          }
+          var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+          var volumeInfo = {
+            createdAt: macintoshDate(dv, 2);
+            lastModifiedAt: macintoshDate(dv, 6),
+            attributes: dv.readInt16(10, false),
+            rootFileCount: dv.readInt16(12, false),
+            bitmapBlockOffset: dv.readInt16(14, false),
+            nextAllocationSearch: dv.readInt16(16, false),
+            allocationBlockCount: dv.readInt16(18, false),
+            allocationBlocksByteLength: dv.readInt32(20, false),
+            defaultClumpSize: dv.readInt32(24, false),
+            allocationBlocksOffset: dv.readInt16(28, false),
+            nextUnusedCatalogNodeId: dv.readInt32(30, false),
+            unusedAllocationBlockCount: dv.readInt16(34, false),
+            name: nullTerminate(macintoshRoman(bytes, 36 + 1, bytes[36])),
+            lastBackupAt: macintoshDate(dv, 64),
+            backupSequenceNumber: dv.readInt16(68, false),
+            writeCount: dv.readInt32(70, false),
+            extentsOverflowFileClumpSize: dv.readInt32(74, false),
+            catalogFileClumpSize: dv.readInt32(78, false),
+            rootFolderCount: dv.readInt16(82, false),
+            fileCount: dv.readInt32(84, false),
+            folderCount: dv.readInt32(88, false),
+            finderInfo: [
+              dv.readInt32(92, false),
+              dv.readInt32(100, false),
+              dv.readInt32(108, false),
+              dv.readInt32(116, false),
+              dv.readInt32(124, false),
+              dv.readInt32(132, false),
+              dv.readInt32(140, false),
+              dv.readInt32(148, false),
+            ],
+            cacheBlockCount: dv.readInt16(156, false),
+            bitmapCacheBlockCount: dv.readInt16(158, false),
+            commonCacheBlockCount: dv.readInt16(160, false),
+            extentsOverflowFileByteLength: dv.readInt32(162, false),
+            extentsOverflowFileExtentRecord: extentsRecord(dv, 166),
+            catalogFileByteLength: dv.readInt32(178, false),
+            catalogFileExtentRecord: extentRecord(dv, 182),
+          };
+          if (typeof reader.onvolumestart === 'function') {
+            reader.onvolumestart(volumeInfo);
+          }
+        }
+      });
     },
   };
   
