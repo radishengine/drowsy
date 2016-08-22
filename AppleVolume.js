@@ -155,9 +155,9 @@ define(['ByteSource'], function(ByteSource) {
             bitmapCacheBlockCount: dv.getInt16(158, false),
             commonCacheBlockCount: dv.getInt16(160, false),
             extentsOverflowFileByteLength: dv.getInt32(162, false),
-            extentsOverflowFileExtentRecord: extentRecord(dv, 166),
+            extentsOverflowFileExtentRecord: extentDataRecord(dv, 166),
             catalogFileByteLength: dv.getInt32(178, false),
-            catalogFileExtentRecord: extentRecord(dv, 182),
+            catalogFileExtentRecord: extentDataRecord(dv, 182),
           };
           if (typeof reader.onvolumestart === 'function') {
             reader.onvolumestart(volumeInfo);
