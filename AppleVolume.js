@@ -35,32 +35,41 @@ define(['ByteSource'], function(ByteSource) {
   }
   AppleVolume.prototype = {
     read: function(reader) {
-      this.byteSource.slice(PHYSICAL_BLOCK_BYTES, PHYSICAL_BLOCK_BYTES * 2).read({
-        onbytes: function(bytes) {
-          if (String.fromCharCode.apply(null, bytes.subarray(0, 4)) !== 'PM\0\0') {
-            console.error('partition map not found');
-            return;
-          }
-          var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-          var partitionInfo = {
-            mapBlockCount: dv.getInt32(4, false),
-            blockOffset: dv.getInt32(8, false),
-            blockCount: dv.getInt32(12, false),
-            partitionName: nullTerminate(macintoshRoman(bytes, 16, 32)),
-            partitionType: nullTerminate(macintoshRoman(bytes, 48, 32)),
-            dataAreaBlockOffset: dv.getInt32(80, false),
-            dataAreaBlockCount: dv.getInt32(84, false),
-            status: dv.getInt32(88, false),
-            bootCodeBlockOffset: dv.getInt32(92, false),
-            bootCodeByteLength: dv.getInt32(96, false),
-            bootCodeLoadAddress: dv.getInt32(100, false),
-            bootCodeEntryPoint: dv.getInt32(108, false),
-            bootCodeChecksum: dv.getInt32(116, false),
-            processorType: nullTerminate(macintoshRoman(bytes, 124, 16)),
-          };
-          console.log(partitionInfo);
-        },
-      });
+      function doPartition(n) {
+        this.byteSource.slice(PHYSICAL_BLOCK_BYTES * n, PHYSICAL_BLOCK_BYTES * (n+1)).read({
+          onbytes: function(bytes) {
+            if (macintoshRoman(bytes, 0, 4) !== 'PM\0\0') {
+              console.error('invalid partition map signature');
+              return;
+            }
+            var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+            var partitionInfo = {
+              mapBlockCount: dv.getInt32(4, false),
+              blockOffset: dv.getInt32(8, false),
+              blockCount: dv.getInt32(12, false),
+              partitionName: nullTerminate(macintoshRoman(bytes, 16, 32)),
+              partitionType: nullTerminate(macintoshRoman(bytes, 48, 32)),
+              dataAreaBlockOffset: dv.getInt32(80, false),
+              dataAreaBlockCount: dv.getInt32(84, false),
+              status: dv.getInt32(88, false),
+              bootCodeBlockOffset: dv.getInt32(92, false),
+              bootCodeByteLength: dv.getInt32(96, false),
+              bootCodeLoadAddress: dv.getInt32(100, false),
+              bootCodeEntryPoint: dv.getInt32(108, false),
+              bootCodeChecksum: dv.getInt32(116, false),
+              processorType: nullTerminate(macintoshRoman(bytes, 124, 16)),
+            };
+            if (typeof reader.onpartition === 'function') {
+              reader.onpartition(partitionInfo);
+            }
+            if (n <= partitionInfo.mapBlockCount) {
+              doPartition(n + 1);
+            }
+          },
+        });
+        
+      }
+      doPartition(1);
     },
   };
   
