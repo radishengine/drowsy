@@ -290,7 +290,7 @@ define(['ByteSource'], function(ByteSource) {
                 var offset = offsetsDV.getUint16(offsets.length - 2*(i+1), false);
                 var length = offsetsDV.getUint16(offsets.length - 2*(i+2), false) - offset;
                 if (typeof reader.onnoderecord === 'function') {
-                  reader.onnoderecord(byteSource.slice(offset, length));
+                  reader.onnoderecord(byteSource.slice(offset, offset + length));
                 }
               }
               if (typeof reader.onnodeend === 'function') {
