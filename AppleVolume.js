@@ -235,11 +235,11 @@ define(['ByteSource'], function(ByteSource) {
               }
               break;
             case 1: // header
-              if (node.records.length !== 3) {
+              if (records.length !== 3) {
                 console.error('header node: expected 3 records, got ' + recordCount);
                 return;
               }
-              var recordDV = new DataView(node.records[0].buffer, node.records[0].byteOffset, node.records[0].byteLength);
+              var recordDV = new DataView(records[0].buffer, records[0].byteOffset, records[0].byteLength);
               node.treeDepth = recordDV.getUint16(0, false);
               node.rootNodeNumber = recordDV.getUint32(2, false);
               node.leafRecordCount = recordDV.getUint32(6, false);
