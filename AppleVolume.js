@@ -308,6 +308,12 @@ define(['ByteSource'], function(ByteSource) {
                     };
                     console.log(fileInfo);
                     break;
+                  case 3: // folder thread
+                    console.error('NYI: folder thread leaf record');
+                    break;
+                  case 4: // file thread
+                    console.error('NYI: file thread leaf record');
+                    break;
                   default:
                     console.error('unknown folder record type: ' + dv.getUint8(0));
                     break;
