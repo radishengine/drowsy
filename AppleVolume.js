@@ -189,11 +189,10 @@ define(['ByteSource'], function(ByteSource) {
           var rootNode = byteSource.slice(
             headerNode.rootNodeNumber * BTREE_NODE_BYTES,
             (headerNode.rootNodeNumber + 1) * BTREE_NODE_BYTES);
-          self.readBTreeNode(rootNode, {
-            onindexnode: function(indexNode) {
-              console.log(indexNode);
-            }
-          });
+          self.readBTreeNode(rootNode, this);
+        },
+        onindexnode: function(indexNode) {
+          console.log(indexNode);
         },
       });
     },
