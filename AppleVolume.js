@@ -293,20 +293,27 @@ define(['ByteSource'], function(ByteSource) {
                       finfoFlags: dv.getUint16(12, false),
                       finfoPointV: dv.getInt16(14, false),
                       finfoPointH: dv.getInt16(16, false),
+                      // finfoReserved: dv.getInt16(18, false),
                       id: dv.getUint32(20, false),
-                      dataBlock: {
+                      dataFork: {
                         firstAllocationBlock: dv.getUint16(24, false),
                         logicalEOF: dv.getUint32(26, false),
                         physicalEOF: dv.getUint32(30, false),
                       },
-                      createdAt: macintoshDate(dv, 34),
-                      modifiedAt: macintoshDate(dv, 38),
-                      backupAt: macintoshDate(dv, 42),
-                      fxinfoFlags: dv.getUint16(54, false),
-                      putAwayFolderID: dv.getUint32(58, false),
-                      clumpSize: dv.getUint16(62),
-                      dataForkFirstExtentRecord: extentDataRecord(dv, 64),
-                      resourceForkFirstExtentRecord: extentDataRecord(dv, 76),
+                      resourceFork: {
+                        firstAllocationBlock: dv.getUint16(34, false),
+                        logicalEOF: dv.getUint32(36, false),
+                        physicalEOF: dv.getUint32(40, false),
+                      },
+                      createdAt: macintoshDate(dv, 44),
+                      modifiedAt: macintoshDate(dv, 48),
+                      backupAt: macintoshDate(dv, 52),
+                      // fxinfoReserved: (8 bytes)
+                      fxinfoFlags: dv.getUint16(64, false),
+                      putAwayFolderID: dv.getUint32(68, false),
+                      clumpSize: dv.getUint16(72),
+                      dataForkFirstExtentRecord: extentDataRecord(dv, 74),
+                      resourceForkFirstExtentRecord: extentDataRecord(dv, 86),
                     };
                     console.log(fileInfo);
                     break;
