@@ -185,131 +185,85 @@ define(['ByteSource'], function(ByteSource) {
     readCatalog: function(byteSource, reader) {
       var self = this;
       this.readBTreeHeaderNode(byteSource.slice(0, BTREE_NODE_BYTES), {
-        onheaderrecord: function(headerRecord) {
+        onheadernode: function(headerNode) {
           var rootNode = byteSource.slice(
-            headerRecord.rootNodeNumber * BTREE_NODE_BYTES,
-            (headerRecord.rootNodeNumber + 1) * BTREE_NODE_BYTES);
+            headerNode.rootNodeNumber * BTREE_NODE_BYTES,
+            (headerNode.rootNodeNumber + 1) * BTREE_NODE_BYTES);
           self.readBTreeIndexNode(rootNode, {
-            onindexrecord: function(indexRecord) {
-              console.log(indexRecord);
+            onindexnode: function(indexNode) {
+              console.log(indexNode);
             }
-          });
-        },
-      });
-    },
-    readBTreeIndexNode: function(byteSource, reader) {
-      var pointerRecords = [];
-      this.readBTreeNode(byteSource, {
-        onnodestart: function(descriptor) {
-          if (descriptor.type !== 'index') {
-            console.error('expected index node, got type: ' + descriptor.type);
-          }
-          console.log(descriptor);
-        },
-        onnoderecord: function(record) {
-          pointerRecords.push(record);
-        },
-        onnodeend: function() {
-          for (var i = 0; i < pointerRecords.length; i++) {
-            pointerRecords[i].read({
-              onbytes: function(bytes) {
-                var keyLength = bytes[0];
-                if (keyLength === 0) {
-                  // deleted record
-                  return;
-                }
-                var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-                var parentDirectoryID = dv.getUint32(2, false);
-                var name = macintoshRoman(bytes, 7, bytes[6]);
-                var nodeNumber = dv.getUint32(1 + keyLength, false);
-                console.log(name, parentDirectoryID, nodeNumber);
-                console.log(bytes);
-              },
-            });
-          }
-        },
-      });
-    },
-    readBTreeHeaderNode: function(byteSource, reader) {
-      var records = [];
-      this.readBTreeNode(byteSource, {
-        onnodestart: function(descriptor) {
-          if (descriptor.type !== 'header') {
-            console.error('expected header node, got type: ' + descriptor.type);
-          }
-        },
-        onnoderecord: function(record) {
-          records.push(record);
-        },
-        onnodeend: function() {
-          if (records.length !== 3) {
-            console.error('expected 3 records in header node, got ' + records.length);
-            return;
-          }
-          var headerRecord = records[0], mapRecord = records[2];
-          headerRecord.slice(0, 30).read({
-            onbytes: function(recordBytes) {
-              var recordDV = new DataView(recordBytes.buffer, recordBytes.byteOffset, recordBytes.byteLength);
-              var recordInfo = {
-                treeDepth: recordDV.getUint16(0, false),
-                rootNodeNumber: recordDV.getUint32(2, false),
-                leafRecordCount: recordDV.getUint32(6, false),
-                firstLeaf: recordDV.getUint32(10, false),
-                lastLeaf: recordDV.getUint32(14, false),
-                nodeByteLength: recordDV.getUint16(18, false), // always 512?
-                maxKeyByteLength: recordDV.getUint16(20, false),
-                nodeCount: recordDV.getUint32(22, false),
-                freeNodeCount: recordDV.getUint32(26, false),
-                // ...76 reserved bytes
-              };
-              if (typeof reader.onheaderrecord === 'function') {
-                reader.onheaderrecord(recordInfo);
-              }
-            },
           });
         },
       });
     },
     readBTreeNode: function(byteSource, reader) {
-      byteSource.slice(0, 12).read({
+      var self = this;
+      byteSource.read({
         onbytes: function(bytes) {
+          var node = {};
           var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-          var descriptor = {
-            forwardLink: dv.getInt32(0, false),
-            backwardLink: dv.getInt32(4, false),
-            type: (function(b) {
-              switch(b) {
-                case 0: return 'index';
-                case 1: return 'header';
-                case 2: return 'map';
-                case 0xFF: return 'leaf';
-                default:
-                  console.error('unknown node descriptor type: ' + b);
-                  return b;
-              }
-            })(bytes[8]),
-            depth: bytes[9],
-            recordCount: dv.getUint16(10, false),
-            // reserved: dv.getUint16(12, false),
-          };
-          if (typeof reader.onnodestart === 'function') {
-            reader.onnodestart(descriptor);
+          var records = new Array(dv.getUint16(10, false));
+          for (var i = 0; i < records.length; i++) {
+            records[i] = bytes.subarray(
+              dv.getUint16(BTREE_NODE_BYTES - 2*(i+1), false),
+              dv.getUint16(BTREE_NODE_BYTES - 2*(i+2), false));
           }
-          byteSource.slice(-2 * (descriptor.recordCount + 1)).read({
-            onbytes: function(offsets) {
-              var offsetsDV = new DataView(offsets.buffer, offsets.byteOffset, offsets.byteLength);
-              for (var i = 0; i < descriptor.recordCount; i++) {
-                var offset = offsetsDV.getUint16(offsets.length - 2*(i+1), false);
-                var length = offsetsDV.getUint16(offsets.length - 2*(i+2), false) - offset;
-                if (typeof reader.onnoderecord === 'function') {
-                  reader.onnoderecord(byteSource.slice(offset, offset + length));
+          var forwardLink = dv.getInt32(0, false);
+          var backwardLink = dv.getInt32(4, false);
+          if (forwardLink !== 0) node.forwardLink = forwardLink;
+          if (backwardLink !== 0) node.backwardLink = backwardLink;
+          node.depth = bytes[9];
+          switch(bytes[8]) {
+            case 0: // index
+              node.pointers = [];
+              for (var i = 0; i < records.length; i++) {
+                var recordBytes = records[i];
+                var keyLength;
+                if (recordBytes.length === 0 || (keyLength = recordBytes[0]) === 0) {
+                  // deleted record
+                  continue;
                 }
+                var dv = new DataView(recordBytes.buffer, recordBytes.byteOffset, recordBytes.byteLength);
+                var parentDirectoryID = dv.getUint32(2, false);
+                var name = macintoshRoman(recordBytes, 7, recordBytes[6]);
+                var nodeNumber = dv.getUint32(1 + keyLength, false);
+                node.pointers.push({name:name, nodeNumber:nodeNumber, parentDirectoryID:parentDirectoryID});
               }
-              if (typeof reader.onnodeend === 'function') {
-                reader.onnodeend();
+              if (typeof reader.onindexnode === 'function') {
+                reader.onindexnode(node);
               }
-            }
-          });
+              break;
+            case 1: // header
+              if (node.records.length !== 3) {
+                console.error('header node: expected 3 records, got ' + recordCount);
+                return;
+              }
+              var recordDV = new DataView(node.records[0].buffer, node.records[0].byteOffset, node.records[0].byteLength);
+              node.treeDepth = recordDV.getUint16(0, false);
+              node.rootNodeNumber = recordDV.getUint32(2, false);
+              node.leafRecordCount = recordDV.getUint32(6, false);
+              node.firstLeaf = recordDV.getUint32(10, false);
+              node.lastLeaf = recordDV.getUint32(14, false);
+              node.nodeByteLength = recordDV.getUint16(18, false); // always 512?
+              node.maxKeyByteLength = recordDV.getUint16(20, false);
+              node.nodeCount = recordDV.getUint32(22, false);
+              node.freeNodeCount = recordDV.getUint32(26, false);
+              node.bitmap = node.records[2];
+              if (typeof reader.onheadernode === 'function') {
+                reader.onheadernode(node);
+              }
+              break;
+            case 2: // map
+              console.error('NYI: map node');
+              break;
+            case 0xff: // leaf
+              console.error('NYI: leaf node');
+              break;
+            default:
+              console.error('unknown node type: ' + bytes[8]);
+              break;
+          }
         }
       });
     },
