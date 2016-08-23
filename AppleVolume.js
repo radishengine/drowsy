@@ -264,7 +264,59 @@ define(['ByteSource'], function(ByteSource) {
               console.error('NYI: map node');
               break;
             case 0xff: // leaf
-              console.error('NYI: leaf node');
+              for (var i = 0; i < records.length; i++) {
+                var record = records[i];
+                var keyLength;
+                if (record.length === 0 || (keyLength = record[0]) === 0) {
+                  // deleted record
+                  continue;
+                }
+                var dv = new DataView(record.buffer, record.byteOffset, record.byteLength);
+                var nodeNumber = dv.getUint32(2, false);
+                var name = macintoshRoman(record, 7, record[6]);
+                var offset = 1 + keyLength;
+                offset = offset + (offset % 2);
+                record = record.subarray(offset);
+                dv = new DataView(record.buffer, record.byteOffset, record.byteLength);
+                switch(record[0]) {
+                  case 1: // folder
+                    console.error('NYI: folder leaf record');
+                    break;
+                  case 2: // file
+                    var fileInfo = {
+                      flags: record[2],
+                      type: record[3],
+                      finfoType = macintoshRoman(record, 4, 4),
+                      finfoCreator = macintoshRoman(record, 8, 4),
+                      finfoFlags = dv.getUint16(12, false),
+                      finfoPointV = dv.getInt16(14, false),
+                      finfoPointH = dv.getInt16(16, false),
+                      id: dv.getUint32(20, false),
+                      dataBlock: {
+                        firstAllocationBlock: dv.getUint16(24, false),
+                        logicalEOF: dv.getUint32(26, false),
+                        physicalEOF: dv.getUint32(30, false),
+                      },
+                      createdAt: macintoshDate(dv, 34),
+                      modifiedAt: macintoshDate(dv, 38),
+                      backupAt: macintoshDate(dv, 42),
+                      fxinfoFlags: dv.getUint16(54, false),
+                      putAwayFolderID: dv.getUint32(58, false),
+                      clumpSize: dv.getUint16(62),
+                      dataForkFirstExtentRecord: extentDataRecord(dv, 64),
+                      resourceForkFirstExtentRecord: extentDataRecord(dv, 76),
+                    };
+                    console.log(fileInfo);
+                    break;
+                  default:
+                    console.error('unknown folder record type: ' + dv.getUint8(0));
+                    break;
+                }
+              }
+              if (bytes)
+              if (typeof reader.onleafnode === 'function') {
+                reader.onleafnode(node);
+              }
               break;
             default:
               console.error('unknown node type: ' + bytes[8]);
