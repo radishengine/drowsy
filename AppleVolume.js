@@ -193,6 +193,13 @@ define(['ByteSource'], function(ByteSource) {
         },
         onindexnode: function(indexNode) {
           console.log(indexNode);
+          for (var i = 0; i < indexNode.pointers.length; i++) {
+            var pointer = indexNode.pointers[i];
+            var pointedBytes = byteSource.slice(
+              pointer.nodeNumber * BTREE_NODE_BYTES,
+              (headerNode.rootNodeNumber + 1) * BTREE_NODE_BYTES);
+            self.readBTreeNode(pointedBytes, this);
+          }
         },
       });
     },
