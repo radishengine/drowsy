@@ -286,11 +286,11 @@ define(['ByteSource'], function(ByteSource) {
                     var fileInfo = {
                       flags: record[2],
                       type: record[3],
-                      finfoType = macintoshRoman(record, 4, 4),
-                      finfoCreator = macintoshRoman(record, 8, 4),
-                      finfoFlags = dv.getUint16(12, false),
-                      finfoPointV = dv.getInt16(14, false),
-                      finfoPointH = dv.getInt16(16, false),
+                      finfoType: macintoshRoman(record, 4, 4),
+                      finfoCreator: macintoshRoman(record, 8, 4),
+                      finfoFlags: dv.getUint16(12, false),
+                      finfoPointV: dv.getInt16(14, false),
+                      finfoPointH: dv.getInt16(16, false),
                       id: dv.getUint32(20, false),
                       dataBlock: {
                         firstAllocationBlock: dv.getUint16(24, false),
