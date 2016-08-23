@@ -249,7 +249,7 @@ define(['ByteSource'], function(ByteSource) {
               node.maxKeyByteLength = recordDV.getUint16(20, false);
               node.nodeCount = recordDV.getUint32(22, false);
               node.freeNodeCount = recordDV.getUint32(26, false);
-              node.bitmap = node.records[2];
+              node.bitmap = records[2];
               if (typeof reader.onheadernode === 'function') {
                 reader.onheadernode(node);
               }
