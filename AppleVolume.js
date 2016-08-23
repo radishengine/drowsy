@@ -284,6 +284,8 @@ define(['ByteSource'], function(ByteSource) {
                     break;
                   case 2: // file
                     var fileInfo = {
+                      name: name,
+                      nodeNumber: nodeNumber,
                       flags: record[2],
                       type: record[3],
                       finfoType: macintoshRoman(record, 4, 4),
