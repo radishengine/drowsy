@@ -197,7 +197,7 @@ define(['ByteSource'], function(ByteSource) {
             var pointer = indexNode.pointers[i];
             var pointedBytes = byteSource.slice(
               pointer.nodeNumber * BTREE_NODE_BYTES,
-              (headerNode.rootNodeNumber + 1) * BTREE_NODE_BYTES);
+              (pointer.nodeNumber + 1) * BTREE_NODE_BYTES);
             self.readBTreeNode(pointedBytes, this);
           }
         },
