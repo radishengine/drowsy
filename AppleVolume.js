@@ -211,6 +211,16 @@ define(['ByteSource'], function(ByteSource) {
           for (var i = 0; i < pointerRecords.length; i++) {
             pointerRecords[i].read({
               onbytes: function(bytes) {
+                var keyLength = bytes[0];
+                if (keyLength === 0) {
+                  // deleted record
+                  return;
+                }
+                var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+                var parentDirectoryID = dv.getUint32(2, false);
+                var name = macintoshRoman(bytes, 7, bytes[6]);
+                var nodeNumber = dv.getUint32(1 + keyLength, false);
+                console.log(name, parentDirectoryID, nodeNumber);
                 console.log(bytes);
               },
             });
