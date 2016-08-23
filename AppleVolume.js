@@ -179,9 +179,9 @@ define(['ByteSource'], function(ByteSource) {
                 self.readBTreeIndexNode(
                   byteSource.slice(
                     PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset
-                      + volumeInfo.allocationBlockByteLength * headerRecord.rootNodeNumber,
+                      + 512 * headerRecord.rootNodeNumber,
                     PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset
-                      + volumeInfo.allocationBlockByteLength * headerRecord.rootNodeNumber
+                      + 512 * headerRecord.rootNodeNumber
                       + 512),
                   {
                     onindexrecord: function(indexRecord) {
