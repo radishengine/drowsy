@@ -184,12 +184,12 @@ define(['ByteSource'], function(ByteSource) {
     },
     readCatalog: function(byteSource, reader) {
       var self = this;
-      this.readBTreeHeaderNode(byteSource.slice(0, BTREE_NODE_BYTES), {
+      this.readBTreeNode(byteSource.slice(0, BTREE_NODE_BYTES), {
         onheadernode: function(headerNode) {
           var rootNode = byteSource.slice(
             headerNode.rootNodeNumber * BTREE_NODE_BYTES,
             (headerNode.rootNodeNumber + 1) * BTREE_NODE_BYTES);
-          self.readBTreeIndexNode(rootNode, {
+          self.readBTreeNode(rootNode, {
             onindexnode: function(indexNode) {
               console.log(indexNode);
             }
