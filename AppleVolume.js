@@ -196,7 +196,7 @@ define(['ByteSource'], function(ByteSource) {
       });
     },
     readBTreeIndexNode: function(byteSource, reader) {
-      var records = [];
+      var pointerRecords = [];
       this.readBTreeNode(byteSource, {
         onnodestart: function(descriptor) {
           if (descriptor.type !== 'index') {
@@ -205,9 +205,16 @@ define(['ByteSource'], function(ByteSource) {
           console.log(descriptor);
         },
         onnoderecord: function(record) {
-          records.push(record);
+          pointerRecords.push(record);
         },
         onnodeend: function() {
+          for (var i = 0; i < pointerRecords.length; i++) {
+            pointerRecords[i].read({
+              onbytes: function(bytes) {
+                console.log(bytes);
+              },
+            });
+          }
         },
       });
     },
