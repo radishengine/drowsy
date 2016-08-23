@@ -176,10 +176,37 @@ define(['ByteSource'], function(ByteSource) {
                 + 512),
             {
               onheaderrecord: function(headerRecord) {
-                console.log(headerRecord);
+                self.readBTreeIndexNode(
+                  byteSource.slice(
+                    PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset
+                      + volumeInfo.allocationBlockByteLength * headerRecord.rootNodeNumber,
+                    PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset
+                      + volumeInfo.allocationBlockByteLength * headerRecord.rootNodeNumber
+                      + 512),
+                  {
+                    onindexrecord: function(indexRecord) {
+                      console.log(indexRecord);
+                    }
+                  });
               },
             });
         }
+      });
+    },
+    readBTreeIndexNode: function(byteSource, reader) {
+      var records = [];
+      this.readBTreeNode(byteSource, {
+        onnodestart: function(descriptor) {
+          if (descriptor.type !== 'index') {
+            console.error('expected index node, got type: ' + descriptor.type);
+          }
+          console.log(descriptor);
+        },
+        onnoderecord: function(record) {
+          records.push(record);
+        },
+        onnodeend: function() {
+        },
       });
     },
     readBTreeHeaderNode: function(byteSource, reader) {
