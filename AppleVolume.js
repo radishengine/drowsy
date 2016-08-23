@@ -4,6 +4,7 @@ define(['ByteSource'], function(ByteSource) {
   'use strict';
   
   var PHYSICAL_BLOCK_BYTES = 512;
+  var BTREE_NODE_BYTES = 512;
   
   var MAC_CHARSET_128_255
     = '\xC4\xC5\xC7\xC9\xD1\xD6\xDC\xE1\xE0\xE2\xE4\xE3\xE5\xE7\xE9\xE8'
@@ -167,32 +168,33 @@ define(['ByteSource'], function(ByteSource) {
           if (typeof reader.onvolumestart === 'function') {
             reader.onvolumestart(volumeInfo);
           }
-          self.readBTreeHeaderNode(
-            byteSource.slice(
-              PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset
-                + volumeInfo.allocationBlockByteLength * volumeInfo.catalogFileExtentRecord[0].offset,
-              PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset
-                + volumeInfo.allocationBlockByteLength * volumeInfo.catalogFileExtentRecord[0].offset
-                + 512),
-            {
-              onheaderrecord: function(headerRecord) {
-                self.readBTreeIndexNode(
-                  byteSource.slice(
-                    PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset
-                      + volumeInfo.allocationBlockByteLength * volumeInfo.catalogFileExtentRecord[0].offset
-                      + 512 * headerRecord.rootNodeNumber,
-                    PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset
-                      + volumeInfo.allocationBlockByteLength * volumeInfo.catalogFileExtentRecord[0].offset
-                      + 512 * headerRecord.rootNodeNumber
-                      + 512),
-                  {
-                    onindexrecord: function(indexRecord) {
-                      console.log(indexRecord);
-                    }
-                  });
-              },
-            });
+          var allocationBlocksAt = PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset;
+          var allocationBlocksLen = volumeInfo.allocationBlockByteLength * volumeInfo.allocationBlockCount;
+          var allocationBlocks = byteSource.slice(allocationBlocksAt, allocationBlocksAt + allocationBlocksLen);
+          allocationBlocks.blockSize = volumeInfo.allocationBlockByteLength;
+          var catalogExtents = volumeInfo.catalogFileExtentRecord[0];
+          catalogExtents = allocationBlocks.slice(
+            allocationBlocks.blockSize * catalogExtents.offset,
+            allocationBlocks.blockSize * (catalogExtents.offset + catalogExtents.length));
+          self.readCatalog(catalogExtents, {
+            
+          });
         }
+      });
+    },
+    readCatalog: function(byteSource, reader) {
+      var self = this;
+      this.readBTreeHeaderNode(byteSource.slice(0, BTREE_NODE_BYTES), {
+        onheaderrecord: function(headerRecord) {
+          var rootNode = byteSource.slice(
+            headerRecord.rootNodeNumber * BTREE_NODE_BYTES,
+            (headerRecord.rootNodeNumber + 1) * BTREE_NODE_BYTES);
+          self.readBTreeIndexNode(rootNode, {
+            onindexrecord: function(indexRecord) {
+              console.log(indexRecord);
+            }
+          });
+        },
       });
     },
     readBTreeIndexNode: function(byteSource, reader) {
