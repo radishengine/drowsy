@@ -355,7 +355,6 @@ define(['ByteSource'], function(ByteSource) {
                     break;
                 }
               }
-              if (bytes)
               if (typeof reader.onleafnode === 'function') {
                 reader.onleafnode(node);
               }
