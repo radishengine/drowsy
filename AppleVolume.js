@@ -342,10 +342,14 @@ define(['ByteSource'], function(ByteSource) {
                     console.log('file', fileInfo);
                     break;
                   case 3: // folder thread
-                    console.error('NYI: folder thread leaf record');
-                    break;
                   case 4: // file thread
-                    console.error('NYI: file thread leaf record');
+                    var threadInfo = {
+                      name: name,
+                      nodeNumber: nodeNumber,
+                      parentFolderID: dv.getUint32(10, false),
+                      parentFolderName: macintoshString(record, 15, record[14]),
+                    };
+                    console.log(record[0] === 3 ? 'folder thread' : 'file thread', threadInfo);
                     break;
                   default:
                     console.error('unknown folder record type: ' + dv.getUint8(0));
