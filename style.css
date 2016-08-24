@@ -35,7 +35,7 @@
   visibility: hidden;
 }
 
-.file.invisible {
+.file.invisible, .folder.invisible {
   display: none;
 }
 
