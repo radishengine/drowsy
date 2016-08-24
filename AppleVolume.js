@@ -205,7 +205,7 @@ define(['ByteSource'], function(ByteSource) {
           var catalogExtents = volumeInfo.catalogFileExtentRecord[0];
           catalogExtents = allocationBlocks.slice(
             allocationBlocks.blockSize * catalogExtents.offset,
-            allocationBlocks.blockSize * (catalogExtents.offset + catalogExtents.length));
+            allocationBlocks.blockSize * catalogExtents.offset + volumeInfo.catalogFileByteLength);
           self.readCatalog(catalogExtents, {
             
           });
