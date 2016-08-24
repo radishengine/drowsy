@@ -290,6 +290,7 @@ define(['ByteSource'], function(ByteSource) {
           var children = document.createElement('SECTION');
           children.classList.add('folder-children');
           container.appendChild(children);
+          folders[folderInfo.id] = children;
           if (folderInfo.id in folders) {
             container.appendChild(folders[folderInfo.id]);
           }
