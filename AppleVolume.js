@@ -204,6 +204,7 @@ define(['ByteSource'], function(ByteSource) {
           var container = document.createElement('SECTION');
           container.classList.add('file');
           container.dataset.name = fileInfo.name;
+          container.dataset.lastModified = fileInfo.modifiedAt.toISOString();
           if (fileInfo.dataFork.physicalEOF) {
             var dataFork = document.createElement('SECTION');
             dataFork.classList.add('data-fork');
