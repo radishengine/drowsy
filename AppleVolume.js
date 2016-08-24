@@ -202,16 +202,19 @@ define(['ByteSource'], function(ByteSource) {
         },
         onfile: function(fileInfo) {
           var container = document.createElement('SECTION');
-          var header = document.createElement('HEADER');
-          var title = document.createElement('H6');
-          title.innerText = fileInfo.name;
-          header.appendChild(title);
-          container.appendChild(header);
+          container.classList.add('file');
+          container.dataset.name = fileInfo.name;
           if (fileInfo.dataFork.physicalEOF) {
-            container.dataset.size = fileInfo.dataFork.physicalEOF;
+            var dataFork = document.createElement('SECTION');
+            dataFork.classList.add('data-fork');
+            dataFork.dataset.size = fileInfo.dataFork.physicalEOF;
+            container.appendChild(dataFork);
           }
           if (fileInfo.resourceFork.physicalEOF) {
-            container.dataset.resourceSize = fileInfo.resourceFork.physicalEOF;
+            var resourceFork = document.createElement('SECTION');
+            resourceFork.classList.add('resource-fork');
+            resourceFork.dataset.size = fileInfo.resourceFork.physicalEOF;
+            container.appendChild(resourceFork);
           }
           document.body.appendChild(container);
         },
