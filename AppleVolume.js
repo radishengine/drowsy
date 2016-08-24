@@ -93,7 +93,6 @@ define(['ByteSource'], function(ByteSource) {
             if (partitionName) partitionInfo.name = partitionName;
             var processorType = nullTerminate(macintoshRoman(bytes, 124, 16));
             if (processorType) partitionInfo.processorType = processorType;
-            console.log('partition', partitionInfo);
             switch (partitionInfo.type) {
               case 'Apple_HFS':
                 self.readHFS(
@@ -123,10 +122,20 @@ define(['ByteSource'], function(ByteSource) {
       var masterDirectoryBlock = byteSource.slice(PHYSICAL_BLOCK_BYTES * 2, PHYSICAL_BLOCK_BYTES * (2+1));
       masterDirectoryBlock.read({
         onbytes: function(bytes) {
-          if (macintoshRoman(bytes, 0, 2) !== 'BD') {
-            console.error('HFS master directory block signature not found');
-            return;
+          var tag;
+          switch(tag = macintoshRoman(bytes, 0, 2)) {
+            case 'BD':
+              this.onhfs(bytes);
+              break;
+            case 'H+':
+              this.onhfsplus(bytes);
+              break;
+            default:
+              console.error('Unknown master directory block signature: ' + tag);
+              break;
           }
+        },
+        onhfs: function(bytes) {
           var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
           var volumeInfo = {
             createdAt: macintoshDate(dv, 2),
@@ -182,7 +191,10 @@ define(['ByteSource'], function(ByteSource) {
           self.readCatalog(catalogExtents, {
             
           });
-        }
+        },
+        onhfsplus: function(bytes) {
+          console.log(bytes);
+        },
       });
     },
     readCatalog: function(byteSource, reader) {
