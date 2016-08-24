@@ -287,12 +287,14 @@ define(['ByteSource'], function(ByteSource) {
           if (timestamp) {
             container.dataset.lastModified = timestamp.toISOString();
           }
-          var children = document.createElement('SECTION');
-          children.classList.add('folder-children');
-          container.appendChild(children);
-          folders[folderInfo.id] = children;
           if (folderInfo.id in folders) {
             container.appendChild(folders[folderInfo.id]);
+          }
+          else {
+            var children = document.createElement('SECTION');
+            children.classList.add('folder-children');
+            container.appendChild(children);
+            folders[folderInfo.id] = children;
           }
           if (folderInfo.parentDirectoryId === 1) {
             container.setAttribute('open', 'open');
