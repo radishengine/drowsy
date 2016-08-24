@@ -308,6 +308,7 @@ define(['ByteSource'], function(ByteSource) {
                     break;
                   case 2: // file
                     var fileInfo = {
+                      name: name,
                       nodeNumber: nodeNumber,
                       flags: record[2],
                       // type: record[3], /* always zero */
@@ -343,7 +344,6 @@ define(['ByteSource'], function(ByteSource) {
                   case 3: // folder thread
                   case 4: // file thread
                     var threadInfo = {
-                      name: name,
                       nodeNumber: nodeNumber,
                       parentFolderID: dv.getUint32(10, false),
                       parentFolderName: macintoshRoman(record, 15, record[14]),
