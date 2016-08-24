@@ -42,3 +42,11 @@
 .folder-children {
   padding-left: 2em;
 }
+
+.file summary, .folder summary {
+  font-family: monospace;
+}
+
+.folder summary {
+  font-weight: bold;
+}
