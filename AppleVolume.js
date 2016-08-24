@@ -48,6 +48,24 @@ define(['ByteSource'], function(ByteSource) {
     return record;
   }
   
+  function hfsPlusForkData(dv, offset) {
+    var forkData = {
+      logicalSize1: dv.getUint32(offset, false),
+      logicalSize2: dv.getUint32(offset + 4, false),
+      clumpSize: dv.getUint32(offset + 8, false),
+      totalBlocks: dv.getUint32(offset + 12, false),
+      extents: [],
+    };
+    for (var i = 0; i < 8; i++) {
+      forkData.extents.push({
+        startBlock: dv.getUint32(offset + 16 + (i * 8), false),
+        blockCount: dv.getUint32(offset + 16 + (i * 8) + 4, false),
+      });
+    }
+    return forkData;
+  }
+  hfsPlusForkData.byteLength = 8 + 4 + 4 + (8 * (4 + 4));
+  
   function AppleVolume(byteSource) {
     this.byteSource = byteSource;
   }
@@ -193,7 +211,44 @@ define(['ByteSource'], function(ByteSource) {
           });
         },
         onhfsplus: function(bytes) {
-          console.log(bytes);
+          var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+          var volumeInfo = {
+            version: dv.getUint16(2, false),
+            attributes: dv.getUint32(4, false),
+            lastMountedVersion: dv.getUint32(8, false),
+            journalInfoBlock: dv.getUint32(12, false),
+            createdAt: macintoshDate(dv, 16),
+            lastModifiedAt: macintoshDate(dv, 20),
+            backupAt: macintoshDate(dv, 24),
+            fileCount: dv.getUint32(28, false),
+            folderCount: dv.getUint32(32, false),
+            blockSize: dv.getUint32(36, false),
+            totalBlocks: dv.getUint32(40, false),
+            freeBlocks: dv.getUint32(44, false),
+            nextAllocation: dv.getUint32(48, false),
+            resourceClumpSize: dv.getUint32(52, false),
+            dataClumpSize: dv.getUint32(56, false),
+            nextCatalogId: dv.getUint32(60, false),
+            writeCount: dv.getUint32(64, false),
+            encodingsBitmap1: dv.getUint32(68, false),
+            encodingsBitmap2: dv.getUint32(72, false),
+            finderInfo: [
+              dv.getInt32(76, false),
+              dv.getInt32(80, false),
+              dv.getInt32(84, false),
+              dv.getInt32(88, false),
+              dv.getInt32(92, false),
+              dv.getInt32(96, false),
+              dv.getInt32(100, false),
+              dv.getInt32(104, false),
+            ],
+            allocationFile: hfsPlusForkData(dv, 108),
+            extentsFile: hfsPlusForkData(dv, 108 + hfsPlusForkData.byteLength),
+            catalogFile: hfsPlusForkData(dv, 108 + hfsPlusForkData.byteLength * 2),
+            attributesFile: hfsPlusForkData(dv, 108 + hfsPlusForkData.byteLength * 3),
+            startupFile: hfsPlusForkData(dv, 108 + hfsPlusForkData.byteLength * 4),
+          };
+          console.log(volumeInfo);
         },
       });
     },
