@@ -27,6 +27,9 @@ define([], function() {
       });
       fr.readAsArrayBuffer(this.blob);
     };
+    proto.getURL = function() {
+      return Promise.resolve(URL.createObjectURL(this.blob));
+    };
   })(ByteSourceFromBlob.prototype = new ByteSource);
   
   ByteSource.FromBlob = ByteSourceFromBlob;
