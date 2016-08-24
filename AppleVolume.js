@@ -287,11 +287,21 @@ define(['ByteSource'], function(ByteSource) {
           if (timestamp) {
             container.dataset.lastModified = timestamp.toISOString();
           }
-          var children = document.createElement('SECTION');
-          children.classList.add('folder-children');
-          container.appendChild(children);
-          folders[folderInfo.id] = children;
-          (folders[folderInfo.parentDirectoryId] || document.body).appendChild(container);
+          if (folderInfo.id in folders) {
+            container.appendChild(folders[folderInfo.id]);
+          }
+          if (!folderInfo.parentDirectoryId) {
+            document.body.appendChild(container);
+          }
+          else if (folderInfo.parentDirectoryId in folders) {
+            folders[folderInfo.parentDirectoryId].appendChild(container);
+          }
+          else {
+            var siblings = document.createElement('SECTION');
+            siblings.classList.add('folder-children');
+            siblings.appendChild(container);
+            folders[folderInfo.parentDirectoryId] = siblings;
+          }
         },
         onfile: function(fileInfo) {
           var container = document.createElement('DETAILS');
@@ -325,7 +335,18 @@ define(['ByteSource'], function(ByteSource) {
             resourceFork.dataset.size = fileInfo.resourceFork.physicalEOF;
             container.appendChild(resourceFork);
           }
-          (folders[fileInfo.parentDirectoryId] || document.body).appendChild(container);
+          if (!fileInfo.parentDirectoryId) {
+            document.body.appendChild(container);
+          }
+          else if (fileInfo.parentDirectoryId in folders) {
+            folders[fileInfo.parentDirectoryId].appendChild(container);
+          }
+          else {
+            var siblings = document.createElement('SECTION');
+            siblings.classList.add('folder-children');
+            siblings.appendChild(container);
+            folders[fileInfo.parentDirectoryId] = siblings;
+          }
         },
       });
     },
