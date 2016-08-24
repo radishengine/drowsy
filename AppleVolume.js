@@ -4,7 +4,7 @@ define(['ByteSource'], function(ByteSource) {
   'use strict';
   
   var PHYSICAL_BLOCK_BYTES = 512;
-  var BTREE_NODE_BYTES = 512;c
+  var BTREE_NODE_BYTES = 512;
   
   var MAC_CHARSET_128_255
     = '\xC4\xC5\xC7\xC9\xD1\xD6\xDC\xE1\xE0\xE2\xE4\xE3\xE5\xE7\xE9\xE8'
