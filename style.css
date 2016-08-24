@@ -34,3 +34,7 @@
 #drop-zone.dropping .help-label {
   visibility: hidden;
 }
+
+.file.invisible {
+  display: none;
+}
