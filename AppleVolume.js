@@ -331,16 +331,16 @@ define(['ByteSource'], function(ByteSource) {
           if (timestamp) {
             container.dataset.lastModified = timestamp.toISOString();
           }
-          if (fileInfo.dataFork.physicalEOF) {
+          if (fileInfo.dataFork.logicalEOF) {
             var dataFork = document.createElement('SECTION');
             dataFork.classList.add('data-fork');
-            dataFork.dataset.size = fileInfo.dataFork.physicalEOF;
+            dataFork.dataset.size = fileInfo.dataFork.logicalEOF;
             container.appendChild(dataFork);
           }
-          if (fileInfo.resourceFork.physicalEOF) {
+          if (fileInfo.resourceFork.logicalEOF) {
             var resourceFork = document.createElement('SECTION');
             resourceFork.classList.add('resource-fork');
-            resourceFork.dataset.size = fileInfo.resourceFork.physicalEOF;
+            resourceFork.dataset.size = fileInfo.resourceFork.logicalEOF;
             container.appendChild(resourceFork);
           }
           if (fileInfo.parentDirectoryId === 1) {
