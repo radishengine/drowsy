@@ -5,7 +5,7 @@ define(['ByteSource'], function(ByteSource) {
   
   var PHYSICAL_BLOCK_BYTES = 512;
   var BTREE_NODE_BYTES = 512;
-  
+  p
   var MAC_CHARSET_128_255
     = '\xC4\xC5\xC7\xC9\xD1\xD6\xDC\xE1\xE0\xE2\xE4\xE3\xE5\xE7\xE9\xE8'
     + '\xEA\xEB\xED\xEC\xEE\xEF\xF1\xF3\xF2\xF4\xF6\xF5\xFA\xF9\xFB\xFC'
@@ -93,6 +93,7 @@ define(['ByteSource'], function(ByteSource) {
             if (partitionName) partitionInfo.name = partitionName;
             var processorType = nullTerminate(macintoshRoman(bytes, 124, 16));
             if (processorType) partitionInfo.processorType = processorType;
+            console.log('partition', partitionInfo);
             switch (partitionInfo.type) {
               case 'Apple_HFS':
                 self.readHFS(
@@ -100,6 +101,8 @@ define(['ByteSource'], function(ByteSource) {
                     PHYSICAL_BLOCK_BYTES * partitionInfo.blockOffset,
                     PHYSICAL_BLOCK_BYTES * (partitionInfo.blockOffset + partitionInfo.blockCount)),
                   reader);
+                break;
+              default:
                 break;
             }
             if (typeof reader.onpartition === 'function') {
