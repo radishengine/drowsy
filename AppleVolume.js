@@ -350,20 +350,11 @@ define(['ByteSource'], function(ByteSource) {
             container.appendChild(dataFork);
           }
           if (fileInfo.resourceFork.logicalEOF) {
-            var resourceFork = document.createElement('A');
-            resourceFork.setAttribute('href', '#');
-            resourceFork.classList.add('resource-fork');
-            resourceFork.innerText = 'Resource Fork';
             var extent = fileInfo.resourceFork.firstExtentRecord[0];
-            allocation.slice(
+            this.readResourceFork(allocation.slice(
               allocation.blockSize * extent.offset,
               allocation.blockSize * extent.offset + fileInfo.resourceFork.logicalEOF
-            ).getURL().then(function(url) {
-              resourceFork.setAttribute('href', url);
-              resourceFork.setAttribute('download', fileInfo.name);
-            });
-            resourceFork.dataset.size = fileInfo.resourceFork.logicalEOF;
-            container.appendChild(resourceFork);
+            ), { });
           }
           if (fileInfo.parentDirectoryId === 1) {
             document.body.appendChild(container);
@@ -377,6 +368,15 @@ define(['ByteSource'], function(ByteSource) {
             siblings.appendChild(container);
             folders[fileInfo.parentDirectoryId] = siblings;
           }
+        },
+      });
+    },
+    readResourceFork: function(byteSource, reader) {
+      byteSource.read({
+        onbytes: function(bytes) {
+          var dv = new DataView(bytes.buffer, bytes.byteOffet, bytes.byteLength);
+          var dataDV = new DataView(bytes.buffer, bytes.byteOffset + dv.getUint32(0, false), dv.getUint32(8,  false));
+          var mapDV = new DataView(bytes.buffer, bytes.byteOffset + dv.getUint32(4, false), dv.getUint32(12, false));
         },
       });
     },
