@@ -38,3 +38,7 @@
 .file.invisible {
   display: none;
 }
+
+.folder-children {
+  padding-left: 2em;
+}
