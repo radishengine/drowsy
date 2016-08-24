@@ -207,8 +207,12 @@ define(['ByteSource'], function(ByteSource) {
           title.innerText = fileInfo.name;
           header.appendChild(title);
           container.appendChild(header);
-          container.data.size = fileInfo.dataFork.physicalEOF;
-          container.data.resourceSize = fileInfo.resourceFork.physicalEOF;
+          if (fileInfo.dataFork.physicalEOF) {
+            container.dataset.size = fileInfo.dataFork.physicalEOF;
+          }
+          if (fileInfo.resourceFork.physicalEOF) {
+            container.dataset.resourceSize = fileInfo.resourceFork.physicalEOF;
+          }
           document.body.appendChild(container);
         },
       });
