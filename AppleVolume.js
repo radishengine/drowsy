@@ -206,6 +206,7 @@ define(['ByteSource'], function(ByteSource) {
           catalogExtents = allocationBlocks.slice(
             allocationBlocks.blockSize * catalogExtents.offset,
             allocationBlocks.blockSize * catalogExtents.offset + volumeInfo.catalogFileByteLength);
+          catalogExtents.allocationBlocks = allocationBlocks;
           self.readCatalog(catalogExtents, {
             
           });
@@ -255,6 +256,7 @@ define(['ByteSource'], function(ByteSource) {
     readCatalog: function(byteSource, reader) {
       var self = this;
       var folders = {};
+      var allocation = byteSource.allocationBlocks;
       this.readBTreeNode(byteSource.slice(0, BTREE_NODE_BYTES), {
         onheadernode: function(headerNode) {
           var rootNode = byteSource.slice(
@@ -332,14 +334,34 @@ define(['ByteSource'], function(ByteSource) {
             container.dataset.lastModified = timestamp.toISOString();
           }
           if (fileInfo.dataFork.logicalEOF) {
-            var dataFork = document.createElement('SECTION');
+            var dataFork = document.createElement('A');
+            dataFork.setAttribute('href', '#');
             dataFork.classList.add('data-fork');
+            dataFork.innerText = 'Data Fork';
+            var extent = fileInfo.dataFork.firstExtentRecord[0];
+            allocation.slice(
+              allocation.blockSize * extent.offset,
+              allocation.blockSize * extent.offset + dataFork.logicalEOF
+            ).getURL().then(function(url) {
+              dataFork.setAttribute('href', url);
+              dataFork.setAttribute('download', fileInfo.name);
+            });
             dataFork.dataset.size = fileInfo.dataFork.logicalEOF;
             container.appendChild(dataFork);
           }
           if (fileInfo.resourceFork.logicalEOF) {
-            var resourceFork = document.createElement('SECTION');
+            var resourceFork = document.createElement('A');
+            resourceFork.setAttribute('href', '#');
             resourceFork.classList.add('resource-fork');
+            resourceFork.innerText = 'Resource Fork';
+            var extent = fileInfo.resourceFork.firstExtentRecord[0];
+            allocation.slice(
+              allocation.blockSize * extent.offset,
+              allocation.blockSize * extent.offset + resourceFork.logicalEOF
+            ).getURL().then(function(url) {
+              resourceFork.setAttribute('href', url);
+              dataFork.setAttribute('download', fileInfo.name);
+            });
             resourceFork.dataset.size = fileInfo.resourceFork.logicalEOF;
             container.appendChild(resourceFork);
           }
