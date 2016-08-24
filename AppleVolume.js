@@ -203,7 +203,7 @@ define(['ByteSource'], function(ByteSource) {
         onfile: function(fileInfo) {
           var container = document.createElement('SECTION');
           var header = document.createElement('HEADER');
-          var title = document.createElemenet('H6');
+          var title = document.createElement('H6');
           title.innerText = fileInfo.name;
           header.appendChild(title);
           container.appendChild(header);
