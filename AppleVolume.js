@@ -207,8 +207,12 @@ define(['ByteSource'], function(ByteSource) {
           }
           container.classList.add('file');
           container.dataset.name = fileInfo.name;
-          container.dataset.macType = fileInfo.type;
-          container.dataset.macCreator = fileInfo.creator;
+          if (fileInfo.type !== '') {
+            container.dataset.macType = fileInfo.type;
+          }
+          if (fileInfo.creator !== '') {
+            container.dataset.macCreator = fileInfo.creator;
+          }
           var timestamp = fileInfo.modifiedAt || fileInfo.createdAt;
           if (timestamp) {
             container.dataset.lastModified = timestamp.toISOString();
