@@ -43,10 +43,10 @@
   padding-left: 2em;
 }
 
-.file summary, .folder summary {
+.file > summary, .folder > summary {
   font-family: monospace;
 }
 
-.folder summary {
+.folder > summary {
   font-weight: bold;
 }
