@@ -290,7 +290,7 @@ define(['ByteSource'], function(ByteSource) {
           if (folderInfo.id in folders) {
             container.appendChild(folders[folderInfo.id]);
           }
-          if (!folderInfo.parentDirectoryId) {
+          if (folderInfo.parentDirectoryId === 1) {
             document.body.appendChild(container);
           }
           else if (folderInfo.parentDirectoryId in folders) {
@@ -335,7 +335,7 @@ define(['ByteSource'], function(ByteSource) {
             resourceFork.dataset.size = fileInfo.resourceFork.physicalEOF;
             container.appendChild(resourceFork);
           }
-          if (!fileInfo.parentDirectoryId) {
+          if (fileInfo.parentDirectoryId === 1) {
             document.body.appendChild(container);
           }
           else if (fileInfo.parentDirectoryId in folders) {
