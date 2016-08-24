@@ -201,12 +201,15 @@ define(['ByteSource'], function(ByteSource) {
           }
         },
         onfile: function(fileInfo) {
-          var container = document.createElement('SECTION');
+          var container = document.createElement('DETAILS');
           if (fileInfo.isInvisible) {
             container.classList.add('invisible');
           }
           container.classList.add('file');
           container.dataset.name = fileInfo.name;
+          var title = document.createElement('SUMMARY');
+          title.innerHTML = fileInfo.name;
+          container.appendChild(title);
           if (fileInfo.type !== null) {
             container.dataset.macType = fileInfo.type;
           }
