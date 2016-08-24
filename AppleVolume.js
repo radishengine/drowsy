@@ -281,28 +281,42 @@ define(['ByteSource'], function(ByteSource) {
                   case 1: // folder
                     var folderInfo = {
                       name: name,
-                      nodeNumber: nodeNumber,
-                      flags: dv.getUint16(2, false),
-                      valence: dv.getUint16(4, false),
                       id: dv.getUint32(6, false),
-                      createdAt: macintoshDate(dv, 10),
                       modifiedAt: macintoshDate(dv, 14),
-                      backupAt: macintoshDate(dv, 18),
-                      top: dv.getInt16(22, false),
-                      left: dv.getInt16(24, false),
-                      bottom: dv.getInt16(26, false),
-                      right: dv.getInt16(28, false),
-                      dinfoFlags: dv.getUint16(30, false),
-                      pointV: dv.getInt16(32, false),
-                      pointH: dv.getInt16(34, false),
+                      location: {
+                        v: dv.getInt16(32, false),
+                        h: dv.getInt16(34, false),
+                      },
+                      window: {
+                        top: dv.getInt16(22, false),
+                        left: dv.getInt16(24, false),
+                        bottom: dv.getInt16(26, false),
+                        right: dv.getInt16(28, false),
+                        scroll: {
+                          v: dv.getInt16(38, false),
+                          h: dv.getInt16(40, false),
+                        },
+                      },
+                      nodeNumber: nodeNumber,
                       // dinfoReserved: dv.getInt16(36, false),
-                      scrollV: dv.getInt16(38, false),
-                      scrollH: dv.getInt16(40, false),
                       // dxinfoReserved: dv.getInt32(42, false),
                       dxinfoFlags: dv.getUint16(46, false),
                       dxinfoComment: dv.getUint16(48, false),
+                      fileCount: dv.getUint16(4, false),
+                      createdAt: macintoshDate(dv, 10),
+                      backupAt: macintoshDate(dv, 18),
                       putAwayFolderID: dv.getInt32(50, false),
+                      flags: dv.getUint16(2, false),
                     };
+                    if (!folderInfo.flags) delete folderInfo.flags;
+                    var dinfoFlags = dv.getUint16(30, false);
+                    if (dinfoFlags & 0x0001) folderInfo.isOnDesk = true;
+                    if (dinfoFlags & 0x000E) folderInfo.color = true;
+                    if (dinfoFlags & 0x0020) folderInfo.requireSwitchLaunch = true;
+                    if (dinfoFlags & 0x0400) folderInfo.hasCustomIcon = true;
+                    if (dinfoFlags & 0x1000) folderInfo.nameLocked = true;
+                    if (dinfoFlags & 0x2000) folderInfo.hasBundle = true;
+                    if (dinfoFlags & 0x4000) folderInfo.isInvisible = true;
                     console.log('folder', folderInfo);
                     break;
                   case 2: // file
