@@ -347,7 +347,7 @@ define(['ByteSource'], function(ByteSource) {
                       name: name,
                       nodeNumber: nodeNumber,
                       parentFolderID: dv.getUint32(10, false),
-                      parentFolderName: macintoshString(record, 15, record[14]),
+                      parentFolderName: macintoshRoman(record, 15, record[14]),
                     };
                     console.log(record[0] === 3 ? 'folder thread' : 'file thread', threadInfo);
                     break;
