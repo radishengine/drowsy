@@ -204,6 +204,8 @@ define(['ByteSource'], function(ByteSource) {
           var container = document.createElement('SECTION');
           container.classList.add('file');
           container.dataset.name = fileInfo.name;
+          container.dataset.macType = fileInfo.type;
+          container.dataset.macCreator = fileInfo.creator;
           var timestamp = fileInfo.modifiedAt || fileInfo.createdAt;
           if (timestamp) {
             container.dataset.lastModified = timestamp.toISOString();
