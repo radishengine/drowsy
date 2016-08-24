@@ -185,7 +185,6 @@ define(['ByteSource'], function(ByteSource) {
     readCatalog: function(byteSource, reader) {
       var self = this;
       var folders = {};
-      var currentFolder;
       this.readBTreeNode(byteSource.slice(0, BTREE_NODE_BYTES), {
         onheadernode: function(headerNode) {
           var rootNode = byteSource.slice(
@@ -203,8 +202,6 @@ define(['ByteSource'], function(ByteSource) {
           }
         },
         onfolderthread: function(threadInfo) {
-          currentFolder = folders[threadInfo.parentFolderID];
-          console.log(threadInfo.parentFolderID, threadInfo.parentFolderName, currentFolder && currentFolder.parentNode.dataset.name);
         },
         onfolder: function(folderInfo) {
           var container = document.createElement('DETAILS');
@@ -223,8 +220,8 @@ define(['ByteSource'], function(ByteSource) {
           var children = document.createElement('SECTION');
           children.classList.add('folder-children');
           container.appendChild(children);
-          folders[folderInfo.nodeNumber] = children;
-          (currentFolder || document.body).appendChild(container);
+          folders[folderInfo.id] = children;
+          (folders[folderInfo.parentDirectoryId] || document.body).appendChild(container);
         },
         onfile: function(fileInfo) {
           var container = document.createElement('DETAILS');
@@ -258,7 +255,7 @@ define(['ByteSource'], function(ByteSource) {
             resourceFork.dataset.size = fileInfo.resourceFork.physicalEOF;
             container.appendChild(resourceFork);
           }
-          (currentFolder || document.body).appendChild(container);
+          (folders[fileInfo.parentDirectoryId] || document.body).appendChild(container);
         },
       });
     },
@@ -331,7 +328,7 @@ define(['ByteSource'], function(ByteSource) {
                   continue;
                 }
                 var dv = new DataView(record.buffer, record.byteOffset, record.byteLength);
-                var nodeNumber = dv.getUint32(2, false);
+                var parentDirectoryId = dv.getUint32(2, false);
                 var name = macintoshRoman(record, 7, record[6]);
                 var offset = 1 + keyLength;
                 offset = offset + (offset % 2);
@@ -357,7 +354,7 @@ define(['ByteSource'], function(ByteSource) {
                           h: dv.getInt16(40, false),
                         },
                       },
-                      nodeNumber: nodeNumber,
+                      parentDirectoryId: parentDirectoryId,
                       // dinfoReserved: dv.getInt16(36, false),
                       // dxinfoReserved: dv.getInt32(42, false),
                       dxinfoFlags: dv.getUint16(46, false),
@@ -387,7 +384,7 @@ define(['ByteSource'], function(ByteSource) {
                       creator: macintoshRoman(record, 8, 4),
                       type: macintoshRoman(record, 4, 4),
                       id: dv.getUint32(20, false),
-                      nodeNumber: nodeNumber,
+                      parentDirectoryId: parentDirectoryId,
                       // type: record[3], /* always zero */
                       position: {v:dv.getInt16(14, false), h:dv.getInt16(16, false)},
                       // finfoReserved: dv.getInt16(18, false),
@@ -437,7 +434,7 @@ define(['ByteSource'], function(ByteSource) {
                   case 3: // folder thread
                   case 4: // file thread
                     var threadInfo = {
-                      nodeNumber: nodeNumber,
+                      parentDirectoryId: parentDirectoryId,
                       parentFolderID: dv.getUint32(10, false),
                       parentFolderName: macintoshRoman(record, 15, record[14]),
                     };
