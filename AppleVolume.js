@@ -287,6 +287,9 @@ define(['ByteSource'], function(ByteSource) {
           if (timestamp) {
             container.dataset.lastModified = timestamp.toISOString();
           }
+          var children = document.createElement('SECTION');
+          children.classList.add('folder-children');
+          container.appendChild(children);
           if (folderInfo.id in folders) {
             container.appendChild(folders[folderInfo.id]);
           }
