@@ -207,10 +207,10 @@ define(['ByteSource'], function(ByteSource) {
           }
           container.classList.add('file');
           container.dataset.name = fileInfo.name;
-          if (fileInfo.type !== '') {
+          if (fileInfo.type !== null) {
             container.dataset.macType = fileInfo.type;
           }
-          if (fileInfo.creator !== '') {
+          if (fileInfo.creator !== null) {
             container.dataset.macCreator = fileInfo.creator;
           }
           var timestamp = fileInfo.modifiedAt || fileInfo.createdAt;
@@ -382,6 +382,8 @@ define(['ByteSource'], function(ByteSource) {
                       putAwayFolderID: dv.getUint32(68, false),
                       clumpSize: dv.getUint16(72),
                     };
+                    if (fileInfo.creator === '\0\0\0\0') fileInfo.creator = null;
+                    if (fileInfo.type === '\0\0\0\0') fileInfo.type = null;
                     if (!(fileInfo.position.v || fileInfo.position.h)) fileInfo.position = 'default';
                     if (record[2] & 0x01) fileInfo.locked = true;
                     if (record[2] & 0x02) fileInfo.hasThreadRecord = true;
