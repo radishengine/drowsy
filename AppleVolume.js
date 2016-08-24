@@ -204,7 +204,7 @@ define(['ByteSource'], function(ByteSource) {
         },
         onfolderthread: function(threadInfo) {
           currentFolder = folders[threadInfo.parentFolderID];
-          console.log(threadInfo.parentFolderID, threadInfo.parentFolderName, currentFolder && currentFolder.name);
+          console.log(threadInfo.parentFolderID, threadInfo.parentFolderName, currentFolder && currentFolder.dataset.name);
         },
         onfolder: function(folderInfo) {
           var container = document.createElement('DETAILS');
