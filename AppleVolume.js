@@ -215,7 +215,7 @@ define(['ByteSource'], function(ByteSource) {
           var volumeInfo = {
             version: dv.getUint16(2, false),
             attributes: dv.getUint32(4, false),
-            lastMountedVersion: dv.getUint32(8, false),
+            lastMountedVersion: macintoshRoman(bytes, 8, 4),
             journalInfoBlock: dv.getUint32(12, false),
             createdAt: macintoshDate(dv, 16),
             lastModifiedAt: macintoshDate(dv, 20),
