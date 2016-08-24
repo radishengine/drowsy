@@ -295,6 +295,7 @@ define(['ByteSource'], function(ByteSource) {
             container.appendChild(folders[folderInfo.id]);
           }
           if (folderInfo.parentDirectoryId === 1) {
+            container.setAttribute('open', 'open');
             document.body.appendChild(container);
           }
           else if (folderInfo.parentDirectoryId in folders) {
