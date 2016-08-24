@@ -309,16 +309,13 @@ define(['ByteSource'], function(ByteSource) {
                   case 2: // file
                     var fileInfo = {
                       name: name,
-                      nodeNumber: nodeNumber,
-                      flags: record[2],
-                      // type: record[3], /* always zero */
-                      finfoType: macintoshRoman(record, 4, 4),
                       finfoCreator: macintoshRoman(record, 8, 4),
-                      finfoFlags: dv.getUint16(12, false),
-                      finfoPointV: dv.getInt16(14, false),
-                      finfoPointH: dv.getInt16(16, false),
-                      // finfoReserved: dv.getInt16(18, false),
+                      finfoType: macintoshRoman(record, 4, 4),
                       id: dv.getUint32(20, false),
+                      nodeNumber: nodeNumber,
+                      // type: record[3], /* always zero */
+                      position: {v:dv.getInt16(14, false), h:dv.getInt16(16, false)},
+                      // finfoReserved: dv.getInt16(18, false),
                       dataFork: {
                         firstAllocationBlock: dv.getUint16(24, false),
                         logicalEOF: dv.getUint32(26, false),
@@ -339,6 +336,23 @@ define(['ByteSource'], function(ByteSource) {
                       dataForkFirstExtentRecord: extentDataRecord(dv, 74),
                       resourceForkFirstExtentRecord: extentDataRecord(dv, 86),
                     };
+                    if (!(fileInfo.position.v || fileInfo.position.h)) fileInfo.position = 'default';
+                    if (record[2] & 0x01) fileInfo.locked = true;
+                    if (record[2] & 0x02) fileInfo.hasThreadRecord = true;
+                    if (record[2] & 0x80) fileInfo.recordUsed = true;
+                    var finfoFlags = dv.getUint16(12, false);
+                    if (finfoFlags & 0x0001) fileInfo.isOnDesk = true;
+                    if (finfoFlags & 0x000E) fileInfo.color = true;
+                    if (finfoFlags & 0x0020) fileInfo.requireSwitchLaunch = true;
+                    if (finfoFlags & 0x0040) fileInfo.isShared = true;
+                    if (finfoFlags & 0x0080) fileInfo.hasNoINITs = true;
+                    if (finfoFlags & 0x0100) fileInfo.hasBeenInited = true;
+                    if (finfoFlags & 0x0400) fileInfo.hasCustomIcon = true;
+                    if (finfoFlags & 0x0800) fileInfo.isStationery = true;
+                    if (finfoFlags & 0x1000) fileInfo.nameLocked = true;
+                    if (finfoFlags & 0x2000) fileInfo.hasBundle = true;
+                    if (finfoFlags & 0x4000) fileInfo.isInvisible = true;
+                    if (finfoFlags & 0x8000) fileInfo.isAlias = true;
                     console.log('file', fileInfo);
                     break;
                   case 3: // folder thread
