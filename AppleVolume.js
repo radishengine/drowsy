@@ -184,6 +184,8 @@ define(['ByteSource'], function(ByteSource) {
     },
     readCatalog: function(byteSource, reader) {
       var self = this;
+      var folders = {};
+      var currentFolder;
       this.readBTreeNode(byteSource.slice(0, BTREE_NODE_BYTES), {
         onheadernode: function(headerNode) {
           var rootNode = byteSource.slice(
@@ -200,6 +202,10 @@ define(['ByteSource'], function(ByteSource) {
             self.readBTreeNode(pointedBytes, this);
           }
         },
+        onfolderthread: function(threadInfo) {
+          currentFolder = folders[threadInfo.parentFolderID];
+          console.log(threadInfo.parentFolderID, threadInfo.parentFolderName, currentFolder && currentFolder.name);
+        },
         onfolder: function(folderInfo) {
           var container = document.createElement('DETAILS');
           if (folderInfo.isInvisible) {
@@ -214,7 +220,8 @@ define(['ByteSource'], function(ByteSource) {
           if (timestamp) {
             container.dataset.lastModified = timestamp.toISOString();
           }
-          document.body.appendChild(container);
+          folders[folderInfo.nodeNumber] = container;
+          (currentFolder || document.body).appendChild(container);
         },
         onfile: function(fileInfo) {
           var container = document.createElement('DETAILS');
@@ -248,7 +255,7 @@ define(['ByteSource'], function(ByteSource) {
             resourceFork.dataset.size = fileInfo.resourceFork.physicalEOF;
             container.appendChild(resourceFork);
           }
-          document.body.appendChild(container);
+          (currentFolder || document.body).appendChild(container);
         },
       });
     },
