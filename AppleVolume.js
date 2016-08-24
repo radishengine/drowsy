@@ -360,7 +360,7 @@ define(['ByteSource'], function(ByteSource) {
               allocation.blockSize * extent.offset + resourceFork.logicalEOF
             ).getURL().then(function(url) {
               resourceFork.setAttribute('href', url);
-              dataFork.setAttribute('download', fileInfo.name);
+              resourceFork.setAttribute('download', fileInfo.name);
             });
             resourceFork.dataset.size = fileInfo.resourceFork.logicalEOF;
             container.appendChild(resourceFork);
