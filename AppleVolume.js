@@ -220,7 +220,10 @@ define(['ByteSource'], function(ByteSource) {
           if (timestamp) {
             container.dataset.lastModified = timestamp.toISOString();
           }
-          folders[folderInfo.nodeNumber] = container;
+          var children = document.createElement('SECTION');
+          children.classList.add('folder-children');
+          container.appendChild(children);
+          folders[folderInfo.nodeNumber] = children;
           (currentFolder || document.body).appendChild(container);
         },
         onfile: function(fileInfo) {
