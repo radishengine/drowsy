@@ -280,7 +280,31 @@ define(['ByteSource'], function(ByteSource) {
                 dv = new DataView(record.buffer, record.byteOffset, record.byteLength);
                 switch(record[0]) {
                   case 1: // folder
-                    console.error('NYI: folder leaf record');
+                    var folderInfo = {
+                      name: name,
+                      nodeNumber: nodeNumber,
+                      flags: dv.getUint16(2, false),
+                      valence: dv.getUint16(4, false),
+                      id: dv.getUint32(6, false),
+                      createdAt: macintoshDate(dv, 10),
+                      modifiedAt: macintoshDate(dv, 14),
+                      backupAt: macintoshDate(dv, 18),
+                      top: dv.getInt16(22, false),
+                      left: dv.getInt16(24, false),
+                      bottom: dv.getInt16(26, false),
+                      right: dv.getInt16(28, false),
+                      dinfoFlags: dv.getUint16(30, false),
+                      pointV: dv.getInt16(32, false),
+                      pointH: dv.getInt16(34, false),
+                      // dinfoReserved: dv.getInt16(36, false),
+                      scrollV: dv.getInt16(38, false),
+                      scrollH: dv.getInt16(40, false),
+                      // dxinfoReserved: dv.getInt32(42, false),
+                      dxinfoFlags: dv.getUint16(46, false),
+                      dxinfoComment: dv.getUint16(48, false),
+                      putAwayFolderID: dv.getInt32(50, false),
+                    };
+                    console.log('folder', folderInfo);
                     break;
                   case 2: // file
                     var fileInfo = {
@@ -315,7 +339,7 @@ define(['ByteSource'], function(ByteSource) {
                       dataForkFirstExtentRecord: extentDataRecord(dv, 74),
                       resourceForkFirstExtentRecord: extentDataRecord(dv, 86),
                     };
-                    console.log(fileInfo);
+                    console.log('file', fileInfo);
                     break;
                   case 3: // folder thread
                     console.error('NYI: folder thread leaf record');
