@@ -309,8 +309,8 @@ define(['ByteSource'], function(ByteSource) {
                   case 2: // file
                     var fileInfo = {
                       name: name,
-                      finfoCreator: macintoshRoman(record, 8, 4),
-                      finfoType: macintoshRoman(record, 4, 4),
+                      creator: macintoshRoman(record, 8, 4),
+                      type: macintoshRoman(record, 4, 4),
                       id: dv.getUint32(20, false),
                       nodeNumber: nodeNumber,
                       // type: record[3], /* always zero */
