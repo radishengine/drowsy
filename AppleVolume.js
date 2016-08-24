@@ -351,7 +351,7 @@ define(['ByteSource'], function(ByteSource) {
           }
           if (fileInfo.resourceFork.logicalEOF) {
             var extent = fileInfo.resourceFork.firstExtentRecord[0];
-            this.readResourceFork(allocation.slice(
+            self.readResourceFork(allocation.slice(
               allocation.blockSize * extent.offset,
               allocation.blockSize * extent.offset + fileInfo.resourceFork.logicalEOF
             ), { });
