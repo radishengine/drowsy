@@ -341,7 +341,7 @@ define(['ByteSource'], function(ByteSource) {
             var extent = fileInfo.dataFork.firstExtentRecord[0];
             allocation.slice(
               allocation.blockSize * extent.offset,
-              allocation.blockSize * extent.offset + dataFork.logicalEOF
+              allocation.blockSize * extent.offset + fileInfo.dataFork.logicalEOF
             ).getURL().then(function(url) {
               dataFork.setAttribute('href', url);
               dataFork.setAttribute('download', fileInfo.name);
@@ -357,7 +357,7 @@ define(['ByteSource'], function(ByteSource) {
             var extent = fileInfo.resourceFork.firstExtentRecord[0];
             allocation.slice(
               allocation.blockSize * extent.offset,
-              allocation.blockSize * extent.offset + resourceFork.logicalEOF
+              allocation.blockSize * extent.offset + fileInfo.resourceFork.logicalEOF
             ).getURL().then(function(url) {
               resourceFork.setAttribute('href', url);
               resourceFork.setAttribute('download', fileInfo.name);
