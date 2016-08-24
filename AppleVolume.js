@@ -207,6 +207,8 @@ define(['ByteSource'], function(ByteSource) {
           title.innerText = fileInfo.name;
           header.appendChild(title);
           container.appendChild(header);
+          container.data.size = fileInfo.dataFork.physicalEOF;
+          container.data.resourceSize = fileInfo.resourceFork.physicalEOF;
           document.body.appendChild(container);
         },
       });
@@ -344,11 +346,13 @@ define(['ByteSource'], function(ByteSource) {
                         firstAllocationBlock: dv.getUint16(24, false),
                         logicalEOF: dv.getUint32(26, false),
                         physicalEOF: dv.getUint32(30, false),
+                        firstExtentRecord: extentDataRecord(dv, 74),
                       },
                       resourceFork: {
                         firstAllocationBlock: dv.getUint16(34, false),
                         logicalEOF: dv.getUint32(36, false),
                         physicalEOF: dv.getUint32(40, false),
+                        firstExtentRecord: extentDataRecord(dv, 86),
                       },
                       createdAt: macintoshDate(dv, 44),
                       modifiedAt: macintoshDate(dv, 48),
@@ -357,8 +361,6 @@ define(['ByteSource'], function(ByteSource) {
                       fxinfoFlags: dv.getUint16(64, false),
                       putAwayFolderID: dv.getUint32(68, false),
                       clumpSize: dv.getUint16(72),
-                      dataForkFirstExtentRecord: extentDataRecord(dv, 74),
-                      resourceForkFirstExtentRecord: extentDataRecord(dv, 86),
                     };
                     if (!(fileInfo.position.v || fileInfo.position.h)) fileInfo.position = 'default';
                     if (record[2] & 0x01) fileInfo.locked = true;
