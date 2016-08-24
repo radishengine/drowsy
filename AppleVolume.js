@@ -192,7 +192,6 @@ define(['ByteSource'], function(ByteSource) {
           self.readBTreeNode(rootNode, this);
         },
         onindexnode: function(indexNode) {
-          console.log(indexNode);
           for (var i = 0; i < indexNode.pointers.length; i++) {
             var pointer = indexNode.pointers[i];
             var pointedBytes = byteSource.slice(
