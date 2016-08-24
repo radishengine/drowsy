@@ -200,6 +200,22 @@ define(['ByteSource'], function(ByteSource) {
             self.readBTreeNode(pointedBytes, this);
           }
         },
+        onfolder: function(folderInfo) {
+          var container = document.createElement('DETAILS');
+          if (folderInfo.isInvisible) {
+            container.classList.add('invisible');
+          }
+          container.classList.add('folder');
+          container.dataset.name = folderInfo.name;
+          var title = document.createElement('SUMMARY');
+          title.innerHTML = folderInfo.name;
+          container.appendChild(title);
+          var timestamp = folderInfo.modifiedAt || folderInfo.createdAt;
+          if (timestamp) {
+            container.dataset.lastModified = timestamp.toISOString();
+          }
+          document.body.appendChild(container);
+        },
         onfile: function(fileInfo) {
           var container = document.createElement('DETAILS');
           if (fileInfo.isInvisible) {
