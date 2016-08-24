@@ -202,6 +202,9 @@ define(['ByteSource'], function(ByteSource) {
         },
         onfile: function(fileInfo) {
           var container = document.createElement('SECTION');
+          if (fileInfo.isInvisible) {
+            container.classList.add('invisible');
+          }
           container.classList.add('file');
           container.dataset.name = fileInfo.name;
           container.dataset.macType = fileInfo.type;
