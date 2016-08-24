@@ -200,6 +200,15 @@ define(['ByteSource'], function(ByteSource) {
             self.readBTreeNode(pointedBytes, this);
           }
         },
+        onfile: function(fileInfo) {
+          var container = document.createElement('SECTION');
+          var header = document.createElement('HEADER');
+          var title = document.createElemenet('H6');
+          title.innerText = fileInfo.name;
+          header.appendChild(title);
+          container.appendChild(header);
+          document.body.appendChild(container);
+        },
       });
     },
     readBTreeNode: function(byteSource, reader) {
@@ -317,7 +326,9 @@ define(['ByteSource'], function(ByteSource) {
                     if (dinfoFlags & 0x1000) folderInfo.nameLocked = true;
                     if (dinfoFlags & 0x2000) folderInfo.hasBundle = true;
                     if (dinfoFlags & 0x4000) folderInfo.isInvisible = true;
-                    console.log('folder', folderInfo);
+                    if (typeof reader.onfolder === 'function') {
+                      reader.onfolder(folderInfo);
+                    }
                     break;
                   case 2: // file
                     var fileInfo = {
@@ -366,7 +377,9 @@ define(['ByteSource'], function(ByteSource) {
                     if (finfoFlags & 0x2000) fileInfo.hasBundle = true;
                     if (finfoFlags & 0x4000) fileInfo.isInvisible = true;
                     if (finfoFlags & 0x8000) fileInfo.isAlias = true;
-                    console.log('file', fileInfo);
+                    if (typeof reader.onfile === 'function') {
+                      reader.onfile(fileInfo);
+                    }
                     break;
                   case 3: // folder thread
                   case 4: // file thread
@@ -375,7 +388,16 @@ define(['ByteSource'], function(ByteSource) {
                       parentFolderID: dv.getUint32(10, false),
                       parentFolderName: macintoshRoman(record, 15, record[14]),
                     };
-                    console.log(record[0] === 3 ? 'folder thread' : 'file thread', threadInfo);
+                    if (record[0] === 3) {
+                      if (typeof reader.onfolderthread === 'function') {
+                        reader.onfolderthread(threadInfo);
+                      }
+                    }
+                    else {
+                      if (typeof reader.onfilethread === 'function') {
+                        reader.onfilethread(threadInfo);
+                      }
+                    }
                     break;
                   default:
                     console.error('unknown folder record type: ' + dv.getUint8(0));
