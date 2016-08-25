@@ -514,6 +514,15 @@ define(['ByteSource'], function(ByteSource) {
                 case 'STR#':
                   console.log(resource.data);
                   console.log(JSON.stringify(macintoshRoman(resource.data, 0, resource.data.length)));
+                  var strcount = new DataView(resource.data.buffer, resource.data.byteOffset, 2).getUint16(0, false);
+                  var list = [];
+                  var pos = 2;
+                  for (var istr = 0; istr < strcount; istr++) {
+                    var len = resource.data[pos++];
+                    list.push(macintoshRoman(resource.data, pos, len));
+                    pos += len;
+                  }
+                  console.log(JSON.stringify(list));
                   break;
                 case 'CURS':
                   if (resource.data.length !== 68) {
