@@ -354,7 +354,18 @@ define(['ByteSource'], function(ByteSource) {
             self.readResourceFork(allocation.slice(
               allocation.blockSize * extent.offset,
               allocation.blockSize * extent.offset + fileInfo.resourceFork.logicalEOF
-            ), { });
+            ), {
+              onresource: function(resource) {
+                var resourceEl = document.createElement('DIV');
+                resourceEl.classList.add('resource');
+                resourceEl.dataset.name = resource.name;
+                resourceEl.dataset.type = resource.type;
+                resourceEl.dataset.id = resource.id;
+                resourceEl.dataset.size = resource.data.length;
+                resourceEl.dataset.attributes = resource.data.attributes;
+                container.appendChild(resourceEl);
+              }
+            });
           }
           if (fileInfo.parentDirectoryId === 1) {
             document.body.appendChild(container);
@@ -410,16 +421,18 @@ define(['ByteSource'], function(ByteSource) {
               var data = bytes.subarray(
                 resourceDataOffset + 4,
                 resourceDataOffset + 4 + dv.getUint32(resourceDataOffset, false));
-              resources.push({
+              var resource = {
                 name: resourceName,
                 type: resourceTypeName,
                 id: resourceID,
                 attributes: resourceAttributes,
                 data: data,
-              });
+              };
+              if (typeof reader.onresource === 'function') {
+                reader.onresource(resource);
+              }
             }
           }
-          console.log(resources);
         },
       });
     },
