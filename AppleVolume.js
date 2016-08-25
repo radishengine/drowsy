@@ -426,6 +426,12 @@ define(['ByteSource'], function(ByteSource) {
                   }
                   resourceEl.appendChild(img);
                 }
+                if ('text' in resource) {
+                  var scr = document.createElement('SCRIPT');
+                  scr.setAttribute('type', 'text/plain');
+                  scr.appendChild(document.createTextNode(resource.text));
+                  resourceEl.appendChild(scr);
+                }
                 container.appendChild(resourceEl);
               }
             });
@@ -495,6 +501,9 @@ define(['ByteSource'], function(ByteSource) {
                 data: data,
               };
               switch (resource.type) {
+                case 'STR ':
+                  resource.text = macintoshRoman(resource.data, 0, resource.data.length);
+                  break;
                 case 'CURS':
                   if (resource.data.length !== 68) {
                     console.error('CURS resource expected to be 68 bytes, got ' + resource.data.length);
