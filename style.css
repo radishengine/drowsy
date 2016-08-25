@@ -36,7 +36,8 @@
 }
 
 .file.invisible, .folder.invisible {
-  display: none;
+  background: #eee;
+  /* display: none; */
 }
 
 .folder-children {
