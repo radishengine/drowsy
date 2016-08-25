@@ -358,11 +358,13 @@ define(['ByteSource'], function(ByteSource) {
               onresource: function(resource) {
                 var resourceEl = document.createElement('DIV');
                 resourceEl.classList.add('resource');
-                resourceEl.dataset.name = resource.name;
+                if (resource.name !== null) {
+                  resourceEl.dataset.name = resource.name;
+                }
                 resourceEl.dataset.type = resource.type;
                 resourceEl.dataset.id = resource.id;
                 resourceEl.dataset.size = resource.data.length;
-                resourceEl.dataset.attributes = resource.data.attributes;
+                resourceEl.dataset.attributes = resource.attributes;
                 container.appendChild(resourceEl);
               }
             });
