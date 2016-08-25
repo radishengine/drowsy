@@ -468,7 +468,7 @@ define(['ByteSource'], function(ByteSource) {
                   ctx.putImageData(pix, 0, 0);
                   resource.image = {url: img.toDataURL(), width:16, height:16};
                   var hotspotDV = new DataView(resource.data.buffer, resource.data.byteOffset + 64, 8);
-                  resource.hotspot = {x:hotspotDV.getInt16(0), y:hotspotDV.getInt16(2)};
+                  resource.hotspot = {y:hotspotDV.getInt16(0), x:hotspotDV.getInt16(2)};
                   break;
               }
               if (resourceAttributes & 0x40) resource.loadInSystemHeap = true; // instead of application heap
