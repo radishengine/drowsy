@@ -322,7 +322,6 @@ define(['ByteSource'], function(ByteSource) {
           var title = document.createElement('SUMMARY');
           title.innerHTML = fileInfo.name;
           container.appendChild(title);
-          container.appendChild(document.createTextNode(JSON.stringify(fileInfo)));
           if (fileInfo.type !== null) {
             container.dataset.macType = fileInfo.type;
           }
