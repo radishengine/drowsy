@@ -461,7 +461,7 @@ define(['ByteSource'], function(ByteSource) {
                     for (var ibit = 0; ibit < 8; ibit++) {
                       var imask = 7 << ibit;
                       if (maskbyte & imask) {
-                        pix.data.set((ibyte*8 + ibit) * 4, databyte & imask ? PIXEL1 : PIXEL0);
+                        pix.data.set(databyte & imask ? PIXEL1 : PIXEL0, (ibyte*8 + ibit) * 4);
                       }
                     }
                   }
