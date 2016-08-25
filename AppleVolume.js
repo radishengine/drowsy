@@ -470,6 +470,25 @@ define(['ByteSource'], function(ByteSource) {
                   var hotspotDV = new DataView(resource.data.buffer, resource.data.byteOffset + 64, 8);
                   resource.hotspot = {y:hotspotDV.getInt16(0), x:hotspotDV.getInt16(2)};
                   break;
+                case 'icl8':
+                  if (resource.data.length !== 1024) {
+                    console.error('icl8 resource expected to be 1024 bytes, got ' + resource.data.length);
+                    break;
+                  }
+                  var img = document.createElement('CANVAS');
+                  img.width = 32;
+                  img.height = 32;
+                  var ctx = img.getContext('2d');
+                  var pix = ctx.createImageData(32, 32);
+                  for (var ibyte = 0; ibyte < 1024; ibyte++) {
+                    pix.data[ibyte*4] = resource.data[ibyte];
+                    pix.data[ibyte*4 + 1] = resource.data[ibyte];
+                    pix.data[ibyte*4 + 2] = resource.data[ibyte];
+                    pix.data[ibyte*4 + 3] = 255;
+                  }
+                  ctx.putImageData(pix, 0, 0);
+                  resource.image = {url: img.toDataURL(), width:32, height:32};
+                  break;
               }
               if (resourceAttributes & 0x40) resource.loadInSystemHeap = true; // instead of application heap
               if (resourceAttributes & 0x20) resource.mayBePagedOutOfMemory = true;
