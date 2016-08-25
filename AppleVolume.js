@@ -585,9 +585,29 @@ define(['ByteSource'], function(ByteSource) {
                   var hotspotDV = new DataView(resource.data.buffer, resource.data.byteOffset + 64, 8);
                   resource.hotspot = {y:hotspotDV.getInt16(0), x:hotspotDV.getInt16(2)};
                   break;
+                case 'ICON':
+                  if (resource.data.length !== 128) {
+                    console.error('ICON resource expected to be 128 bytes, got ' + resource.data.length);
+                    break;
+                  }
+                  var img = document.createElement('CANVAS');
+                  img.width = 32;
+                  img.height = 32;
+                  var ctx = img.getContext('2d');
+                  var pix = ctx.createImageData(32, 32);
+                  for (var ibyte = 0; ibyte < 128; ibyte++) {
+                    var databyte = resource.data[ibyte];
+                    for (var ibit = 0; ibit < 8; ibit++) {
+                      var imask = 0x80 >> ibit;
+                      pix.data.set(databyte & imask ? PIXEL1 : PIXEL0, (ibyte*8 + ibit) * 4);
+                    }
+                  }
+                  ctx.putImageData(pix, 0, 0);
+                  resource.image = {url: img.toDataURL(), width:32, height:32};
+                  break;
                 case 'ICN#':
                   if (resource.data.length !== 256) {
-                    console.error('ICS# resource expected to be 256 bytes, got ' + resource.data.length);
+                    console.error('ICN# resource expected to be 256 bytes, got ' + resource.data.length);
                     break;
                   }
                   var img = document.createElement('CANVAS');
