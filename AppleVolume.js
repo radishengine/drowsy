@@ -364,7 +364,6 @@ define(['ByteSource'], function(ByteSource) {
                 resourceEl.dataset.type = resource.type;
                 resourceEl.dataset.id = resource.id;
                 resourceEl.dataset.size = resource.data.length;
-                resourceEl.dataset.attributes = resource.attributes;
                 container.appendChild(resourceEl);
               }
             });
@@ -427,9 +426,14 @@ define(['ByteSource'], function(ByteSource) {
                 name: resourceName,
                 type: resourceTypeName,
                 id: resourceID,
-                attributes: resourceAttributes,
                 data: data,
               };
+              if (resourceAttributes & 0x40) resource.loadInSystemHeap = true; // instead of application heap
+              if (resourceAttributes & 0x20) resource.mayBePagedOutOfMemory = true;
+              if (resourceAttributes & 0x10) resource.doNotMoveInMemory = true;
+              if (resourceAttributes & 0x08) resource.isReadOnly = true;
+              if (resourceAttributes & 0x04) resource.preload = true;
+              if (resourceAttributes & 0x01) resource.compressed = true;
               if (typeof reader.onresource === 'function') {
                 reader.onresource(resource);
               }
