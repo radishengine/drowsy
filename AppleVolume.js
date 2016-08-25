@@ -512,12 +512,19 @@ define(['ByteSource'], function(ByteSource) {
                 id: resourceID,
                 data: data,
               };
+              if (resourceAttributes & 0x40) resource.loadInSystemHeap = true; // instead of application heap
+              if (resourceAttributes & 0x20) resource.mayBePagedOutOfMemory = true;
+              if (resourceAttributes & 0x10) resource.doNotMoveInMemory = true;
+              if (resourceAttributes & 0x08) resource.isReadOnly = true;
+              if (resourceAttributes & 0x04) resource.preload = true;
+              if (resourceAttributes & 0x01) resource.compressed = true;
               switch (resource.type) {
                 case 'STR ':
                   resource.text = macintoshRoman(resource.data, 0, resource.data.length);
                   break;
                 case 'STR#':
                   var strcount = new DataView(resource.data.buffer, resource.data.byteOffset, 2).getUint16(0, false);
+                  console.log(!!resource.compressed, strcount, resource.data);
                   var list = [];
                   var pos = 2;
                   for (var istr = 0; istr < strcount; istr++) {
@@ -662,12 +669,6 @@ define(['ByteSource'], function(ByteSource) {
                   resource.image = {url: img.toDataURL(), width:16, height:16};
                   break;
               }
-              if (resourceAttributes & 0x40) resource.loadInSystemHeap = true; // instead of application heap
-              if (resourceAttributes & 0x20) resource.mayBePagedOutOfMemory = true;
-              if (resourceAttributes & 0x10) resource.doNotMoveInMemory = true;
-              if (resourceAttributes & 0x08) resource.isReadOnly = true;
-              if (resourceAttributes & 0x04) resource.preload = true;
-              if (resourceAttributes & 0x01) resource.compressed = true;
               if (typeof reader.onresource === 'function') {
                 reader.onresource(resource);
               }
