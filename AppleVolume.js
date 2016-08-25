@@ -534,6 +534,22 @@ define(['ByteSource'], function(ByteSource) {
                   ctx.putImageData(pix, 0, 0);
                   resource.image = {url: img.toDataURL(), width:32, height:32};
                   break;
+                case 'ics8':
+                  if (resource.data.length !== 256) {
+                    console.error('ics8 resource expected to be 256 bytes, got ' + resource.data.length);
+                    break;
+                  }
+                  var img = document.createElement('CANVAS');
+                  img.width = 16;
+                  img.height = 16;
+                  var ctx = img.getContext('2d');
+                  var pix = ctx.createImageData(16, 16);
+                  for (var ibyte = 0; ibyte < 256; ibyte++) {
+                    pix.data.set(mac8BitSystemPalette[resource.data[ibyte]], ibyte*4);
+                  }
+                  ctx.putImageData(pix, 0, 0);
+                  resource.image = {url: img.toDataURL(), width:16, height:16};
+                  break;
               }
               if (resourceAttributes & 0x40) resource.loadInSystemHeap = true; // instead of application heap
               if (resourceAttributes & 0x20) resource.mayBePagedOutOfMemory = true;
