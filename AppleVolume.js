@@ -375,8 +375,50 @@ define(['ByteSource'], function(ByteSource) {
       byteSource.read({
         onbytes: function(bytes) {
           var dv = new DataView(bytes.buffer, bytes.byteOffet, bytes.byteLength);
-          var dataDV = new DataView(bytes.buffer, bytes.byteOffset + dv.getUint32(0, false), dv.getUint32(8,  false));
+          var dataOffset = dv.getUint32(0, false);
           var mapDV = new DataView(bytes.buffer, bytes.byteOffset + dv.getUint32(4, false), dv.getUint32(12, false));
+          var attributes = mapDV.getUint16(22, false);
+          var typeListOffset = mapDV.getUint16(24, false);
+          var nameListOffset = mapDV.getUint16(26, false);
+          var typeCount = mapDV.getUint16(28, false) + 1;
+          var resources = [];
+          for (var i = 0; i < typeCount; i++) {
+            var resourceTypeName = macintoshRoman(
+              new Uint8Array(mapDV.buffer, mapDV.byteOffset + typeListOffset + (i * 8), 4),
+              0, 4);
+            var resourceCount = mapDV.getUint16(typeList + (i * 8) + 4, false) + 1;
+            var referenceListOffset = mapDV.getUint16(typeList + (i * 8) + 4 + 2, false);
+            var referenceListDV = new DataView(
+              bytes.buffer,
+              bytes.byteOffset + typeListOffset + referenceListOffset,
+              resourceCount * 12);
+            for (var j = 0; j < resourceCount; j++) {
+              var resourceID = referenceListDV.getUint16(j * 12, false);
+              var resourceNameOffset = referenceListDV.getInt16(j * 12 + 2, false);
+              var resourceAttributes = referenceListDV.getUint8(j * 12 + 4, false);
+              var resourceDataOffset = referenceListDV.getUint32(j * 12 + 4, false) & 0xffffff;
+              var resourceName;
+              if (resourceNameOffset === -1) {
+                resourceName = null;
+              }
+              else {
+                resourceNameOffset += nameListOffset;
+                resourceName = macintoshRoman(bytes, resourceNameOffset + 1, bytes[resourceNameOffset]);
+              }
+              resourceDataOffset += dataOffset;
+              var data = bytes.subarray(
+                resourceDataOffset + 4,
+                resourceDataOffset + 4 + dv.getUint32(resourceDataOffset, false));
+              resources.push({
+                name: resourceName,
+                type: resourceTypeName,
+                id: resourceID,
+                attributes: resourceAttributes,
+                data: data,
+              });
+            }
+          }
+          console.log(resources);
         },
       });
     },
