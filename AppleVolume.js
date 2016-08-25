@@ -386,8 +386,8 @@ define(['ByteSource'], function(ByteSource) {
             var resourceTypeName = macintoshRoman(
               new Uint8Array(mapDV.buffer, mapDV.byteOffset + typeListOffset + (i * 8), 4),
               0, 4);
-            var resourceCount = mapDV.getUint16(typeList + (i * 8) + 4, false) + 1;
-            var referenceListOffset = mapDV.getUint16(typeList + (i * 8) + 4 + 2, false);
+            var resourceCount = mapDV.getUint16(typeListOffset + (i * 8) + 4, false) + 1;
+            var referenceListOffset = mapDV.getUint16(typeListOffset + (i * 8) + 4 + 2, false);
             var referenceListDV = new DataView(
               bytes.buffer,
               bytes.byteOffset + typeListOffset + referenceListOffset,
