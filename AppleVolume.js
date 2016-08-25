@@ -416,10 +416,11 @@ define(['ByteSource'], function(ByteSource) {
               }
               else {
                 resourceNameOffset += nameListOffset;
-                resourceName = macintoshRoman(
+                resourceName = new Uint8Array(
                   mapDV.buffer,
                   mapDV.byteOffset + resourceNameOffset + 1,
                   mapDV.getUint8(resourceNameOffset));
+                resourceName = macintoshRoman(resourceName, 0, resourceName.length);
               }
               resourceDataOffset += dataOffset;
               var data = bytes.subarray(
