@@ -429,6 +429,11 @@ define(['ByteSource'], function(ByteSource) {
                   resourceEl.setAttribute('type', 'text/plain');
                   resourceEl.appendChild(document.createTextNode(resource.text));
                 }
+                else if ('dataObject' in resource) {
+                  resourceEl = document.createElement('SCRIPT');
+                  resourceEl.setAttribute('type', 'application/json');
+                  resourceEl.appendChild(document.createTextNode(JSON.stringify(resource.dataObject)));
+                }
                 else {
                   resourceEl = document.createElement('DIV');
                   resourceEl.dataset.size = resource.data.length;
@@ -512,8 +517,6 @@ define(['ByteSource'], function(ByteSource) {
                   resource.text = macintoshRoman(resource.data, 0, resource.data.length);
                   break;
                 case 'STR#':
-                  console.log(resource.data);
-                  console.log(JSON.stringify(macintoshRoman(resource.data, 0, resource.data.length)));
                   var strcount = new DataView(resource.data.buffer, resource.data.byteOffset, 2).getUint16(0, false);
                   var list = [];
                   var pos = 2;
@@ -522,7 +525,7 @@ define(['ByteSource'], function(ByteSource) {
                     list.push(macintoshRoman(resource.data, pos, len));
                     pos += len;
                   }
-                  console.log(JSON.stringify(list));
+                  resource.dataObject = list;
                   break;
                 case 'CURS':
                   if (resource.data.length !== 68) {
