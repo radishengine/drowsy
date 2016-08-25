@@ -69,6 +69,13 @@ define(['ByteSource'], function(ByteSource) {
   var PIXEL0 = new Uint8Array([255,255,255,255]);
   var PIXEL1 = new Uint8Array([0,0,0,255]);
   
+  var mac4BitSystemPalette = [
+    [255,255,255, 255], [255,255,  0, 255], [255,102,  0, 255], [221,  0,  0, 255],
+    [255,  0,153, 255], [ 51,  0,153, 255], [  0,  0,204, 255], [  0,153,255, 255],
+    [  0,170,  0, 255], [  0,102,  0, 255], [102, 51,  0, 255], [153,102, 51, 255],
+    [187,187,187, 255], [136,136,136, 255], [ 68, 68, 68, 255], [  0,  0,  0, 255],
+  ];
+  
   var mac8BitSystemPalette = [
     [255,255,255, 255], [255,255,204, 255], [255,255,153, 255], [255,255,102, 255], [255,255, 51, 255], [255,255,  0, 255],
     [255,204,255, 255], [255,204,204, 255], [255,204,153, 255], [255,204,102, 255], [255,204, 51, 255], [255,204,  0, 255],
@@ -600,6 +607,40 @@ define(['ByteSource'], function(ByteSource) {
                   var pix = ctx.createImageData(16, 16);
                   for (var ibyte = 0; ibyte < 256; ibyte++) {
                     pix.data.set(mac8BitSystemPalette[resource.data[ibyte]], ibyte*4);
+                  }
+                  ctx.putImageData(pix, 0, 0);
+                  resource.image = {url: img.toDataURL(), width:16, height:16};
+                  break;
+                case 'icl4':
+                  if (resource.data.length !== 512) {
+                    console.error('icl4 resource expected to be 512 bytes, got ' + resource.data.length);
+                    break;
+                  }
+                  var img = document.createElement('CANVAS');
+                  img.width = 32;
+                  img.height = 32;
+                  var ctx = img.getContext('2d');
+                  var pix = ctx.createImageData(32, 32);
+                  for (var ibyte = 0; ibyte < 512; ibyte++) {
+                    pix.data.set(mac8BitSystemPalette[resource.data[ibyte] >> 4], ibyte*8);
+                    pix.data.set(mac8BitSystemPalette[resource.data[ibyte] & 15], ibyte*8 + 4);
+                  }
+                  ctx.putImageData(pix, 0, 0);
+                  resource.image = {url: img.toDataURL(), width:32, height:32};
+                  break;
+                case 'ics4':
+                  if (resource.data.length !== 128) {
+                    console.error('ics4 resource expected to be 128 bytes, got ' + resource.data.length);
+                    break;
+                  }
+                  var img = document.createElement('CANVAS');
+                  img.width = 16;
+                  img.height = 16;
+                  var ctx = img.getContext('2d');
+                  var pix = ctx.createImageData(16, 16);
+                  for (var ibyte = 0; ibyte < 128; ibyte++) {
+                    pix.data.set(mac8BitSystemPalette[resource.data[ibyte] >> 4], ibyte*8);
+                    pix.data.set(mac8BitSystemPalette[resource.data[ibyte] & 15], ibyte*8 + 4);
                   }
                   ctx.putImageData(pix, 0, 0);
                   resource.image = {url: img.toDataURL(), width:16, height:16};
