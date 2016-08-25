@@ -364,6 +364,17 @@ define(['ByteSource'], function(ByteSource) {
                 resourceEl.dataset.type = resource.type;
                 resourceEl.dataset.id = resource.id;
                 resourceEl.dataset.size = resource.data.length;
+                if ('image' in resource) {
+                  var img = document.createElement('IMG');
+                  img.width = resource.image.width;
+                  img.height = resource.image.height;
+                  img.src = resource.image.url;
+                  if ('hotspot' in resource) {
+                    img.style.cursor = 'url(' + resource.image.url + ') '
+                      + resource.hotspot.x + ', ' + resource.hotspot.y + ', url(' + resource.image.url + ')';
+                  }
+                  resourceEl.appendChild(img);
+                }
                 container.appendChild(resourceEl);
               }
             });
@@ -432,6 +443,34 @@ define(['ByteSource'], function(ByteSource) {
                 id: resourceID,
                 data: data,
               };
+              switch (resource.type) {
+                case 'CURS':
+                  if (resource.data.length !== 68) {
+                    console.error('CURS resource expected to be 68 bytes, got ' + resource.data.length);
+                    break;
+                  }
+                  var img = document.createElement('CANVAS');
+                  img.width = 16;
+                  img.height = 16;
+                  var ctx = img.getContext('2d');
+                  var pix = ctx.createImageData(16, 16);
+                  var PIXEL0 = new Uint8Array([0,0,0,255]);
+                  var PIXEL1 = new Uint8Array([255,255,255,255]);
+                  for (var ibyte = 0; ibyte < 32; ibyte++) {
+                    var databyte = resource.data[ibyte], maskbyte = resource.data[32 + ibyte];
+                    for (var ibit = 0; ibit < 8; ibit++) {
+                      var imask = 7 << ibit;
+                      if (maskbyte & imask) {
+                        pix.data.set((ibyte*8 + ibit) * 4, databyte & imask ? PIXEL1 : PIXEL0);
+                      }
+                    }
+                  }
+                  ctx.putImageData(pix, 0, 0);
+                  resource.image = {url: img.toDataURL(), width:16, height:16};
+                  var hotspotDV = new DataView(resource.data.buffer, resource.data.byteOffset + 64, 8);
+                  resource.hotspot = {x:hotspotDV.getInt16(0), y:hotspotDV.getInt16(2)};
+                  break;
+              }
               if (resourceAttributes & 0x40) resource.loadInSystemHeap = true; // instead of application heap
               if (resourceAttributes & 0x20) resource.mayBePagedOutOfMemory = true;
               if (resourceAttributes & 0x10) resource.doNotMoveInMemory = true;
