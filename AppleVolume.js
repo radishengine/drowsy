@@ -413,7 +413,25 @@ define(['ByteSource'], function(ByteSource) {
               allocation.blockSize * extent.offset + fileInfo.resourceFork.logicalEOF
             ), {
               onresource: function(resource) {
-                var resourceEl = document.createElement('DIV');
+                var resourceEl;
+                if ('image' in resource) {
+                  resourceEl = document.createElement('IMG');
+                  resourceEl.width = resource.image.width;
+                  resourceEl.height = resource.image.height;
+                  resourceEl.src = resource.image.url;
+                  if ('hotspot' in resource) {
+                    resourceEl.style.cursor = 'url(' + resource.image.url + ') '
+                      + resource.hotspot.x + ' ' + resource.hotspot.y + ', url(' + resource.image.url + '), auto';
+                  }
+                }
+                else if ('text' in resource) {
+                  resourceEl = document.createElement('SCRIPT');
+                  resourceEl.setAttribute('type', 'text/plain');
+                  resourceEl.appendChild(document.createTextNode(resource.text));
+                }
+                else {
+                  resourceEl = document.createElement('DIV');
+                }
                 resourceEl.classList.add('resource');
                 if (resource.name !== null) {
                   resourceEl.dataset.name = resource.name;
@@ -421,24 +439,6 @@ define(['ByteSource'], function(ByteSource) {
                 resourceEl.dataset.type = resource.type;
                 resourceEl.dataset.id = resource.id;
                 resourceEl.dataset.size = resource.data.length;
-                if ('image' in resource) {
-                  var img = document.createElement('IMG');
-                  img.width = resource.image.width;
-                  img.height = resource.image.height;
-                  img.src = resource.image.url;
-                  img.style.background = '#ccc';
-                  if ('hotspot' in resource) {
-                    img.style.cursor = 'url(' + resource.image.url + ') '
-                      + resource.hotspot.x + ' ' + resource.hotspot.y + ', url(' + resource.image.url + '), auto';
-                  }
-                  resourceEl.appendChild(img);
-                }
-                if ('text' in resource) {
-                  var scr = document.createElement('SCRIPT');
-                  scr.setAttribute('type', 'text/plain');
-                  scr.appendChild(document.createTextNode(resource.text));
-                  resourceEl.appendChild(scr);
-                }
                 container.appendChild(resourceEl);
               }
             });
