@@ -390,8 +390,8 @@ define(['ByteSource'], function(ByteSource) {
             var resourceCount = mapDV.getUint16(typeListOffset + 2 + (i * 8) + 4, false) + 1;
             var referenceListOffset = mapDV.getUint16(typeListOffset + 2 + (i * 8) + 4 + 2, false);
             var referenceListDV = new DataView(
-              bytes.buffer,
-              bytes.byteOffset + typeListOffset + referenceListOffset,
+              mapDV.buffer,
+              mapDV.byteOffset + typeListOffset + referenceListOffset,
               resourceCount * 12);
             for (var j = 0; j < resourceCount; j++) {
               var resourceID = referenceListDV.getUint16(j * 12, false);
