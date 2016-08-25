@@ -66,6 +66,9 @@ define(['ByteSource'], function(ByteSource) {
   }
   hfsPlusForkData.byteLength = 8 + 4 + 4 + (8 * (4 + 4));
   
+  var PIXEL0 = new Uint8Array([255,255,255,255]);
+  var PIXEL1 = new Uint8Array([0,0,0,255]);
+  
   var mac8BitSystemPalette = [
     [255,255,255, 255], [255,255,204, 255], [255,255,153, 255], [255,255,102, 255], [255,255, 51, 255], [255,255,  0, 255],
     [255,204,255, 255], [255,204,204, 255], [255,204,153, 255], [255,204,102, 255], [255,204, 51, 255], [255,204,  0, 255],
@@ -502,8 +505,6 @@ define(['ByteSource'], function(ByteSource) {
                   img.height = 16;
                   var ctx = img.getContext('2d');
                   var pix = ctx.createImageData(16, 16);
-                  var PIXEL0 = new Uint8Array([0,0,0,255]);
-                  var PIXEL1 = new Uint8Array([255,255,255,255]);
                   for (var ibyte = 0; ibyte < 32; ibyte++) {
                     var databyte = resource.data[ibyte], maskbyte = resource.data[32 + ibyte];
                     for (var ibit = 0; ibit < 8; ibit++) {
@@ -528,8 +529,6 @@ define(['ByteSource'], function(ByteSource) {
                   img.height = 16;
                   var ctx = img.getContext('2d');
                   var pix = ctx.createImageData(16, 16);
-                  var PIXEL0 = new Uint8Array([0,0,0,255]);
-                  var PIXEL1 = new Uint8Array([255,255,255,255]);
                   for (var ibyte = 0; ibyte < 32; ibyte++) {
                     var databyte = resource.data[ibyte], maskbyte = resource.data[32 + ibyte];
                     for (var ibit = 0; ibit < 8; ibit++) {
