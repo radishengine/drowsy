@@ -369,6 +369,7 @@ define(['ByteSource'], function(ByteSource) {
                   img.width = resource.image.width;
                   img.height = resource.image.height;
                   img.src = resource.image.url;
+                  img.style.background = '#ccc';
                   if ('hotspot' in resource) {
                     img.style.cursor = 'url(' + resource.image.url + ') '
                       + resource.hotspot.x + ' ' + resource.hotspot.y + ', url(' + resource.image.url + '), auto';
