@@ -404,13 +404,13 @@ define(['ByteSource'], function(ByteSource) {
           var isReadOnly = !!(attributes & 0x80);
           var typeListOffset = mapDV.getUint16(24, false);
           var nameListOffset = mapDV.getUint16(26, false);
-          var typeCount = mapDV.getUint16(typeListOffset, false) + 1;
+          var typeCount = mapDV.getInt16(typeListOffset, false) + 1;
           var resources = [];
           for (var i = 0; i < typeCount; i++) {
             var resourceTypeName = macintoshRoman(
               new Uint8Array(mapDV.buffer, mapDV.byteOffset + typeListOffset + 2 + (i * 8), 4),
               0, 4);
-            var resourceCount = mapDV.getUint16(typeListOffset + 2 + (i * 8) + 4, false) + 1;
+            var resourceCount = mapDV.getInt16(typeListOffset + 2 + (i * 8) + 4, false) + 1;
             var referenceListOffset = mapDV.getUint16(typeListOffset + 2 + (i * 8) + 4 + 2, false);
             var referenceListDV = new DataView(
               mapDV.buffer,
