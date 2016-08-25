@@ -511,6 +511,10 @@ define(['ByteSource'], function(ByteSource) {
                 case 'STR ':
                   resource.text = macintoshRoman(resource.data, 0, resource.data.length);
                   break;
+                case 'STR#':
+                  console.log(resource.data);
+                  console.log(JSON.stringify(macintoshRoman(resource.data, 0, resource.data.length)));
+                  break;
                 case 'CURS':
                   if (resource.data.length !== 68) {
                     console.error('CURS resource expected to be 68 bytes, got ' + resource.data.length);
