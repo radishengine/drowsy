@@ -459,7 +459,7 @@ define(['ByteSource'], function(ByteSource) {
                   for (var ibyte = 0; ibyte < 32; ibyte++) {
                     var databyte = resource.data[ibyte], maskbyte = resource.data[32 + ibyte];
                     for (var ibit = 0; ibit < 8; ibit++) {
-                      var imask = 7 << ibit;
+                      var imask = 0x80 >> ibit;
                       if (maskbyte & imask) {
                         pix.data.set(databyte & imask ? PIXEL1 : PIXEL0, (ibyte*8 + ibit) * 4);
                       }
