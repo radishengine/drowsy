@@ -431,6 +431,7 @@ define(['ByteSource'], function(ByteSource) {
                 }
                 else {
                   resourceEl = document.createElement('DIV');
+                  resourceEl.dataset.size = resource.data.length;
                 }
                 resourceEl.classList.add('resource');
                 if (resource.name !== null) {
@@ -438,7 +439,6 @@ define(['ByteSource'], function(ByteSource) {
                 }
                 resourceEl.dataset.type = resource.type;
                 resourceEl.dataset.id = resource.id;
-                resourceEl.dataset.size = resource.data.length;
                 container.appendChild(resourceEl);
               }
             });
