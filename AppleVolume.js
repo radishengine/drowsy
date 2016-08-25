@@ -696,7 +696,7 @@ define(['ByteSource'], function(ByteSource) {
                   resource.image = {url: img.toDataURL(), width:16, height:16};
                   break;
                 case 'BITD':
-                  resource.unpackedData = unpackBits(resource.data);
+                  resource.unpackedData = unpackBits(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
                   break;
               }
               if (typeof reader.onresource === 'function') {
