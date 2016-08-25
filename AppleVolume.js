@@ -523,8 +523,11 @@ define(['ByteSource'], function(ByteSource) {
                   resource.text = macintoshRoman(resource.data, 0, resource.data.length);
                   break;
                 case 'STR#':
-                  var strcount = new DataView(resource.data.buffer, resource.data.byteOffset, 2).getUint16(0, false);
-                  console.log(!!resource.compressed, strcount, resource.data);
+                  var strcount = new DataView(resource.data.buffer, resource.data.byteOffset, 2).getInt16(0, false);
+                  if (strcount < 0) {
+                    console.log(strcount, resource.data);
+                    break;
+                  }
                   var list = [];
                   var pos = 2;
                   for (var istr = 0; istr < strcount; istr++) {
