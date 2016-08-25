@@ -124,6 +124,30 @@ define(['ByteSource'], function(ByteSource) {
     [0,0,0,255],
   ];
   
+  function unpackBits(buffer, byteOffset, byteLength) {
+  	var packed = new Int8Array(buffer, byteOffset, byteLength);
+  	var pos = 0;
+  	var buf = [];
+  	while (pos < packed.length) {
+  		if (packed[pos] >= 0) {
+  			var length = packed[pos++] + 1;
+  			for (var i = 0; i < length; i++) {
+  				buf.push(packed[pos++]);
+  			}
+  		}
+  		else {
+  			if (packed[pos] > -128) {
+  				var count = 1 - packed[pos++];
+  				for (var i = 0; i < count; i++) {
+  					buf.push(packed[pos]);
+  				}
+  			}
+  			pos++;
+  		}
+  	}
+  	return new Uint8Array(new Int8Array(buf).buffer, 0, buf.length);
+  }
+  
   function AppleVolume(byteSource) {
     this.byteSource = byteSource;
   }
@@ -670,6 +694,9 @@ define(['ByteSource'], function(ByteSource) {
                   }
                   ctx.putImageData(pix, 0, 0);
                   resource.image = {url: img.toDataURL(), width:16, height:16};
+                  break;
+                case 'BITD':
+                  resource.unpackedData = unpackBits(resource.data);
                   break;
               }
               if (typeof reader.onresource === 'function') {
