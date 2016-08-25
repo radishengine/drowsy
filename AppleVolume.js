@@ -718,6 +718,16 @@ define(['ByteSource'], function(ByteSource) {
                 case 'BITD':
                   resource.unpackedData = unpackBits(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
                   break;
+                case 'FREF':
+                  if (resource.data.length !== 7) {
+                    console.error('FREF resource expected to be 7 bytes, got ' + resource.data.length);
+                    break;
+                  }
+                  resource.dataObject = {
+                    fileType: macintoshRoman(resource.data, 0, 4),
+                    iconListID: (resource.data[4] << 8) | resource.data[5],
+                  };
+                  break;
               }
               if (typeof reader.onresource === 'function') {
                 reader.onresource(resource);
