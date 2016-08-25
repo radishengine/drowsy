@@ -371,7 +371,7 @@ define(['ByteSource'], function(ByteSource) {
                   img.src = resource.image.url;
                   if ('hotspot' in resource) {
                     img.style.cursor = 'url(' + resource.image.url + ') '
-                      + resource.hotspot.x + ' ' + resource.hotspot.y + ', url(' + resource.image.url + ')';
+                      + resource.hotspot.x + ' ' + resource.hotspot.y + ', url(' + resource.image.url + '), auto';
                   }
                   resourceEl.appendChild(img);
                 }
