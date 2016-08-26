@@ -797,11 +797,28 @@ define(['ByteSource'], function(ByteSource) {
                   if (resource.data[10] === 0x11 && resource.data[11] === 0x01) {
                     // version 1
                     console.log('PICTv1', left, top, right, bottom);
+                    function region() {
+                      var len = pictDV.getUint16(pictPos);
+                      var region = {
+                        left: pictDV.getInt16(pictPos + 2),
+                        top: pictDV.getInt16(pictPos + 4),
+                        right: pictDV.getInt16(pictPos + 6),
+                        bottom: pictDV.getInt16(pictPos + 8),
+                      };
+                      if (len > 10) {
+                        region.extra = resource.data.subarray(pictPos + 10, pictPos + len);
+                      }
+                      pictPos += len;
+                      return region;
+                    }
                     pictV1loop:
                     for (var pictPos = 12; resource.data[pictPos] !== 0xff; ) {
                       switch(resource.data[pictPos++]) {
                         case 0x00: break; // no-op
-                        // case 0x01: // clipping region
+                        case 0x01: // clipping region
+                          var clipRegion = region();
+                          console.log('clip', clipRegion);
+                          break;
                         case 0x02: // background pattern
                           pictPos += 8;
                           break;
@@ -991,11 +1008,26 @@ define(['ByteSource'], function(ByteSource) {
                         case 0x7C: // fill same poly
                           break;
                         
-                        // case 0x80: // frame region
-                        // case 0x81: // paint region
-                        // case 0x82: // erase region
-                        // case 0x83: // invert region
-                        // case 0x84: // fill region
+                        case 0x80: // frame region
+                          var frameRegion = region();
+                          console.log('frame', frameRegion);
+                          break;
+                        case 0x81: // paint region
+                          var paintRegion = region();
+                          console.log('paint', paintRegion);
+                          break;
+                        case 0x82: // erase region
+                          var eraseRegion = region();
+                          console.log('erase', eraseRegion);
+                          break;
+                        case 0x83: // invert region
+                          var invertRegion = region();
+                          console.log('invert', invertRegion);
+                          break;
+                        case 0x84: // fill region
+                          var fillRegion = region();
+                          console.log('fill', fillRegion);
+                          break;
                         case 0x88: // frame same region
                           break;
                         case 0x89: // paint same region
