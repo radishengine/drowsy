@@ -889,8 +889,8 @@ define(['ByteSource'], function(ByteSource) {
                           pictPos += 4;
                           var text = macintoshRoman(resource.data, pictPos+1, resource.data[pictPos]);
                           pictPos += 1 + text.length;
-                          currentX += x;
-                          currentY += y;
+                          currentX = x;
+                          currentY = y;
                           ctx.fillText(text, currentX, currentY);
                           break;
                         case 0x29: // DHtext
