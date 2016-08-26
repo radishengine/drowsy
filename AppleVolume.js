@@ -797,6 +797,7 @@ define(['ByteSource'], function(ByteSource) {
                   if (resource.data[10] === 0x11 && resource.data[11] === 0x01) {
                     // version 1
                     console.log('PICTv1', left, top, right, bottom);
+                    pictV1loop:
                     for (var pictPos = 12; resource.data[pictPos] !== 0xff; ) {
                       switch(resource.data[pictPos++]) {
                         case 0x00: break; // no-op
@@ -1017,6 +1018,10 @@ define(['ByteSource'], function(ByteSource) {
                         //case 0xA1: // long comment
                         
                         //case 0xFF: // end of picture (checked by outer loop)
+                        
+                        default:
+                          console.error('unhandled PICTv1 opcode: ' + resource.data[pictPos - 1]);
+                          break pictV1loop;
                       }
                     }
                   }
