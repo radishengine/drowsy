@@ -768,6 +768,13 @@ define(['ByteSource'], function(ByteSource) {
                   var pos = 7 + resource.data[6];
                   resource.dataObject.versionMessage = macintoshRoman(resource.data, pos + 1, resource.data[pos]);
                   break;
+                case 'STXT':
+                  var dataDV = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
+            			var textPos = dataDV.getUint32(0, false);
+            			var textLen = dataDV.getUint32(4, false);
+            			var num3 = dataDV.getUint32(8, false); // TODO: what is this
+            			resource.text = macintoshRoman(resource.data, textPos, textLen);
+                  break;
               }
               if (typeof reader.onresource === 'function') {
                 reader.onresource(resource);
