@@ -795,7 +795,6 @@ define(['ByteSource'], function(ByteSource) {
                   canvas.width = right - left;
                   canvas.height = bottom - top;
                   var ctx = canvas.getContext('2d');
-                  var imageData = ctx.createImageData(right - left, bottom - top);
                   if (resource.data[10] === 0x11 && resource.data[11] === 0x01) {
                     // version 1
                     console.log('PICTv1', left, top, right, bottom);
@@ -1108,7 +1107,6 @@ define(['ByteSource'], function(ByteSource) {
                     console.error('unknown PICT format version');
                     break;
                   }
-                  ctx.putImageData(imageData, 0, 0);
                   resource.image = {width:right - left, height:bottom-top, url:canvas.toDataURL()};
                   if (left) resource.image.offsetX = left;
                   if (top) resource.image.offsetY = top;
