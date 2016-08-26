@@ -451,7 +451,7 @@ define(['ByteSource'], function(ByteSource) {
                 else if ('text' in resource) {
                   resourceEl = document.createElement('SCRIPT');
                   resourceEl.setAttribute('type', 'text/plain');
-                  resourceEl.appendChild(document.createTextNode(resource.text));
+                  resourceEl.appendChild(document.createTextNode(resource.text.replace(/\r/g, '\n')));
                 }
                 else if ('dataObject' in resource) {
                   resourceEl = document.createElement('SCRIPT');
