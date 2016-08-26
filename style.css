@@ -44,7 +44,11 @@ body {
   padding-left: 1em;
 }
 
-.file > summary, .folder > summary {
+.file, .folder {
+  display: list-item;
+}
+
+.file > header, .folder > header {
   font-family: monospace;
 }
 
