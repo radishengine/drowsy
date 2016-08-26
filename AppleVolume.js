@@ -331,7 +331,6 @@ define(['ByteSource'], function(ByteSource) {
             attributesFile: hfsPlusForkData(dv, 108 + hfsPlusForkData.byteLength * 3),
             startupFile: hfsPlusForkData(dv, 108 + hfsPlusForkData.byteLength * 4),
           };
-          console.log(volumeInfo);
         },
       });
     },
