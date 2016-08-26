@@ -1013,9 +1013,17 @@ define(['ByteSource'], function(ByteSource) {
                         //case 0x99: // copy packed bits to clipped region
                         
                         case 0xA0: // short comment
+                          var kind = pictDV.getUint16(pictPos, false);
+                          console.log('comment', kind);
                           pictPos += 2;
                           break;
-                        //case 0xA1: // long comment
+                        case 0xA1: // long comment
+                          var kind = pictDV.getUint16(pictPos, false);
+                          var len = pictDV.getUint16(pictPos + 2, false);
+                          var commentData = resource.data.subarray(pictPos + 4, pictPos + 4 + len);
+                          console.log('comment', kind, macintoshRoman(commentData, 0, commentData.length));
+                          pictPos += 4 + len;
+                          break;
                         
                         //case 0xFF: // end of picture (checked by outer loop)
                         
