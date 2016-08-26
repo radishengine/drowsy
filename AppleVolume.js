@@ -723,7 +723,9 @@ define(['ByteSource'], function(ByteSource) {
                   resource.image = {url: img.toDataURL(), width:16, height:16};
                   break;
                 case 'BITD':
-                  resource.unpackedData = unpackBits(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
+                  resource.getUnpackedData = function() {
+                    return unpackBits(this.data.buffer, this.data.byteOffset, this.data.byteLength);
+                  };
                   break;
                 case 'FREF':
                   if (resource.data.length !== 7) {
