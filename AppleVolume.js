@@ -811,6 +811,7 @@ define(['ByteSource'], function(ByteSource) {
                       pictPos += len;
                       return region;
                     }
+                    var currentX = 0, currentY = 0;
                     pictV1loop:
                     for (var pictPos = 12; resource.data[pictPos] !== 0xff; ) {
                       switch(resource.data[pictPos++]) {
@@ -850,6 +851,8 @@ define(['ByteSource'], function(ByteSource) {
                           pictPos += 4;
                           break;
                         case 0x0C: // origin
+                          currentY = pictDV.getInt16(pictPos);
+                          currentX = pictDV.getInt16(pictPos + 2);
                           pictPos += 4;
                           break;
                         case 0x0D: // text size
@@ -885,26 +888,32 @@ define(['ByteSource'], function(ByteSource) {
                           pictPos += 4;
                           var text = macintoshRoman(resource.data, pictPos+1, resource.data[pictPos]);
                           pictPos += 1 + text.length;
-                          console.log('long text', x, y, text);
+                          currentX += x;
+                          currentY += y;
+                          ctx.fillText(text, currentX, currentY);
                           break;
                         case 0x29: // DHtext
-                          var y = resource.data[pictPos++];
-                          var text = macintoshRoman(resource.data, pictPos+1, resource.data[pictPos]);
-                          pictPos += 1 + text.length;
-                          console.log('DHtext', y, text);
-                          break;
-                        case 0x2A: // DVtext
                           var x = resource.data[pictPos++];
                           var text = macintoshRoman(resource.data, pictPos+1, resource.data[pictPos]);
                           pictPos += 1 + text.length;
-                          console.log('DVtext', x, text);
+                          currentX += x;
+                          ctx.fillText(text, currentX, currentY);
+                          break;
+                        case 0x2A: // DVtext
+                          var y = resource.data[pictPos++];
+                          var text = macintoshRoman(resource.data, pictPos+1, resource.data[pictPos]);
+                          pictPos += 1 + text.length;
+                          currentY += text;
+                          ctx.fillText(text, currentX, currentY);
                           break;
                         case 0x2B: // DHDVtext
                           var x = resource.data[pictPos++];
                           var y = resource.data[pictPos++];
                           var text = macintoshRoman(resource.data, pictPos+1, resource.data[pictPos]);
                           pictPos += 1 + text.length;
-                          console.log('DHDVtext', x, y, text);
+                          currentX += x;
+                          currentY += y;
+                          ctx.fillText(text, currentX, currentY);
                           break;
                         case 0x30: // frame rect
                           pictPos += 8;
