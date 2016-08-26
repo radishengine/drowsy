@@ -748,6 +748,26 @@ define(['ByteSource'], function(ByteSource) {
                     resource.dataObject.positioning = dataDV.getInt16(pos);
                   }
                   break;
+                case 'vers':
+                  resource.dataObject = {
+                    major: resource.data[0],
+                    minor: resource.data[1],
+                    developmentStage: (function(v) {
+                      switch(v) {
+                        case 0x20: return 'development';
+                        case 0x40: return 'alpha';
+                        case 0x60: return 'beta';
+                        case 0x80: return 'release';
+                        default: return v;
+                      }
+                    })([resource.data[2]]),
+                    prereleaseRevisionLevel: revision.data[3],
+                    regionCode: (revision.data[4] << 8) | revision.data[5],
+                  };
+                  resource.dataObject.versionNumber = macintoshRoman(revision.data, 7, revision.data[6]);
+                  var pos = 7 + revision.data[6];
+                  resource.dataObject.versionMessage = macintoshRoman(revision.data, pos + 1, revision.data[pos]);
+                  break;
               }
               if (typeof reader.onresource === 'function') {
                 reader.onresource(resource);
