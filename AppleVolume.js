@@ -728,6 +728,26 @@ define(['ByteSource'], function(ByteSource) {
                     iconListID: (resource.data[4] << 8) | resource.data[5],
                   };
                   break;
+                case 'WIND':
+                  var dataDV = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
+                  resource.dataObject = {
+                    initialRectangle: {
+                      top: dataDV.getInt16(0, false),
+                      left: dataDV.getInt16(2, false),
+                      bottom: dataDV.getInt16(4, false),
+                      right: dataDV.getInt16(6, false),
+                    },
+                    definitionID: dataDV.getInt16(8, false),
+                    visible: dataDV.getInt16(10, false),
+                    closeBox: dataDV.getInt16(12, false),
+                    referenceConstant: dataDV.getInt32(14, false),
+                  };
+                  resource.dataObject.title = macintoshRoman(resource.data, 17, resource.data[16]);
+                  var pos = 17 + resource.data[16];
+                  if (pos+2 <= resource.data.length) {
+                    resource.dataObject.positioning = dataDV.getInt16(pos);
+                  }
+                  break;
               }
               if (typeof reader.onresource === 'function') {
                 reader.onresource(resource);
