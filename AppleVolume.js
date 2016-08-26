@@ -443,6 +443,12 @@ define(['ByteSource'], function(ByteSource) {
                   resourceEl = document.createElement('IMG');
                   resourceEl.width = resource.image.width;
                   resourceEl.height = resource.image.height;
+                  if ('offsetX' in resource.image) {
+                    resourceEl.dataset.offsetX = resource.image.offsetX;
+                  }
+                  if ('offsetY' in resource.image) {
+                    resourceEl.dataset.offsetY = resource.image.offsetY;
+                  }
                   resourceEl.src = resource.image.url;
                   if ('hotspot' in resource) {
                     resourceEl.style.cursor = 'url(' + resource.image.url + ') '
@@ -783,6 +789,11 @@ define(['ByteSource'], function(ByteSource) {
                   var top = pictDV.getInt16(4, false);
                   var right = pictDV.getInt16(6, false);
                   var bottom = pictDV.getInt16(8, false);
+                  var canvas = document.createElement('CANVAS');
+                  canvas.width = right - left;
+                  canvas.height = bottom - top;
+                  var ctx = canvas.getContext('2d');
+                  var imageData = ctx.createImageData(right - left, bottom - top);
                   if (resource.data[10] === 0x11 && resource.data[11] === 0x01) {
                     // version 1
                     console.log('PICTv1', left, top, right, bottom);
@@ -794,7 +805,12 @@ define(['ByteSource'], function(ByteSource) {
                   }
                   else {
                     console.error('unknown PICT format version');
+                    break;
                   }
+                  ctx.putImageData(imageData, 0, 0);
+                  resource.image = {width:right - left, height:bottom-top, url:canvas.toDataURL()};
+                  if (left) resource.image.offsetX = left;
+                  if (top) resource.image.offsetY = top;
                   break;
               }
               if (typeof reader.onresource === 'function') {
