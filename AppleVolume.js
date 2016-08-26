@@ -394,7 +394,7 @@ define(['ByteSource'], function(ByteSource) {
           }
         },
         onfile: function(fileInfo) {
-          var container = document.createElement('DETAILS');
+          var container = document.createElement('SECTION');
           if (fileInfo.isInvisible) {
             container.classList.add('invisible');
           }
@@ -410,7 +410,7 @@ define(['ByteSource'], function(ByteSource) {
           if (timestamp) {
             container.dataset.lastModified = timestamp.toISOString();
           }
-          var title = document.createElement('SUMMARY');
+          var title = document.createElement('HEADER');
           if (fileInfo.dataFork.logicalEOF) {
             container.dataset.size = fileInfo.dataFork.logicalEOF;
             var dataFork = document.createElement('A');
