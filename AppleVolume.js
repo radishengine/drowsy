@@ -888,23 +888,23 @@ define(['ByteSource'], function(ByteSource) {
                           console.log('long text', x, y, text);
                           break;
                         case 0x29: // DHtext
-                          var dh = resource.data[pictPos++];
+                          var y = resource.data[pictPos++];
                           var text = macintoshRoman(resource.data, pictPos+1, resource.data[pictPos]);
                           pictPos += 1 + text.length;
-                          console.log('DHtext', dh, text);
+                          console.log('DHtext', y, text);
                           break;
                         case 0x2A: // DVtext
-                          var dv = resource.data[pictPos++];
+                          var x = resource.data[pictPos++];
                           var text = macintoshRoman(resource.data, pictPos+1, resource.data[pictPos]);
                           pictPos += 1 + text.length;
-                          console.log('DVtext', dv, text);
+                          console.log('DVtext', x, text);
                           break;
                         case 0x2B: // DHDVtext
-                          var dh = resource.data[pictPos++];
-                          var dv = resource.data[pictPos++];
+                          var x = resource.data[pictPos++];
+                          var y = resource.data[pictPos++];
                           var text = macintoshRoman(resource.data, pictPos+1, resource.data[pictPos]);
                           pictPos += 1 + text.length;
-                          console.log('DHDVtext', dh, dv, text);
+                          console.log('DHDVtext', x, y, text);
                           break;
                         case 0x30: // frame rect
                           pictPos += 8;
