@@ -44,15 +44,6 @@ body {
   padding-left: 1em;
 }
 
-.file, .folder {
-  display: list-item;
-  list-style: none;
-}
-
-.file:before, .folder:before {
-  content: "\25ba\00a0";
-}
-
 .file > header, .folder > header {
   font-family: monospace;
 }
