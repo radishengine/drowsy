@@ -783,7 +783,7 @@ define(['ByteSource'], function(ByteSource) {
             			resource.text = macintoshRoman(resource.data, textPos, textLen);
                   break;
                 case 'PICT':
-                  var pictDV = new DataView(resource.data.buffer, resource.data.byteOffset, 10);
+                  var pictDV = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
                   var fileSizeBytes = pictDV.getUint16(0, false);
                   var left = pictDV.getInt16(2, false);
                   var top = pictDV.getInt16(4, false);
