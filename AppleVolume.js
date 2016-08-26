@@ -903,7 +903,7 @@ define(['ByteSource'], function(ByteSource) {
                           var y = resource.data[pictPos++];
                           var text = macintoshRoman(resource.data, pictPos+1, resource.data[pictPos]);
                           pictPos += 1 + text.length;
-                          currentY += text;
+                          currentY += y;
                           ctx.fillText(text, currentX, currentY);
                           break;
                         case 0x2B: // DHDVtext
