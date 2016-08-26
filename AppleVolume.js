@@ -1079,26 +1079,26 @@ define(['ByteSource'], function(ByteSource) {
                         
                         case 0x98: // copy packed bits to clipped rect
                           var pixmap = {
-                            baseAddr: pictDV.getUint32(pictPos, false), // TODO: is this 16-bit?
-                            rowBytes: pictDV.getUint16(pictPos + 4, false),
+                            baseAddr: pictDV.getUint16(pictPos, false),
+                            rowBytes: pictDV.getUint16(pictPos + 2, false),
                             bounds: {
-                              top: pictDV.getInt16(pictPos + 4 + 2, false),
-                              left: pictDV.getInt16(pictPos + 4 + 4, false),
-                              bottom: pictDV.getInt16(pictPos + 4 + 6, false),
-                              right: pictDV.getInt16(pictPos + 4 + 8, false),
+                              top: pictDV.getInt16(pictPos + 2 + 2, false),
+                              left: pictDV.getInt16(pictPos + 2 + 4, false),
+                              bottom: pictDV.getInt16(pictPos + 2 + 6, false),
+                              right: pictDV.getInt16(pictPos + 2 + 8, false),
                             },
-                            recordVersionNumber: pictDV.getInt16(pictPos + 4 + 10, false),
-                            packType: pictDV.getInt16(pictPos + 4 + 12, false),
-                            packSize: pictDV.getInt32(pictPos + 4 + 14, false),
-                            hRes: pictDV.getInt32(pictPos + 4 + 18, false),
-                            vRes: pictDV.getInt32(pictPos + 4 + 22, false),
-                            pixelType: pictDV.getInt16(pictPos + 4 + 26, false),
-                            pixelSize: pictDV.getInt16(pictPos + 4 + 28, false),
-                            componentsPerPixel: pictDV.getInt16(pictPos + 4 + 30, false),
-                            bitsPerComponent: pictDV.getInt16(pictPos + 4 + 32, false),
-                            planeBytes: pictDV.getInt32(pictPos + 4 + 34, false),
-                            colorTableHandle: pictDV.getInt32(pictPos + 4 + 38, false),
-                            reserved: pictDV.getInt32(pictPos + 4 + 42, false),
+                            recordVersionNumber: pictDV.getInt16(pictPos + 2 + 10, false),
+                            packType: pictDV.getInt16(pictPos + 2 + 12, false),
+                            packSize: pictDV.getInt32(pictPos + 2 + 14, false),
+                            hRes: pictDV.getInt32(pictPos + 2 + 18, false),
+                            vRes: pictDV.getInt32(pictPos + 2 + 22, false),
+                            pixelType: pictDV.getInt16(pictPos + 2 + 26, false),
+                            pixelSize: pictDV.getInt16(pictPos + 2 + 28, false),
+                            componentsPerPixel: pictDV.getInt16(pictPos + 2 + 30, false),
+                            bitsPerComponent: pictDV.getInt16(pictPos + 2 + 32, false),
+                            planeBytes: pictDV.getInt32(pictPos + 2 + 34, false),
+                            colorTableHandle: pictDV.getInt16(pictPos + 2 + 38, false),
+                            reserved: pictDV.getInt32(pictPos + 2 + 40, false),
                           };
                           pictPos += 4 + 46;
                           console.log(pixmap);
