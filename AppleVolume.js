@@ -760,7 +760,7 @@ define(['ByteSource'], function(ByteSource) {
                         case 0x80: return 'release';
                         default: return v;
                       }
-                    })([resource.data[2]]),
+                    })(resource.data[2]),
                     prereleaseRevisionLevel: resource.data[3],
                     regionCode: (resource.data[4] << 8) | resource.data[5],
                   };
