@@ -1021,7 +1021,7 @@ define(['ByteSource'], function(ByteSource) {
                           var kind = pictDV.getUint16(pictPos, false);
                           var len = pictDV.getUint16(pictPos + 2, false);
                           var commentData = resource.data.subarray(pictPos + 4, pictPos + 4 + len);
-                          console.log('comment', kind, macintoshRoman(commentData, 0, commentData.length));
+                          console.log('comment', kind, commentData);
                           pictPos += 4 + len;
                           break;
                         
