@@ -400,9 +400,6 @@ define(['ByteSource'], function(ByteSource) {
           }
           container.classList.add('file');
           container.dataset.name = fileInfo.name;
-          var title = document.createElement('SUMMARY');
-          title.innerHTML = fileInfo.name;
-          container.appendChild(title);
           if (fileInfo.type !== null) {
             container.dataset.macType = fileInfo.type;
           }
@@ -413,11 +410,13 @@ define(['ByteSource'], function(ByteSource) {
           if (timestamp) {
             container.dataset.lastModified = timestamp.toISOString();
           }
+          var title = document.createElement('SUMMARY');
           if (fileInfo.dataFork.logicalEOF) {
+            container.dataset.size = fileInfo.dataFork.logicalEOF;
             var dataFork = document.createElement('A');
             dataFork.setAttribute('href', '#');
             dataFork.classList.add('data-fork');
-            dataFork.innerText = 'Data Fork';
+            dataFork.innerText = fileInfo.name;
             var extent = fileInfo.dataFork.firstExtentRecord[0];
             allocation.slice(
               allocation.blockSize * extent.offset,
@@ -426,9 +425,12 @@ define(['ByteSource'], function(ByteSource) {
               dataFork.setAttribute('href', url);
               dataFork.setAttribute('download', fileInfo.name);
             });
-            dataFork.dataset.size = fileInfo.dataFork.logicalEOF;
-            container.appendChild(dataFork);
+            title.appendChild(dataFork);
           }
+          else {
+            title.appendChild(document.createTextNode(fileInfo.name));
+          }
+          container.appendChild(title);
           if (fileInfo.resourceFork.logicalEOF) {
             var extent = fileInfo.resourceFork.firstExtentRecord[0];
             self.readResourceFork(allocation.slice(
