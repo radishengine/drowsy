@@ -761,12 +761,12 @@ define(['ByteSource'], function(ByteSource) {
                         default: return v;
                       }
                     })([resource.data[2]]),
-                    prereleaseRevisionLevel: revision.data[3],
-                    regionCode: (revision.data[4] << 8) | revision.data[5],
+                    prereleaseRevisionLevel: resource.data[3],
+                    regionCode: (resource.data[4] << 8) | resource.data[5],
                   };
-                  resource.dataObject.versionNumber = macintoshRoman(revision.data, 7, revision.data[6]);
-                  var pos = 7 + revision.data[6];
-                  resource.dataObject.versionMessage = macintoshRoman(revision.data, pos + 1, revision.data[pos]);
+                  resource.dataObject.versionNumber = macintoshRoman(resource.data, 7, resource.data[6]);
+                  var pos = 7 + resource.data[6];
+                  resource.dataObject.versionMessage = macintoshRoman(resource.data, pos + 1, resource.data[pos]);
                   break;
               }
               if (typeof reader.onresource === 'function') {
