@@ -1020,7 +1020,7 @@ define(['ByteSource'], function(ByteSource) {
                         //case 0xFF: // end of picture (checked by outer loop)
                         
                         default:
-                          console.error('unhandled PICTv1 opcode: ' + resource.data[pictPos - 1]);
+                          console.error('unhandled PICTv1 opcode: 0x' + resource.data[pictPos - 1].toString(16));
                           break pictV1loop;
                       }
                     }
