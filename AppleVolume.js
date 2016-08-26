@@ -795,6 +795,7 @@ define(['ByteSource'], function(ByteSource) {
                   canvas.width = right - left;
                   canvas.height = bottom - top;
                   var ctx = canvas.getContext('2d');
+                  var fontFamily = 'sans-serif';
                   if (resource.data[10] === 0x11 && resource.data[11] === 0x01) {
                     // version 1
                     console.log('PICTv1', left, top, right, bottom);
@@ -857,6 +858,7 @@ define(['ByteSource'], function(ByteSource) {
                           pictPos += 4;
                           break;
                         case 0x0D: // text size
+                          ctx.font = fontFamily + ' ' + pictDV.getUint16(pictPos) + 'px';
                           pictPos += 2;
                           break;
                         case 0x0E: // foreground color
