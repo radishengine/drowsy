@@ -27,6 +27,16 @@ define(['ByteSource'], function(ByteSource) {
       });
   }
   
+  function fixed(i32) {
+    var frac = 0;
+    for (var i = 0; i < 16; i++) {
+      if (i32 & (0x8000 >> i)) {
+        frac += 1 / (2 << i);
+      }
+    }
+    return (i32 >>> 16) + frac;
+  }
+  
   function macintoshDate(dv, offset) {
     var offset = dv.getUint32(offset, false);
     if (offset === 0) return null;
@@ -1090,8 +1100,8 @@ define(['ByteSource'], function(ByteSource) {
                             recordVersionNumber: pictDV.getInt16(pictPos + 2 + 10, false),
                             packType: pictDV.getInt16(pictPos + 2 + 12, false),
                             packSize: pictDV.getInt32(pictPos + 2 + 14, false),
-                            hRes: pictDV.getInt32(pictPos + 2 + 18, false),
-                            vRes: pictDV.getInt32(pictPos + 2 + 22, false),
+                            hRes: fixed(pictDV.getInt32(pictPos + 2 + 18, false)),
+                            vRes: fixed(pictDV.getInt32(pictPos + 2 + 22, false)),
                             pixelType: pictDV.getInt16(pictPos + 2 + 26, false),
                             pixelSize: pictDV.getInt16(pictPos + 2 + 28, false),
                             componentsPerPixel: pictDV.getInt16(pictPos + 2 + 30, false),
