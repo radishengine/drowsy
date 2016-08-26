@@ -1110,7 +1110,8 @@ define(['ByteSource'], function(ByteSource) {
                             colorTableHandle: pictDV.getInt16(pictPos + 2 + 38, false),
                             reserved: pictDV.getInt32(pictPos + 2 + 40, false),
                           };
-                          pictPos += 4 + 46;
+                          console.log(resource.data.subarray(pictPos, pictPos + 2 + 44));
+                          pictPos += 2 + 44;
                           console.log(pixmap);
                           break pictV1loop;
                         
