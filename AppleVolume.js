@@ -776,6 +776,26 @@ define(['ByteSource'], function(ByteSource) {
             			var num3 = dataDV.getUint32(8, false); // TODO: what is this
             			resource.text = macintoshRoman(resource.data, textPos, textLen);
                   break;
+                case 'PICT':
+                  var pictDV = new DataView(resource.data.buffer, resource.data.byteOffset + 512, 10);
+                  var fileSizeBytes = pictDV.getUint16(0, false);
+                  var left = pictDV.getInt16(2, false);
+                  var top = pictDV.getInt16(4, false);
+                  var right = pictDV.getInt16(6, false);
+                  var bottom = pictDV.getInt16(8, false);
+                  if (resource.data[512 + 10] === 0x11 && resource.data[512 + 11] === 0x01) {
+                    // version 1
+                    console.log('PICTv1', left, top, right, bottom);
+                  }
+                  else if (resource.data[512 + 10] === 0x00 && resource.data[512 + 11] === 0x11
+                      && resource.data[512 + 12] === 0x02 && resource.data[512 + 13] === 0xff) {
+                    // version 2
+                    console.log('PICTv2', left, top, right, bottom);
+                  }
+                  else {
+                    console.error('unknown PICT format version');
+                  }
+                  break;
               }
               if (typeof reader.onresource === 'function') {
                 reader.onresource(resource);
