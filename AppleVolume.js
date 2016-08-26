@@ -742,8 +742,8 @@ define(['ByteSource'], function(ByteSource) {
                     closeBox: dataDV.getInt16(12, false),
                     referenceConstant: dataDV.getInt32(14, false),
                   };
-                  resource.dataObject.title = macintoshRoman(resource.data, 17, resource.data[16]);
-                  var pos = 17 + resource.data[16];
+                  resource.dataObject.title = macintoshRoman(resource.data, 19, resource.data[18]);
+                  var pos = 19 + resource.data[18];
                   if (pos+2 <= resource.data.length) {
                     resource.dataObject.positioning = dataDV.getInt16(pos);
                   }
