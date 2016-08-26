@@ -357,13 +357,13 @@ define(['ByteSource'], function(ByteSource) {
         onfolderthread: function(threadInfo) {
         },
         onfolder: function(folderInfo) {
-          var container = document.createElement('DETAILS');
+          var container = document.createElement('SECTION');
           if (folderInfo.isInvisible) {
             container.classList.add('invisible');
           }
           container.classList.add('folder');
           container.dataset.name = folderInfo.name;
-          var title = document.createElement('SUMMARY');
+          var title = document.createElement('HEADER');
           title.innerHTML = folderInfo.name;
           container.appendChild(title);
           var timestamp = folderInfo.modifiedAt || folderInfo.createdAt;
