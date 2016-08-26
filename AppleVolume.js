@@ -879,10 +879,33 @@ define(['ByteSource'], function(ByteSource) {
                         case 0x23: // short line from
                           pictPos += 2;
                           break;
-                        // case 0x28: // long text
-                        // case 0x29: // DHtext
-                        // case 0x2A: // DVtext
-                        // case 0x2B: // DHDVtext
+                        case 0x28: // long text
+                          var y = pictDV.getInt16(pictPos, false);
+                          var x = pictDV.getInt16(pictPos + 2, false);
+                          pictPos += 4;
+                          var text = macintoshRoman(region.data, pictPos+1, region.data[pictPos]);
+                          pictPos += 1 + text.length;
+                          console.log('long text', x, y, text);
+                          break;
+                        case 0x29: // DHtext
+                          var dh = region.data[pictPos++];
+                          var text = macintoshRoman(region.data, pictPos+1, region.data[pictPos]);
+                          pictPos += 1 + text.length;
+                          console.log('DHtext', dh, text);
+                          break;
+                        case 0x2A: // DVtext
+                          var dv = region.data[pictPos++];
+                          var text = macintoshRoman(region.data, pictPos+1, region.data[pictPos]);
+                          pictPos += 1 + text.length;
+                          console.log('DVtext', dv, text);
+                          break;
+                        case 0x2B: // DHDVtext
+                          var dh = region.data[pictPos++];
+                          var dv = region.data[pictPos++];
+                          var text = macintoshRoman(region.data, pictPos+1, region.data[pictPos]);
+                          pictPos += 1 + text.length;
+                          console.log('DHDVtext', dh, dv, text);
+                          break;
                         case 0x30: // frame rect
                           pictPos += 8;
                           break;
