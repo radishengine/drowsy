@@ -6,16 +6,6 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
   var PHYSICAL_BLOCK_BYTES = 512;
   var BTREE_NODE_BYTES = 512;
 
-  function fixed(i32) {
-    var frac = 0;
-    for (var i = 0; i < 16; i++) {
-      if (i32 & (0x8000 >> i)) {
-        frac += 1 / (2 << i);
-      }
-    }
-    return (i32 >>> 16) + frac;
-  }
-  
   function macintoshDate(dv, offset) {
     var offset = dv.getUint32(offset, false);
     if (offset === 0) return null;
