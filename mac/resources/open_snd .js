@@ -1,4 +1,4 @@
-define(function() {
+define(['mac/fixedPoint'], function(fixedPoint) {
 
   'use strict';
   
@@ -59,7 +59,7 @@ define(function() {
       return;
     }
     var dataOffset = dv.getUint32(soundHeaderOffset, false);
-    var samplingRate = dv.getFixed32(soundHeaderOffset + 8, false);
+    var samplingRate = fixedPoint.fromInt32(dv.getInt32(soundHeaderOffset + 8, false));
     var loopStartPoint = dv.getUint32(soundHeaderOffset + 12, false);
     var loopEndPoint = dv.getUint32(soundHeaderOffset + 16, false);
     var baseFrequency = dv.getUint8(soundHeaderOffset + 21);
