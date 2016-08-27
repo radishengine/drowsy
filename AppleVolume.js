@@ -560,13 +560,14 @@ define(['ByteSource'], function(ByteSource) {
               if (resourceAttributes & 0x04) resource.preload = true;
               if (resourceAttributes & 0x01) resource.compressed = true;
               switch (resource.type) {
-                case 'CLUT':
-                  console.log('CLUT', resource.name, resource.data);
-                  break;
                 case 'clut':
                   var clut = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
                   var seed = clut.getInt32(0, false); // resource ID
                   var flags = clut.getUint16(4, false); // 0x8000: color map for indexed device
+                  if (flags !== 0x0000) {
+                    console.log(resource.type, resource.name, resource.data);
+                    break;
+                  }
                   var entryCount = clut.getUint16(6, false) + 1;
                   var palCanvas = document.createElement('CANVAS');
                   palCanvas.width = entryCount;
