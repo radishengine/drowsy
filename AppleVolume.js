@@ -570,7 +570,12 @@ define(['ByteSource'], function(ByteSource) {
                     },
                     function(err) {
                       requirejs.undef('mac/resources/open_' + resource.type);
-                      define('mac/resources/open_' + resource.type, function() { });
+                      define('mac/resources/open_' + resource.type,
+                        // do-nothing handler
+                        function() {
+                          return function(resource) {
+                          };
+                        });
                       if (typeof reader.onresource === 'function') {
                         reader.onresource(resource);
                       }
