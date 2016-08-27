@@ -477,7 +477,7 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
                         reader.onresource(resource);
                       }
                     });
-                  return;
+                  break;
                 case 'CLUT':
                 case 'clut':
                   var clut = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
@@ -508,10 +508,10 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
                     height: 1,
                     url: palCanvas.toDataURL()
                   };
+                  if (typeof reader.onresource === 'function') {
+                    reader.onresource(resource);
+                  }
                   break;
-              }
-              if (typeof reader.onresource === 'function') {
-                reader.onresource(resource);
               }
             }
           }
