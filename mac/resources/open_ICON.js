@@ -1,4 +1,4 @@
-define(['mac/palette2'], function(ICON) {
+define(['mac/palette2'], function(palette) {
 
   'use strict';
   
