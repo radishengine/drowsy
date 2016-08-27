@@ -458,25 +458,27 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
               if (resourceAttributes & 0x01) resource.compressed = true;
               switch (resource.type) {
                 default:
-                  require(['mac/resources/open_' + resource.type],
-                    function(open_resource) {
-                      open_resource(resource);
-                      if (typeof reader.onresource === 'function') {
-                        reader.onresource(resource);
-                      }
-                    },
-                    function(err) {
-                      requirejs.undef('mac/resources/open_' + resource.type);
-                      define('mac/resources/open_' + resource.type,
-                        // do-nothing handler
-                        function() {
-                          return function(resource) {
-                          };
-                        });
-                      if (typeof reader.onresource === 'function') {
-                        reader.onresource(resource);
-                      }
-                    });
+                  (function(resource) {
+                    require(['mac/resources/open_' + resource.type],
+                      function(open_resource) {
+                        open_resource(resource);
+                        if (typeof reader.onresource === 'function') {
+                          reader.onresource(resource);
+                        }
+                      },
+                      function(err) {
+                        requirejs.undef('mac/resources/open_' + resource.type);
+                        define('mac/resources/open_' + resource.type,
+                          // do-nothing handler
+                          function() {
+                            return function(resource) {
+                            };
+                          });
+                        if (typeof reader.onresource === 'function') {
+                          reader.onresource(resource);
+                        }
+                      });
+                  })(resource);
                   break;
                 case 'CLUT':
                 case 'clut':
