@@ -572,11 +572,13 @@ define(['ByteSource'], function(ByteSource) {
                   var palCtx = palCanvas.getContext('2d');
                   var palData = palCtx.createImageData(entryCount, 1);
                   for (var icolor = 0; icolor < entryCount; icolor++) {
-                    var offset = clut.getUint16(8 + icolor*8, false) * 4;
-                    palData.data[offset] = resource.data[8 + icolor*8 + 2];
-                    palData.data[offset + 1] = resource.data[8 + icolor*8 + 4];
-                    palData.data[offset + 2] = resource.data[8 + icolor*8 + 6];
-                    palData.data[offset + 3] = 255;
+                    var offset = clut.getInt16(8 + icolor*8, false) * 4;
+                    if (offset >= 0) {
+                      palData.data[offset] = resource.data[8 + icolor*8 + 2];
+                      palData.data[offset + 1] = resource.data[8 + icolor*8 + 4];
+                      palData.data[offset + 2] = resource.data[8 + icolor*8 + 6];
+                      palData.data[offset + 3] = 255;
+                    }
                   }
                   palCtx.putImageData(palData, 0, 0);
                   resource.image = {
