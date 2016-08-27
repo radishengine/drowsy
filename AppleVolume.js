@@ -562,17 +562,17 @@ define(['ByteSource'], function(ByteSource) {
               switch (resource.type) {
                 case 'CLUT':
                 case 'clut':
-                  var dv = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
-                  var seed = dv.getInt32(0, false); // resource ID
-                  var flags = dv.getUint16(4, false); // 0x8000: color map for indexed device
-                  var entryCount = dv.getUint16(6, false) + 1;
+                  var clut = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
+                  var seed = clut.getInt32(0, false); // resource ID
+                  var flags = clut.getUint16(4, false); // 0x8000: color map for indexed device
+                  var entryCount = clut.getUint16(6, false) + 1;
                   var palCanvas = document.createElement('CANVAS');
                   palCanvas.width = entryCount;
                   palCanvas.height = 1;
                   var palCtx = palCanvas.getContext('2d');
                   var palData = palCtx.createImageData(entryCount, 1);
                   for (var icolor = 0; icolor < entryCount; icolor++) {
-                    var offset = dv.getUint16(8 + icolor*8, false) * 4;
+                    var offset = clut.getUint16(8 + icolor*8, false) * 4;
                     palData.data[offset] = resource.data[8 + icolor*8 + 2];
                     palData.data[offset + 1] = resource.data[8 + icolor*8 + 4];
                     palData.data[offset + 2] = resource.data[8 + icolor*8 + 6];
