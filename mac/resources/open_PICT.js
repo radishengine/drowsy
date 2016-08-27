@@ -353,12 +353,11 @@ define(['mac/roman'], function(macintoshRoman) {
     }
     else {
       console.error('unknown PICT format version');
-      break;
+      return;
     }
     resource.image = {width:right - left, height:bottom-top, url:canvas.toDataURL()};
     if (left) resource.image.offsetX = left;
     if (top) resource.image.offsetY = top;
-    break;
   };
 
 });
