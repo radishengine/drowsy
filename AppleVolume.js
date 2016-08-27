@@ -561,6 +561,8 @@ define(['ByteSource'], function(ByteSource) {
               if (resourceAttributes & 0x01) resource.compressed = true;
               switch (resource.type) {
                 case 'CLUT':
+                  console.log('CLUT', resource.name, resource.data);
+                  break;
                 case 'clut':
                   var clut = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
                   var seed = clut.getInt32(0, false); // resource ID
