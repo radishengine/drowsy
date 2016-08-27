@@ -732,6 +732,24 @@ define(['ByteSource'], function(ByteSource) {
                   ctx.putImageData(pix, 0, 0);
                   resource.image = {url: img.toDataURL(), width:16, height:16};
                   break;
+                case 'VWLB':
+                  var VWLB = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
+                  resource.dataObject = new Array(VWLB.getUint16(0, false));
+                  var textBase = 2 + 4 * (resource.dataObject.length + 1);
+                  var totalTextLen = VWLB.getUint16(2 + (4 * resource.dataObject.length) + 2, false);
+                  resource.dataObject.text = macintoshRoman(resource.data, textBase, totalTextLen);
+                  var names = resource.dataObject.text.match(/^[^\r\n]*/)[0];
+                  for (var i = 0; i < resource.dataObject.length; i++) {
+                    var markerBase = 2 + (4 * i);
+                    resource.dataObject[i] = {
+                      frame: VWLB.getUint16(markerBase, false),
+                      name: names.substring(
+                        VWLB.getUint16(markerBase + 2, false),
+                        VWLB.getUint16(markerBase + 4 + 2, false))
+                    };
+                  }
+                  delete resource.dataObject.text;
+                  break;
                 case 'BITD':
                   resource.getUnpackedData = function() {
                     return unpackBits(this.data.buffer, this.data.byteOffset, this.data.byteLength);
