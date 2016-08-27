@@ -1,5 +1,5 @@
 
-define(['ByteSource', 'macintoshRoman'], function(ByteSource, macintoshRoman) {
+define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
 
   'use strict';
   
