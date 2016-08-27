@@ -16,7 +16,7 @@ define(['mac/roman'], function(macintoshRoman) {
       resource.dataObject.items = [];
       while (pos < resource.data.length && resource.data[pos] !== 0) {
         var text = macintoshRoman(resource.data, pos + 1, resource.data[pos]);
-        text += 1 + text.length;
+        pos += 1 + text.length;
         var item = {
           text: text,
           iconNumberOrScriptCode: resource.data[pos],
