@@ -16,7 +16,12 @@ define(['mac/roman'], function(macintoshRoman) {
 
   return function(resource) {
     var dv = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
-    resource.dataObject = new Array(dv.getUint16(0, false) + 1);
+    var len = dv.getInt16(0, false) + 1;
+    if (len < 0) {
+      console.error('DITL resource has invalid length');
+      return;
+    }
+    resource.dataObject = new Array(len);
     var pos = 2;
     for (var i = 0; i < resource.dataObject.length; i++) {
       var itemType = resource.data[pos + 12];
