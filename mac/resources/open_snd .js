@@ -82,11 +82,9 @@ define(['mac/fixedPoint'], function(fixedPoint) {
       totalBytes = channels * totalFrames * bytesPerSample;
       sampleAreaOffset = 64;
     }
+    var sampleDataOffset = soundHeaderOffset + sampleAreaOffset + dataOffset;
     resource.soundData = {
-      samples: new DataView(
-        resource.data.buffer,
-        resource.data.byteOffset + soundHeaderOffset + sampleAreaOffset + dataOffset,
-        totalBytes),
+      samples: resource.data.subarray(sampleDataOffset, sampleDataOffset + totalBytes),
       samplingRate: samplingRate,
       channels: channels,
       bytesPerSample: bytesPerSample};
