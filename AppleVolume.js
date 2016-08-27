@@ -401,7 +401,7 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
                   
                   var wavFooter = new Uint8Array(samples.byteLength % 2);
 
-                  var wavView = new DataView(wavHeader);
+                  var wavView = new DataView(wavHeader.buffer, wavHeader.byteOffset, wavHeader.byteLength);
                   wavView.setUint32(4, wavHeader.byteLength + samples.byteLength + wavFooter.byteLength, true);
                   wavView.setUint16(22, channelCount, true);
                   wavView.setUint32(24, samplingRate, true);
