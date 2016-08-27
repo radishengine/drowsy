@@ -739,9 +739,9 @@ define(['ByteSource'], function(ByteSource) {
                   var totalTextLen = VWLB.getUint16(2 + (4 * resource.dataObject.length) + 2, false);
                   resource.dataObject.text = macintoshRoman(resource.data, textBase, totalTextLen);
                   var names = resource.dataObject.text.match(/^[^\r\n]*/)[0];
-                  for (var i = 0; i < resource.dataObject.length; i++) {
-                    var markerBase = 2 + (4 * i);
-                    resource.dataObject[i] = {
+                  for (var imarker = 0; imarker < resource.dataObject.length; imarker++) {
+                    var markerBase = 2 + (4 * imarker);
+                    resource.dataObject[imarker] = {
                       frame: VWLB.getUint16(markerBase, false),
                       name: names.substring(
                         VWLB.getUint16(markerBase + 2, false),
