@@ -7,39 +7,29 @@ define(['mac/roman'], function(macintoshRoman) {
     var dv = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
     
     var signatureResourceID = dv.getUint16(4, false),
-      arrayCount = dv.getUint16(6, false),
-      mappingResourceType = macintoshRoman(resource.data, 8, 4);
+      arrayCount = dv.getUint16(6, false);
     if (signatureResourceID !== 0) {
       console.error('BNDL: signature resource ID expected to be 0, got ' + signatureResourceID);
       return;
     }
-    if (arrayCount !== 2) {
-      console.error('BNDL: array count expected to be 2, got ' + arrayCount);
-      return;
-    }
-    if (mappingResourceType !== 'ICN#') {
-      console.error('BNDL: expected mapping resource type ICN#, got ' + macintoshRoman(resource.data, 8, 2));
-      return;
-    }
-    var offset = 12;
-    var iconMapping = {};
-    var iconMappingCount = dv.getUint16(offset, false);
-    offset += 2;
-    for (var i = 0; i < iconMappingCount; i++) {
-      iconMapping[dv.getUint16(offset + i*4, false)] = dv.getUint16(offset + i*4 + 2, false);
-    }
-    offset += iconMappingCount * 4;
-    var fileRefMapping = {};
-    var fileRefMappingCount = dv.getUint16(offset, false);
-    offset += 2;
-    for (var i = 0; i < fileRefMappingCount; i++) {
-      fileRefMapping[dv.getUint16(offset + i*4, false)] = dv.getUint16(offset + i*4 + 2, false);
+    var offset = 8;
+    var mappings = {};
+    for (var i = 0; i < arrayCount; i++) {
+      var resourceType = macintoshRoman(resource.data, offset, 4);
+      offset += 4;
+      var mappingCount = dv.getUint16(offset, false);
+      offset += 2;
+      var mapping = {};
+      for (var i = 0; i < mappingCount; i++) {
+        mapping[dv.getUint16(offset, false).toString()] = dv.getUint16(offset + 2, false);
+        offset += 4;
+      }
+      mappings[resourceType] = mapping;
     }
     resource.dataObject = {
       appSignature: appSignature,
       signatureResourceID: signatureResourceID,
-      iconMapping: iconMapping,
-      fileRefMapping: fileRefMapping,
+      mappings: mappings,
     };
   };
 
