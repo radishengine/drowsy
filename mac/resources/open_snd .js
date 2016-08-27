@@ -4,27 +4,45 @@ define(function() {
   
   return function(resource) {
     var dv = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
-  	if (dv.getUint16(0, false) !== 2) {
-  		console.error('audio data must be format 2');
-  		return;
-  	}
-  	if (dv.getUint16(2, false) !== 0) {
-  		// reference count is application specific use anyway
-  	}
-  	if (dv.getUint16(4, false) !== 1) {
+    var formatNumber = dv.getUint16(0, false);
+    var offset;
+    switch (formatNumber) {
+      case 1:
+        var numOfDataFormats = dv.getUint16(2, false);
+        if (numOfDataFormats !== 1) {
+          console.error('expecting 1 snd data format, got ' + numOfDataFormats);
+          return;
+        }
+        var firstDataFormatID = dv.getUint16(4, false);
+        if (firstDataFormatID !== 5) {
+          console.error('expected snd data format 5, got ' + firstDataFormatID);
+          return;
+        }
+        var initOption = dv.getUint32(6, false);
+        console.log('audio init option: ' + initOption.toString(16));
+        offset = 10;
+        break;
+      case 2:
+        offset = 4;
+        break;
+      default:
+        console.error('unknown "snd " format version: ' + formatNumber);
+        return;
+    }
+  	if (dv.getUint16(offset, false) !== 1) {
   		console.error('audio data must have 1 sound command');
   		return;
   	}
-  	var command = dv.getUint16(6, false);
+  	var command = dv.getUint16(offset + 2, false);
   	if (command !== 0x8051 && command !== 0x8050) {
   		console.error('audio command must be bufferCmd or soundCmd');
   		return;
   	}
-  	if (dv.getUint16(8, false) !== 0) {
+  	if (dv.getUint16(offset + 4, false) !== 0) {
   		console.error('bufferCmd parameter must be 0');
   		return;
   	}
-  	var soundHeaderOffset = dv.getUint32(10, false);
+  	var soundHeaderOffset = dv.getUint32(offset + 6, false);
   	var headerType;
   	var encoding = dv.getUint8(soundHeaderOffset + 20);
   	if (encoding === 0) {
@@ -56,7 +74,8 @@ define(function() {
   		channels = dv.getUint32(soundHeaderOffset + 4, false);
   		var bitsPerSample = dv.getUint16(soundHeaderOffset + 48, false);
   		if (bitsPerSample % 8 !== 0) {
-  			throw new Error('Bits per sample: ' + bitsPerSample);
+  			console.error('unsupported bits per sample: ' + bitsPerSample);
+  			return;
   		}
   		bytesPerSample = bitsPerSample / 8;
   		var totalFrames = dv.getUint32(soundHeaderOffset + 22, false);
