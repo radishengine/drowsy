@@ -473,7 +473,7 @@ define(['ByteSource'], function(ByteSource) {
                 else if ('dataObject' in resource) {
                   resourceEl = document.createElement('SCRIPT');
                   resourceEl.setAttribute('type', 'application/json');
-                  resourceEl.appendChild(document.createTextNode(JSON.stringify(resource.dataObject)));
+                  resourceEl.appendChild(document.createTextNode(JSON.stringify(resource.dataObject, null, 2)));
                 }
                 else {
                   resourceEl = document.createElement('DIV');
