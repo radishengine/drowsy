@@ -573,7 +573,7 @@ define(['ByteSource'], function(ByteSource) {
                       ascent: styl.getUint16(offset + 6, false),
                       fontID: styl.getUint16(offset + 8, false),
                       size: styl.getUint16(offset + 12, false),
-                      color: 'rgb(' + Tstyl.getUint8(offset + 14, false)
+                      color: 'rgb(' + styl.getUint8(offset + 14, false)
                         + ', ' + styl.getUint8(offset + 16, false)
                         + ', ' + styl.getUint8(offset + 18, false) + ')',
                     };
