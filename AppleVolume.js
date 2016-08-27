@@ -744,8 +744,8 @@ define(['ByteSource'], function(ByteSource) {
                     var markerBase = 2 + (4 * imarker);
                     resource.dataObject[names.substring(
                         VWLB.getUint16(markerBase + 2, false),
-                        VWLB.getUint16(markerBase + 4 + 2, false))
-                    }] = VWLB.getUint16(markerBase, false);
+                        VWLB.getUint16(markerBase + 4 + 2, false)
+                    )] = VWLB.getUint16(markerBase, false);
                   }
                   break;
                 case 'BITD':
