@@ -25,7 +25,7 @@ define(function() {
         }
       }
       palCtx.putImageData(palData, 0, 0);
-    },
+    }
     resource.image = {
       width: palCanvas.width,
       height: palCanvas.height,
