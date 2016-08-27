@@ -510,15 +510,13 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
                         }
                       },
                       function(err) {
-                        if (err.requireType === 'nodefine') {
-                          requirejs.undef(importString);
-                          define(importString,
-                            // do-nothing handler
-                            function() {
-                              return function(resource) {
-                              };
-                            });
-                        }
+                        requirejs.undef(importString);
+                        define(importString,
+                          // do-nothing handler
+                          function() {
+                            return function(resource) {
+                            };
+                          });
                         if (typeof reader.onresource === 'function') {
                           reader.onresource(resource);
                         }
