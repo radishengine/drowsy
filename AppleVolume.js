@@ -459,7 +459,8 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
               switch (resource.type) {
                 default:
                   (function(resource) {
-                    require(['mac/resources/open_' + resource.type],
+                    var importString = 'mac/resources/open_' + encodeURIComponent(resource.type);
+                    require([importString],
                       function(open_resource) {
                         open_resource(resource);
                         if (typeof reader.onresource === 'function') {
@@ -467,8 +468,8 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
                         }
                       },
                       function(err) {
-                        requirejs.undef('mac/resources/open_' + resource.type);
-                        define('mac/resources/open_' + resource.type,
+                        requirejs.undef(importString);
+                        define(importString,
                           // do-nothing handler
                           function() {
                             return function(resource) {
