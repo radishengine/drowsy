@@ -1,4 +1,4 @@
-define(['mac/roman'], function(macintoshRoman) {
+define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
 
   'use strict';
   
@@ -308,8 +308,8 @@ define(['mac/roman'], function(macintoshRoman) {
               recordVersionNumber: pictDV.getInt16(pictPos + 2 + 10, false),
               packType: pictDV.getInt16(pictPos + 2 + 12, false),
               packSize: pictDV.getInt32(pictPos + 2 + 14, false),
-              hRes: fixed(pictDV.getInt32(pictPos + 2 + 18, false)),
-              vRes: fixed(pictDV.getInt32(pictPos + 2 + 22, false)),
+              hRes: fixedPoint.fromInt32(pictDV.getInt32(pictPos + 2 + 18, false)),
+              vRes: fixedPoint.fromInt32(pictDV.getInt32(pictPos + 2 + 22, false)),
               pixelType: pictDV.getInt16(pictPos + 2 + 26, false),
               pixelSize: pictDV.getInt16(pictPos + 2 + 28, false),
               componentsPerPixel: pictDV.getInt16(pictPos + 2 + 30, false),
