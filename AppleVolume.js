@@ -560,6 +560,9 @@ define(['ByteSource'], function(ByteSource) {
               if (resourceAttributes & 0x04) resource.preload = true;
               if (resourceAttributes & 0x01) resource.compressed = true;
               switch (resource.type) {
+                case 'CLUT':
+                  console.log(resource.data);
+                  break;
                 case 'STR ':
                   resource.text = macintoshRoman(resource.data, 0, resource.data.length);
                   break;
