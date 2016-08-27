@@ -18,6 +18,6 @@ define(['mac/palette16'], function(palette) {
     }
     ctx.putImageData(pix, 0, 0);
     resource.image = {url: img.toDataURL(), width:16, height:16};
-  });
+  };
   
 });
