@@ -2,7 +2,7 @@ define(['mac/roman'], function(macintoshRoman) {
 
   'use strict';
   
-  return function() {
+  return function(resource) {
     var dataDV = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
     resource.dataObject = {
       initialRectangle: {
