@@ -64,7 +64,7 @@ define(['mac/roman'], function(macintoshRoman) {
         case 'button': case 'checkbox': case 'radiobutton': case 'statictext': case 'editabletext':
           var text = macintoshRoman(resource.data, pos + 14, resource.data[pos + 13]);
           resource.dataObject[i].text = text;
-          pos += 13 + 1 + text.length + (1 + text.length) % 2;
+          pos += 13 + 1 + text.length + (text.length % 2);
           break;
         default:
           console.error('unsupported item type: ' + itemType);
