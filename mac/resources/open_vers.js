@@ -2,7 +2,7 @@ define(['mac/roman'], function(macintoshRoman) {
 
   'use strict';
   
-  return function() {
+  return function(resource) {
     resource.dataObject = {
       major: resource.data[0],
       minor: resource.data[1],
