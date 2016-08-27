@@ -560,33 +560,22 @@ define(['ByteSource'], function(ByteSource) {
               if (resourceAttributes & 0x04) resource.preload = true;
               if (resourceAttributes & 0x01) resource.compressed = true;
               switch (resource.type) {
-                case 'styl':
-                  var styl = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
-                  var styleCount = styl.getUint16(0, false);
-                  console.log('style count', styl);
-                  resource.dataObject = [];
-                  for (var istyle = 0; istyle < styleCount; istyle++) {
-                    var offset = 2 + istyle*20;
-                    var entry = {
-                      startChar: styl.getUint32(offset, false),
-                      height: styl.getUint16(offset + 4, false),
-                      ascent: styl.getUint16(offset + 6, false),
-                      fontID: styl.getUint16(offset + 8, false),
-                      size: styl.getUint16(offset + 12, false),
-                      color: 'rgb(' + styl.getUint8(offset + 14, false)
-                        + ', ' + styl.getUint8(offset + 16, false)
-                        + ', ' + styl.getUint8(offset + 18, false) + ')',
-                    };
-                    var face = styl.getUint16(offset + 10, false);
-                    if (face & 0x0100) entry.bold = true;
-                    if (face & 0x0200) entry.italic = true;
-                    if (face & 0x0400) entry.underline = true;
-                    if (face & 0x1000) entry.shadow = true;
-                    if (face & 0x2000) entry.condense = true;
-                    if (face & 0x4000) entry.extend = true;
-                    resource.dataObject.push(entry);
-                  }
-                  break;
+                default:
+                  require(['mac/resources/open_' + resource.type],
+                    function(open_resource) {
+                      open_resource(resource);
+                      if (typeof reader.onresource === 'function') {
+                        reader.onresource(resource);
+                      }
+                    },
+                    function(err) {
+                      requirejs.undef('mac/resources/open_' + resource.type);
+                      define('mac/resources/open_' + resource.type, function() { });
+                      if (typeof reader.onresource === 'function') {
+                        reader.onresource(resource);
+                      }
+                    });
+                  return;
                 case 'CLUT':
                 case 'clut':
                   var clut = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
