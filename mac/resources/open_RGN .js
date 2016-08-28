@@ -30,6 +30,9 @@ define(function() {
       var y = -1;
       for (var pos = 10; pos < resource.data.length; ) {
         var newY = dv.getUint16(pos, false);
+        if (newY === 0x7fff) {
+          break;
+        }
         if (on && newY > ++y) {
           ctx.drawRect(0, y, canvas.width, newY - y);
         }
