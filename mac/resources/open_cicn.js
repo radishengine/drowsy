@@ -98,7 +98,7 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
       case 4:
         for (var y = 0; y < canvas.height; y++) {
           for (var x = 0; x < canvas.width; x++) {
-            var xp = resource.data[y.pixmap.rowBytes + (x >> 1)];
+            var xp = resource.data[y*pixmap.rowBytes + (x >> 1)];
             var xc = (x & 1) ? xp & 0xf : xp >> 4;
             pixels.data.set(
               palette[xc] || [0,0,0,0],
