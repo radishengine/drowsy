@@ -64,7 +64,7 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
     pos += 8 * colorCount;
     pixmap.offset = pos;
     pos += pixmap.rowBytes * (pixmap.bounds.bottom - pixmap.bounds.top);
-    console.log('cicn', maskBitmap.offset, iconBitmap.offset, colorCount, pos, resource.data.length);
+    console.log('cicn', maskBitmap.offset, iconBitmap.offset, pixmap.offset, pos, resource.data.length);
   }
 
 });
