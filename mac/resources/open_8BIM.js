@@ -250,9 +250,16 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
         for (var i = 0; i < 4; i++) {
           var offset = 28 * i;
           var curve = [];
+          var notNull = true;
           for (var j = 0; j < 13; j++) {
             curve.push(dv.getInt16(offset + j * 2, false));
+            notNull = notNull && (
+              j === 0 ? curve[j] === 0
+              : j === 12 ? curve[j] === 1000
+              : curve[j] === -1
+            );
           }
+          if (!notNull) curve = null;
           resource.dataObject.push({
             curve: curve,
             overridePrinterCurve: !!dv.getUint16(offset + 26, false),
