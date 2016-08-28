@@ -516,6 +516,10 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
                       function(err) {
                         requirejs.undef(importString);
                         function defaultHandler(resource) {
+                          if (resource.data.length === 0) {
+                            resource.dataObject = null;
+                            return;
+                          }
                           for (var i = 0; i < resource.data.length; i++) {
                             var b = resource.data[i];
                             if (b >= 32) {
