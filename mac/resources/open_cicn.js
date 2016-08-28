@@ -19,12 +19,12 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
       packSize: dv.getInt32(18, false),
       hRes: fixedPoint.fromInt32(dv.getInt32(22, false)),
       vRes: fixedPoint.fromInt32(dv.getInt32(26, false)),
-      pixelType: macintoshRoman(resource.data, 30, 4),
-      pixelSize: dv.getInt16(34, false),
-      componentsPerPixel: dv.getInt16(36, false),
-      bitsPerComponent: dv.getInt16(38, false),
-      planeBytes: dv.getInt32(40, false),
-      colorTableHandle: dv.getInt16(44, false),
+      pixelType: dv.getInt16(30, false),
+      pixelSize: dv.getInt16(32, false),
+      componentCount: dv.getInt16(34, false),
+      componentSize: dv.getInt16(36, false),
+      pixelFormat: macintoshRoman(resource.data, 38, 4),
+      colorTableHandle: dv.getInt32(42, false),
       reserved: dv.getInt32(46, false),
     };
     var pos = 50;
