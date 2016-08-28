@@ -83,6 +83,18 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
     var pixels = ctx.createImageData(canvas.width, canvas.height);
     var pixelPitch = pixels.width * 4;
     switch(pixmap.pixelSize) {
+      case 1:
+        for (var y = 0; y < canvas.height; y++) {
+          for (var x = 0; x < canvas.width; x++) {
+            var xc = x >> 3, xn = x & 7;
+            var xp = resource.data[y*pixmap.rowBytes + xc];
+            var ix = 0x80 >> xn;
+            pixels.data.set(
+              palette[(xp & ix) ? 1 : 0] || [0,0,0,0],
+              pixelPitch * y + 4 * x);
+          }
+        }
+        break;
       case 8:
         for (var y = 0; y < canvas.height; y++) {
           for (var x = 0; x < canvas.width; x++) {
