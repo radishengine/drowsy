@@ -6,7 +6,8 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
     var dv = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
     var pixmap = {
       baseAddr: dv.getUint32(0, false),
-      rowBytes: dv.getUint16(4, false),
+      rowBytes: dv.getUint16(4, false) & 0x3fff,
+      flags: dv.getUint16(4, false) & 0xC000,
       bounds: {
         top: dv.getInt16(6, false),
         left: dv.getInt16(8, false),
