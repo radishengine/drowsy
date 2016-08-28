@@ -110,7 +110,7 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
     }
     ctx.putImageData(pixels, 0, 0);
     resource.image = {
-      url: ctx.toDataURL(),
+      url: canvas.toDataURL(),
       width: canvas.width,
       height: canvas.height,
       offsetX: pixmap.bounds.left,
