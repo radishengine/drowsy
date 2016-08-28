@@ -51,7 +51,20 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
     pos += 14;
     var iconDataHandle = dv.getUint32(pos, false);
     pos += 4;
-    console.log(pixmap, maskBitmap, iconBitmap, iconDataHandle);
+    maskBitmap.offset = pos;
+    pos += maskBitmap.rowBytes * (maskBitmap.bounds.bottom - maskBottom.bounds.top);
+    iconBitmap.offset = pos;
+    pos += iconBitmap.rowBytes * (iconBitmap.bounds.bottom - iconBitmap.bounds.top);
+    var colorCount = dv.getInt16(pos + 6, false) + 1;
+    if (colorCount < 0) {
+      console.error('invalid number of colors in color table');
+      return;
+    }
+    pos += 8;
+    pos += 8 * colorCount;
+    pixmap.offset = pos;
+    pos += pixmap.rowBytes * (pixmap.bounds.bottom - pixmap.bounds.top);
+    console.log('cicn', maskBitmap.offset, iconBitmap.offset, colorCount, pos, resource.data.length);
   }
 
 });
