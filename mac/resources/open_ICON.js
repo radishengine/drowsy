@@ -3,7 +3,7 @@ define(['mac/palette2'], function(palette) {
   'use strict';
   
   return function(resource) {
-    if (resource.data.length !== 128) {
+    if (resource.data.length !== 128 && resource.data.length !== 256) {
       console.error('ICON resource expected to be 128 bytes, got ' + resource.data.length);
       return;
     }
@@ -12,11 +12,14 @@ define(['mac/palette2'], function(palette) {
     img.height = 32;
     var ctx = img.getContext('2d');
     var pix = ctx.createImageData(32, 32);
+    var mask = resource.data.length === 256 ? resource.data.subarray(128, 256) : null;
     for (var ibyte = 0; ibyte < 128; ibyte++) {
-      var databyte = resource.data[ibyte];
+      var databyte = resource.data[ibyte], maskbyte = mask ? mask[ibyte] : 255;
       for (var ibit = 0; ibit < 8; ibit++) {
         var imask = 0x80 >> ibit;
-        pix.data.set(palette[databyte & imask ? 1 : 0], (ibyte*8 + ibit) * 4);
+        if (maskbyte & imask) {
+          pix.data.set(palette[databyte & imask ? 1 : 0], (ibyte*8 + ibit) * 4);
+        }
       }
     }
     ctx.putImageData(pix, 0, 0);
