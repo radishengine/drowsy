@@ -1,4 +1,4 @@
-define(['mac/roman'], function(macintoshRoman) {
+define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
 
   'use strict';
   
@@ -9,7 +9,7 @@ define(['mac/roman'], function(macintoshRoman) {
         break;
       case 1001: // Printing Manager TPrint record
         if (resource.data.length !== 120) {
-          console.error('unexpected length for Printing ManagerTPrint record');
+          console.error('unexpected length for Printing Manager TPrint record');
           return;
         }
         resource.dataObject = {
@@ -101,7 +101,19 @@ define(['mac/roman'], function(macintoshRoman) {
         break;
       case 1003: // indexed color table
         break;
-      case 1005: // ResolutionInfo structure (Appendix A in Photoshop API Guide.pdf)
+      case 1005: // ResolutionInfo
+        if (resource.data.length !== 16) {
+          console.error('unexpected length for ResolutionInfo record');
+          return;
+        }
+        resource.dataObject = {
+          hRes: fixedPoint.fromInt32(dv.getInt32(0, false)),
+          hResUnit: dv.getInt16(4, false),
+          widthUnit: dv.getInt16(6, false),
+          vRes: fixedPoint.fromInt32(dv.getInt32(8, false)),
+          vResUnit: dv.getInt16(12, false),
+          heightUnit: dv.getInt16(14, false),
+        };
         break;
       case 1006: // Names of the alpha channels as a series of Pascal strings.
         break;
@@ -114,21 +126,138 @@ define(['mac/roman'], function(macintoshRoman) {
         // fixed number (2 bytes real, 2 bytes fraction) for the border width
         // 2 bytes for border units (1 = inches, 2 = cm, 3 = points, 4 = picas, 5 = columns)
         break;
-      case 1010: // Background color. See See Color structure.
+      case 1010: // Background color
+        if (resource.data.length !== 16) {
+          console.error('unexpected length for Color record');
+          return;
+        }
+        switch(dv.getUint16(0, false)) {
+          case 0:
+            resource.dataObject = {
+              type: 'rgb',
+              red: dv.getUint16(2, false),
+              green: dv.getUint16(4, false),
+              blue: dv.getUint16(6, false),
+            };
+            break;
+          case 1:
+            resource.dataObject = {
+              type: 'hsb',
+              hue: dv.getUint16(2, false),
+              saturation: dv.getUint16(4, false),
+              brightness: dv.getUint16(6, false),
+            };
+            break;
+          case 2:
+            resource.dataObject = {
+              type: 'cmyk',
+              cyan: dv.getUint16(2, false),
+              magenta: dv.getUint16(4, false),
+              yellow: dv.getUint16(6, false),
+              black: dv.getUint16(8, false),
+            };
+            break;
+          case 7:
+            resource.dataObject = {
+              type: 'lab',
+              lightness: dv.getUint16(2, false), // 0...10000
+              aChrominance: dv.getInt16(4, false),
+              bChrominance: dv.getInt16(6, false),
+            };
+            break;
+          case 8:
+            resource.dataObject = {
+              type: 'grayscale',
+              gray: dv.getUint16(2, false), // 0...10000
+            };
+            break;
+          default:
+            console.error('unknown color space code: ' + dv.getUint16(0, false));
+            return;
+        }
         break;
       case 1011:
         // Print flags
         // one-byte booleans (see Page Setup dialog):
         // labels, crop marks, color bars, registration marks, negative, flip, interpolate, caption, print flags
+        if (resource.data.length !== 7 && resource.data.length !== 8) {
+          console.error('unexpected length for print flags');
+          return;
+        }
+        resource.dataObject = {
+          labels: !!resource.data[0],
+          cropMarks: !!resource.data[1],
+          colorBars: !!resource.data[2],
+          registrationMarks: !!resource.data[3],
+          negative: !!resource.data[4],
+          flip: !!resource.data[5],
+          interpolate: !!resource.data[6],
+        };
+        if (resource.data.length > 7) {
+          resource.dataObject.caption = resource.data[7];
+        }
+        break;
       case 1012: // Grayscale and multichannel halftoning information
         break;
       case 1013: // Color halftoning information
+        if (resource.data.length < 4*18) {
+          // extra length is custom dot drawing function (not yet supported)
+          console.error('unexpected length for halftoning information');
+          return;
+        }
+        resource.dataObject = [];
+        for (var i = 0; i < 4; i++) {
+          var offset = i * 18;
+          resource.dataObject.push({
+            screenFrequency: fixedPoint.fromInt32(dv.getInt32(offset, false)),
+            screenFrequencyUnits: (function(code) {
+              switch(code) {
+                case 1: return 'linesPerInch';
+                case 2: return 'linesPerCm';
+                default: return code;
+              }
+            })( dv.getUint16(offset + 4, false) );
+            screenAngle: fixedPoint.fromInt32(dv.getInt32(offset + 6, false));
+            halftoneDotShape: (function(code) {
+              // TODO: negative numbers indicate size of custom PostScript dot-drawing function
+              //  coming after the 4 screens' data
+              switch(code) {
+                case 0: return 'round';
+                case 1: return 'ellipse';
+                case 2: return 'line';
+                case 3: return 'square';
+                case 4: return 'cross';
+                case 6: return 'diamond';
+                default: return code;
+              }
+            })( dv.getUint16(offset + 10) ),
+            // 4 bytes not used
+            useAccurateScreens: !!resource.data[offset + 16],
+            usePrintersDefaultScreens: !!resource.data[offset + 17],
+          });
+        }
         break;
       case 1014: // Duotone halftoning information
         break;
       case 1015: // Grayscale and multichannel transfer function
         break;
       case 1016: // Color transfer functions
+        if (resource.data.length !== 4 * 28) {
+          console.error('unexpected length for Transfer Function');
+          return;
+        }
+        resource.dataObject = [];
+        for (var i = 0; i < 4; i++) {
+          var offset = 28 * i;
+          var curve = [];
+          for (var j = 0; j < 13; j++) {
+            curve.push(dv.getInt16(offset + j * 2, false));
+          }
+          resource.dataObject.push({
+            curve: curve,
+            overridePrinterCurve: !!dv.getUint16(offset + 26, false),
+          });
+        }
         break;
       case 1017: // Duotone transfer functions
         break;
