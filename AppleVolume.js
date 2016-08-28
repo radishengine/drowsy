@@ -86,6 +86,10 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
         byteSource.slice(PHYSICAL_BLOCK_BYTES * n, PHYSICAL_BLOCK_BYTES * (n+1)).read({
           onbytes: function(bytes) {
             if (macintoshRoman(bytes, 0, 4) !== 'PM\0\0') {
+              if (n === 1) {
+                self.readHFS(byteSource, reader);
+                return;
+              }
               console.error('invalid partition map signature');
               return;
             }
