@@ -28,7 +28,7 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
       reserved: dv.getInt32(46, false),
     };
     var pos = 50;
-    var maskBitmap = {
+    var mask = {
       baseAddr: dv.getUint32(pos),
       rowBytes: dv.getUint16(pos + 4),
       bounds: {
@@ -52,8 +52,8 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
     pos += 14;
     var iconDataHandle = dv.getUint32(pos, false);
     pos += 4;
-    maskBitmap.offset = pos;
-    pos += maskBitmap.rowBytes * (maskBitmap.bounds.bottom - maskBitmap.bounds.top);
+    mask.offset = pos;
+    pos += mask.rowBytes * (mask.bounds.bottom - mask.bounds.top);
     iconBitmap.offset = pos;
     pos += iconBitmap.rowBytes * (iconBitmap.bounds.bottom - iconBitmap.bounds.top);
     var colorCount = dv.getInt16(pos + 6, false) + 1;
@@ -98,11 +98,14 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
       case 4:
         for (var y = 0; y < canvas.height; y++) {
           for (var x = 0; x < canvas.width; x++) {
-            var xp = resource.data[pixmap.offset + y*pixmap.rowBytes + (x >> 1)];
-            var xc = (x & 1) ? xp & 0xf : xp >> 4;
-            pixels.data.set(
-              palette[xc] || [0,0,0,0],
-              pixelPitch * y + 4 * x);
+            var mp = resource.data[mask.offset + y*mask.rowBytes + (x >> 3)];
+            if (mp & (0x80 >> (x & 0x7))) {
+              var xp = resource.data[pixmap.offset + y*pixmap.rowBytes + (x >> 1)];
+              var xc = (x & 1) ? xp & 0xf : xp >> 4;
+              pixels.data.set(
+                palette[xc] || [0,0,0,0],
+                pixelPitch * y + 4 * x);
+            }
           }
         }
         break;
