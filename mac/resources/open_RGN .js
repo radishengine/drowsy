@@ -27,8 +27,13 @@ define(function() {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = 'black';
       var on = false;
+      var y = -1;
       for (var pos = 10; pos < resource.data.length; ) {
-        var y = dv.getUint16(pos, false);
+        var newY = dv.getUint16(pos, false);
+        if (on && newY > ++y) {
+          ctx.drawRect(0, y, canvas.width, newY - y);
+        }
+        y = newY;
         pos += 2;
         var x = 0;
         for (var runLength = dv.getUint16(pos); runLength !== 0x7fff; pos += 2) {
