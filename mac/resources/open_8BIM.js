@@ -252,11 +252,13 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
           var curve = [];
           var notNull = true;
           for (var j = 0; j < 13; j++) {
-            curve.push(dv.getInt16(offset + j * 2, false));
+            var v = dv.getInt16(offset + j * 2, false);
+            if (v === -1) v = null;
+            curve.push(v);
             notNull = notNull && (
-              j === 0 ? curve[j] === 0
-              : j === 12 ? curve[j] === 1000
-              : curve[j] === -1
+              (j === 0) ? (curve[0] === 0)
+              : (j === 12) ? (curve[12] === 1000)
+              : (curve[j] !== null)
             );
           }
           if (!notNull) curve = null;
