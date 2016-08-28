@@ -515,22 +515,19 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
                       },
                       function(err) {
                         requirejs.undef(importString);
-                        define(importString,
-                          // do-nothing handler
-                          function() {
-                            return function(resource) {
-                              for (var i = 0; i < resource.data.length; i++) {
-                                var b = resource.data[i];
-                                if (b >= 32) {
-                                  if (b === 127) return;
-                                  continue;
-                                }
-                                if (b !== 9 && b !== 13) return;
-                              }
-                              resource.text = macintoshRoman(resource.data, 0, resource.data.length);
-                            };
-                          });
-                        require(importString);
+                        function defaultHandler(resource) {
+                          for (var i = 0; i < resource.data.length; i++) {
+                            var b = resource.data[i];
+                            if (b >= 32) {
+                              if (b === 127) return;
+                              continue;
+                            }
+                            if (b !== 9 && b !== 13) return;
+                          }
+                          resource.text = macintoshRoman(resource.data, 0, resource.data.length);
+                        }
+                        define(importString, function() { return defaultHandler; });
+                        defaultHandler(resource);
                       });
                   })(resource);
                   break;
