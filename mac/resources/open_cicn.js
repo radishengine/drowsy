@@ -62,10 +62,48 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
       return;
     }
     pos += 8;
-    pos += 8 * colorCount;
+    var palette = new Array(256);
+    for (var i = 0; i < colorCount; i++) {
+      var entryNumber = dv.getUint16(pos, false);
+      palette[entryNumber] = [
+        resource.data[pos + 2],
+        resource.data[pos + 4],
+        resource.data[pos + 6],
+        255];
+      pos += 8;
+    }
     pixmap.offset = pos;
     pos += pixmap.rowBytes * (pixmap.bounds.bottom - pixmap.bounds.top);
-    console.log('cicn', maskBitmap.offset, iconBitmap.offset, pixmap.offset, pos, resource.data.length);
+    
+    // TODO: extract palette and bitmap version too (multiple resource output)
+    var canvas = document.createElement('CANVAS');
+    canvas.width = pixmap.bounds.right - pixmap.bounds.left;
+    canvas.height = pixmap.bounds.bottom - pixmap.bounds.top;
+    var ctx = canvas.getContext('2d');
+    var pixels = ctx.createImageData(canvas.width, canvas.height);
+    var pixelPitch = pixels.width * 4;
+    switch(pixmap.pixelSize) {
+      case 8:
+        for (var y = 0; y < canvas.height; y++) {
+          for (var x = 0; x < canvas.width; x++) {
+            pixels.data.set(
+              palette[resource.data[y*pixmap.rowBytes + x]] || [0,0,0,0],
+              pixelPitch * y + 4 * x);
+          }
+        }
+        break;
+      default:
+        console.error('pixel size not yet supported: ' + pixmap.pixelSize);
+        return;
+    }
+    ctx.putImageData(pixels, 0, 0);
+    resource.image = {
+      url: ctx.toDataURL(),
+      width: canvas.width,
+      height: canvas.height,
+      offsetX: pixmap.bounds.left,
+      offsetY: pixmap.bounds.top,
+    };
   }
 
 });
