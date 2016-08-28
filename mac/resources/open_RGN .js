@@ -36,7 +36,7 @@ define(function() {
         y = newY;
         pos += 2;
         var x = 0;
-        for (var runLength = dv.getUint16(pos); runLength !== 0x7fff; pos += 2) {
+        for (var runLength = dv.getUint16(pos, false); runLength !== 0x7fff; pos += 2) {
           if (on) ctx.fillRect(x, y, runLength, 1);
           on = !on;
           x += runLength;
