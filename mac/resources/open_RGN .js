@@ -22,34 +22,30 @@ define(function() {
     canvas.width = bounds.right - bounds.left;
     canvas.height = bounds.bottom - bounds.top;
     var ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'black';
-    var on = false;
+    ctx.globalCompositeOperation = 'xor';
     var y = -1;
+    var lastRow = ctx.createImageData(canvas.width, 1);
     for (var pos = 10; pos < resource.data.length; ) {
       var newY = dv.getUint16(pos, false);
       if (newY === 0x7fff) {
         break;
       }
-      if (on && newY > ++y) {
-        ctx.drawRect(0, y, canvas.width, newY - y);
+      while (++y <= newY) {
+        ctx.putImageData(lastRow, 0, y);
       }
-      y = newY;
       pos += 2;
       var x = 0;
       var runLength = dv.getUint16(pos, false);
       while (runLength !== 0x7fff) {
-        if (on) ctx.fillRect(x, y, runLength, 1);
-        on = !on;
         x += runLength;
         pos += 2;
         runLength = dv.getUint16(pos, false);
+        ctx.fillRect(x, y, runLength, 1);
+        x += runLength;
+        pos += 2;
       }
-      if (on) {
-        ctx.fillRect(x, y, canvas.width - x, 1);
-      }
-      pos += 2;
+      lastRow = ctx.getImageData(0, y, canvas.width, 1);
     }
     resource.image = {
       offsetX: bounds.left,
