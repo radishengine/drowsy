@@ -52,7 +52,7 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
     var iconDataHandle = dv.getUint32(pos, false);
     pos += 4;
     maskBitmap.offset = pos;
-    pos += maskBitmap.rowBytes * (maskBitmap.bounds.bottom - maskBottom.bounds.top);
+    pos += maskBitmap.rowBytes * (maskBitmap.bounds.bottom - maskBitmap.bounds.top);
     iconBitmap.offset = pos;
     pos += iconBitmap.rowBytes * (iconBitmap.bounds.bottom - iconBitmap.bounds.top);
     var colorCount = dv.getInt16(pos + 6, false) + 1;
