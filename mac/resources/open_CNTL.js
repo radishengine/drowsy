@@ -18,7 +18,7 @@ define(['mac/roman'], function(macintoshRoman) {
       minimumSetting: dv.getInt16(14, false),
       cdefID: dv.getInt16(16, false),
       referenceConstant: dv.getInt32(18, false),
-      text: macintoshRoman(resource.data, 23, resource.data[22]);
+      text: macintoshRoman(resource.data, 23, resource.data[22]),
     };
   };
 
