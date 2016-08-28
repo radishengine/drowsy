@@ -3,15 +3,6 @@ define(['mac/roman'], function(macintoshRoman) {
   'use strict';
   
   return function(resource) {
-    var name = macintoshRoman(resource.data, 1, resource.data[0]);
-    var pos = 1 + name.length + (1 + name.length) % 2;
-    var dataLen = new DataView(resource.data.buffer, resource.data.byteOffset + pos, 4).getUint32(0, false);
-    var data = resource.data.subarray(pos + 4, pos + 4 + dataLen);
-    resource.dataObject = {
-      name: name,
-      dataLen: dataLen,
-      data: [].slice.apply(data),
-    };
     switch(resource.id) {
       case 1000: // 2-byte values: number of channels, rows, columns, depth, mode
         break;
