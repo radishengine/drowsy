@@ -36,10 +36,13 @@ define(function() {
         y = newY;
         pos += 2;
         var x = 0;
-        for (var runLength; (runLength = dv.getUint16(pos, false)) !== 0x7fff; pos += 2) {
+        var runLength = dv.getUint16(pos, false);
+        while (runLength !== 0x7fff) {
           if (on) ctx.fillRect(x, y, runLength, 1);
           on = !on;
           x += runLength;
+          pos += 2;
+          runLength = dv.getUint16(pos, false);
         }
         if (on) {
           ctx.fillRect(x, y, canvas.width - x, 1);
