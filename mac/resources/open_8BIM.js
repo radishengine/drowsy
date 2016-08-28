@@ -3,10 +3,99 @@ define(['mac/roman'], function(macintoshRoman) {
   'use strict';
   
   return function(resource) {
+    var dv = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
     switch(resource.id) {
       case 1000: // 2-byte values: number of channels, rows, columns, depth, mode
         break;
-      case 1001: // Macintosh print manager print info record
+      case 1001: // Printing Manager TPrint record
+        if (resource.data.length !== 120) {
+          console.error('unexpected length for Printing ManagerTPrint record');
+          return;
+        }
+        resource.dataObject = {
+          iPrVersion: dv.getInt16(0, false),
+          prInfo: {
+            iDev: dv.getInt16(2, false),
+            iVRes: dv.getInt16(4, false),
+            iHRes: dv.getInt16(6, false),
+            rPage: {
+              top: dv.getInt16(8, false),
+              left: dv.getInt16(10, false),
+              bottom: dv.getInt16(12, false),
+              right: dv.getInt16(14, false),
+            },
+          },
+          rPaper: {
+            top: dv.getInt16(16, false),
+            left: dv.getInt16(18, false),
+            bottom: dv.getInt16(20, false),
+            right: dv.getInt16(22, false),
+          },
+          prStl: {
+            wDev: dv.getInt16(24, false),
+            iPageV: dv.getInt16(26, false),
+            iPageH: dv.getInt16(28, false),
+            bPort: dv.getInt8(30),
+            feed: dv.getInt8(31),
+          },
+          prInfoPT: {
+            iDev: dv.getInt16(32, false),
+            iVRes: dv.getInt16(34, false),
+            iHRes: dv.getInt16(36, false),
+            rPage: {
+              top: dv.getInt16(38, false),
+              left: dv.getInt16(40, false),
+              bottom: dv.getInt16(42, false),
+              right: dv.getInt16(44, false),
+            },
+          },
+          prXInfo: {
+            iRowBytes: dv.getInt16(46, false),
+            iBandV: dv.getInt16(48, false),
+            iBandH: dv.getInt16(50, false),
+            iDevBytes: dv.getInt16(52, false),
+            iBands: dv.getInt16(54, false),
+            bPatScale: dv.getInt8(56),
+            bUlThick: dv.getInt8(57),
+            bUlOffset: dv.getInt8(58),
+            bUlShadow: dv.getInt8(59),
+            scan: dv.getInt8(60),
+            bXInfoX: dv.getInt8(61),
+          },
+          prJob: {
+            iFstPage: dv.getInt16(62, false),
+            iLstPage: dv.getInt16(64, false),
+            iCopies: dv.getInt16(66, false),
+            bJDocLoop: dv.getInt8(68, false),
+            fFromUsr: dv.getUint8(69, false),
+            pIdleProc: dv.getInt32(70, false),
+            pFileName: dv.getInt32(74, false),
+            iFileVol: dv.getInt16(78, false),
+            bFileVers: dv.getInt8(80),
+            bJobX: dv.getInt8(81),
+          },
+          printX: [
+            dv.getInt16(82, false),
+            dv.getInt16(84, false),
+            dv.getInt16(86, false),
+            dv.getInt16(88, false),
+            dv.getInt16(90, false),
+            dv.getInt16(92, false),
+            dv.getInt16(94, false),
+            dv.getInt16(96, false),
+            dv.getInt16(98, false),
+            dv.getInt16(100, false),
+            dv.getInt16(102, false),
+            dv.getInt16(104, false),
+            dv.getInt16(106, false),
+            dv.getInt16(108, false),
+            dv.getInt16(110, false),
+            dv.getInt16(112, false),
+            dv.getInt16(114, false),
+            dv.getInt16(116, false),
+            dv.getInt16(118, false),
+          ],
+        };
         break;
       case 1002: // Macintosh page format info
         break;
