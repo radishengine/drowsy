@@ -528,6 +528,9 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
                         }
                         define(importString, function() { return defaultHandler; });
                         defaultHandler(resource);
+                        if (typeof reader.onresource === 'function') {
+                          reader.onresource(resource);
+                        }
                       });
                   })(resource);
                   break;
