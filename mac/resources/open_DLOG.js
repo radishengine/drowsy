@@ -24,7 +24,9 @@ define(['mac/roman'], function(macintoshRoman) {
     }
     resource.dataObject.text = macintoshRoman(resource.data, 21, resource.data[20]);
     var pos = 20 + 1 + resource.dataObject.text.length + (1 + resource.dataObject.text.length) % 2;
-    resource.dataObject.positionCode = dv.getUint16(pos, false);
+    if (pos + 2 <= resource.data.length) {
+      resource.dataObject.positionCode = dv.getUint16(pos, false);
+    }
   };
 
 });
