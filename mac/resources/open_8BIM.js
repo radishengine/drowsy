@@ -216,8 +216,8 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
                 case 2: return 'linesPerCm';
                 default: return code;
               }
-            })( dv.getUint16(offset + 4, false) );
-            screenAngle: fixedPoint.fromInt32(dv.getInt32(offset + 6, false));
+            })( dv.getUint16(offset + 4, false) ),
+            screenAngle: fixedPoint.fromInt32(dv.getInt32(offset + 6, false)),
             halftoneDotShape: (function(code) {
               // TODO: negative numbers indicate size of custom PostScript dot-drawing function
               //  coming after the 4 screens' data
