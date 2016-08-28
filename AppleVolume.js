@@ -519,11 +519,18 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
                           // do-nothing handler
                           function() {
                             return function(resource) {
+                              for (var i = 0; i < resource.data.length; i++) {
+                                var b = resource.data[i];
+                                if (b >= 32) {
+                                  if (b === 127) return;
+                                  continue;
+                                }
+                                if (b !== 9 && b !== 13) return;
+                              }
+                              resource.text = macintoshRoman(resource.data, 0, resource.data.length);
                             };
                           });
-                        if (typeof reader.onresource === 'function') {
-                          reader.onresource(resource);
-                        }
+                        require(importString);
                       });
                   })(resource);
                   break;
