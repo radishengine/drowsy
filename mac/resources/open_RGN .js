@@ -47,6 +47,7 @@ define(function() {
         runLength = dv.getUint16(pos, false);
       }
       lastRow = ctx.getImageData(0, y, canvas.width, 1);
+      pos += 2;
     }
     resource.image = {
       offsetX: bounds.left,
