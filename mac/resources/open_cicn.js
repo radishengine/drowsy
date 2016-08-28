@@ -95,6 +95,26 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
           }
         }
         break;
+      case 2:
+        for (var y = 0; y < canvas.height; y++) {
+          for (var x = 0; x < canvas.width; x++) {
+            var mp = resource.data[mask.offset + y*mask.rowBytes + (x >> 3)];
+            if (mp & (0x80 >> (x & 0x7))) {
+              var xp = resource.data[pixmap.offset + y*pixmap.rowBytes + (x >> 2)];
+              var xc;
+              switch(x & 3) {
+                case 0: xc = xp >> 6; break;
+                case 1: xc = (xp >> 4) & 3; break;
+                case 2: xc = (xp >> 2) & 3; break;
+                case 3: xc = xp & 3; break;
+              }
+              pixels.data.set(
+                palette[xc] || [0,0,0,0],
+                pixelPitch * y + 4 * x);
+            }
+          }
+        }
+        break;
       case 4:
         for (var y = 0; y < canvas.height; y++) {
           for (var x = 0; x < canvas.width; x++) {
