@@ -44,6 +44,7 @@ define(function() {
         ctx.fillRect(x, y, runLength, 1);
         x += runLength;
         pos += 2;
+        runLength = dv.getUint16(pos, false);
       }
       lastRow = ctx.getImageData(0, y, canvas.width, 1);
     }
