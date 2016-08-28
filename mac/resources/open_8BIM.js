@@ -127,7 +127,7 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
         // 2 bytes for border units (1 = inches, 2 = cm, 3 = points, 4 = picas, 5 = columns)
         break;
       case 1010: // Background color
-        if (resource.data.length !== 16) {
+        if (resource.data.length !== 10) {
           console.error('unexpected length for Color record');
           return;
         }
