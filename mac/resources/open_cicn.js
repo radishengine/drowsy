@@ -1,4 +1,4 @@
-define(['mac/roman'], function(macintoshRoman) {
+define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
 
   'use strict';
   
