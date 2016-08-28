@@ -87,7 +87,7 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
         for (var y = 0; y < canvas.height; y++) {
           for (var x = 0; x < canvas.width; x++) {
             var xc = x >> 3, xn = x & 7;
-            var xp = resource.data[y*pixmap.rowBytes + xc];
+            var xp = resource.data[pixmap.offset + y*pixmap.rowBytes + xc];
             var ix = 0x80 >> xn;
             pixels.data.set(
               palette[(xp & ix) ? 1 : 0] || [0,0,0,0],
@@ -98,7 +98,7 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
       case 4:
         for (var y = 0; y < canvas.height; y++) {
           for (var x = 0; x < canvas.width; x++) {
-            var xp = resource.data[y*pixmap.rowBytes + (x >> 1)];
+            var xp = resource.data[pixmap.offset + y*pixmap.rowBytes + (x >> 1)];
             var xc = (x & 1) ? xp & 0xf : xp >> 4;
             pixels.data.set(
               palette[xc] || [0,0,0,0],
@@ -110,7 +110,7 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
         for (var y = 0; y < canvas.height; y++) {
           for (var x = 0; x < canvas.width; x++) {
             pixels.data.set(
-              palette[resource.data[y*pixmap.rowBytes + x]] || [0,0,0,0],
+              palette[resource.data[pixmap.offset + y*pixmap.rowBytes + x]] || [0,0,0,0],
               pixelPitch * y + 4 * x);
           }
         }
