@@ -23,7 +23,7 @@ define(['mac/roman'], function(macintoshRoman) {
       case 5: resource.dataObject.type = 'movableModal'; break;
     }
     resource.dataObject.text = macintoshRoman(resource.data, 21, resource.data[20]);
-    var pos = 21 + resource.dataObject.text.length + resource.dataObject.text.length % 2;
+    var pos = 20 + 1 + resource.dataObject.text.length + (1 + resource.dataObject.text.length) % 2;
     resource.dataObject.positionCode = dv.getUint16(pos, false);
   };
 
