@@ -13,7 +13,7 @@ define(['mac/roman'], function(macintoshRoman) {
       },
       initialSetting: dv.getUint16(8, false),
       visible: !!resource.data[10],
-      closeBox: !!resource.data[11],
+      fill: !!resource.data[11],
       maximumSetting: dv.getInt16(12, false),
       minimumSetting: dv.getInt16(14, false),
       cdefID: dv.getInt16(16, false),
