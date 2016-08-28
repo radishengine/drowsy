@@ -256,9 +256,9 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
             if (v === -1) v = null;
             curve.push(v);
             notNull = notNull && (
-              (j === 0) ? (curve[0] === 0)
-              : (j === 12) ? (curve[12] === 1000)
-              : (curve[j] !== null)
+              (j === 0) ? (v === 0)
+              : (j === 12) ? (v === 1000)
+              : (v !== null)
             );
           }
           if (!notNull) curve = null;
