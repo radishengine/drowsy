@@ -275,6 +275,7 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
           self.readBTreeNode(rootNode, this);
         },
         onindexnode: function(indexNode) {
+          console.log('index', indexNode);
           for (var i = 0; i < indexNode.pointers.length; i++) {
             var pointer = indexNode.pointers[i];
             var pointedBytes = byteSource.slice(
@@ -286,6 +287,7 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
         onfolderthread: function(threadInfo) {
         },
         onfolder: function(folderInfo) {
+          console.log('folder', folderInfo);
           var container = document.createElement('SECTION');
           if (folderInfo.isInvisible) {
             container.classList.add('invisible');
@@ -323,6 +325,7 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
           }
         },
         onfile: function(fileInfo) {
+          console.log('file', fileInfo);
           var container = document.createElement('SECTION');
           if (fileInfo.isInvisible) {
             container.classList.add('invisible');
