@@ -267,21 +267,14 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
       var self = this;
       var folders = {};
       var allocation = byteSource.allocationBlocks;
-      this.readBTreeNode(byteSource.slice(0, BTREE_NODE_BYTES), {
+      this.readBTreeNode(byteSource, 0, {
         onheadernode: function(headerNode) {
-          var rootNode = byteSource.slice(
-            headerNode.rootNodeNumber * BTREE_NODE_BYTES,
-            (headerNode.rootNodeNumber + 1) * BTREE_NODE_BYTES);
-          self.readBTreeNode(rootNode, this);
+          self.readBTreeNode(byteSource, headerNode.rootNodeNumber, this);
         },
         onindexnode: function(indexNode) {
           console.log('index', indexNode);
           for (var i = 0; i < indexNode.pointers.length; i++) {
-            var pointer = indexNode.pointers[i];
-            var pointedBytes = byteSource.slice(
-              pointer.nodeNumber * BTREE_NODE_BYTES,
-              (pointer.nodeNumber + 1) * BTREE_NODE_BYTES);
-            self.readBTreeNode(pointedBytes, this);
+            self.readBTreeNode(byteSource, pointers[i].nodeNumber, this);
           }
         },
         onfolderthread: function(threadInfo) {
@@ -584,11 +577,11 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
         },
       });
     },
-    readBTreeNode: function(byteSource, reader) {
+    readBTreeNode: function(byteSource, nodeNumber, reader) {
       var self = this;
-      byteSource.read({
+      byteSource.slice(nodeNumber * BTREE_NODE_BYTES, (nodeNumber + 1) * BTREE_NODE_BYTES).read({
         onbytes: function(bytes) {
-          var node = {};
+          var node = {number: nodeNumber};
           var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
           var records = new Array(dv.getUint16(10, false));
           for (var i = 0; i < records.length; i++) {
