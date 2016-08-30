@@ -274,7 +274,7 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
         onindexnode: function(indexNode) {
           console.log('index', indexNode);
           for (var i = 0; i < indexNode.pointers.length; i++) {
-            self.readBTreeNode(byteSource, pointers[i].nodeNumber, this);
+            self.readBTreeNode(byteSource, indexNode.pointers[i].nodeNumber, this);
           }
         },
         onfolderthread: function(threadInfo) {
