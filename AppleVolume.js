@@ -607,8 +607,8 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
                 var dv = new DataView(recordBytes.buffer, recordBytes.byteOffset, recordBytes.byteLength);
                 var parentDirectoryID = dv.getUint32(2, false);
                 var name = macintoshRoman(recordBytes, 7, recordBytes[6]);
-                var nodeNumber = dv.getUint32(1 + keyLength, false);
-                node.pointers.push({name:name, nodeNumber:nodeNumber, parentDirectoryID:parentDirectoryID});
+                var pointerNodeNumber = dv.getUint32(1 + keyLength, false);
+                node.pointers.push({name:name, nodeNumber:pointerNodeNumber, parentDirectoryID:parentDirectoryID});
               }
               if (typeof reader.onindexnode === 'function') {
                 reader.onindexnode(node);
