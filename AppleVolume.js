@@ -655,6 +655,8 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
                 switch(record[0]) {
                   case 1: // folder
                     var folderInfo = {
+                      leafNodeNumber: nodeNumber,
+                      nodeRecordNumber: i,
                       name: name,
                       id: dv.getUint32(6, false),
                       modifiedAt: macintoshDate(dv, 14),
@@ -698,6 +700,8 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
                     break;
                   case 2: // file
                     var fileInfo = {
+                      leafNodeNumber: nodeNumber,
+                      nodeRecordNumber: i,
                       name: name,
                       creator: macintoshRoman(record, 8, 4),
                       type: macintoshRoman(record, 4, 4),
