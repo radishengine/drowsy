@@ -30,6 +30,19 @@ define([], function() {
     proto.getURL = function() {
       return Promise.resolve(URL.createObjectURL(this.blob));
     };
+    proto.getBytes = function() {
+      var blob = this.blob;
+      return new Promise(function(resolve, reject) {
+        var fr = new FileReader();
+        fr.addEventListener('load', function() {
+          resolve(new Uint8Array(fr.result));
+        });
+        fr.addEventListener('error', function(e) {
+          reject(e);
+        });
+        fr.readAsArrayBuffer(blob);
+      });
+    };
   })(ByteSourceFromBlob.prototype = new ByteSource);
   
   ByteSource.FromBlob = ByteSourceFromBlob;
