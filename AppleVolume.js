@@ -324,6 +324,9 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
             folders[folderInfo.parentDirectoryId] = siblings;
           }
         },
+        onleafnode: function(leaf) {
+          console.log('leaf', leaf);
+        },
         onfile: function(fileInfo) {
           console.log('file', fileInfo);
           var container = document.createElement('SECTION');
