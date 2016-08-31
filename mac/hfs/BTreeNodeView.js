@@ -167,7 +167,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
     
     if (!this.isDeleted) {
       var dataOffset = 1 + this.bytes[0];
-      datOffset += dataOffset % 2;
+      dataOffset += dataOffset % 2;
       var dataLength = byteLength - dataOffset;
       this.dataDataView = new DataView(buffer, byteOffset + dataOffset, dataLength);
       this.dataBytes = new Uint8Array(buffer, byteOffset + dataOffset, dataLength);
