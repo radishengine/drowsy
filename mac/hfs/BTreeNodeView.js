@@ -312,7 +312,7 @@ define(['mac/roman'], ['mac/date'], function(macintoshRoman, macintoshDate) {
       return this.dataView.getUint32(68, false);
     },
     get clumpSize() {
-      return this.dataView.getUint16(72, false),
+      return this.dataView.getUint16(72, false);
     },
     get dataForkFirstExtentRecord() {
       return extentDataRecord(this.dataView, 74);
