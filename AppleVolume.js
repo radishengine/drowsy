@@ -324,7 +324,7 @@ define(['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView'], function(ByteSource
           console.log('leaf', leaf);
           for (var i = 0; i < leaf.records.length; i++) {
             var record = leaf.records[i];
-            record.leafNodeNumber = nodeNumber;
+            record.leafNodeNumber = leaf.number;
             record.nodeRecordNumber = i;
             switch(record.leafType) {
               case 'folder':
