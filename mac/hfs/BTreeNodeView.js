@@ -332,7 +332,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
   };
   
   function ForkInfoView(buffer, byteOffset) {
-    this.dataView = new DataView(buffer, byteOffset, 6);
+    this.dataView = new DataView(buffer, byteOffset, 10);
   }
   ForkInfoView.prototype = {
     get firstAllocationBlock() {
