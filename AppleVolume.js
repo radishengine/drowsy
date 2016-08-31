@@ -328,15 +328,19 @@ define(['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView'], function(ByteSource
             record.nodeRecordNumber = i;
             switch(record.leafType) {
               case 'folder':
+                record.folderInfo.name = record.name;
+                record.folderInfo.number = record.number;
                 this.onfolder(record.folderInfo);
                 break;
               case 'file':
+                record.fileInfo.name = record.name;
+                record.fileInfo.number = record.number;
                 this.onfile(record.fileInfo);
                 break;
               case 'folderthread':
                 this.onfolderthread(record.threadInfo);
                 break;
-              case 4: // file thread
+              case 'filethread':
                 this.onfilethread(record.threadInfo);
                 break;
               default:
