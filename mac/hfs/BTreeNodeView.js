@@ -422,7 +422,7 @@ define(['mac/roman', 'mac/date'], function(macintoshRoman, macintoshDate) {
     this.dataView = new DataView(buffer, byteOffset, byteLength);
     this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
-  ThreadInfo.prototype = {
+  ThreadInfoView.prototype = {
     get parentFolderID() {
       this.dataView.getUint32(10, false);
     },
