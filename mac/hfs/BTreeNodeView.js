@@ -100,7 +100,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
     get name() {
       return macintoshRoman(this.bytes, 7, this.bytes[6]);
     },
-    get pointerNodeNumber() {
+    get nodeNumber() {
       return this.dataView.getUint32(1 + this.bytes[0], false);
     },
   };
