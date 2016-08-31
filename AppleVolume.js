@@ -1,4 +1,6 @@
-define(['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView'], function(ByteSource, macintoshRoman, BTreeNodeView) {
+define(
+['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView', 'mac/hfs/PartitionRecordView'],
+function(ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView) {
 
   'use strict';
   
@@ -84,7 +86,8 @@ define(['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView'], function(ByteSource
       function doPartition(n) {
         byteSource.slice(PHYSICAL_BLOCK_BYTES * n, PHYSICAL_BLOCK_BYTES * (n+1)).read({
           onbytes: function(bytes) {
-            if (macintoshRoman(bytes, 0, 4) !== 'PM\0\0') {
+            var partition = new PartitionRecordView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+            if (!partition.hasValidTag) {
               if (n === 1) {
                 self.readHFS(byteSource, reader);
                 return;
@@ -92,50 +95,21 @@ define(['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView'], function(ByteSource
               console.error('invalid partition map signature');
               return;
             }
-            var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-            var mapBlockCount = dv.getInt32(4, false);
-            var partitionInfo = {
-              blockOffset: dv.getInt32(8, false),
-              blockCount: dv.getInt32(12, false),
-              type: nullTerminate(macintoshRoman(bytes, 48, 32)),
-              status: dv.getInt32(88, false),
-            };
-            var dataAreaBlockCount = dv.getInt32(84, false);
-            if (dataAreaBlockCount > 0) {
-              partitionInfo.dataArea = {
-                blockCount: dataAreaBlockCount,
-                blockOffset: dv.getInt32(80, false),
-              };
-            }
-            var bootCodeByteLength = dv.getInt32(96, false);
-            if (bootCodeByteLength > 0) {
-              partitionInfo.bootCode = {
-                byteLength: bootCodeByteLength,
-                blockOffset: dv.getInt32(92, false),
-                loadAddress: dv.getInt32(100, false),
-                entryPoint: dv.getInt32(108, false),
-                checksum: dv.getInt32(116, false),
-              };
-            }
-            var partitionName = nullTerminate(macintoshRoman(bytes, 16, 32));
-            if (partitionName) partitionInfo.name = partitionName;
-            var processorType = nullTerminate(macintoshRoman(bytes, 124, 16));
-            if (processorType) partitionInfo.processorType = processorType;
-            switch (partitionInfo.type) {
+            switch (partition.type) {
               case 'Apple_HFS':
                 self.readHFS(
                   byteSource.slice(
-                    PHYSICAL_BLOCK_BYTES * partitionInfo.blockOffset,
-                    PHYSICAL_BLOCK_BYTES * (partitionInfo.blockOffset + partitionInfo.blockCount)),
+                    PHYSICAL_BLOCK_BYTES * partition.blockOffset,
+                    PHYSICAL_BLOCK_BYTES * (partition.blockOffset + partition.blockCount)),
                   reader);
                 break;
               default:
                 break;
             }
             if (typeof reader.onpartition === 'function') {
-              reader.onpartition(partitionInfo);
+              reader.onpartition(partition);
             }
-            if (n < mapBlockCount) {
+            if (n < partition.totalPartitionCount) {
               doPartition(n + 1);
             }
           },
