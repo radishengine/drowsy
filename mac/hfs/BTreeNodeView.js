@@ -337,8 +337,90 @@ define(['mac/roman'], ['mac/date'], function(macintoshRoman, macintoshDate) {
     },
   };
   
+  function FolderInfoView(byffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteoffset, byteLength);
+  }
+  FolderInfoView.prototype = {
+    get flags() {
+      return this.dataView.getUint16(2, false);
+    },
+    get id() {
+      return this.dataView.getUint32(6, false);
+    },
+    get modifiedAt() {
+      return macintoshDate(this.dataView, 14);
+    },
+    get iconPosition() {
+      var position = {
+        v: this.dataView.getInt16(32, false),
+        h: this.dataView.getInt16(34, false),
+      };
+      if (position.v === 0 && position.h === 0) {
+        return 'default';
+      }
+      return position;
+    },
+    get windowRect() {
+      return {
+        top: this.dataView.getInt16(22, false),
+        left: this.dataView.getInt16(24, false),
+        bottom: this.dataView.getInt16(26, false),
+        right: this.dataView.getInt16(28, false),
+      };
+    },
+    get isOnDesk() {
+      return !!(this.dataView.getUint16(30, false) & 0x0001);
+    },
+    get isColor() {
+      return !!(this.dataView.getUint16(30, false) & 0x000E);
+    },
+    get requiresSwitchLaunch() {
+      return !!(this.dataView.getUint16(30, false) & 0x0020);
+    },
+    get hasCustomIcon() {
+      return !!(this.dataView.getUint16(30, false) & 0x0400);
+    },
+    get isNameLocked() {
+      return !!(this.dataView.getUint16(30, false) & 0x1000);
+    },
+    get hasBundle() {
+      return !!(this.dataView.getUint16(30, false) & 0x2000);
+    },
+    get isInvisible() {
+      return !!(this.dataView.getUint16(30, false) & 0x4000);
+    },
+    get scrollPosition() {
+      var position = {
+        v: this.dataView.getInt16(38, false),
+        h: this.dataView.getInt16(40, false),
+      };
+      return position;
+    },
+    // dinfoReserved: dv.getInt16(36, false),
+    // dxinfoReserved: dv.getInt32(42, false),
+    get dxinfoFlags() {
+      return this.dataView.getUint16(46, false);
+    },
+    get dxinfoComment() {
+      return this.dataView.getUint16(48, false);
+    },
+    get fileCount() {
+      return this.dataView.getUint16(4, false);
+    },
+    get createdAt() {
+      return macintoshDate(this.dataView, 10);
+    },
+    get backupAt() {
+      return macintoshDate(this.dataView, 18);
+    },
+    get putAwayFolderID() {
+      return this.dataView.getInt32(50, false);
+    },
+  };
+  
   function ThreadInfoView(buffer, byteOffset, byteLength) {
     this.dataView = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
   ThreadInfo.prototype = {
     get parentFolderID() {
