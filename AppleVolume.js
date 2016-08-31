@@ -1,4 +1,4 @@
-define(['ByteSource', 'mac/roman', 'BTreeNodeView'], function(ByteSource, macintoshRoman, BTreeNodeView) {
+define(['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView'], function(ByteSource, macintoshRoman, BTreeNodeView) {
 
   'use strict';
   
