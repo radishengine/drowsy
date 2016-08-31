@@ -49,40 +49,47 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
       return this.bytes[9];
     },
     get records() {
+      var records;
       switch (this.nodeType) {
         case 'index':
-          return this.rawRecords
+          records = this.rawRecords
           .map(function(recordBytes) {
             return new IndexRecordView(recordBytes.buffer, recordBytes.byteOffset, recordBytes.byteLength);
           })
           .filter(function(indexRecord) {
             return !indexRecord.isDeleted;
           });
+          break;
         case 'header':
           if (this.rawRecords.length !== 3) {
             throw new Error('B*Tree header node: expected 3 records, got ' + this.rawRecords.length);
           }
           var rawHeader = this.rawRecords[0], rawMap = this.rawRecords[2];
-          return [
+          records = [
             new HeaderRecordView(rawHeader.buffer, rawHeader.byteOffset, rawHeader.byteLength),
             'unused',
             new MapRecordView(rawMap.buffer, rawMap.byteOffset, rawMap.byteLength),
           ];
+          break;
         case 'map':
-          return this.rawRecords
+          records = this.rawRecords
           .map(function(rawMap) {
             return new MapRecordView(rawMap.buffer, rawMap.byteOffset, rawMap.byteLength)
           });
+          break;
         case 'leaf':
-          return this.rawRecords
+          records = this.rawRecords
           .map(function(rawLeaf) {
             return new LeafRecordView(rawLeaf.buffer, rawLeaf.byteOffset, rawLeaf.byteLength);
           })
           .filter(function(leaf) {
             return !leaf.isDeleted;
           });
+          break;
         default: return null;
       }
+      Object.defineProperty(this, 'records', {value:records});
+      return records;
     },
   };
   
