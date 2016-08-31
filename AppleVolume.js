@@ -369,16 +369,16 @@ define(['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView'], function(ByteSource
             container.dataset.lastModified = timestamp.toISOString();
           }
           var title = document.createElement('HEADER');
-          if (fileInfo.dataFork.logicalEOF) {
-            container.dataset.size = fileInfo.dataFork.logicalEOF;
+          if (fileInfo.dataForkInfo.logicalEOF) {
+            container.dataset.size = fileInfo.dataForkInfo.logicalEOF;
             var dataFork = document.createElement('A');
             dataFork.setAttribute('href', '#');
             dataFork.classList.add('data-fork');
             dataFork.innerText = fileInfo.name;
-            var extent = fileInfo.dataFork.firstExtentRecord[0];
+            var extent = fileInfo.dataForkFirstExtentRecord[0];
             allocation.slice(
               allocation.blockSize * extent.offset,
-              allocation.blockSize * extent.offset + fileInfo.dataFork.logicalEOF
+              allocation.blockSize * extent.offset + fileInfo.dataForkInfo.logicalEOF
             ).getURL().then(function(url) {
               dataFork.setAttribute('href', url);
               dataFork.setAttribute('download', fileInfo.name);
@@ -389,11 +389,11 @@ define(['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView'], function(ByteSource
             title.appendChild(document.createTextNode(fileInfo.name));
           }
           container.appendChild(title);
-          if (fileInfo.resourceFork.logicalEOF) {
-            var extent = fileInfo.resourceFork.firstExtentRecord[0];
+          if (fileInfo.resourceForkInfo.logicalEOF) {
+            var extent = fileInfo.resourceForkFirstExtentRecord[0];
             self.readResourceFork(allocation.slice(
               allocation.blockSize * extent.offset,
-              allocation.blockSize * extent.offset + fileInfo.resourceFork.logicalEOF
+              allocation.blockSize * extent.offset + fileInfo.resourceForkInfo.logicalEOF
             ), {
               onresource: function(resource) {
                 var resourceEl;
