@@ -230,11 +230,11 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
     },
   };
   
-  function FileInfo(buffer, byteOffset, byteLength) {
+  function FileInfoView(buffer, byteOffset, byteLength) {
     this.dataView = new DataView(buffer, byteOffset, byteLength);
     this.bytes = new DataView(buffer, byteOffset, byteLength);
   }
-  FileInfo.prototype = {
+  FileInfoView.prototype = {
     get locked() {
       return  !!(record[2] & 0x01);
     },
