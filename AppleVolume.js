@@ -1,5 +1,4 @@
-
-define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
+define(['ByteSource', 'mac/roman', 'BTreeNodeView'], function(ByteSource, macintoshRoman, BTreeNodeView) {
 
   'use strict';
   
@@ -278,6 +277,10 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
           }
         },
         onfolderthread: function(threadInfo) {
+          console.log('folder thread', threadInfo);
+        },
+        onfilethread: function(threadInfo) {
+          console.log('file thread', threadInfo);
         },
         onfolder: function(folderInfo) {
           console.log('folder', folderInfo);
@@ -319,6 +322,28 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
         },
         onleafnode: function(leaf) {
           console.log('leaf', leaf);
+          for (var i = 0; i < leaf.records.length; i++) {
+            var record = leaf.records[i];
+            record.leafNodeNumber = nodeNumber;
+            record.nodeRecordNumber = i;
+            switch(record.leafType) {
+              case 'folder':
+                this.onfolder(record.folderInfo);
+                break;
+              case 'file':
+                this.onfile(record.fileInfo);
+                break;
+              case 'folderthread':
+                this.onfolderthread(record.threadInfo);
+                break;
+              case 4: // file thread
+                this.onfilethread(record.threadInfo);
+                break;
+              default:
+                console.error('unknown folder record type');
+                break;
+            }
+          }
         },
         onfile: function(fileInfo) {
           console.log('file', fileInfo);
@@ -581,201 +606,27 @@ define(['ByteSource', 'mac/roman'], function(ByteSource, macintoshRoman) {
       var self = this;
       byteSource.slice(nodeNumber * BTREE_NODE_BYTES, (nodeNumber + 1) * BTREE_NODE_BYTES).read({
         onbytes: function(bytes) {
-          var node = {number: nodeNumber};
-          var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-          var records = new Array(dv.getUint16(10, false));
-          for (var i = 0; i < records.length; i++) {
-            records[i] = bytes.subarray(
-              dv.getUint16(BTREE_NODE_BYTES - 2*(i+1), false),
-              dv.getUint16(BTREE_NODE_BYTES - 2*(i+2), false));
-          }
-          var forwardLink = dv.getInt32(0, false);
-          var backwardLink = dv.getInt32(4, false);
-          if (forwardLink !== 0) node.forwardLink = forwardLink;
-          if (backwardLink !== 0) node.backwardLink = backwardLink;
-          node.depth = bytes[9];
-          switch(bytes[8]) {
-            case 0: // index
-              node.pointers = [];
-              for (var i = 0; i < records.length; i++) {
-                var recordBytes = records[i];
-                var keyLength;
-                if (recordBytes.length === 0 || (keyLength = recordBytes[0]) === 0) {
-                  // deleted record
-                  continue;
-                }
-                var dv = new DataView(recordBytes.buffer, recordBytes.byteOffset, recordBytes.byteLength);
-                var parentDirectoryID = dv.getUint32(2, false);
-                var name = macintoshRoman(recordBytes, 7, recordBytes[6]);
-                var pointerNodeNumber = dv.getUint32(1 + keyLength, false);
-                node.pointers.push({name:name, nodeNumber:pointerNodeNumber, parentDirectoryID:parentDirectoryID});
-              }
+          var node = new BTreeNodeView(bytes.buffer, bytes.byteOffset, byte.byteLength);
+          node.number = nodeNumber;
+          switch(node.nodeType) {
+            case 'index';
+              node.pointers = node.records;
               if (typeof reader.onindexnode === 'function') {
                 reader.onindexnode(node);
               }
               break;
-            case 1: // header
-              if (records.length !== 3) {
-                console.error('header node: expected 3 records, got ' + recordCount);
-                return;
-              }
-              var recordDV = new DataView(records[0].buffer, records[0].byteOffset, records[0].byteLength);
-              node.treeDepth = recordDV.getUint16(0, false);
-              node.rootNodeNumber = recordDV.getUint32(2, false);
-              node.leafRecordCount = recordDV.getUint32(6, false);
-              node.firstLeaf = recordDV.getUint32(10, false);
-              node.lastLeaf = recordDV.getUint32(14, false);
-              node.nodeByteLength = recordDV.getUint16(18, false); // always 512?
-              node.maxKeyByteLength = recordDV.getUint16(20, false);
-              node.nodeCount = recordDV.getUint32(22, false);
-              node.freeNodeCount = recordDV.getUint32(26, false);
-              node.bitmap = records[2];
+            case 'header':
+              var header = node.records[0];
+              header.number = nodeNumber;
+              header.bitmap = node.records[2];
               if (typeof reader.onheadernode === 'function') {
-                reader.onheadernode(node);
+                reader.onheadernode(header);
               }
               break;
-            case 2: // map
+            case 'map':
               console.error('NYI: map node');
               break;
-            case 0xff: // leaf
-              for (var i = 0; i < records.length; i++) {
-                var record = records[i];
-                var keyLength;
-                if (record.length === 0 || (keyLength = record[0]) === 0) {
-                  // deleted record
-                  continue;
-                }
-                var dv = new DataView(record.buffer, record.byteOffset, record.byteLength);
-                var parentDirectoryId = dv.getUint32(2, false);
-                var name = macintoshRoman(record, 7, record[6]);
-                var offset = 1 + keyLength;
-                offset = offset + (offset % 2);
-                record = record.subarray(offset);
-                dv = new DataView(record.buffer, record.byteOffset, record.byteLength);
-                switch(record[0]) {
-                  case 1: // folder
-                    var folderInfo = {
-                      leafNodeNumber: nodeNumber,
-                      nodeRecordNumber: i,
-                      name: name,
-                      id: dv.getUint32(6, false),
-                      modifiedAt: macintoshDate(dv, 14),
-                      location: {
-                        v: dv.getInt16(32, false),
-                        h: dv.getInt16(34, false),
-                      },
-                      window: {
-                        top: dv.getInt16(22, false),
-                        left: dv.getInt16(24, false),
-                        bottom: dv.getInt16(26, false),
-                        right: dv.getInt16(28, false),
-                        scroll: {
-                          v: dv.getInt16(38, false),
-                          h: dv.getInt16(40, false),
-                        },
-                      },
-                      parentDirectoryId: parentDirectoryId,
-                      // dinfoReserved: dv.getInt16(36, false),
-                      // dxinfoReserved: dv.getInt32(42, false),
-                      dxinfoFlags: dv.getUint16(46, false),
-                      dxinfoComment: dv.getUint16(48, false),
-                      fileCount: dv.getUint16(4, false),
-                      createdAt: macintoshDate(dv, 10),
-                      backupAt: macintoshDate(dv, 18),
-                      putAwayFolderID: dv.getInt32(50, false),
-                      flags: dv.getUint16(2, false),
-                    };
-                    if (!folderInfo.flags) delete folderInfo.flags;
-                    var dinfoFlags = dv.getUint16(30, false);
-                    if (dinfoFlags & 0x0001) folderInfo.isOnDesk = true;
-                    if (dinfoFlags & 0x000E) folderInfo.color = true;
-                    if (dinfoFlags & 0x0020) folderInfo.requireSwitchLaunch = true;
-                    if (dinfoFlags & 0x0400) folderInfo.hasCustomIcon = true;
-                    if (dinfoFlags & 0x1000) folderInfo.nameLocked = true;
-                    if (dinfoFlags & 0x2000) folderInfo.hasBundle = true;
-                    if (dinfoFlags & 0x4000) folderInfo.isInvisible = true;
-                    if (typeof reader.onfolder === 'function') {
-                      reader.onfolder(folderInfo);
-                    }
-                    break;
-                  case 2: // file
-                    var fileInfo = {
-                      leafNodeNumber: nodeNumber,
-                      nodeRecordNumber: i,
-                      name: name,
-                      creator: macintoshRoman(record, 8, 4),
-                      type: macintoshRoman(record, 4, 4),
-                      id: dv.getUint32(20, false),
-                      parentDirectoryId: parentDirectoryId,
-                      // type: record[3], /* always zero */
-                      position: {v:dv.getInt16(14, false), h:dv.getInt16(16, false)},
-                      // finfoReserved: dv.getInt16(18, false),
-                      dataFork: {
-                        firstAllocationBlock: dv.getUint16(24, false),
-                        logicalEOF: dv.getUint32(26, false),
-                        physicalEOF: dv.getUint32(30, false),
-                        firstExtentRecord: extentDataRecord(dv, 74),
-                      },
-                      resourceFork: {
-                        firstAllocationBlock: dv.getUint16(34, false),
-                        logicalEOF: dv.getUint32(36, false),
-                        physicalEOF: dv.getUint32(40, false),
-                        firstExtentRecord: extentDataRecord(dv, 86),
-                      },
-                      createdAt: macintoshDate(dv, 44),
-                      modifiedAt: macintoshDate(dv, 48),
-                      backupAt: macintoshDate(dv, 52),
-                      // fxinfoReserved: (8 bytes)
-                      fxinfoFlags: dv.getUint16(64, false),
-                      putAwayFolderID: dv.getUint32(68, false),
-                      clumpSize: dv.getUint16(72),
-                    };
-                    if (fileInfo.creator === '\0\0\0\0') fileInfo.creator = null;
-                    if (fileInfo.type === '\0\0\0\0') fileInfo.type = null;
-                    if (!(fileInfo.position.v || fileInfo.position.h)) fileInfo.position = 'default';
-                    if (record[2] & 0x01) fileInfo.locked = true;
-                    if (record[2] & 0x02) fileInfo.hasThreadRecord = true;
-                    if (record[2] & 0x80) fileInfo.recordUsed = true;
-                    var finfoFlags = dv.getUint16(12, false);
-                    if (finfoFlags & 0x0001) fileInfo.isOnDesk = true;
-                    if (finfoFlags & 0x000E) fileInfo.color = true;
-                    if (finfoFlags & 0x0020) fileInfo.requireSwitchLaunch = true;
-                    if (finfoFlags & 0x0040) fileInfo.isShared = true;
-                    if (finfoFlags & 0x0080) fileInfo.hasNoINITs = true;
-                    if (finfoFlags & 0x0100) fileInfo.hasBeenInited = true;
-                    if (finfoFlags & 0x0400) fileInfo.hasCustomIcon = true;
-                    if (finfoFlags & 0x0800) fileInfo.isStationery = true;
-                    if (finfoFlags & 0x1000) fileInfo.nameLocked = true;
-                    if (finfoFlags & 0x2000) fileInfo.hasBundle = true;
-                    if (finfoFlags & 0x4000) fileInfo.isInvisible = true;
-                    if (finfoFlags & 0x8000) fileInfo.isAlias = true;
-                    if (typeof reader.onfile === 'function') {
-                      reader.onfile(fileInfo);
-                    }
-                    break;
-                  case 3: // folder thread
-                  case 4: // file thread
-                    var threadInfo = {
-                      parentDirectoryId: parentDirectoryId,
-                      parentFolderID: dv.getUint32(10, false),
-                      parentFolderName: macintoshRoman(record, 15, record[14]),
-                    };
-                    if (record[0] === 3) {
-                      if (typeof reader.onfolderthread === 'function') {
-                        reader.onfolderthread(threadInfo);
-                      }
-                    }
-                    else {
-                      if (typeof reader.onfilethread === 'function') {
-                        reader.onfilethread(threadInfo);
-                      }
-                    }
-                    break;
-                  default:
-                    console.error('unknown folder record type: ' + dv.getUint8(0));
-                    break;
-                }
-              }
+            case 'leaf':
               if (typeof reader.onleafnode === 'function') {
                 reader.onleafnode(node);
               }
