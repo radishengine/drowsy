@@ -347,7 +347,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
   };
   
   function FolderInfoView(buffer, byteOffset, byteLength) {
-    this.dataView = new DataView(buffer, byteoffset, byteLength);
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
   }
   FolderInfoView.prototype = {
     get flags() {
