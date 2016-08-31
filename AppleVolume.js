@@ -306,18 +306,17 @@ define(['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView'], function(ByteSource
             container.appendChild(children);
             folders[folderInfo.id] = children;
           }
-          if (folderInfo.parentDirectoryId === 1) {
-            container.setAttribute('open', 'open');
+          if (folderInfo.parentFolderID === 1) {
             document.body.appendChild(container);
           }
-          else if (folderInfo.parentDirectoryId in folders) {
-            folders[folderInfo.parentDirectoryId].appendChild(container);
+          else if (folderInfo.parentFolderID in folders) {
+            folders[folderInfo.parentFolderID].appendChild(container);
           }
           else {
             var siblings = document.createElement('SECTION');
             siblings.classList.add('folder-children');
             siblings.appendChild(container);
-            folders[folderInfo.parentDirectoryId] = siblings;
+            folders[folderInfo.parentFolderID] = siblings;
           }
         },
         onleafnode: function(leaf) {
@@ -330,11 +329,13 @@ define(['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView'], function(ByteSource
               case 'folder':
                 record.folderInfo.name = record.name;
                 record.folderInfo.number = record.number;
+                record.folderInfo.parentFolderID = record.parentFolderID;
                 this.onfolder(record.folderInfo);
                 break;
               case 'file':
                 record.fileInfo.name = record.name;
                 record.fileInfo.number = record.number;
+                record.fileInfo.parentFolderID = record.parentFolderID;
                 this.onfile(record.fileInfo);
                 break;
               case 'folderthread':
@@ -460,17 +461,17 @@ define(['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView'], function(ByteSource
               }
             });
           }
-          if (fileInfo.parentDirectoryId === 1) {
+          if (fileInfo.parentFolderID === 1) {
             document.body.appendChild(container);
           }
-          else if (fileInfo.parentDirectoryId in folders) {
-            folders[fileInfo.parentDirectoryId].appendChild(container);
+          else if (fileInfo.parentFolderID in folders) {
+            folders[fileInfo.parentFolderID].appendChild(container);
           }
           else {
             var siblings = document.createElement('SECTION');
             siblings.classList.add('folder-children');
             siblings.appendChild(container);
-            folders[fileInfo.parentDirectoryId] = siblings;
+            folders[fileInfo.parentFolderID] = siblings;
           }
         },
       });
