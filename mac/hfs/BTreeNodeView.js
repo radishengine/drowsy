@@ -232,7 +232,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
   
   function FileInfoView(buffer, byteOffset, byteLength) {
     this.dataView = new DataView(buffer, byteOffset, byteLength);
-    this.bytes = new UintArray(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
   FileInfoView.prototype = {
     get locked() {
