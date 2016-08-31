@@ -101,7 +101,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
     get isDeleted() {
       return !(this.bytes.length && this.bytes[0]);
     },
-    get parentDirectoryID() {
+    get parentFolderID() {
       return this.dataView.getUint32(2, false);
     },
     get name() {
@@ -177,7 +177,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
     get isDeleted() {
       return !(this.bytes.length && this.bytes[0]);
     },
-    get parentDirectoryID() {
+    get parentFolderID() {
       return this.dataView.getUint32(2, false);
     },
     get name() {
