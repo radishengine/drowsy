@@ -1,4 +1,4 @@
-define(['mac/roman', 'mac/date'], function(macintoshRoman, macintoshDate) {
+define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macintoshDate, RectView) {
 
   'use strict';
   
@@ -361,12 +361,7 @@ define(['mac/roman', 'mac/date'], function(macintoshRoman, macintoshDate) {
       return position;
     },
     get windowRect() {
-      return {
-        top: this.dataView.getInt16(22, false),
-        left: this.dataView.getInt16(24, false),
-        bottom: this.dataView.getInt16(26, false),
-        right: this.dataView.getInt16(28, false),
-      };
+      return new RectView(this.dataView.buffer, this.dataView.byteOffset + 22);
     },
     get isOnDesk() {
       return !!(this.dataView.getUint16(30, false) & 0x0001);
