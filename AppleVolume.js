@@ -609,7 +609,7 @@ define(['ByteSource', 'mac/roman', 'BTreeNodeView'], function(ByteSource, macint
           var node = new BTreeNodeView(bytes.buffer, bytes.byteOffset, byte.byteLength);
           node.number = nodeNumber;
           switch(node.nodeType) {
-            case 'index';
+            case 'index':
               node.pointers = node.records;
               if (typeof reader.onindexnode === 'function') {
                 reader.onindexnode(node);
