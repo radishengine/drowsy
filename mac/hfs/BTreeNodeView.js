@@ -1,9 +1,20 @@
-define(function() {
+define(['mac/roman'], ['mac/date'], function(macintoshRoman, macintoshDate) {
 
   'use strict';
   
   var NODE_BYTES = 512;
-
+  
+  function extentDataRecord(dv, offset) {
+    var record = [];
+    for (var i = 0; i < 3; i++) {
+      record.push({
+        offset: dv.getUint16(offset + i*4, false),
+        length: dv.getUint16(offset + i*4 + 2, false),
+      });
+    }
+    return record;
+  }
+  
   function BTreeNodeView(buffer, byteOffset) {
     this.dataView = new DataView(buffer, byteOffset, NODE_BYTES);
     this.bytes = new Uint8Array(buffer, byteOffset, NODE_BYTES);
@@ -34,18 +45,67 @@ define(function() {
     get backwardLink() {
       return this.dataView.getInt32(4, false);
     },
-    get headerInfo() {
-      if (this.nodeType !== 'header') return null;
-      var headerInfo = new BTreeHeaderView(this.rawRecords[0].buffer, this.rawRecords[0].byteOffset);
-      Object.defineProperty(this, 'headerInfo', {value:headerInfo});
-      return headerInfo;
+    get records() {
+      switch (this.nodeType) {
+        case 'index':
+          return this.rawRecords
+          .map(function(recordBytes) {
+            return new IndexRecordView(recordBytes.buffer, recordBytes.byteOffset, recordBytes.byteLength);
+          })
+          .filter(function(indexRecord) {
+            return !indexRecord.isDeleted;
+          });
+        case 'header':
+          if (this.rawRecords.length !== 3) {
+            throw new Error('B*Tree header node: expected 3 records, got ' + this.rawRecords.length);
+          }
+          var rawHeader = this.rawRecords[0], rawMap = this.rawRecords[2];
+          return [
+            new HeaderRecordView(rawHeader.buffer, rawHeader.byteOffset, rawHeader.byteLength),
+            'unused',
+            new MapRecordView(rawMap.buffer, rawMap.byteOffset, rawMap.byteLength),
+          ];
+        case 'map':
+          return this.rawRecords
+          .map(function(rawMap) {
+            return new MapRecordView(rawMap.buffer, rawMap.byteOffset, rawMap.byteLength)
+          });
+        case 'leaf':
+          return this.rawRecords
+          .map(function(rawLeaf) {
+            return new LeafRecordView(rawLeaf.buffer, rawLeaf.byteOffset, rawLeaf.byteLength);
+          })
+          .filter(function(leaf) {
+            return !leaf.isDeleted;
+          });
+        default: return null;
+      }
     },
   };
   
-  function BTreeHeaderView(buffer, byteOffset) {
-    this.dataView = new DataView(buffer, byteOffset, BTreeHeaderView.byteLength);
+  function IndexRecordView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
-  BTreeHeaderView.prototype = {
+  IndexRecordView.prototype = {
+    get isDeleted() {
+      return !(this.bytes.length && this.bytes[0]);
+    },
+    get parentDirectoryID() {
+      return this.dataView.getUint32(2, false);
+    },
+    get name() {
+      return macintoshRoman(this.bytes, 7, this.bytes[6]);
+    },
+    get pointerNodeNumber() {
+      return this.dataView.getUint32(1 + this.bytes[0], false);
+    },
+  };
+  
+  function HeaderRecordView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+  }
+  HeaderRecordView.prototype = {
     get treeDepth() {
       return this.dataView.getUint16(0, false);
     },
@@ -74,8 +134,221 @@ define(function() {
       return this.dataView.getUint32(26, false);
     },
   };
-  BTreeHeaderView.byteLength = 30;
   
+  function MapRecordView(startOffset, buffer, byteOffset, byteLength) {
+    this.startOffset = startOffset;
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+  };
+  MapRecordView.prototype = {
+    get nodeCount() {
+      return this.bytes.length * 8;
+    },
+    getIsNodeUsed: function(index) {
+      var byte = index >> 3, bit = (0x80 >> (index & 7));
+      if (byte < 0 || byte >= this.bytes.length) {
+        throw new RangeError('map index out of range: ' + index + ' (size: ' + this.nodeCount + ')');
+      }
+      return !!(this.bytes[byte] & bit);
+    },
+  };
+  
+  function LeafRecordView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    
+    if (!this.isDeleted) {
+      var dataOffset = 1 + this.bytes[0];
+      datOffset += dataOffset % 2;
+      var dataLength = byteLength - dataOffset;
+      this.dataDataView = new DataView(buffer, byteOffset + dataOffset, dataLength);
+      this.dataBytes = new Uint8Array(buffer, byteOffset + dataOffset, dataLength);
+    }
+  }
+  LeafRecordView.prototype = {
+    get isDeleted() {
+      return !(this.bytes.length && this.bytes[0]);
+    },
+    get parentDirectoryID() {
+      return this.dataView.getUint32(2, false);
+    },
+    get name() {
+      return macintoshRoman(this.bytes, 7, this.bytes[6]);
+    },
+    get leafType() {
+      switch (this.dataBytes[0]) {
+        case 1: return 'folder';
+        case 2: return 'file';
+        case 3: return 'folderthread';
+        case 4: return 'filethread';
+        default: return 'unknown';
+      }
+    },
+    get fileInfo() {
+      if (this.leafType !== 'file') return null;
+      var fileInfo = new FileInfoView(
+        this.dataBytes.buffer,
+        this.dataBytes.byteOffset,
+        this.dataBytes.byteLength);
+      Object.defineProperty(this, 'fileInfo', {value:fileInfo});
+      return fileInfo;
+    },
+    get folderInfo() {
+      if (this.leafType !== 'folder') return null;
+      var folderInfo = new FolderInfoView(
+        this.dataBytes.buffer,
+        this.dataBytes.byteOffset,
+        this.dataBytes.byteLength);
+      Object.defineProperty(this, 'folderInfo', {value:folderInfo});
+      return folderInfo;
+    },
+    get fileThreadInfo() {
+      if (this.leafType !== 'filethread') return null;
+      var threadInfo = new ThreadInfoView(
+        this.dataBytes.buffer,
+        this.dataBytes.byteOffset,
+        this.dataBytes.byteLength);
+      Object.defineProperty(this, 'fileThreadInfo', {value:threadInfo});
+      return threadInfo;
+    },
+    get folderThreadInfo() {
+      if (this.leafType !== 'folderthread') return null;
+      var threadInfo = new ThreadInfoView(
+        this.dataBytes.buffer,
+        this.dataBytes.byteOffset,
+        this.dataBytes.byteLength);
+      Object.defineProperty(this, 'folderThreadInfo', {value:threadInfo});
+      return threadInfo;
+    },
+  };
+  
+  function FileInfo(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new DataView(buffer, byteOffset, byteLength);
+  }
+  FileInfo.prototype = {
+    get locked() {
+      return  !!(record[2] & 0x01);
+    },
+    get hasThreadRecord() {
+      return  !!(record[2] & 0x02);
+    },
+    get recordUsed() {
+      return  !!(record[2] & 0x80);
+    },
+    get type() {
+      var type = macintoshRoman(this.bytes, 4, 4);
+      return (type === '\0\0\0\0') ? null : type;
+    },
+    get creator() {
+      var creator = macintoshRoman(this.bytes, 8, 4);
+      return (creator === '\0\0\0\0') ? null : creator;
+    },
+    get isOnDesk() {
+      return !!(0x0001 & this.dataView.getUint16(12, false));
+    },
+    get color() {
+      return !!(0x000E & this.dataView.getUint16(12, false));
+    },
+    get requireSwitchLaunch() {
+      return !!(0x0020 & this.dataView.getUint16(12, false));
+    },
+    get isShared() {
+      return !!(0x0040 & this.dataView.getUint16(12, false));
+    },
+    get hasNoINITs() {
+      return !!(0x0080 & this.dataView.getUint16(12, false));
+    },
+    get hasBeenInited() {
+      return !!(0x0100 & this.dataView.getUint16(12, false));
+    },
+    get hasCustomIcon() {
+      return !!(0x0400 & this.dataView.getUint16(12, false));
+    },
+    get isStationery() {
+      return !!(0x0800 & this.dataView.getUint16(12, false));
+    },
+    get isNameLocked() {
+      return !!(0x1000 & this.dataView.getUint16(12, false));
+    },
+    get hasBundle() {
+      return !!(0x2000 & this.dataView.getUint16(12, false));
+    },
+    get isInvisible() {
+      return !!(0x4000 & this.dataView.getUint16(12, false));
+    },
+    get isAlias() {
+      return !!(0x8000 & this.dataView.getUint16(12, false));
+    },
+    get id() {
+      return this.dataView.getUInt32(20, false);
+    },
+    get iconPosition() {
+      var position = {
+        v: this.dataView.getInt16(14, false),
+        h: this.dataView.getInt16(16, false),
+      };
+      return !(position.v && position.h) ? 'default' : position;
+    },
+    get dataForkInfo() {
+      return new ForkInfo(this.bytes.buffer, this.bytes.byteOffset + 24);
+    },
+    get resourceForkInfo() {
+      return new ForkInfo(this.bytes.buffer, this.bytes.byteOffset + 34);
+    },
+    get createdAt() {
+      return macintoshDate(this.dataView, 44);
+    },
+    get modifiedAt() {
+      return macintoshDate(this.dataView, 48);
+    },
+    get backupAt() {
+      return macintoshDate(this.dataView, 52);
+    },
+    // 56: fxInfoReserved (8 bytes)
+    get fxinfoFlags() {
+      return this.dataView.getUint16(64, false);
+    },
+    get putAwayFolderID() {
+      return this.dataView.getUint32(68, false);
+    },
+    get clumpSize() {
+      return this.dataView.getUint16(72, false),
+    },
+    get dataForkFirstExtentRecord() {
+      return extentDataRecord(this.dataView, 74);
+    },
+    get resourceForkFirstExtentRecord() {
+      return extentDataRecord(this.dataView, 86);
+    },
+  };
+  
+  function ForkInfoView(buffer, byteOffset) {
+    this.dataView = new DataView(buffer, byteOffset, 6);
+  }
+  ForkInfoView.prototype = {
+    get firstAllocationBlock() {
+      return this.dataView.getUint16(0, false);
+    },
+    get logicalEOF() {
+      return this.dataView.getUint32(2, false);
+    },
+    get physicalEOF() {
+      return this.dataView.getUint32(6, false);
+    },
+  };
+  
+  function ThreadInfoView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+  }
+  ThreadInfo.prototype = {
+    get parentFolderID() {
+      this.dataView.getUint32(10, false);
+    },
+    get parentFolderName() {
+      return macintoshRoman(this.bytes, 15, this.bytes[14]);
+    },
+  };
+
   return BTreeNodeView;
 
 });
