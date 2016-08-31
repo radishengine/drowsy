@@ -15,7 +15,7 @@ define(['mac/roman'], function(macintoshRoman) {
       return String.fromCharCode.apply(null, this.bytes.subarray(0, 4)) === 'PM\0\0';
     },
     get totalPartitionCount() {
-      return this.dataView.getInt32(4, false),
+      return this.dataView.getInt32(4, false);
     },
     get blockOffset() {
       return this.dataView.getInt32(8, false);
