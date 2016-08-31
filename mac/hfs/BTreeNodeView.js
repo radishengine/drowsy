@@ -299,10 +299,10 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
       return !(position.v && position.h) ? 'default' : position;
     },
     get dataForkInfo() {
-      return new ForkInfo(this.bytes.buffer, this.bytes.byteOffset + 24);
+      return new ForkInfoView(this.bytes.buffer, this.bytes.byteOffset + 24);
     },
     get resourceForkInfo() {
-      return new ForkInfo(this.bytes.buffer, this.bytes.byteOffset + 34);
+      return new ForkInfoView(this.bytes.buffer, this.bytes.byteOffset + 34);
     },
     get createdAt() {
       return macintoshDate(this.dataView, 44);
