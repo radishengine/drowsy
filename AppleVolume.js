@@ -1,6 +1,6 @@
 define(
-['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView', 'mac/hfs/PartitionRecordView'],
-function(ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView) {
+['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView', 'mac/hfs/PartitionRecordView', 'mac/hfs/ResourceHeaderView'],
+function(ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView, ResourceHeaderView) {
 
   'use strict';
   
@@ -453,9 +453,8 @@ function(ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView) {
     readResourceFork: function(byteSource, reader) {
       byteSource.read({
         onbytes: function(bytes) {
-          var dv = new DataView(bytes.buffer, bytes.byteOffet, bytes.byteLength);
-          var dataOffset = dv.getUint32(0, false);
-          var mapDV = new DataView(bytes.buffer, bytes.byteOffset + dv.getUint32(4, false), dv.getUint32(12, false));
+          var header = new ResourceHeaderView(bytes.buffer, bytes.byteOffset, ResourceHeaderView.byteLength);
+          var mapDV = new DataView(bytes.buffer, bytes.byteOffset + header.mapOffset, header.mapLength);
           var attributes = mapDV.getUint16(22, false);
           var isReadOnly = !!(attributes & 0x80);
           var typeListOffset = mapDV.getUint16(24, false);
@@ -489,7 +488,8 @@ function(ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView) {
                   mapDV.getUint8(resourceNameOffset));
                 resourceName = macintoshRoman(resourceName, 0, resourceName.length);
               }
-              resourceDataOffset += dataOffset;
+              resourceDataOffset += header.dataOffset;
+              var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
               var data = bytes.subarray(
                 resourceDataOffset + 4,
                 resourceDataOffset + 4 + dv.getUint32(resourceDataOffset, false));
@@ -569,7 +569,7 @@ function(ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView) {
                   resource.image = {
                     width: entryCount,
                     height: 1,
-                    url: palCanvas.toDataURL()
+                    url: palCanvas.toDataURL(),
                   };
                   if (typeof reader.onresource === 'function') {
                     reader.onresource(resource);
