@@ -606,7 +606,7 @@ define(['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView'], function(ByteSource
       var self = this;
       byteSource.slice(nodeNumber * BTREE_NODE_BYTES, (nodeNumber + 1) * BTREE_NODE_BYTES).read({
         onbytes: function(bytes) {
-          var node = new BTreeNodeView(bytes.buffer, bytes.byteOffset, byte.byteLength);
+          var node = new BTreeNodeView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
           node.number = nodeNumber;
           switch(node.nodeType) {
             case 'index':
