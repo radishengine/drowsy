@@ -138,8 +138,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
     },
   };
   
-  function MapRecordView(startOffset, buffer, byteOffset, byteLength) {
-    this.startOffset = startOffset;
+  function MapRecordView(buffer, byteOffset, byteLength) {
     this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   };
   MapRecordView.prototype = {
