@@ -1,4 +1,4 @@
-define(['mac/roman'], ['mac/date'], function(macintoshRoman, macintoshDate) {
+define(['mac/roman', 'mac/date'], function(macintoshRoman, macintoshDate) {
 
   'use strict';
   
