@@ -45,6 +45,9 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
     get backwardLink() {
       return this.dataView.getInt32(4, false);
     },
+    get depth() {
+      return this.bytes[9];
+    },
     get records() {
       switch (this.nodeType) {
         case 'index':
