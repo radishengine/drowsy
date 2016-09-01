@@ -269,6 +269,10 @@ function(
           container.dataset.name = folderInfo.name;
           var title = document.createElement('HEADER');
           title.innerHTML = folderInfo.name;
+          var expandButton = document.createElement('BUTTON');
+          expandButton.style.width = '1ex';
+          expandButton.innerHTML = '&#x2795;';
+          title.insertBefore(expandButton, title.firstChild);
           container.appendChild(title);
           var timestamp = folderInfo.modifiedAt || folderInfo.createdAt;
           if (timestamp) {
@@ -381,6 +385,10 @@ function(
           }
           container.appendChild(title);
           if (fileInfo.resourceForkInfo.logicalEOF) {
+            var expandButton = document.createElement('BUTTON');
+            expandButton.style.width = '1ex';
+            expandButton.innerHTML = '&#x2795;';
+            title.insertBefore(expandButton, title.firstChild);
             var resources = document.createElement('SECTION');
             resources.classList.add('folder-children');
             container.appendChild(resources);
