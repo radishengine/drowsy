@@ -454,28 +454,30 @@ function(
       });
     },
     readResourceFork: function(byteSource, reader) {
-      var header, map;
+      var header, map, dataByteSource;
       byteSource.slice(0, ResourceHeaderView.byteLength).getBytes()
       .then(function(headerBytes) {
         header = new ResourceHeaderView(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
+        dataByteSource = byteSource.slice(header.dataOffset, header.dataOffset + header.dataLength);
         return byteSource.slice(header.mapOffset, header.mapOffset + header.mapLength).getBytes();
       })
       .then(function(mapBytes) {
         map = new ResourceMapView(mapBytes.buffer, mapBytes.byteOffset, mapBytes.byteLength);
-        for (var i = 0; i < map.resourceList.length; i++) {
-          var resource = map.resourceList[i];
-          var dataOffset = header.dataOffset + resource.dataOffset;
-          byteSource.slice(dataOffset, dataOffset + 4).getBytes()
-          .then(function(lengthBytes) {
+        map.resourceList.forEach(function(resource) {
+          dataByteSource.slice(
+            resource.dataOffset,
+            resource.dataOffset + 4)
+          .getBytes()
+          .then(function(values) {
             return new DataView(
               lengthBytes.buffer,
               lengthBytes.byteOffset,
               lengthBytes.byteLength).getUint32(0, false);
           })
           .then(function(length) {
-            resource.byteSource = byteSource.slice(
-              dataOffset + 4,
-              dataOffset + 4 + length);
+            resource.byteSource = dataByteSource.slice(
+              resource.dataOffset + 4,
+              resource.dataOffset + 4 + length);
             return resource.byteSource.getBytes();
           })
           .then(function(data) {
@@ -552,7 +554,7 @@ function(
                 break;
             }
           });
-        }
+        });
       });
     },
     readBTreeNode: function(byteSource, nodeNumber, reader) {
