@@ -385,7 +385,8 @@ function(
                 downloadLink.style.display = 'none';
                 downloadLink.href = '#';
                 downloadLink.setAttribute('download', 'resource.dat');
-                function clickDownloadLink() {
+                function clickDownloadLink(e) {
+                    e.preventDefault();
                     resource.byteSource.getURL()
                         .then(function(url) {
                             downloadLink.href = url;
