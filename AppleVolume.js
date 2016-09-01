@@ -271,7 +271,7 @@ function(
           title.innerHTML = folderInfo.name;
           var expandButton = document.createElement('BUTTON');
           expandButton.style.width = '2em';
-          expandButton.innerHTML = '&#x2795;';
+          expandButton.innerHTML = '&#x1F4C1;';
           title.insertBefore(expandButton, title.firstChild);
           container.appendChild(title);
           var timestamp = folderInfo.modifiedAt || folderInfo.createdAt;
