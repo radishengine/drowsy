@@ -1,9 +1,9 @@
 define([
-    'ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView', 'mac/hfs/PartitionRecordView',
-    'mac/hfs/ResourceHeaderView', 'mac/hfs/ResourceMapView'],
+  'ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView', 'mac/hfs/PartitionRecordView',
+  'mac/hfs/ResourceHeaderView', 'mac/hfs/ResourceMapView'],
 function(
-    ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView,
-    ResourceHeaderView, ResourceMapView) {
+  ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView,
+  ResourceHeaderView, ResourceMapView) {
 
   'use strict';
   
@@ -348,25 +348,42 @@ function(
           var title = document.createElement('HEADER');
           if (fileInfo.dataForkInfo.logicalEOF) {
             container.dataset.size = fileInfo.dataForkInfo.logicalEOF;
-            var dataFork = document.createElement('A');
-            dataFork.setAttribute('href', '#');
-            dataFork.classList.add('data-fork');
-            dataFork.innerText = fileInfo.name;
+            var downloadButton = document.createElement('BUTTON');
+            downloadButton.innerHTML = '&#x1f4be;';
+            var downloadLink = document.createElement('A');
+            downloadLink.style.display = 'none';
+            downloadLink.href = '#';
+            downloadLink.setAttribute('download', fileInfo.name);
             var extent = fileInfo.dataForkFirstExtentRecord[0];
-            allocation.slice(
+            var downloadByteSource = allocation.slice(
               allocation.blockSize * extent.offset,
               allocation.blockSize * extent.offset + fileInfo.dataForkInfo.logicalEOF
-            ).getURL().then(function(url) {
-              dataFork.setAttribute('href', url);
-              dataFork.setAttribute('download', fileInfo.name);
+            );
+            function clickDownloadLink(e) {
+              e.preventDefault();
+              downloadByteSource.getURL()
+                .then(function(url) {
+                  downloadLink.href = url;
+                  downloadLink.click();
+                });
+              downloadLink.removeEventListener('click', clickDownloadLink);
+            }
+            downloadLink.addEventListener('click', clickDownloadLink);
+            downloadButton.addEventListener('click', function() {
+                downloadLink.click();
             });
-            title.appendChild(dataFork);
+            title.appendChild(downloadButton);
+            title.appendChild(downloadLink);
+            title.appendChild(document.createTextNode(fileInfo.name));
           }
           else {
             title.appendChild(document.createTextNode(fileInfo.name));
           }
           container.appendChild(title);
           if (fileInfo.resourceForkInfo.logicalEOF) {
+            var resources = document.createElement('SECTION');
+            resources.classList.add('folder-children');
+            container.appendChild(resources);
             var extent = fileInfo.resourceForkFirstExtentRecord[0];
             self.readResourceFork(allocation.slice(
               allocation.blockSize * extent.offset,
@@ -376,7 +393,7 @@ function(
                 var resourceEl = document.createElement('SECTION');
                 var resourceTitleString = '[' + resource.type + '] #' + resource.id;
                 if (resource.name) {
-                    resourceTitleString += ' "' + resource.name + '"';
+                  resourceTitleString += ' "' + resource.name + '"';
                 }
                 var resourceTitle = document.createElement('HEADER');
                 var downloadButton = document.createElement('BUTTON');
@@ -396,13 +413,13 @@ function(
                 }
                 downloadLink.addEventListener('click', clickDownloadLink);
                 downloadButton.addEventListener('click', function() {
-                    downloadLink.click();
+                  downloadLink.click();
                 });
                 resourceTitle.appendChild(downloadLink);
                 resourceTitle.appendChild(downloadButton);
                 resourceTitle.appendChild(document.createTextNode(resourceTitleString));
                 resourceEl.appendChild(resourceTitle);
-                container.appendChild(resourceEl);
+                resources.appendChild(resourceEl);
                 /*
                 var resourceEl;
                 if ('image' in resource) {
