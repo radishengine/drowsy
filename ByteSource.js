@@ -43,6 +43,11 @@ define([], function() {
         fr.readAsArrayBuffer(blob);
       });
     };
+    Object.defineProperty(proto, 'byteLength', {
+      get: function() {
+        return this.blob.size;
+      },
+    });
   })(ByteSourceFromBlob.prototype = new ByteSource);
   
   ByteSource.FromBlob = ByteSourceFromBlob;
