@@ -454,17 +454,32 @@ function(
       });
     },
     readResourceFork: function(byteSource, reader) {
-      byteSource.read({
-        onbytes: function(bytes) {
-          var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-          var header = new ResourceHeaderView(bytes.buffer, bytes.byteOffset, ResourceHeaderView.byteLength);
-          var map = new ResourceMapView(bytes.buffer, bytes.byteOffset + header.mapOffset, header.mapLength);
-          for (var i = 0; i < map.resourceList.length; i++) {
-            var resource = map.resourceList[i];
-            var dataOffset = header.dataOffset + resource.dataOffset;
-            resource.data = bytes.subarray(
+      var header, map;
+      byteSource.slice(0, ResourceHeaderView.byteLength).getBytes()
+      .then(function(headerBytes) {
+        header = new ResourceHeaderView(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
+        return byteSource.slice(header.mapOffset, header.mapOffset + header.mapLength).getBytes();
+      })
+      .then(function(mapBytes) {
+        map = new ReourceMapView(mapBytes.buffer, mapBytes.byteOffset, mapBytes.byteLength);
+        for (var i = 0; i < map.resourceList.length; i++) {
+          var resource = map.resourceList[i];
+          var dataOffset = header.dataOffset + resource.dataOffset;
+          byteSource.slice(dataOffset, dataOffset + 4).getBytes()
+          .then(function(lengthBytes) {
+            return new DataView(
+              lengthBytes.buffer,
+              lengthBytes.byteOffset,
+              lengthBytes.byteLength).getUint32(0, false);
+          })
+          .then(function(length) {
+            resource.byteSource = byteSource.slice(
               dataOffset + 4,
-              dataOffset + 4 + dv.getUint32(dataOffset));
+              dataOffset + 4 + length);
+            return resource.byteSource.getBytes();
+          })
+          .then(function(data) {
+            resource.data = data;
             switch (resource.type) {
               default:
                 (function(resource) {
@@ -536,8 +551,8 @@ function(
                 }
                 break;
             }
-          }
-        },
+          });
+        }
       });
     },
     readBTreeNode: function(byteSource, nodeNumber, reader) {
