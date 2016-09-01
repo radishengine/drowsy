@@ -32,7 +32,7 @@ define(['mac/roman'], function(macintoshRoman) {
       var byteLength = ResourceTypeListEntryView.byteLength;
       for (var i = 0; i < list.length; i++) {
         list[i] = new ResourceTypeListEntryView(buffer, byteOffset, byteLength);
-        byteOffset += byteLength * i;
+        byteOffset += byteLength;
       }
       Object.defineProperty(this, 'typeList', {value:list});
       return list;
