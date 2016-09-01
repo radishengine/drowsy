@@ -8,20 +8,20 @@ define(['mac/roman'], function(macintoshRoman) {
   }
   ResourceMapView.prototype = {
     get isReadOnly() {
-      return !!(this.getUint16(0, false) & 0x0080);
+      return !!(this.dataView.getUint16(0, false) & 0x0080);
     },
     get typeListOffset() {
-      var offset = this.getUint16(2, false);
+      var offset = this.dataView.getUint16(2, false);
       Object.defineProperty(this, 'typeListOffset', {value:offset});
       return offset;
     },
     get nameListOffset() {
-      var offset = this.getUint16(4, false);
+      var offset = this.dataView.getUint16(4, false);
       Object.defineProperty(this, 'nameListOffset', {value:offset});
       return offset;
     },
     get typeCount() {
-      var count = this.getInt16(this.typeListOffset, false) + 1;
+      var count = this.dataView.getInt16(this.typeListOffset, false) + 1;
       Object.defineProperty(this, 'typeCount', {value:count});
       return count;
     },
@@ -80,10 +80,10 @@ define(['mac/roman'], function(macintoshRoman) {
       return macintoshRoman(this.bytes, 0, 4);
     },
     get resourceCount() {
-      return this.getInt16(4, false) + 1;
+      return this.dataView.getInt16(4, false) + 1;
     },
     get referenceListOffset() {
-      return this.getUint16(6, false);
+      return this.dataView.getUint16(6, false);
     },
   };
   ResourceTypeListEntryView.byteLength = 8;
