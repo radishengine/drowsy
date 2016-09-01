@@ -353,7 +353,7 @@ function(
           if (fileInfo.dataForkInfo.logicalEOF) {
             container.dataset.size = fileInfo.dataForkInfo.logicalEOF;
             var downloadButton = document.createElement('BUTTON');
-            downloadButton.innerHTML = '&#x1f4be;';
+            downloadButton.innerHTML = '&#x1F4C4;';
             var downloadLink = document.createElement('A');
             downloadLink.style.display = 'none';
             downloadLink.href = '#';
@@ -405,7 +405,7 @@ function(
                 }
                 var resourceTitle = document.createElement('HEADER');
                 var downloadButton = document.createElement('BUTTON');
-                downloadButton.innerHTML = '&#x1f4be;';
+                downloadButton.innerHTML = '&#x1F4C4;';
                 var downloadLink = document.createElement('A');
                 downloadLink.style.display = 'none';
                 downloadLink.href = '#';
