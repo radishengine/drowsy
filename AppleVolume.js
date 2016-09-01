@@ -468,7 +468,7 @@ function(
             resource.dataOffset,
             resource.dataOffset + 4)
           .getBytes()
-          .then(function(values) {
+          .then(function(lengthBytes) {
             return new DataView(
               lengthBytes.buffer,
               lengthBytes.byteOffset,
