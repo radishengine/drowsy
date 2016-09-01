@@ -461,7 +461,7 @@ function(
         return byteSource.slice(header.mapOffset, header.mapOffset + header.mapLength).getBytes();
       })
       .then(function(mapBytes) {
-        map = new ReourceMapView(mapBytes.buffer, mapBytes.byteOffset, mapBytes.byteLength);
+        map = new ResourceMapView(mapBytes.buffer, mapBytes.byteOffset, mapBytes.byteLength);
         for (var i = 0; i < map.resourceList.length; i++) {
           var resource = map.resourceList[i];
           var dataOffset = header.dataOffset + resource.dataOffset;
