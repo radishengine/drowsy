@@ -8,15 +8,15 @@ define(['mac/roman'], function(macintoshRoman) {
   }
   ResourceMapView.prototype = {
     get isReadOnly() {
-      return !!(this.dataView.getUint16(0, false) & 0x0080);
+      return !!(this.dataView.getUint16(22, false) & 0x0080);
     },
     get typeListOffset() {
-      var offset = this.dataView.getUint16(2, false);
+      var offset = this.dataView.getUint16(24, false);
       Object.defineProperty(this, 'typeListOffset', {value:offset});
       return offset;
     },
     get nameListOffset() {
-      var offset = this.dataView.getUint16(4, false);
+      var offset = this.dataView.getUint16(26, false);
       Object.defineProperty(this, 'nameListOffset', {value:offset});
       return offset;
     },
