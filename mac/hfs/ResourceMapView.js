@@ -64,6 +64,7 @@ define(['mac/roman'], function(macintoshRoman) {
           var resourceInfo = withType[j];
           resourceInfo.type = typeName;
           reourceInfo.name = this.getName(resourceInfo.nameOffset);
+          list.push(resourceInfo);
         }
       }
       Object.defineProperty(this, 'resourceList', {value:list});
