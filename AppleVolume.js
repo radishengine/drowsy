@@ -1,6 +1,9 @@
-define(
-['ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView', 'mac/hfs/PartitionRecordView', 'mac/hfs/ResourceHeaderView'],
-function(ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView, ResourceHeaderView) {
+define([
+    'ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView', 'mac/hfs/PartitionRecordView',
+    'mac/hfs/ResourceHeaderView', 'mac/hfs/ResourceMapView'],
+function(
+    ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView,
+    ResourceHeaderView, ResourceMapView) {
 
   'use strict';
   
@@ -453,129 +456,85 @@ function(ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView, Resourc
     readResourceFork: function(byteSource, reader) {
       byteSource.read({
         onbytes: function(bytes) {
+          var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
           var header = new ResourceHeaderView(bytes.buffer, bytes.byteOffset, ResourceHeaderView.byteLength);
-          var mapDV = new DataView(bytes.buffer, bytes.byteOffset + header.mapOffset, header.mapLength);
-          var attributes = mapDV.getUint16(22, false);
-          var isReadOnly = !!(attributes & 0x80);
-          var typeListOffset = mapDV.getUint16(24, false);
-          var nameListOffset = mapDV.getUint16(26, false);
-          var typeCount = mapDV.getInt16(typeListOffset, false) + 1;
-          var resources = [];
-          for (var i = 0; i < typeCount; i++) {
-            var resourceTypeName = macintoshRoman(
-              new Uint8Array(mapDV.buffer, mapDV.byteOffset + typeListOffset + 2 + (i * 8), 4),
-              0, 4);
-            var resourceCount = mapDV.getInt16(typeListOffset + 2 + (i * 8) + 4, false) + 1;
-            var referenceListOffset = mapDV.getUint16(typeListOffset + 2 + (i * 8) + 4 + 2, false);
-            var referenceListDV = new DataView(
-              mapDV.buffer,
-              mapDV.byteOffset + typeListOffset + referenceListOffset,
-              resourceCount * 12);
-            for (var j = 0; j < resourceCount; j++) {
-              var resourceID = referenceListDV.getUint16(j * 12, false);
-              var resourceNameOffset = referenceListDV.getInt16(j * 12 + 2, false);
-              var resourceAttributes = referenceListDV.getUint8(j * 12 + 4, false);
-              var resourceDataOffset = referenceListDV.getUint32(j * 12 + 4, false) & 0xffffff;
-              var resourceName;
-              if (resourceNameOffset === -1) {
-                resourceName = null;
-              }
-              else {
-                resourceNameOffset += nameListOffset;
-                resourceName = new Uint8Array(
-                  mapDV.buffer,
-                  mapDV.byteOffset + resourceNameOffset + 1,
-                  mapDV.getUint8(resourceNameOffset));
-                resourceName = macintoshRoman(resourceName, 0, resourceName.length);
-              }
-              resourceDataOffset += header.dataOffset;
-              var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-              var data = bytes.subarray(
-                resourceDataOffset + 4,
-                resourceDataOffset + 4 + dv.getUint32(resourceDataOffset, false));
-              var resource = {
-                name: resourceName,
-                type: resourceTypeName,
-                id: resourceID,
-                data: data,
-              };
-              if (resourceAttributes & 0x40) resource.loadInSystemHeap = true; // instead of application heap
-              if (resourceAttributes & 0x20) resource.mayBePagedOutOfMemory = true;
-              if (resourceAttributes & 0x10) resource.doNotMoveInMemory = true;
-              if (resourceAttributes & 0x08) resource.isReadOnly = true;
-              if (resourceAttributes & 0x04) resource.preload = true;
-              if (resourceAttributes & 0x01) resource.compressed = true;
-              switch (resource.type) {
-                default:
-                  (function(resource) {
-                    var importString = 'mac/resources/open_' + encodeURIComponent(resource.type);
-                    require([importString],
-                      function(open_resource) {
-                        open_resource(resource);
-                        if (typeof reader.onresource === 'function') {
-                          reader.onresource(resource);
+          var map = new ResourceMapView(bytes.buffer, bytes.byteOffset + header.mapOffset, header.mapLength);
+          for (var i = 0; i < map.resourceList.length; i++) {
+            var resource = map.resourceList[i];
+            var dataOffset = header.dataOffset + resource.dataOffset;
+            resource.data = bytes.subarray(
+              dataOffset + 4,
+              dataOffset + 4 + dv.getUint32(dataOffset));
+            switch (resource.type) {
+              default:
+                (function(resource) {
+                  var importString = 'mac/resources/open_' + encodeURIComponent(resource.type);
+                  require([importString],
+                    function(open_resource) {
+                      open_resource(resource);
+                      if (typeof reader.onresource === 'function') {
+                        reader.onresource(resource);
+                      }
+                    },
+                    function(err) {
+                      requirejs.undef(importString);
+                      function defaultHandler(resource) {
+                        if (resource.data.length === 0) {
+                          resource.dataObject = null;
+                          return;
                         }
-                      },
-                      function(err) {
-                        requirejs.undef(importString);
-                        function defaultHandler(resource) {
-                          if (resource.data.length === 0) {
-                            resource.dataObject = null;
-                            return;
+                        for (var i = 0; i < resource.data.length; i++) {
+                          var b = resource.data[i];
+                          if (b >= 32) {
+                            if (b === 127) return;
+                            continue;
                           }
-                          for (var i = 0; i < resource.data.length; i++) {
-                            var b = resource.data[i];
-                            if (b >= 32) {
-                              if (b === 127) return;
-                              continue;
-                            }
-                            if (b !== 9 && b !== 13) return;
-                          }
-                          resource.text = macintoshRoman(resource.data, 0, resource.data.length);
+                          if (b !== 9 && b !== 13) return;
                         }
-                        define(importString, function() { return defaultHandler; });
-                        defaultHandler(resource);
-                        if (typeof reader.onresource === 'function') {
-                          reader.onresource(resource);
-                        }
-                      });
-                  })(resource);
+                        resource.text = macintoshRoman(resource.data, 0, resource.data.length);
+                      }
+                      define(importString, function() { return defaultHandler; });
+                      defaultHandler(resource);
+                      if (typeof reader.onresource === 'function') {
+                        reader.onresource(resource);
+                      }
+                    });
+                })(resource);
+                break;
+              case 'CLUT':
+              case 'clut':
+                var clut = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
+                var seed = clut.getInt32(0, false); // resource ID
+                var flags = clut.getUint16(4, false); // 0x8000: color map for indexed device
+                if (flags !== 0x0000) {
+                  console.log(resource.type, resource.name, resource.data);
                   break;
-                case 'CLUT':
-                case 'clut':
-                  var clut = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
-                  var seed = clut.getInt32(0, false); // resource ID
-                  var flags = clut.getUint16(4, false); // 0x8000: color map for indexed device
-                  if (flags !== 0x0000) {
-                    console.log(resource.type, resource.name, resource.data);
-                    break;
+                }
+                var entryCount = clut.getUint16(6, false) + 1;
+                var palCanvas = document.createElement('CANVAS');
+                palCanvas.width = entryCount;
+                palCanvas.height = 1;
+                var palCtx = palCanvas.getContext('2d');
+                var palData = palCtx.createImageData(entryCount, 1);
+                for (var icolor = 0; icolor < entryCount; icolor++) {
+                  var offset = clut.getInt16(8 + icolor*8, false) * 4;
+                  if (offset >= 0) {
+                    palData.data[offset] = resource.data[8 + icolor*8 + 2];
+                    palData.data[offset + 1] = resource.data[8 + icolor*8 + 4];
+                    palData.data[offset + 2] = resource.data[8 + icolor*8 + 6];
+                    palData.data[offset + 3] = 255;
                   }
-                  var entryCount = clut.getUint16(6, false) + 1;
-                  var palCanvas = document.createElement('CANVAS');
-                  palCanvas.width = entryCount;
-                  palCanvas.height = 1;
-                  var palCtx = palCanvas.getContext('2d');
-                  var palData = palCtx.createImageData(entryCount, 1);
-                  for (var icolor = 0; icolor < entryCount; icolor++) {
-                    var offset = clut.getInt16(8 + icolor*8, false) * 4;
-                    if (offset >= 0) {
-                      palData.data[offset] = resource.data[8 + icolor*8 + 2];
-                      palData.data[offset + 1] = resource.data[8 + icolor*8 + 4];
-                      palData.data[offset + 2] = resource.data[8 + icolor*8 + 6];
-                      palData.data[offset + 3] = 255;
-                    }
-                  }
-                  palCtx.putImageData(palData, 0, 0);
-                  resource.image = {
-                    width: entryCount,
-                    height: 1,
-                    url: palCanvas.toDataURL(),
-                  };
-                  if (typeof reader.onresource === 'function') {
-                    reader.onresource(resource);
-                  }
-                  break;
-              }
+                }
+                palCtx.putImageData(palData, 0, 0);
+                resource.image = {
+                  width: entryCount,
+                  height: 1,
+                  url: palCanvas.toDataURL(),
+                };
+                if (typeof reader.onresource === 'function') {
+                  reader.onresource(resource);
+                }
+                break;
             }
           }
         },
