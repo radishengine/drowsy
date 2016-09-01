@@ -69,7 +69,7 @@ define(['mac/roman'], function(macintoshRoman) {
       Object.defineProperty(this, 'resourceList', {value:list});
       return list;
     },
-  },
+  };
   
   function ResourceTypeListEntryView(buffer, byteOffset, byteLength) {
     this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
