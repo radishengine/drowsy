@@ -373,6 +373,16 @@ function(
               allocation.blockSize * extent.offset + fileInfo.resourceForkInfo.logicalEOF
             ), {
               onresource: function(resource) {
+                var resourceEl = document.createElement('SECTION');
+                var resourceTitleString = '[' + resource.type + '] #' + resource.id;
+                if (resource.name) {
+                    resourceTitleString += ' "' + resource.name = '"';
+                }
+                var resourceTitle = document.createElement('HEADER');
+                resourceTitle.innerText = resourceTitleString;
+                resourceEl.appendChild(resourceTitle);
+                container.appendChild(resourceEl);
+                /*
                 var resourceEl;
                 if ('image' in resource) {
                   resourceEl = document.createElement('IMG');
@@ -435,6 +445,7 @@ function(
                 resourceEl.dataset.type = resource.type;
                 resourceEl.dataset.id = resource.id;
                 container.appendChild(resourceEl);
+              */
               }
             });
           }
@@ -478,8 +489,12 @@ function(
             resource.byteSource = dataByteSource.slice(
               resource.dataOffset + 4,
               resource.dataOffset + 4 + length);
-            return resource.byteSource.getBytes();
+            if (typeof reader.onresource === 'function') {
+              reader.onresource(resource);
+            }
+            //return resource.byteSource.getBytes();
           })
+          /*
           .then(function(data) {
             resource.data = data;
             switch (resource.type) {
@@ -553,7 +568,7 @@ function(
                 }
                 break;
             }
-          });
+          })*/;
         });
       });
     },
