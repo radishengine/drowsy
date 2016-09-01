@@ -379,7 +379,27 @@ function(
                     resourceTitleString += ' "' + resource.name + '"';
                 }
                 var resourceTitle = document.createElement('HEADER');
-                resourceTitle.innerText = resourceTitleString;
+                var downloadButton = document.createElement('BUTTON');
+                downloadButton.innerHTML = '&#x1f4be;';
+                var downloadLink = document.createElement('A');
+                downloadLink.style.display = 'none';
+                downloadLink.href = '#';
+                downloadLink.setAttribute('download', 'resource.dat');
+                function clickDownloadLink() {
+                    resource.byteSource.getURL()
+                        .then(function(url) {
+                            downloadLink.href = url;
+                            downloadLink.click();
+                        });
+                    downloadLink.removeEventListener('click', clickDownloadLink);
+                }
+                downloadLink.addEventListener('click', clickDownloadLink);
+                downloadButton.addEventListener('click', function() {
+                    downloadLink.click();
+                });
+                resourceTitle.appendChild(downloadLink);
+                resourceTitle.appendChild(downloadButton);
+                resourceTitle.appendChild(document.createTextNode(resourceTitleString));
                 resourceEl.appendChild(resourceTitle);
                 container.appendChild(resourceEl);
                 /*
