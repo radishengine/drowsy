@@ -270,7 +270,7 @@ function(
           var title = document.createElement('HEADER');
           title.innerHTML = folderInfo.name;
           var expandButton = document.createElement('BUTTON');
-          expandButton.style.width = '1ex';
+          expandButton.style.width = '1em';
           expandButton.innerHTML = '&#x2795;';
           title.insertBefore(expandButton, title.firstChild);
           container.appendChild(title);
@@ -386,7 +386,7 @@ function(
           container.appendChild(title);
           if (fileInfo.resourceForkInfo.logicalEOF) {
             var expandButton = document.createElement('BUTTON');
-            expandButton.style.width = '1ex';
+            expandButton.style.width = '1em';
             expandButton.innerHTML = '&#x2795;';
             title.insertBefore(expandButton, title.firstChild);
             var resources = document.createElement('SECTION');
