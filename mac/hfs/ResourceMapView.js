@@ -63,7 +63,7 @@ define(['mac/roman'], function(macintoshRoman) {
         for (var j = 0; j < withType.length; j++) {
           var resourceInfo = withType[j];
           resourceInfo.type = typeName;
-          reourceInfo.name = this.getName(resourceInfo.nameOffset);
+          resourceInfo.name = this.getName(resourceInfo.nameOffset);
           list.push(resourceInfo);
         }
       }
