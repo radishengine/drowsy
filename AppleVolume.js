@@ -376,7 +376,7 @@ function(
                 var resourceEl = document.createElement('SECTION');
                 var resourceTitleString = '[' + resource.type + '] #' + resource.id;
                 if (resource.name) {
-                    resourceTitleString += ' "' + resource.name = '"';
+                    resourceTitleString += ' "' + resource.name + '"';
                 }
                 var resourceTitle = document.createElement('HEADER');
                 resourceTitle.innerText = resourceTitleString;
