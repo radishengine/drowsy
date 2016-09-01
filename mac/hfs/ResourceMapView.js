@@ -56,7 +56,7 @@ define(['mac/roman'], function(macintoshRoman) {
     get resourceList() {
       var list = [];
       for (var i = 0; i < this.typeList.length; i++) {
-        var type = this.typeList[i].typeName;
+        var typeName = this.typeList[i].typeName;
         var withType = this.getReferenceList(
           this.typeList[i].referenceListOffset,
           this.typeList[i].resourceCount);
