@@ -93,7 +93,7 @@ define(['mac/roman'], function(macintoshRoman) {
     this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
   ReferenceListEntryView.prototype = {
-    get resourceID() {
+    get id() {
       return this.dataView.getInt16(0, false);
     },
     get nameOffset() {
