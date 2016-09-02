@@ -389,7 +389,6 @@ function(
               container.classList.toggle('open');
             }
             container.addEventListener('click', clickExpand);
-            title.insertBefore(expandButton, title.firstChild);
             var resources = document.createElement('SECTION');
             resources.classList.add('folder-children');
             container.appendChild(resources);
