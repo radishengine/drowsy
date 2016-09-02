@@ -59,3 +59,11 @@ body {
 .open > .folder-children {
   display: block;
 }
+
+.folder > header::before {
+  content: "&#x25B6;";
+}
+
+.folder.open > header::before {
+  content: "&#x25BC;";
+}
