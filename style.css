@@ -19,7 +19,7 @@ body {
 
 #drop-zone.drop-target {
   border: 3px dashed silver;
-  background: rgb(0,0,0, 0.2);
+  background: #bbb;
 }
 
 #drop-zone.drop-target .help-label {
@@ -36,7 +36,7 @@ body {
 }
 
 .file.invisible, .folder.invisible {
-  background: #eee;
+  background: rgba(0,0,0, 0.2);
   /* display: none; */
 }
 
