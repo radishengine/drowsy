@@ -51,3 +51,11 @@ body {
 .folder > summary {
   font-weight: bold;
 }
+
+.folder-children {
+  display: none;
+}
+
+.open > .folder-children {
+  display: block;
+}
