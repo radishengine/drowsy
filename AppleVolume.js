@@ -334,8 +334,8 @@ function(
             }
           }
         },
-        onfile: function(fileInfo) {
-          console.log('file', fileInfo);
+        onfile: function(fileInfo, chain) {
+          console.log('file', chain, fileInfo);
           var container = document.createElement('SECTION');
           if (fileInfo.isInvisible) {
             container.classList.add('invisible');
