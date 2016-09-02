@@ -403,6 +403,11 @@ function(
             ), {
               onresource: function(resource) {
                 var resourceEl = document.createElement('SECTION');
+                function clickResource(e) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+                resourceEl.addEventListener(e, clickResource);
                 var resourceTitleString = '[' + resource.type + '] #' + resource.id;
                 if (resource.name) {
                   resourceTitleString += ' "' + resource.name + '"';
