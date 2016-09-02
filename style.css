@@ -46,10 +46,6 @@ body {
   /* display: none; */
 }
 
-.folder-children {
-  padding-left: 0.8em;
-}
-
 .file > header, .folder > header {
   font-family: monospace;
 }
@@ -105,4 +101,5 @@ body {
 .folder-children {
   min-height: 0.5em;
   background: white;
+  margin-left: 1em;
 }
