@@ -413,7 +413,7 @@ function(
                 var downloadLink = document.createElement('A');
                 downloadLink.innerHTML = '&#x1f4be;';
                 downloadLink.href = '#';
-                downloadLink.title = 'Download (' + resource.byteSource.length + ' bytes)';
+                downloadLink.title = 'Download (' + resource.byteSource.byteLength + ' bytes)';
                 downloadLink.setAttribute('download', 'resource.dat');
                 function clickDownloadLink(e) {
                     e.preventDefault();
