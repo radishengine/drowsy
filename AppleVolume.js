@@ -354,11 +354,10 @@ function(
           var title = document.createElement('HEADER');
           if (fileInfo.dataForkInfo.logicalEOF) {
             container.dataset.size = fileInfo.dataForkInfo.logicalEOF;
-            var downloadButton = document.createElement('BUTTON');
-            downloadButton.innerHTML = '&#x1F4C4;';
             var downloadLink = document.createElement('A');
-            downloadLink.style.display = 'none';
+            downloadLink.innerHTML = '&#x1f4be;';
             downloadLink.href = '#';
+            downloadLink.title = 'Download (' + fileInfo.dataFork.logicalEOF + ' bytes)';
             downloadLink.setAttribute('download', fileInfo.name);
             var extent = fileInfo.dataForkFirstExtentRecord[0];
             var downloadByteSource = allocation.slice(
@@ -375,11 +374,7 @@ function(
               downloadLink.removeEventListener('click', clickDownloadLink);
             }
             downloadLink.addEventListener('click', clickDownloadLink);
-            downloadButton.addEventListener('click', function() {
-                downloadLink.click();
-            });
             title.appendChild(document.createTextNode(fileInfo.name + ' '));
-            title.appendChild(downloadButton);
             title.appendChild(downloadLink);
           }
           else {
@@ -415,11 +410,10 @@ function(
                   resourceTitleString += ' "' + resource.name + '"';
                 }
                 var resourceTitle = document.createElement('HEADER');
-                var downloadButton = document.createElement('BUTTON');
-                downloadButton.innerHTML = '&#x1F4C4;';
                 var downloadLink = document.createElement('A');
-                downloadLink.style.display = 'none';
+                downloadLink.innerHTML = '&#x1f4be;';
                 downloadLink.href = '#';
+                downloadLink.title = 'Download (' + resource.byteSource.length + ' bytes)';
                 downloadLink.setAttribute('download', 'resource.dat');
                 function clickDownloadLink(e) {
                     e.preventDefault();
@@ -431,12 +425,8 @@ function(
                     downloadLink.removeEventListener('click', clickDownloadLink);
                 }
                 downloadLink.addEventListener('click', clickDownloadLink);
-                downloadButton.addEventListener('click', function() {
-                  downloadLink.click();
-                });
                 resourceTitle.appendChild(document.createTextNode(resourceTitleString + ' '));
                 resourceTitle.appendChild(downloadLink);
-                resourceTitle.appendChild(downloadButton);
                 resourceEl.appendChild(resourceTitle);
                 resources.appendChild(resourceEl);
                 /*
