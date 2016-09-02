@@ -269,8 +269,10 @@ function(
           container.dataset.name = folderInfo.name;
           var title = document.createElement('HEADER');
           title.innerHTML = folderInfo.name;
-          function clickExpand() {
+          function clickExpand(e) {
             container.classList.toggle('open');
+            e.preventDefault();
+            e.stopPropagation();
           }
           container.addEventListener('click', clickExpand);
           container.appendChild(title);
@@ -385,8 +387,10 @@ function(
           }
           container.appendChild(title);
           if (fileInfo.resourceForkInfo.logicalEOF) {
-            function clickExpand() {
+            function clickExpand(e) {
               container.classList.toggle('open');
+              e.preventDefault();
+              e.stopPropagation();
             }
             container.addEventListener('click', clickExpand);
             var resources = document.createElement('SECTION');
