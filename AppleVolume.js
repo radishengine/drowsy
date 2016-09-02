@@ -404,6 +404,7 @@ function(
             ), {
               onresource: function(resource) {
                 var resourceEl = document.createElement('SECTION');
+                resourceEl.classList.add('file');
                 function clickResource(e) {
                   e.preventDefault();
                   e.stopPropagation();
