@@ -40,7 +40,7 @@ body {
 }
 
 .file.invisible, .folder.invisible {
-  background-color: #ccc;
+  background-color: #eee;
   /* display: none; */
 }
 
