@@ -16,142 +16,203 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
   }
   
   function BTreeNodeView(buffer, byteOffset) {
-    this.dataView = new DataView(buffer, byteOffset, NODE_BYTES);
-    this.bytes = new Uint8Array(buffer, byteOffset, NODE_BYTES);
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, NODE_BYTES)},
+      bytes: {value:new Uint8Array(buffer, byteOffset, NODE_BYTES)},
+    });
   }
-  BTreeNodeView.prototype = {
-    get nodeType() {
-      switch(this.bytes[8]) {
-        case 0: return 'index';
-        case 1: return 'header';
-        case 2: return 'map';
-        case 0xff: return 'leaf';
-        default: return 'unknown';
-      }
+  Object.defineProperties(BTreeNodeView.prototype, {
+    nodeType: {
+      get: function() {
+        switch(this.bytes[8]) {
+          case 0: return 'index';
+          case 1: return 'header';
+          case 2: return 'map';
+          case 0xff: return 'leaf';
+          default: return 'unknown';
+        }
+      },
+      enumerable: true,
     },
-    get rawRecords() {
-      var records = new Array(this.dataView.getUint16(10, false));
-      for (var i = 0; i < records.length; i++) {
-        records[i] = this.bytes.subarray(
-          this.dataView.getUint16(NODE_BYTES - 2*(i+1), false),
-          this.dataView.getUint16(NODE_BYTES - 2*(i+2), false));
-      }
-      Object.defineProperty(this, 'rawRecords', {value:records});
-      return records;
+    rawRecords: {
+      get: function() {
+        var records = new Array(this.dataView.getUint16(10, false));
+        for (var i = 0; i < records.length; i++) {
+          records[i] = this.bytes.subarray(
+            this.dataView.getUint16(NODE_BYTES - 2*(i+1), false),
+            this.dataView.getUint16(NODE_BYTES - 2*(i+2), false));
+        }
+        Object.defineProperty(this, 'rawRecords', {value:records});
+        return records;
+      },
     },
-    get forwardLink() {
-      return this.dataView.getInt32(0, false);
+    forwardLink: {
+      get: function() {
+        return this.dataView.getInt32(0, false);
+      },
+      enumerable: true,
     },
-    get backwardLink() {
-      return this.dataView.getInt32(4, false);
+    backwardLink: {
+      get: function() {
+        return this.dataView.getInt32(4, false);
+      },
+      enumerable: true,
     },
-    get depth() {
-      return this.bytes[9];
+    depth: {
+      get: function() {
+        return this.bytes[9];
+      },
+      enumerable: true,
     },
-    get records() {
-      var records;
-      switch (this.nodeType) {
-        case 'index':
-          records = this.rawRecords
-          .map(function(recordBytes) {
-            return new IndexRecordView(recordBytes.buffer, recordBytes.byteOffset, recordBytes.byteLength);
-          })
-          .filter(function(indexRecord) {
-            return !indexRecord.isDeleted;
-          });
-          break;
-        case 'header':
-          if (this.rawRecords.length !== 3) {
-            throw new Error('B*Tree header node: expected 3 records, got ' + this.rawRecords.length);
-          }
-          var rawHeader = this.rawRecords[0], rawMap = this.rawRecords[2];
-          records = [
-            new HeaderRecordView(rawHeader.buffer, rawHeader.byteOffset, rawHeader.byteLength),
-            'unused',
-            new MapRecordView(rawMap.buffer, rawMap.byteOffset, rawMap.byteLength),
-          ];
-          break;
-        case 'map':
-          records = this.rawRecords
-          .map(function(rawMap) {
-            return new MapRecordView(rawMap.buffer, rawMap.byteOffset, rawMap.byteLength)
-          });
-          break;
-        case 'leaf':
-          records = this.rawRecords
-          .map(function(rawLeaf) {
-            return new LeafRecordView(rawLeaf.buffer, rawLeaf.byteOffset, rawLeaf.byteLength);
-          })
-          .filter(function(leaf) {
-            return !leaf.isDeleted;
-          });
-          break;
-        default: return null;
-      }
-      Object.defineProperty(this, 'records', {value:records});
-      return records;
+    records: {
+      get: function() {
+        var records;
+        switch (this.nodeType) {
+          case 'index':
+            records = this.rawRecords
+            .map(function(recordBytes) {
+              return new IndexRecordView(recordBytes.buffer, recordBytes.byteOffset, recordBytes.byteLength);
+            })
+            .filter(function(indexRecord) {
+              return !indexRecord.isDeleted;
+            });
+            break;
+          case 'header':
+            if (this.rawRecords.length !== 3) {
+              throw new Error('B*Tree header node: expected 3 records, got ' + this.rawRecords.length);
+            }
+            var rawHeader = this.rawRecords[0], rawMap = this.rawRecords[2];
+            records = [
+              new HeaderRecordView(rawHeader.buffer, rawHeader.byteOffset, rawHeader.byteLength),
+              'unused',
+              new MapRecordView(rawMap.buffer, rawMap.byteOffset, rawMap.byteLength),
+            ];
+            break;
+          case 'map':
+            records = this.rawRecords
+            .map(function(rawMap) {
+              return new MapRecordView(rawMap.buffer, rawMap.byteOffset, rawMap.byteLength)
+            });
+            break;
+          case 'leaf':
+            records = this.rawRecords
+            .map(function(rawLeaf) {
+              return new LeafRecordView(rawLeaf.buffer, rawLeaf.byteOffset, rawLeaf.byteLength);
+            })
+            .filter(function(leaf) {
+              return !leaf.isDeleted;
+            });
+            break;
+          default: return null;
+        }
+        Object.defineProperty(this, 'records', {value:records});
+        return records;
+      },
+      enumerable: true,
     },
-  };
-  
+  });
+
   function IndexRecordView(buffer, byteOffset, byteLength) {
-    this.dataView = new DataView(buffer, byteOffset, byteLength);
-    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+      bytes: {value:new Uint8Array(buffer, byteOffset, byteLength)},
+    });
   }
-  IndexRecordView.prototype = {
-    get isDeleted() {
-      return !(this.bytes.length && this.bytes[0]);
+  Object.defineProperties(IndexRecordView.prototype, {
+    isDeleted: {
+      get: function() {
+        return !(this.bytes.length && this.bytes[0]);
+      },
+      enumerable: true,
     },
-    get parentFolderID() {
-      return this.dataView.getUint32(2, false);
+    parentFolderID: {
+      get: function() {
+        return this.dataView.getUint32(2, false);
+      },
+      enumerable: true,
     },
-    get name() {
-      return macintoshRoman(this.bytes, 7, this.bytes[6]);
+    name: {
+      get: function() {
+        return macintoshRoman(this.bytes, 7, this.bytes[6]);
+      },
+      enumerable: true,
     },
-    get nodeNumber() {
-      return this.dataView.getUint32(1 + this.bytes[0], false);
+    nodeNumber: {
+      get: function() {
+        return this.dataView.getUint32(1 + this.bytes[0], false);
+      },
+      enumerable: true,
     },
-  };
+  });
   
   function HeaderRecordView(buffer, byteOffset, byteLength) {
-    this.dataView = new DataView(buffer, byteOffset, byteLength);
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+    });
   }
-  HeaderRecordView.prototype = {
-    get treeDepth() {
-      return this.dataView.getUint16(0, false);
+  Object.defineProperties(HeaderRecordView.prototype, {
+    treeDepth: {
+      get: function() {
+        return this.dataView.getUint16(0, false);
+      },
+      enumerable: true,
     },
-    get rootNodeNumber() {
-      return this.dataView.getUint32(2, false);
+    rootNodeNumber: {
+      get: function() {
+        return this.dataView.getUint32(2, false);
+      },
+      enumerable: true,
     },
-    get leafRecordCount() {
-      return this.dataView.getUint32(6, false);
+    leafRecordCount: {
+      get: function() {
+        return this.dataView.getUint32(6, false);
+      },
+      enumerable: true,
     },
-    get firstLeaf() {
-      return this.dataView.getUint32(10, false);
+    firstLeaf: {
+      get: function() {
+        return this.dataView.getUint32(10, false);
+      },
+      enumerable: true,
     },
-    get lastLeaf() {
-      return this.dataView.getUint32(14, false);
+    lastLeaf: {
+      get: function() {
+        return this.dataView.getUint32(14, false);
+      },
+      enumerable: true,
     },
-    get nodeByteLength() {
-      return this.dataView.getUint16(18, false); // always 512?
+    nodeByteLength: {
+      get: function() {
+        return this.dataView.getUint16(18, false); // always 512?
+      },
+      enumerable: true,
     },
-    get maxKeyByteLength() {
-      return this.dataView.getUint16(20, false);
+    maxKeyByteLength: {
+      get: function() {
+        return this.dataView.getUint16(20, false);
+      },
+      enumerable: true,
     },
-    get nodeCount() {
-      return this.dataView.getUint32(22, false);
+    nodeCount: {
+      get: function() {
+        return this.dataView.getUint32(22, false);
+      },
+      enumerable: true,
     },
-    get freeNodeCount() {
-      return this.dataView.getUint32(26, false);
+    freeNodeCount: {
+      get: function() {
+        return this.dataView.getUint32(26, false);
+      },
+      enumerable: true,
     },
-  };
+  });
   
   function MapRecordView(buffer, byteOffset, byteLength) {
-    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    Object.defineProperties(this, {
+      bytes: {value:new Uint8Array(buffer, byteOffset, byteLength)},
+    });
   };
   MapRecordView.prototype = {
-    get nodeCount() {
-      return this.bytes.length * 8;
-    },
     getIsNodeUsed: function(index) {
       var byte = index >> 3, bit = (0x80 >> (index & 7));
       if (byte < 0 || byte >= this.bytes.length) {
@@ -160,271 +221,471 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
       return !!(this.bytes[byte] & bit);
     },
   };
+  Object.defineProperties(MapRecordView.prototype, {
+    nodeCount: {
+      get: function() {
+        return this.bytes.length * 8;
+      },
+      enumerable: true,
+    },
+  });
   
   function LeafRecordView(buffer, byteOffset, byteLength) {
-    this.dataView = new DataView(buffer, byteOffset, byteLength);
-    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+      bytes: {value:new Uint8Array(buffer, byteOffset, byteLength)},
+    })
     
     if (!this.isDeleted) {
       var dataOffset = 1 + this.bytes[0];
       dataOffset += dataOffset % 2;
       var dataLength = byteLength - dataOffset;
-      this.dataDataView = new DataView(buffer, byteOffset + dataOffset, dataLength);
-      this.dataBytes = new Uint8Array(buffer, byteOffset + dataOffset, dataLength);
+      Object.defineProperties(this, {
+        dataDataView: {value:new DataView(buffer, byteOffset + dataOffset, dataLength)},
+        dataBytes: {value:new Uint8Array(buffer, byteOffset + dataOffset, dataLength)},
+      });
     }
   }
-  LeafRecordView.prototype = {
-    get isDeleted() {
-      return !(this.bytes.length && this.bytes[0]);
+  Object.defineProperties(LeafRecordView.prototype, {
+    isDeleted: {
+      get: function() {
+        return !(this.bytes.length && this.bytes[0]);
+      },
+      enumerable: true,
     },
-    get parentFolderID() {
-      return this.dataView.getUint32(2, false);
+    parentFolderID: {
+      get: function() {
+        return this.dataView.getUint32(2, false);
+      },
+      enumerable: true,
     },
-    get name() {
-      return macintoshRoman(this.bytes, 7, this.bytes[6]);
+    name: {
+      get: function() {
+        return macintoshRoman(this.bytes, 7, this.bytes[6]);
+      },
+      enumerable: true,
     },
-    get leafType() {
-      switch (this.dataBytes[0]) {
-        case 1: return 'folder';
-        case 2: return 'file';
-        case 3: return 'folderthread';
-        case 4: return 'filethread';
-        default: return 'unknown';
-      }
+    leafType: {
+      get: function() {
+        switch (this.dataBytes[0]) {
+          case 1: return 'folder';
+          case 2: return 'file';
+          case 3: return 'folderthread';
+          case 4: return 'filethread';
+          default: return 'unknown';
+        }
+      },
+      enumerable: true,
     },
-    get fileInfo() {
-      if (this.leafType !== 'file') return null;
-      var fileInfo = new FileInfoView(
-        this.dataBytes.buffer,
-        this.dataBytes.byteOffset,
-        this.dataBytes.byteLength);
-      Object.defineProperty(this, 'fileInfo', {value:fileInfo});
-      return fileInfo;
+    fileInfo: {
+      get: function() {
+        if (this.leafType !== 'file') return null;
+        var fileInfo = new FileInfoView(
+          this.dataBytes.buffer,
+          this.dataBytes.byteOffset,
+          this.dataBytes.byteLength);
+        Object.defineProperty(this, 'fileInfo', {value:fileInfo});
+        return fileInfo;
+      },
+      enumerable: true,
     },
-    get folderInfo() {
-      if (this.leafType !== 'folder') return null;
-      var folderInfo = new FolderInfoView(
-        this.dataBytes.buffer,
-        this.dataBytes.byteOffset,
-        this.dataBytes.byteLength);
-      Object.defineProperty(this, 'folderInfo', {value:folderInfo});
-      return folderInfo;
+    folderInfo: {
+      get: function() {
+        if (this.leafType !== 'folder') return null;
+        var folderInfo = new FolderInfoView(
+          this.dataBytes.buffer,
+          this.dataBytes.byteOffset,
+          this.dataBytes.byteLength);
+        Object.defineProperty(this, 'folderInfo', {value:folderInfo});
+        return folderInfo;
+      },
+      enumerable: true,
     },
-    get threadInfo() {
-      if (this.leafType !== 'filethread' && this.leafType !== 'folderthread') return null;
-      var threadInfo = new ThreadInfoView(
-        this.dataBytes.buffer,
-        this.dataBytes.byteOffset,
-        this.dataBytes.byteLength);
-      Object.defineProperty(this, 'threadInfo', {value:threadInfo});
-      return threadInfo;
+    threadInfo: {
+      get: function() {
+        if (this.leafType !== 'filethread' && this.leafType !== 'folderthread') return null;
+        var threadInfo = new ThreadInfoView(
+          this.dataBytes.buffer,
+          this.dataBytes.byteOffset,
+          this.dataBytes.byteLength);
+        Object.defineProperty(this, 'threadInfo', {value:threadInfo});
+        return threadInfo;
+      },
+      enumerable: true,
     },
-  };
+  });
   
   function FileInfoView(buffer, byteOffset, byteLength) {
-    this.dataView = new DataView(buffer, byteOffset, byteLength);
-    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+      bytes: {value:new Uint8Array(buffer, byteOffset, byteLength)},
+    });
   }
-  FileInfoView.prototype = {
-    get locked() {
-      return  !!(record[2] & 0x01);
+  Object.defineProperties(FileInfoView.prototype, {
+    locked: {
+      get: function() {
+        return  !!(record[2] & 0x01);
+      },
+      enumerable: true,
     },
-    get hasThreadRecord() {
-      return  !!(record[2] & 0x02);
+    hasThreadRecord: {
+      get: function() {
+        return  !!(record[2] & 0x02);
+      },
+      enumerable: true,
     },
-    get recordUsed() {
-      return  !!(record[2] & 0x80);
+    recordUsed: {
+      get: function() {
+        return  !!(record[2] & 0x80);
+      },
+      enumerable: true,
     },
-    get type() {
-      var type = macintoshRoman(this.bytes, 4, 4);
-      return (type === '\0\0\0\0') ? null : type;
+    type: {
+      get: function() {
+        var type = macintoshRoman(this.bytes, 4, 4);
+        return (type === '\0\0\0\0') ? null : type;
+      },
+      enumerable: true,
     },
-    get creator() {
-      var creator = macintoshRoman(this.bytes, 8, 4);
-      return (creator === '\0\0\0\0') ? null : creator;
+    creator: {
+      get: function() {
+        var creator = macintoshRoman(this.bytes, 8, 4);
+        return (creator === '\0\0\0\0') ? null : creator;
+      },
+      enumerable: true,
     },
-    get isOnDesk() {
-      return !!(0x0001 & this.dataView.getUint16(12, false));
+    isOnDesk: {
+      get: function() {
+        return !!(0x0001 & this.dataView.getUint16(12, false));
+      },
+      enumerable: true,
     },
-    get color() {
-      return !!(0x000E & this.dataView.getUint16(12, false));
+    color: {
+      get: function() {
+        return !!(0x000E & this.dataView.getUint16(12, false));
+      },
+      enumerable: true,
     },
-    get requireSwitchLaunch() {
-      return !!(0x0020 & this.dataView.getUint16(12, false));
+    requireSwitchLaunch: {
+      get: function() {
+        return !!(0x0020 & this.dataView.getUint16(12, false));
+      },
+      enumerable: true,
     },
-    get isShared() {
-      return !!(0x0040 & this.dataView.getUint16(12, false));
+    isShared: {
+      get: function() {
+        return !!(0x0040 & this.dataView.getUint16(12, false));
+      },
+      enumerable: true,
     },
-    get hasNoINITs() {
-      return !!(0x0080 & this.dataView.getUint16(12, false));
+    hasNoINITs: {
+      get: function() {
+        return !!(0x0080 & this.dataView.getUint16(12, false));
+      },
+      enumerable: true,
     },
-    get hasBeenInited() {
-      return !!(0x0100 & this.dataView.getUint16(12, false));
+    hasBeenInited: {
+      get: function() {
+        return !!(0x0100 & this.dataView.getUint16(12, false));
+      },
+      enumerable: true,
     },
-    get hasCustomIcon() {
-      return !!(0x0400 & this.dataView.getUint16(12, false));
+    hasCustomIcon: {
+      get: function() {
+        return !!(0x0400 & this.dataView.getUint16(12, false));
+      },
+      enumerable: true,
     },
-    get isStationery() {
-      return !!(0x0800 & this.dataView.getUint16(12, false));
+    isStationery: {
+      get: function() {
+        return !!(0x0800 & this.dataView.getUint16(12, false));
+      },
+      enumerable: true,
     },
-    get isNameLocked() {
-      return !!(0x1000 & this.dataView.getUint16(12, false));
+    isNameLocked: {
+      get: function() {
+        return !!(0x1000 & this.dataView.getUint16(12, false));
+      },
+      enumerable: true,
     },
-    get hasBundle() {
-      return !!(0x2000 & this.dataView.getUint16(12, false));
+    hasBundle: {
+      get: function() {
+        return !!(0x2000 & this.dataView.getUint16(12, false));
+      },
+      enumerable: true,
     },
-    get isInvisible() {
-      return !!(0x4000 & this.dataView.getUint16(12, false));
+    isInvisible: {
+      get: function() {
+        return !!(0x4000 & this.dataView.getUint16(12, false));
+      },
+      enumerable: true,
     },
-    get isAlias() {
-      return !!(0x8000 & this.dataView.getUint16(12, false));
+    isAlias: {
+      get: function() {
+        return !!(0x8000 & this.dataView.getUint16(12, false));
+      },
+      enumerable: true,
     },
-    get id() {
-      return this.dataView.getUInt32(20, false);
+    id: {
+      get: function() {
+        return this.dataView.getUInt32(20, false);
+      },
+      enumerable: true,
     },
-    get iconPosition() {
-      var position = {
-        v: this.dataView.getInt16(14, false),
-        h: this.dataView.getInt16(16, false),
-      };
-      return !(position.v && position.h) ? 'default' : position;
+    iconPosition: {
+      get: function() {
+        var position = {
+          v: this.dataView.getInt16(14, false),
+          h: this.dataView.getInt16(16, false),
+        };
+        return !(position.v && position.h) ? 'default' : position;
+      },
+      enumerable: true,
     },
-    get dataForkInfo() {
-      return new ForkInfoView(this.bytes.buffer, this.bytes.byteOffset + 24);
+    dataForkInfo: {
+      get: function() {
+        return new ForkInfoView(this.bytes.buffer, this.bytes.byteOffset + 24);
+      },
+      enumerable: true,
     },
-    get resourceForkInfo() {
-      return new ForkInfoView(this.bytes.buffer, this.bytes.byteOffset + 34);
+    resourceForkInfo: {
+      get: function() {
+        return new ForkInfoView(this.bytes.buffer, this.bytes.byteOffset + 34);
+      },
+      enumerable: true,
     },
-    get createdAt() {
-      return macintoshDate(this.dataView, 44);
+    createdAt: {
+      get: function() {
+        return macintoshDate(this.dataView, 44);
+      },
+      enumerable: true,
     },
-    get modifiedAt() {
-      return macintoshDate(this.dataView, 48);
+    modifiedAt: {
+      get: function() {
+        return macintoshDate(this.dataView, 48);
+      },
+      enumerable: true,
     },
-    get backupAt() {
-      return macintoshDate(this.dataView, 52);
+    backupAt: {
+      get: function() {
+        return macintoshDate(this.dataView, 52);
+      },
+      enumerable: true,
     },
     // 56: fxInfoReserved (8 bytes)
-    get fxinfoFlags() {
-      return this.dataView.getUint16(64, false);
+    fxinfoFlags: {
+      get: function() {
+        return this.dataView.getUint16(64, false);
+      },
+      enumerable: true,
     },
-    get putAwayFolderID() {
-      return this.dataView.getUint32(68, false);
+    putAwayFolderID: {
+      get: function() {
+        return this.dataView.getUint32(68, false);
+      },
+      enumerable: true,
     },
-    get clumpSize() {
-      return this.dataView.getUint16(72, false);
+    clumpSize: {
+      get: function() {
+        return this.dataView.getUint16(72, false);
+      },
+      enumerable: true,
     },
-    get dataForkFirstExtentRecord() {
-      return extentDataRecord(this.dataView, 74);
+    dataForkFirstExtentRecord: {
+      get: function() {
+        return extentDataRecord(this.dataView, 74);
+      },
+      enumerable: true,
     },
-    get resourceForkFirstExtentRecord() {
-      return extentDataRecord(this.dataView, 86);
+    resourceForkFirstExtentRecord: {
+      get: function() {
+        return extentDataRecord(this.dataView, 86);
+      },
+      enumerable: true,
     },
-  };
+  });
   
   function ForkInfoView(buffer, byteOffset) {
-    this.dataView = new DataView(buffer, byteOffset, 10);
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, 10)},
+    });
   }
   ForkInfoView.prototype = {
-    get firstAllocationBlock() {
-      return this.dataView.getUint16(0, false);
+    firstAllocationBlock: {
+      get: function() {
+        return this.dataView.getUint16(0, false);
+      },
+      enumerable: true,
     },
-    get logicalEOF() {
-      return this.dataView.getUint32(2, false);
+    logicalEOF: {
+      get: function() {
+        return this.dataView.getUint32(2, false);
+      },
+      enumerable: true,
     },
-    get physicalEOF() {
-      return this.dataView.getUint32(6, false);
+    physicalEOF: {
+      get: function() {
+        return this.dataView.getUint32(6, false);
+      },
+      enumerable: true,
     },
   };
   
   function FolderInfoView(buffer, byteOffset, byteLength) {
-    this.dataView = new DataView(buffer, byteOffset, byteLength);
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+    });
   }
-  FolderInfoView.prototype = {
-    get flags() {
-      return this.dataView.getUint16(2, false);
+  Object.defineProperties(FolderInfoView.prototype, {
+    flags: {
+      get: function() {
+        return this.dataView.getUint16(2, false);
+      },
+      enumerable: true,
     },
-    get id() {
-      return this.dataView.getUint32(6, false);
+    id: {
+      get: function() {
+        return this.dataView.getUint32(6, false);
+      },
+      enumerable: true,
     },
-    get modifiedAt() {
-      return macintoshDate(this.dataView, 14);
+    modifiedAt: {
+      get: function() {
+        return macintoshDate(this.dataView, 14);
+      },
+      enumerable: true,
     },
-    get iconPosition() {
-      var position = {
-        v: this.dataView.getInt16(32, false),
-        h: this.dataView.getInt16(34, false),
-      };
-      if (position.v === 0 && position.h === 0) {
-        return 'default';
-      }
-      return position;
+    iconPosition: {
+      get: function() {
+        var position = {
+          v: this.dataView.getInt16(32, false),
+          h: this.dataView.getInt16(34, false),
+        };
+        if (position.v === 0 && position.h === 0) {
+          return 'default';
+        }
+        return position;
+      },
+      enumerable: true,
     },
-    get windowRect() {
-      return new RectView(this.dataView.buffer, this.dataView.byteOffset + 22);
+    windowRect: {
+      get: function() {
+        return new RectView(this.dataView.buffer, this.dataView.byteOffset + 22);
+      },
+      enumerable: true,
     },
-    get isOnDesk() {
-      return !!(this.dataView.getUint16(30, false) & 0x0001);
+    isOnDesk: {
+      get: function() {
+        return !!(this.dataView.getUint16(30, false) & 0x0001);
+      },
+      enumerable: true,
     },
-    get isColor() {
-      return !!(this.dataView.getUint16(30, false) & 0x000E);
+    isColor: {
+      get: function() {
+        return !!(this.dataView.getUint16(30, false) & 0x000E);
+      },
+      enumerable: true,
     },
-    get requiresSwitchLaunch() {
-      return !!(this.dataView.getUint16(30, false) & 0x0020);
+    requiresSwitchLaunch: {
+      get: function() {
+        return !!(this.dataView.getUint16(30, false) & 0x0020);
+      },
+      enumerable: true,
     },
-    get hasCustomIcon() {
-      return !!(this.dataView.getUint16(30, false) & 0x0400);
+    hasCustomIcon: {
+      get: function() {
+        return !!(this.dataView.getUint16(30, false) & 0x0400);
+      },
+      enumerable: true,
     },
-    get isNameLocked() {
-      return !!(this.dataView.getUint16(30, false) & 0x1000);
+    isNameLocked: {
+      get: function() {
+        return !!(this.dataView.getUint16(30, false) & 0x1000);
+      },
+      enumerable: true,
     },
-    get hasBundle() {
-      return !!(this.dataView.getUint16(30, false) & 0x2000);
+    hasBundle: {
+      get: function() {
+        return !!(this.dataView.getUint16(30, false) & 0x2000);
+      },
+      enumerable: true,
     },
-    get isInvisible() {
-      return !!(this.dataView.getUint16(30, false) & 0x4000);
+    isInvisible: {
+      get: function() {
+        return !!(this.dataView.getUint16(30, false) & 0x4000);
+      },
+      enumerable: true,
     },
-    get scrollPosition() {
-      var position = {
-        v: this.dataView.getInt16(38, false),
-        h: this.dataView.getInt16(40, false),
-      };
-      return position;
+    scrollPosition: {
+      get: function() {
+        var position = {
+          v: this.dataView.getInt16(38, false),
+          h: this.dataView.getInt16(40, false),
+        };
+        return position;
+      },
+      enumerable: true,
     },
     // dinfoReserved: dv.getInt16(36, false),
     // dxinfoReserved: dv.getInt32(42, false),
-    get dxinfoFlags() {
-      return this.dataView.getUint16(46, false);
+    dxinfoFlags: {
+      get: function() {
+        return this.dataView.getUint16(46, false);
+      },
+      enumerable: true,
     },
-    get dxinfoComment() {
-      return this.dataView.getUint16(48, false);
+    dxinfoComment: {
+      get: function() {
+        return this.dataView.getUint16(48, false);
+      },
+      enumerable: true,
     },
-    get fileCount() {
-      return this.dataView.getUint16(4, false);
+    fileCount: {
+      get: function() {
+        return this.dataView.getUint16(4, false);
+      },
+      enumerable: true,
     },
-    get createdAt() {
-      return macintoshDate(this.dataView, 10);
+    createdAt: {
+      get: function() {
+        return macintoshDate(this.dataView, 10);
+      },
+      enumerable: true,
     },
-    get backupAt() {
-      return macintoshDate(this.dataView, 18);
+    backupAt: {
+      get: function() {
+        return macintoshDate(this.dataView, 18);
+      },
+      enumerable: true,
     },
-    get putAwayFolderID() {
-      return this.dataView.getInt32(50, false);
+    putAwayFolderID: {
+      get: function() {
+        return this.dataView.getInt32(50, false);
+      },
+      enumerable: true,
     },
-  };
+  });
   
   function ThreadInfoView(buffer, byteOffset, byteLength) {
-    this.dataView = new DataView(buffer, byteOffset, byteLength);
-    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)}),
+      bytes: {value:new Uint8Array(buffer, byteOffset, byteLength)}),
+    });
   }
-  ThreadInfoView.prototype = {
-    get parentFolderID() {
-      this.dataView.getUint32(10, false);
+  Object.defineProperties(ThreadInfoView.prototype, {
+    parentFolderID: {
+      get: function() {
+        return this.dataView.getUint32(10, false);
+      },
+      enumerable: true,
     },
-    get parentFolderName() {
-      return macintoshRoman(this.bytes, 15, this.bytes[14]);
+    parentFolderName: {
+      get: function() {
+        return macintoshRoman(this.bytes, 15, this.bytes[14]);
+      },
+      enumerable: true,
     },
-  };
+  });
 
   return BTreeNodeView;
 
