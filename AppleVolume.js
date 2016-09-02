@@ -407,7 +407,7 @@ function(
                   e.preventDefault();
                   e.stopPropagation();
                 }
-                resourceEl.addEventListener(e, clickResource);
+                resourceEl.addEventListener('click', clickResource);
                 var resourceTitleString = '[' + resource.type + '] #' + resource.id;
                 if (resource.name) {
                   resourceTitleString += ' "' + resource.name + '"';
