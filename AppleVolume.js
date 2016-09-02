@@ -387,6 +387,7 @@ function(
           }
           container.appendChild(title);
           if (fileInfo.resourceForkInfo.logicalEOF) {
+            container.classList.add('folder');
             function clickExpand(e) {
               container.classList.toggle('open');
               e.preventDefault();
@@ -402,7 +403,6 @@ function(
               allocation.blockSize * extent.offset + fileInfo.resourceForkInfo.logicalEOF
             ), {
               onresource: function(resource) {
-                container.classList.add('folder');
                 var resourceEl = document.createElement('SECTION');
                 function clickResource(e) {
                   e.preventDefault();
