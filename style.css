@@ -65,6 +65,7 @@ body {
   text-align: center;
   vertical-align: top;
   width: 1em;
+  content: "\a0";
 }
 
 .folder > header::before {
