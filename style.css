@@ -36,11 +36,11 @@ body {
 }
 
 .file, .folder {
-  background: white;
+  background-color: white;
 }
 
 .file.invisible, .folder.invisible {
-  background: #ccc;
+  background-color: #ccc;
   /* display: none; */
 }
 
