@@ -272,6 +272,10 @@ function(
           var expandButton = document.createElement('BUTTON');
           expandButton.style.width = '2em';
           expandButton.innerHTML = '&#x1F4C1;';
+          function clickExpand() {
+            container.classList.toggle('open');
+          }
+          expandButton.addEventListener('click', clickExpand);
           title.insertBefore(expandButton, title.firstChild);
           container.appendChild(title);
           var timestamp = folderInfo.modifiedAt || folderInfo.createdAt;
@@ -388,6 +392,10 @@ function(
             var expandButton = document.createElement('BUTTON');
             expandButton.style.width = '2em';
             expandButton.innerHTML = '&#x2795;';
+            function clickExpand() {
+              container.classList.toggle('open');
+            }
+            expandButton.addEventListener('click', clickExpand);
             title.insertBefore(expandButton, title.firstChild);
             var resources = document.createElement('SECTION');
             resources.classList.add('folder-children');
