@@ -48,6 +48,7 @@ body {
 
 .file > header, .folder > header {
   font-family: monospace;
+  cursor: default;
 }
 
 .folder > summary {
