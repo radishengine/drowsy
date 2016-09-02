@@ -378,9 +378,9 @@ function(
             downloadButton.addEventListener('click', function() {
                 downloadLink.click();
             });
+            title.appendChild(document.createTextNode(fileInfo.name + ' '));
             title.appendChild(downloadButton);
             title.appendChild(downloadLink);
-            title.appendChild(document.createTextNode(fileInfo.name));
           }
           else {
             title.appendChild(document.createTextNode(fileInfo.name));
