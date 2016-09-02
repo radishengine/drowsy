@@ -290,6 +290,7 @@ function(
             folders[folderInfo.id] = children;
           }
           if (folderInfo.parentFolderID === 1) {
+            container.classList.add('open');
             document.body.appendChild(container);
           }
           else if (folderInfo.parentFolderID in folders) {
