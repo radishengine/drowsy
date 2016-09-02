@@ -499,6 +499,13 @@ function(
               }
             });
           }
+          else {
+            function clickExpand(e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+            container.addEventListener('click', clickExpand);
+          }
           if (fileInfo.parentFolderID === 1) {
             document.body.appendChild(container);
           }
