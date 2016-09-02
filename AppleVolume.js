@@ -383,54 +383,93 @@ function(
           }
           container.appendChild(title);
           if (fileInfo.resourceForkInfo.logicalEOF) {
+            var extent = fileInfo.resourceForkFirstExtentRecord[0];
+            var resourceForkByteSource = allocation.slice(
+              allocation.blockSize * extent.offset,
+              allocation.blockSize * extent.offset + fileInfo.resourceForkInfo.logicalEOF);
+            var resources = document.createElement('SECTION');
+            resources.classList.add('folder-children');
+            container.appendChild(resources);
             container.classList.add('folder');
             function clickExpand(e) {
               container.classList.toggle('open');
               e.preventDefault();
               e.stopPropagation();
             }
-            container.addEventListener('click', clickExpand);
-            var resources = document.createElement('SECTION');
-            resources.classList.add('folder-children');
-            container.appendChild(resources);
-            var extent = fileInfo.resourceForkFirstExtentRecord[0];
-            self.readResourceFork(allocation.slice(
-              allocation.blockSize * extent.offset,
-              allocation.blockSize * extent.offset + fileInfo.resourceForkInfo.logicalEOF
-            ), {
-              onresource: function(resource) {
-                var resourceEl = document.createElement('SECTION');
-                resourceEl.classList.add('file');
-                function clickResource(e) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }
-                resourceEl.addEventListener('click', clickResource);
-                var resourceTitleString = '[' + resource.type + '] #' + resource.id;
-                if (resource.name) {
-                  resourceTitleString += ' "' + resource.name + '"';
-                }
-                var resourceTitle = document.createElement('HEADER');
-                var downloadLink = document.createElement('A');
-                downloadLink.innerHTML = '&#x1f4be;';
-                downloadLink.href = '#';
-                downloadLink.title = 'Download (' + resource.byteSource.byteLength + ' bytes)';
-                downloadLink.setAttribute('download', 'resource.dat');
-                function clickDownloadLink(e) {
+            function clickLoad(e) {
+              container.classList.add('loading');
+              e.preventDefault();
+              e.stopPropagation();
+              container.removeEventListener('click', clickLoad);
+              container.addEventListener('click', clickExpand);
+              
+              var header, map, dataByteSource;
+              resourceForkByteSource.slice(0, ResourceHeaderView.byteLength).getBytes()
+              .then(function(headerBytes) {
+                header = new ResourceHeaderView(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
+                dataByteSource = byteSource.slice(header.dataOffset, header.dataOffset + header.dataLength);
+                return byteSource.slice(header.mapOffset, header.mapOffset + header.mapLength).getBytes();
+              })
+              .then(function(mapBytes) {
+                map = new ResourceMapView(mapBytes.buffer, mapBytes.byteOffset, mapBytes.byteLength);
+                return Promise.all(map.resourceList.map(function(resource) {
+                  var resourceEl = document.createElement('SECTION');
+                  resourceEl.classList.add('file');
+                  function clickResource(e) {
                     e.preventDefault();
-                    resource.byteSource.getURL()
-                        .then(function(url) {
-                            downloadLink.href = url;
-                            downloadLink.click();
-                        });
-                    downloadLink.removeEventListener('click', clickDownloadLink);
-                }
-                downloadLink.addEventListener('click', clickDownloadLink);
-                resourceTitle.appendChild(document.createTextNode(resourceTitleString + ' '));
-                resourceTitle.appendChild(downloadLink);
-                resourceEl.appendChild(resourceTitle);
-                resources.appendChild(resourceEl);
-                /*
+                    e.stopPropagation();
+                  }
+                  resourceEl.addEventListener('click', clickResource);
+                  var resourceTitleString = '[' + resource.type + '] #' + resource.id;
+                  if (resource.name) {
+                    resourceTitleString += ' "' + resource.name + '"';
+                  }
+                  var resourceTitle = document.createElement('HEADER');
+                  var downloadLink = document.createElement('A');
+                  downloadLink.innerHTML = '&#x1f4be;';
+                  downloadLink.href = '#';
+                  downloadLink.title = 'Download (' + resource.byteSource.byteLength + ' bytes)';
+                  downloadLink.setAttribute('download', 'resource.dat');
+                  function clickDownloadLink(e) {
+                      e.preventDefault();
+                      resource.byteSource.getURL()
+                          .then(function(url) {
+                              downloadLink.href = url;
+                              downloadLink.click();
+                          });
+                      downloadLink.removeEventListener('click', clickDownloadLink);
+                  }
+                  downloadLink.addEventListener('click', clickDownloadLink);
+                  resourceTitle.appendChild(document.createTextNode(resourceTitleString + ' '));
+                  resourceTitle.appendChild(downloadLink);
+                  resourceEl.appendChild(resourceTitle);
+                  resources.appendChild(resourceEl);
+                  
+                  /*
+                  return dataByteSource.slice(
+                    resource.dataOffset,
+                    resource.dataOffset + 4)
+                  .getBytes()
+                  .then(function(lengthBytes) {
+                    var length = new DataView(
+                      lengthBytes.buffer,
+                      lengthBytes.byteOffset,
+                      lengthBytes.byteLength).getUint32(0, false);
+                    resource.byteSource = dataByteSource.slice(
+                      resource.dataOffset + 4,
+                      resource.dataOffset + 4 + length);
+                  */
+                  });
+                }));
+              })
+              .then(function() {
+                container.classList.remove('loading');
+              });
+            }
+            container.addEventListener('click', clickLoad);
+            /*
+            self.readResourceFork(resourceForkByteSource), {
+              onresource: function(resource) {
                 var resourceEl;
                 if ('image' in resource) {
                   resourceEl = document.createElement('IMG');
@@ -493,9 +532,9 @@ function(
                 resourceEl.dataset.type = resource.type;
                 resourceEl.dataset.id = resource.id;
                 container.appendChild(resourceEl);
-              */
               }
             });
+            */
           }
           else {
             function clickExpand(e) {
