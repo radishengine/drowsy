@@ -243,24 +243,24 @@ function(
       var self = this;
       var folders = {};
       var allocation = byteSource.allocationBlocks;
-      this.readBTreeNode(byteSource, 0, {
-        onheadernode: function(headerNode) {
-          self.readBTreeNode(byteSource, headerNode.rootNodeNumber, this);
+      this.readBTreeNode(byteSource, 0, [], {
+        onheadernode: function(headerNode, chain) {
+          self.readBTreeNode(byteSource, headerNode.rootNodeNumber, chain, this);
         },
-        onindexnode: function(indexNode) {
-          console.log('index', indexNode);
+        onindexnode: function(indexNode, chain) {
+          console.log('index', chain, indexNode);
           for (var i = 0; i < indexNode.pointers.length; i++) {
-            self.readBTreeNode(byteSource, indexNode.pointers[i].nodeNumber, this);
+            self.readBTreeNode(byteSource, indexNode.pointers[i].nodeNumber, chain, this);
           }
         },
-        onfolderthread: function(threadInfo) {
-          console.log('folder thread', threadInfo);
+        onfolderthread: function(threadInfo, chain) {
+          console.log('folder thread', chain, threadInfo);
         },
-        onfilethread: function(threadInfo) {
-          console.log('file thread', threadInfo);
+        onfilethread: function(threadInfo, chain) {
+          console.log('file thread', chain, threadInfo);
         },
-        onfolder: function(folderInfo) {
-          console.log('folder', folderInfo);
+        onfolder: function(folderInfo, chain) {
+          console.log('folder', chain, folderInfo);
           var container = document.createElement('SECTION');
           if (folderInfo.isInvisible) {
             container.classList.add('invisible');
@@ -303,8 +303,8 @@ function(
             folders[folderInfo.parentFolderID] = siblings;
           }
         },
-        onleafnode: function(leaf) {
-          console.log('leaf', leaf);
+        onleafnode: function(leaf, chain) {
+          console.log('leaf', chain, leaf);
           for (var i = 0; i < leaf.records.length; i++) {
             var record = leaf.records[i];
             record.leafNodeNumber = leaf.number;
@@ -314,19 +314,19 @@ function(
                 record.folderInfo.name = record.name;
                 record.folderInfo.number = record.number;
                 record.folderInfo.parentFolderID = record.parentFolderID;
-                this.onfolder(record.folderInfo);
+                this.onfolder(record.folderInfo, chain.concat(i));
                 break;
               case 'file':
                 record.fileInfo.name = record.name;
                 record.fileInfo.number = record.number;
                 record.fileInfo.parentFolderID = record.parentFolderID;
-                this.onfile(record.fileInfo);
+                this.onfile(record.fileInfo, chain.concat(i));
                 break;
               case 'folderthread':
-                this.onfolderthread(record.threadInfo);
+                this.onfolderthread(record.threadInfo, chain.concat(i));
                 break;
               case 'filethread':
-                this.onfilethread(record.threadInfo);
+                this.onfilethread(record.threadInfo, chain.concat(i));
                 break;
               default:
                 console.error('unknown folder record type');
@@ -679,8 +679,9 @@ function(
         });
       });
     },
-    readBTreeNode: function(byteSource, nodeNumber, reader) {
+    readBTreeNode: function(byteSource, nodeNumber, chain, reader) {
       var self = this;
+      chain = chain.concat(nodeNumber);
       byteSource.slice(nodeNumber * BTREE_NODE_BYTES, (nodeNumber + 1) * BTREE_NODE_BYTES).read({
         onbytes: function(bytes) {
           var node = new BTreeNodeView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -689,7 +690,7 @@ function(
             case 'index':
               node.pointers = node.records;
               if (typeof reader.onindexnode === 'function') {
-                reader.onindexnode(node);
+                reader.onindexnode(node, chain);
               }
               break;
             case 'header':
@@ -697,7 +698,7 @@ function(
               header.number = nodeNumber;
               header.bitmap = node.records[2];
               if (typeof reader.onheadernode === 'function') {
-                reader.onheadernode(header);
+                reader.onheadernode(header, chain);
               }
               break;
             case 'map':
@@ -705,7 +706,7 @@ function(
               break;
             case 'leaf':
               if (typeof reader.onleafnode === 'function') {
-                reader.onleafnode(node);
+                reader.onleafnode(node, chain);
               }
               break;
             default:
