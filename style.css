@@ -67,10 +67,6 @@ body {
   width: 1em;
 }
 
-.file > header::before {
-  content: "\25FC";
-}
-
 .folder > header::before {
   content: "\25B6";
 }
