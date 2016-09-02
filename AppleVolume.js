@@ -413,6 +413,21 @@ function(
               .then(function(mapBytes) {
                 map = new ResourceMapView(mapBytes.buffer, mapBytes.byteOffset, mapBytes.byteLength);
                 return Promise.all(map.resourceList.map(function(resource) {
+                  var resourceEl = document.createElement('SECTION');
+                  resourceEl.classList.add('file');
+                  function clickResource(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }
+                  resourceEl.addEventListener('click', clickResource);
+                  var resourceTitleString = '[' + resource.type + '] #' + resource.id;
+                  if (resource.name) {
+                    resourceTitleString += ' "' + resource.name + '"';
+                  }
+                  var resourceTitle = document.createElement('HEADER');
+                  resourceTitle.appendChild(document.createTextNode(resourceTitleString + ' '));
+                  resourceEl.appendChild(resourceTitle);
+                  resources.appendChild(resourceEl);
                   return dataByteSource.slice(
                     resource.dataOffset,
                     resource.dataOffset + 4)
@@ -425,18 +440,6 @@ function(
                     resource.byteSource = dataByteSource.slice(
                       resource.dataOffset + 4,
                       resource.dataOffset + 4 + length);
-                    var resourceEl = document.createElement('SECTION');
-                    resourceEl.classList.add('file');
-                    function clickResource(e) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }
-                    resourceEl.addEventListener('click', clickResource);
-                    var resourceTitleString = '[' + resource.type + '] #' + resource.id;
-                    if (resource.name) {
-                      resourceTitleString += ' "' + resource.name + '"';
-                    }
-                    var resourceTitle = document.createElement('HEADER');
                     var downloadLink = document.createElement('A');
                     downloadLink.innerHTML = '&#x1f4be;';
                     downloadLink.href = '#';
@@ -452,10 +455,7 @@ function(
                         downloadLink.removeEventListener('click', clickDownloadLink);
                     }
                     downloadLink.addEventListener('click', clickDownloadLink);
-                    resourceTitle.appendChild(document.createTextNode(resourceTitleString + ' '));
                     resourceTitle.appendChild(downloadLink);
-                    resourceEl.appendChild(resourceTitle);
-                    resources.appendChild(resourceEl);
                   });
                   
                   /*
