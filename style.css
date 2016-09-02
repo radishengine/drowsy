@@ -104,4 +104,5 @@ body {
 
 .folder-children {
   min-height: 0.5em;
+  background: white;
 }
