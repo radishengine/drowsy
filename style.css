@@ -68,7 +68,7 @@ body {
 }
 
 .file > header::before {
-  content: "\25FE";
+  content: "\25FC";
 }
 
 .folder > header::before {
@@ -76,5 +76,5 @@ body {
 }
 
 .folder.open > header::before {
-  content: "\25FC";
+  content: "\25BC";
 }
