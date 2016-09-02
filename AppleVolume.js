@@ -397,7 +397,7 @@ function(
               e.stopPropagation();
             }
             function clickLoad(e) {
-              container.classList.add('loading');
+              container.classList.add('loading', 'open');
               e.preventDefault();
               e.stopPropagation();
               container.removeEventListener('click', clickLoad);
