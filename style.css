@@ -35,8 +35,12 @@ body {
   visibility: hidden;
 }
 
+.file, .folder {
+  background: white;
+}
+
 .file.invisible, .folder.invisible {
-  background: rgba(0,0,0, 0.15);
+  background: #ccc;
   /* display: none; */
 }
 
