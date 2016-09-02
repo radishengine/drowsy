@@ -308,17 +308,14 @@ function(
           for (var i = 0; i < leaf.records.length; i++) {
             var record = leaf.records[i];
             record.leafNodeNumber = leaf.number;
-            record.nodeRecordNumber = i;
             switch(record.leafType) {
               case 'folder':
                 record.folderInfo.name = record.name;
-                record.folderInfo.number = record.number;
                 record.folderInfo.parentFolderID = record.parentFolderID;
                 this.onfolder(record.folderInfo, chain.concat(i));
                 break;
               case 'file':
                 record.fileInfo.name = record.name;
-                record.fileInfo.number = record.number;
                 record.fileInfo.parentFolderID = record.parentFolderID;
                 this.onfile(record.fileInfo, chain.concat(i));
                 break;
