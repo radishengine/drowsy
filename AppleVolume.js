@@ -357,7 +357,7 @@ function(
             var downloadLink = document.createElement('A');
             downloadLink.innerHTML = '&#x1f4be;';
             downloadLink.href = '#';
-            downloadLink.title = 'Download (' + fileInfo.dataFork.logicalEOF + ' bytes)';
+            downloadLink.title = 'Download (' + fileInfo.dataForkInfo.logicalEOF + ' bytes)';
             downloadLink.setAttribute('download', fileInfo.name);
             var extent = fileInfo.dataForkFirstExtentRecord[0];
             var downloadByteSource = allocation.slice(
