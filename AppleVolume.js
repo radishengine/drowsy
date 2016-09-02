@@ -458,8 +458,8 @@ function(
                     resource.byteSource = dataByteSource.slice(
                       resource.dataOffset + 4,
                       resource.dataOffset + 4 + length);
-                  */
                   });
+                  */
                 }));
               })
               .then(function() {
