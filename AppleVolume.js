@@ -407,8 +407,8 @@ function(
               resourceForkByteSource.slice(0, ResourceHeaderView.byteLength).getBytes()
               .then(function(headerBytes) {
                 header = new ResourceHeaderView(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
-                dataByteSource = byteSource.slice(header.dataOffset, header.dataOffset + header.dataLength);
-                return byteSource.slice(header.mapOffset, header.mapOffset + header.mapLength).getBytes();
+                dataByteSource = resourceForkByteSource.slice(header.dataOffset, header.dataOffset + header.dataLength);
+                return resourceForkByteSource.slice(header.mapOffset, header.mapOffset + header.mapLength).getBytes();
               })
               .then(function(mapBytes) {
                 map = new ResourceMapView(mapBytes.buffer, mapBytes.byteOffset, mapBytes.byteLength);
