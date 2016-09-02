@@ -93,6 +93,7 @@ body {
     transparent
   );
   animation: animate-stripes 3s linear infinite;             
+  background-attachment: fixed;
 }
 
 @keyframes animate-stripes {
