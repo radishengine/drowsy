@@ -668,8 +668,8 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
   
   function ThreadInfoView(buffer, byteOffset, byteLength) {
     Object.defineProperties(this, {
-      dataView: {value:new DataView(buffer, byteOffset, byteLength)}),
-      bytes: {value:new Uint8Array(buffer, byteOffset, byteLength)}),
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+      bytes: {value:new Uint8Array(buffer, byteOffset, byteLength)},
     });
   }
   Object.defineProperties(ThreadInfoView.prototype, {
