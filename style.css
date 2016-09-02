@@ -19,7 +19,7 @@ body {
 
 #drop-zone.drop-target {
   border: 3px dashed silver;
-  background: #bbb;
+  background: #eee;
 }
 
 #drop-zone.drop-target .help-label {
