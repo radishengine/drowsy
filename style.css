@@ -76,5 +76,5 @@ body {
 }
 
 .folder.open > header::before {
-  content: "\25BC";
+  content: "\25FC";
 }
