@@ -41,8 +41,8 @@ body {
 }
 
 .file.invisible, .folder.invisible {
-  background-color: #eee;
-  box-shadow: 3px 3px 10px #eee inset;
+  background-color: #cce;
+  box-shadow: 3px 3px 10px #cce inset;
   /* display: none; */
 }
 
