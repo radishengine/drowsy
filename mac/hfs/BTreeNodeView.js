@@ -210,22 +210,13 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
       Object.defineProperty(this, 'folderInfo', {value:folderInfo});
       return folderInfo;
     },
-    get fileThreadInfo() {
-      if (this.leafType !== 'filethread') return null;
+    get threadInfo() {
+      if (this.leafType !== 'filethread' && this.leafType !== 'folderthread') return null;
       var threadInfo = new ThreadInfoView(
         this.dataBytes.buffer,
         this.dataBytes.byteOffset,
         this.dataBytes.byteLength);
-      Object.defineProperty(this, 'fileThreadInfo', {value:threadInfo});
-      return threadInfo;
-    },
-    get folderThreadInfo() {
-      if (this.leafType !== 'folderthread') return null;
-      var threadInfo = new ThreadInfoView(
-        this.dataBytes.buffer,
-        this.dataBytes.byteOffset,
-        this.dataBytes.byteLength);
-      Object.defineProperty(this, 'folderThreadInfo', {value:threadInfo});
+      Object.defineProperty(this, 'threadInfo', {value:threadInfo});
       return threadInfo;
     },
   };
