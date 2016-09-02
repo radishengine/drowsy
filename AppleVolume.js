@@ -413,37 +413,50 @@ function(
               .then(function(mapBytes) {
                 map = new ResourceMapView(mapBytes.buffer, mapBytes.byteOffset, mapBytes.byteLength);
                 return Promise.all(map.resourceList.map(function(resource) {
-                  var resourceEl = document.createElement('SECTION');
-                  resourceEl.classList.add('file');
-                  function clickResource(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                  resourceEl.addEventListener('click', clickResource);
-                  var resourceTitleString = '[' + resource.type + '] #' + resource.id;
-                  if (resource.name) {
-                    resourceTitleString += ' "' + resource.name + '"';
-                  }
-                  var resourceTitle = document.createElement('HEADER');
-                  var downloadLink = document.createElement('A');
-                  downloadLink.innerHTML = '&#x1f4be;';
-                  downloadLink.href = '#';
-                  downloadLink.title = 'Download (' + resource.byteSource.byteLength + ' bytes)';
-                  downloadLink.setAttribute('download', 'resource.dat');
-                  function clickDownloadLink(e) {
+                  return dataByteSource.slice(
+                    resource.dataOffset,
+                    resource.dataOffset + 4)
+                  .getBytes()
+                  .then(function(lengthBytes) {
+                    var length = new DataView(
+                      lengthBytes.buffer,
+                      lengthBytes.byteOffset,
+                      lengthBytes.byteLength).getUint32(0, false);
+                    resource.byteSource = dataByteSource.slice(
+                      resource.dataOffset + 4,
+                      resource.dataOffset + 4 + length);
+                    var resourceEl = document.createElement('SECTION');
+                    resourceEl.classList.add('file');
+                    function clickResource(e) {
                       e.preventDefault();
-                      resource.byteSource.getURL()
-                          .then(function(url) {
-                              downloadLink.href = url;
-                              downloadLink.click();
-                          });
-                      downloadLink.removeEventListener('click', clickDownloadLink);
-                  }
-                  downloadLink.addEventListener('click', clickDownloadLink);
-                  resourceTitle.appendChild(document.createTextNode(resourceTitleString + ' '));
-                  resourceTitle.appendChild(downloadLink);
-                  resourceEl.appendChild(resourceTitle);
-                  resources.appendChild(resourceEl);
+                      e.stopPropagation();
+                    }
+                    resourceEl.addEventListener('click', clickResource);
+                    var resourceTitleString = '[' + resource.type + '] #' + resource.id;
+                    if (resource.name) {
+                      resourceTitleString += ' "' + resource.name + '"';
+                    }
+                    var resourceTitle = document.createElement('HEADER');
+                    var downloadLink = document.createElement('A');
+                    downloadLink.innerHTML = '&#x1f4be;';
+                    downloadLink.href = '#';
+                    downloadLink.title = 'Download (' + resource.byteSource.byteLength + ' bytes)';
+                    downloadLink.setAttribute('download', 'resource.dat');
+                    function clickDownloadLink(e) {
+                        e.preventDefault();
+                        resource.byteSource.getURL()
+                            .then(function(url) {
+                                downloadLink.href = url;
+                                downloadLink.click();
+                            });
+                        downloadLink.removeEventListener('click', clickDownloadLink);
+                    }
+                    downloadLink.addEventListener('click', clickDownloadLink);
+                    resourceTitle.appendChild(document.createTextNode(resourceTitleString + ' '));
+                    resourceTitle.appendChild(downloadLink);
+                    resourceEl.appendChild(resourceTitle);
+                    resources.appendChild(resourceEl);
+                  });
                   
                   /*
                   return dataByteSource.slice(
