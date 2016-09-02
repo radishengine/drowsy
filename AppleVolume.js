@@ -432,9 +432,9 @@ function(
                 downloadButton.addEventListener('click', function() {
                   downloadLink.click();
                 });
+                resourceTitle.appendChild(document.createTextNode(resourceTitleString + ' '));
                 resourceTitle.appendChild(downloadLink);
                 resourceTitle.appendChild(downloadButton);
-                resourceTitle.appendChild(document.createTextNode(resourceTitleString));
                 resourceEl.appendChild(resourceTitle);
                 resources.appendChild(resourceEl);
                 /*
