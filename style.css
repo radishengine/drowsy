@@ -60,12 +60,19 @@ body {
   display: block;
 }
 
-.folder > header::before {
-  content: "\25B6";
+.folder > header::before, .file > header::before {
   display: inline-block;
   text-align: center;
   vertical-align: top;
   width: 1em;
+}
+
+.file > header::before {
+  content: "\25FE";
+}
+
+.folder > header::before {
+  content: "\25B6";
 }
 
 .folder.open > header::before {
