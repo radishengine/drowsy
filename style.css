@@ -93,6 +93,7 @@ body {
   );
   animation: animate-stripes 3s linear infinite;             
   background-attachment: fixed;
+  cursor: wait;
 }
 
 @keyframes animate-stripes {
