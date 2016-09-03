@@ -321,7 +321,7 @@ function(
               var extent = record.fileInfo.dataForkFirstExtentRecord[0];
               itemEl.dataForkByteSource = allocation.slice(
                 allocation.blockSize * extent.offset,
-                allocation.blockSize * extent.offset + record.fileInfo.resourceForkInfo.logicalEOF);
+                allocation.blockSize * extent.offset + record.fileInfo.dataForkInfo.logicalEOF);
                 
               var downloadLink = document.createElement('A');
               downloadLink.classList.add('download');
