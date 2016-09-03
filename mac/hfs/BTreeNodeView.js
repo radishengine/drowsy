@@ -4,17 +4,6 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
   
   var NODE_BYTES = 512;
   
-  function folderID(id) {
-    switch(id) {
-      case 1: return 'rootParent';
-      case 2: return 'root';
-      case 3: return 'extents';
-      case 4: return 'catalog';
-      case 5: return 'badAllocationBlock';
-      default: return id;
-    }
-  }
-   
   function extentDataRecord(dv, offset) {
     var record = [];
     for (var i = 0; i < 3; i++) {
@@ -138,7 +127,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
     },
     parentFolderID: {
       get: function() {
-        return folderID(this.dataView.getUint32(2, false));
+        return this.dataView.getUint32(2, false);
       },
       enumerable: true,
     },
@@ -266,7 +255,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
     },
     parentFolderID: {
       get: function() {
-        return folderID(this.dataView.getUint32(2, false));
+        return this.dataView.getUint32(2, false);
       },
       enumerable: true,
     },
@@ -556,7 +545,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
     },
     id: {
       get: function() {
-        return folderID(this.dataView.getUint32(6, false));
+        return this.dataView.getUint32(6, false);
       },
       enumerable: true,
     },
@@ -686,7 +675,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
   Object.defineProperties(ThreadInfoView.prototype, {
     parentFolderID: {
       get: function() {
-        return folderID(this.dataView.getUint32(10, false));
+        return this.dataView.getUint32(10, false);
       },
       enumerable: true,
     },
@@ -697,7 +686,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
       enumerable: true,
     },
   });
-
+  
   return BTreeNodeView;
 
 });
