@@ -686,7 +686,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
   Object.defineProperties(ThreadInfoView.prototype, {
     parentFolderID: {
       get: function() {
-        return this.dataView.getUint32(10, false);
+        return folderID(this.dataView.getUint32(10, false));
       },
       enumerable: true,
     },
