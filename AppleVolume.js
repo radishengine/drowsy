@@ -203,6 +203,7 @@ function(
     },
     readCatalog: function(byteSource, reader) {
       var btree = new BTreeByteSink(byteSource);
+      var allocation = byteSource.allocationBlocks;
       function onFolderClick(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -215,6 +216,42 @@ function(
             self.classList.add('loaded');
             self.classList.remove('loading');
           });
+        }
+      }
+      function onFileClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this.classList.contains('folder')) {
+          this.classList.toggle('open');
+          if (!this.classList.contains('loaded') && !this.classList.contains('loading')) {
+            this.classList.add('loading');
+            var self = this;
+            var dataByteSource;
+            this.resourceForkByteSource.slice(0, ResourceHeaderView.byteLength).getBytes()
+            .then(function(headerBytes) {
+              var header = new ResourceHeaderView(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
+              dataByteSource = self.resourceForkByteSource.slice(header.dataOffset, header.dataOffset + header.dataLength);
+              return self.resourceForkByteSource.slice(header.mapOffset, header.mapOffset + header.mapLength).getBytes();
+            })
+            .then(function(mapBytes) {
+              var map = new ResourceMapView(mapBytes.buffer, mapBytes.byteOffset, mapBytes.byteLength);
+              map.resourceList.forEach(function(resourceInfo) {
+                var itemEl = document.createElement('SECTION');
+                
+                itemEl.addClass('invisible', 'file');
+                
+                var titleEl = document.createElement('HEADER');
+                titleEl.appendChild(document.createTextNode(resourceInfo.name));
+                itemEl.appendChild(titleEl);
+                
+                self.childrenEl.appendChild(itemEl);
+              });
+            })
+            .then(function() {
+              self.classList.add('loaded');
+              self.classList.remove('loading');
+            });
+          }
         }
       }
       function addRecordTo(record, containerEl) {
@@ -233,6 +270,16 @@ function(
               itemEl.classList.add('file');
             }
             itemEl.dataset.catalogId = record.fileInfo.id;
+            if (record.resourceForkInfo.logicalEOF) {
+              var extent = record.fileInfo.resourceForkFirstExtentRecord[0];
+              itemEl.resourceForkByteSource = allocation.slice(
+                allocation.blockSize * extent.offset,
+                allocation.blockSize * extent.offset + fileInfo.resourceForkInfo.logicalEOF);
+              itemEl.classList.add('folder');
+              var childrenEl = document.createElemente('SECTION');
+              itemEl.childrenEl = childrenEl;
+            }
+            itemEl.addEventListener('click', onFileClick);
             break;
           case 'folder':
             if (record.folderInfo.isInvisible) {
