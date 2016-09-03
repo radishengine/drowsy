@@ -264,7 +264,7 @@ function(
               dataByteSource.slice(
                 resourceInfo.dataOffset,
                 resourceInfo.dataOffset + 4).getBytes()
-              .then(function(lengthBYtes) {
+              .then(function(lengthBytes) {
                 var length = new DataView(
                   lengthBytes.buffer,
                   lengthBytes.byteOffset,
