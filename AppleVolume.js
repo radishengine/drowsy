@@ -205,7 +205,7 @@ function(
       var allocation = byteSource.allocationBlocks;
       this.getFirstLeaf(byteSource)
       .then(function(leaf) {
-        console.log(leaf);
+        console.log('first leaf', leaf);
       });
       this.readBTreeNode(byteSource, 0, [], {
         onheadernode: function(headerNode, chain) {
