@@ -210,7 +210,7 @@ function(
         if (!this.classList.contains('loaded') && !this.classList.contains('loading')) {
           this.classList.add('loading');
           var self = this;
-          listFolderTo(this.dataset.catalogId, this.childrenEl)
+          listFolderTo(this.catalogID, this.childrenEl)
           .then(function() {
             self.classList.add('loaded');
             self.classList.remove('loading');
@@ -249,6 +249,15 @@ function(
             itemEl.addEventListener('click', onFolderClick);
             break;
         }
+        
+        Object.defineProperties(itemEl, {
+          catalogID: {
+            get: function() {
+              return +this.dataset.catalogId
+            },
+            enumerable: true,
+          },
+        });
 
         containerEl.appendChild(itemEl);
       }
