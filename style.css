@@ -114,3 +114,9 @@ body {
 .file:hover > header .download {
   visibility: visible;
 }
+
+.folder-children pre {
+  max-height: 5em;
+  overflow: auto;
+  margin: 0;
+}
