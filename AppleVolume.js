@@ -310,6 +310,15 @@ function(
                 return;
               }
               this.classList.add('loading');
+              Object.defineProperties(itemEl, {
+                dataObject: {
+                  set: function(value) {
+                    var dataObjectEl = document.createElement('PRE');
+                    dataObjectEl.appendChild(document.createTextNode(JSON.stringify(value, 2)));
+                    itemChildrenEl.appendChild(dataObjectEl);
+                  },
+                },
+              });
               var loaderImport = 'mac/resources/open_' + encodeURIComponent(resourceInfo.type);
               var promisedLoader = new Promise(function(resolve, reject) {
                 require([loaderImport], resolve, reject);
