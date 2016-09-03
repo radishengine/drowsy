@@ -203,6 +203,10 @@ function(
       var self = this;
       var folders = {};
       var allocation = byteSource.allocationBlocks;
+      this.getFirstLeaf(byteSource)
+      .then(function(leaf) {
+        console.log(leaf);
+      });
       this.readBTreeNode(byteSource, 0, [], {
         onheadernode: function(headerNode, chain) {
           self.readBTreeNode(byteSource, headerNode.rootNodeNumber, chain, this);
@@ -634,6 +638,28 @@ function(
             }
           })*/;
         });
+      });
+    },
+    getFirstLeaf: function(byteSource) {
+      return byteSource.slice(0, BTREE_NODE_BYTES).getBytes()
+      .then(function(rawHeader) {
+        var header = new BTreeNodeView(rawHeader.buffer, rawHeader.byteOffset, rawHeader.byteLength);
+        if (header.type !== 'header') return Promise.reject('node zero is not a header node');
+        function indexRecurser(rawNode) {
+          var node = new BTreeNodeView(rawNode.buffer, rawNode.byteOffset, rawNode.byteLength);
+          switch (node.type) {
+            case 'leaf': return node;
+            case 'index':
+              return byteSource.slice(
+                node.records[0].nodeNumber * BTREE_NODE_BYTES,
+                (node.records[0].nodeNumber + 1) * BTREE_NODE_BYTES).then(indexRecurser);
+            default:
+              return Promise.reject('node is not an index or leaf node');
+          }
+        }
+        return byteSource.slice(
+          header.rootNodeNumber * BTREE_NODE_BYTES,
+          (header.rootNodeNumber + 1) * BTREE_NODE_BYTES).then(indexRecurser);
       });
     },
     readBTreeNode: function(byteSource, nodeNumber, chain, reader) {
