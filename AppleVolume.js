@@ -306,7 +306,7 @@ function(
                 return;
               }
               this.classList.add('loading');
-              var loaderImport = 'mac/resources/open_' + encodeURIComponent();
+              var loaderImport = 'mac/resources/open_' + encodeURIComponent(resourceInfo.type);
               var promisedLoader = new Promise(function(resolve, reject) {
                 require([loaderImport], resolve, reject);
               });
