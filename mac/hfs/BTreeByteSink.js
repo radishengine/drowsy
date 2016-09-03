@@ -49,14 +49,36 @@ define(['mac/hfs/BTreeNodeView'], function(BTreeNodeView) {
     findLeafForParentFolderID: function(parentFolderID) {
       var self = this;
       function onNode(node) {
-        if (node.nodeType === 'leaf') return node;
-        if (node.nodeType !== 'index') return Promise.reject('node is not a leaf or index');
-        for (var i = node.records.length - 1; i >= 0; i--) {
-          if (parentFolderID >= node.records[i].parentFolderID) {
-            return self.getNode(node.records[i].nodeNumber).then(onNode);
+        if (node.nodeType === 'leaf') {
+          if (parentFolderID < node.records[0].parentFolderID) {
+            return Promise.reject('folder not found:' + parentFolderID);
+          }
+          if (parentFolderID > node.records[node.records.length-1].parentFolderID) {
+            if (!node.forwardLink) {
+              return Promise.reject('folder not found: ' + parentFolderID);
+            }
+            return self.getNode(node.forwardLink)
+            .then(function(nextLeaf) {
+              if (nextLeaf.records[0].parentFolderID !== parentFolderID) {
+                return Promise.reject('folder not found: ' + parentFolderID);
+              }
+              return nextLeaf;
+            });
+          }
+          for (var i = 0; i < node.records.length; i++) {
+            if (node.records[i].parentFolderID === parentFolderID) return node;
+          }
+          return Promise.reject('folder not found: ' + parentFolderID);
+        }
+        if (node.nodeType !== 'index') {
+          return Promise.reject('node is not a leaf or index');
+        }
+        for (var i = 1; i < node.records.length; i++) {
+          if (parentFolderID <= node.records[i].parentFolderID) {
+            return self.getNode(node.records[i-1].nodeNumber).then(onNode);
           }
         }
-        return Promise.reject('parent folder ID not found: ' + parentFolderID);
+        return self.getNode(node.records[node.records.length-1].nodeNumber).then(onNode);
       }
       return this.getRootNode().then(onNode);
     },
