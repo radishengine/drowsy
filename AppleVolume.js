@@ -203,8 +203,26 @@ function(
     },
     readCatalog: function(byteSource, reader) {
       var btree = new BTreeByteSink(byteSource);
+      function onFolderClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.toggle('open');
+        if (!this.classList.contains('loaded') && !this.classList.contains('loading')) {
+          this.classList.add('loading');
+          var self = this;
+          listFolderTo(this.dataset.catalogId, this.childrenEl)
+          .then(function() {
+            self.classList.add('loaded');
+            self.classList.remove('loading');
+          });
+        }
+      }
       function addRecordTo(record, containerEl) {
         var itemEl = document.createElement('SECTION');
+        
+        var titleEl = document.createElement('HEADER');
+        titleEl.appendChild(document.createTextNode(record.name));
+        itemEl.appendChild(titleEl);
         
         switch (record.leafType) {
           case 'file':
@@ -214,6 +232,7 @@ function(
             else {
               itemEl.classList.add('file');
             }
+            itemEl.dataset.catalogId = record.fileInfo.id;
             break;
           case 'folder':
             if (record.folderInfo.isInvisible) {
@@ -222,13 +241,15 @@ function(
             else {
               itemEl.classList.add('folder');
             }
+            itemEl.dataset.catalogId = record.folderInfo.id;
+            var childrenEl = document.createElement('SECTION');
+            childrenEl.classList.add('folder-children');
+            itemEl.appendChild(childrenEl);
+            itemEl.childrenEl = childrenEl;
+            itemEl.addEventListener('click', onFolderClick);
             break;
         }
 
-        var titleEl = document.createElement('HEADER');
-        titleEl.appendChild(document.createTextNode(record.name));
-        itemEl.appendChild(titleEl);
-        
         containerEl.appendChild(itemEl);
       }
       function listFolderTo(folderID, containerEl) {
