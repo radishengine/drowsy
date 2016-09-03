@@ -104,3 +104,12 @@ body {
   background: white;
   margin-left: 1em;
 }
+
+.download {
+  visibility: hidden;
+  text-decoration: none;
+}
+
+.file:hover > header .download {
+  visibility: hidden;
+}
