@@ -14,7 +14,7 @@ define(['mac/hfs/BTreeNodeView'], function(BTreeNodeView) {
         (number + 1) * BLOCK_BYTES).getBytes();
     },
     getNode: function(number) {
-      return this.getRawNode()
+      return this.getRawNode(number)
       .then(function(rawNode) {
         return new BTreeNodeView(rawNode.buffer, rawNode.byteOffset, rawNode.byteLength);
       });
