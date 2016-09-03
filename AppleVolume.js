@@ -1,9 +1,11 @@
 define([
   'ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView', 'mac/hfs/PartitionRecordView',
-  'mac/hfs/ResourceHeaderView', 'mac/hfs/ResourceMapView', 'mac/hfs/MasterDirectoryBlockView'],
+  'mac/hfs/ResourceHeaderView', 'mac/hfs/ResourceMapView', 'mac/hfs/MasterDirectoryBlockView',
+  'mac/hfs/BTreeByteSink'],
 function(
   ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView,
-  ResourceHeaderView, ResourceMapView, MasterDirectoryBlockView) {
+  ResourceHeaderView, ResourceMapView, MasterDirectoryBlockView,
+  BTreeByteSink) {
 
   'use strict';
   
@@ -200,33 +202,41 @@ function(
       });
     },
     readCatalog: function(byteSource, reader) {
-      var self = this;
-      var folders = {};
-      var allocation = byteSource.allocationBlocks;
-      function clickFolderEl(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.classList.toggle('open');
-      }
-      function makeFolderElement(record) {
-        var folderEl = document.createElement('SECTION');
-        folderEl.classList.add('folder');
-        folderEl.addEventListener('click', clickFolderEl);
+      var btree = new BTreeByteSink(byteSource);
+      function addRecordTo(record, containerEl) {
+        var itemEl = document.createElement('SECTION');
         
         var titleEl = document.createElement('HEADER');
         titleEl.appendChild(document.createTextNode(record.name));
-        folderEl.appendChild(titleEl);
+        itemEl.addChild(titleEl);
         
-        var childrenEl = document.createElement('SECTION');
-        folderEl.appendChild(childrenEl);
-        
-        return folderEl;
+        containerEl.appendChild(itemEl);
       }
-      this.getFirstLeaf(byteSource)
-      .then(function(leaf) {
-        console.log('first leaf', leaf);
-        document.body.appendChild(makeFolderElement(leaf.records[0]));
-      });
+      function listFolderTo(directoryID, containerEl) {
+        return btree.findLeafForParentDirectoryID(directoryID)
+        .then(function(leaf) {
+          var i;
+          for (i = 0; i < leaf.records.length; i++) {
+            if (leaf.records[i].parentDirectoryID === directoryID) break;
+          }
+          if (i >= leaf.records.length) return Promise.reject('directory not found');
+          do {
+            if (leaf.records[i].parentDirectoryID !== directoryID) return;
+            addRecordTo(leaf.records[i], containerEl);
+          } while (++i < leaf.records.length);
+          if (!leaf.forwardLink) return;
+          function onNextLeaf(nextLeaf) {
+            for (var j = 0; j < nextLeaf.records.length; j++) {
+              if (leaf.records[j].parentDirectoryID !== directoryID) return;
+              addRecordTo(leaf.records[j], containerEl);
+            }
+            if (!nextLeaf.forwardLink) return;
+            return btree.getNode(nextLeaf.forwardLink).then(onNextLeaf);
+          }
+          return btree.getNode(leaf.forwardLink).then(onNextLeaf);
+        });
+      }
+      listFolderTo(1, document.body);
       return;
       this.readBTreeNode(byteSource, 0, [], {
         onheadernode: function(headerNode, chain) {
