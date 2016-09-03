@@ -238,6 +238,12 @@ function(
           map.resourceList.forEach(function(resourceInfo) {
             var itemEl = document.createElement('SECTION');
             
+            function clickItem(e) {
+              e.stopPropagation();
+              e.preventDefault();
+            }
+            itemEl.addEventListener('click', clickItem);
+            
             itemEl.classList.add('invisible', 'file');
             
             var titleEl = document.createElement('HEADER');
