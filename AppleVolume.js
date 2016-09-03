@@ -332,7 +332,7 @@ function(
               downloadLink.addEventListener('click', function(e) {
                 e.stopPropagation();
                 if (this.classList.contains('loaded')) return;
-                e.stopDefault();
+                e.preventDefault();
                 if (this.classList.contains('loading')) return;
                 this.classList.add('loading');
                 var self = this;
