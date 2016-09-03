@@ -250,7 +250,7 @@ function(
             itemEl.appendChild(titleEl);
             
             var downloadLink = document.createElement('A');
-            downloadLink.addClass('download');
+            downloadLink.classList.add('download');
             downloadLink.download = titleString.replace(/[\\\/:"<>\*\?\|]/g, '_') + '.dat';
             downloadLink.innerHTML = '&#x1f4be;';
             downloadLink.href = '#';
