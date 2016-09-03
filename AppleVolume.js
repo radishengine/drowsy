@@ -270,13 +270,13 @@ function(
               itemEl.classList.add('file');
             }
             itemEl.dataset.catalogId = record.fileInfo.id;
-            if (record.resourceForkInfo.logicalEOF) {
+            if (record.fileInfo.resourceForkInfo.logicalEOF) {
               var extent = record.fileInfo.resourceForkFirstExtentRecord[0];
               itemEl.resourceForkByteSource = allocation.slice(
                 allocation.blockSize * extent.offset,
                 allocation.blockSize * extent.offset + fileInfo.resourceForkInfo.logicalEOF);
               itemEl.classList.add('folder');
-              var childrenEl = document.createElemente('SECTION');
+              var childrenEl = document.createElement('SECTION');
               itemEl.childrenEl = childrenEl;
             }
             itemEl.addEventListener('click', onFileClick);
