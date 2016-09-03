@@ -221,38 +221,38 @@ function(
       function onFileClick(e) {
         e.preventDefault();
         e.stopPropagation();
-        if (this.classList.contains('folder')) {
-          this.classList.toggle('open');
-          if (!this.classList.contains('loaded') && !this.classList.contains('loading')) {
-            this.classList.add('loading');
-            var self = this;
-            var dataByteSource;
-            this.resourceForkByteSource.slice(0, ResourceHeaderView.byteLength).getBytes()
-            .then(function(headerBytes) {
-              var header = new ResourceHeaderView(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
-              dataByteSource = self.resourceForkByteSource.slice(header.dataOffset, header.dataOffset + header.dataLength);
-              return self.resourceForkByteSource.slice(header.mapOffset, header.mapOffset + header.mapLength).getBytes();
-            })
-            .then(function(mapBytes) {
-              var map = new ResourceMapView(mapBytes.buffer, mapBytes.byteOffset, mapBytes.byteLength);
-              map.resourceList.forEach(function(resourceInfo) {
-                var itemEl = document.createElement('SECTION');
-                
-                itemEl.addClass('invisible', 'file');
-                
-                var titleEl = document.createElement('HEADER');
-                titleEl.appendChild(document.createTextNode(resourceInfo.name));
-                itemEl.appendChild(titleEl);
-                
-                self.childrenEl.appendChild(itemEl);
-              });
-            })
-            .then(function() {
-              self.classList.add('loaded');
-              self.classList.remove('loading');
-            });
-          }
-        }
+        if (!this.classList.contains('folder')) return;
+        this.classList.toggle('open');
+        if (this.classList.contains('loaded') || this.classList.contains('loading')) return;
+        this.classList.add('loading');
+        var self = this;
+        var dataByteSource;
+        this.resourceForkByteSource.slice(0, ResourceHeaderView.byteLength).getBytes()
+        .then(function(headerBytes) {
+          var header = new ResourceHeaderView(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
+          dataByteSource = self.resourceForkByteSource.slice(header.dataOffset, header.dataOffset + header.dataLength);
+          return self.resourceForkByteSource.slice(header.mapOffset, header.mapOffset + header.mapLength).getBytes();
+        })
+        .then(function(mapBytes) {
+          var map = new ResourceMapView(mapBytes.buffer, mapBytes.byteOffset, mapBytes.byteLength);
+          map.resourceList.forEach(function(resourceInfo) {
+            var itemEl = document.createElement('SECTION');
+            
+            itemEl.addClass('invisible', 'file');
+            
+            var titleEl = document.createElement('HEADER');
+            var titleString = '[' + resourceInfo.type + '/' + resourceInfo.id + ']';
+            if (resourceInfo.name) titleString = resourceInfo.name + ' ' + titleString;
+            titleEl.appendChild(document.createTextNode(titleString));
+            itemEl.appendChild(titleEl);
+            
+            self.childrenEl.appendChild(itemEl);
+          });
+        })
+        .then(function() {
+          self.classList.add('loaded');
+          self.classList.remove('loading');
+        });
       }
       function addRecordTo(record, containerEl) {
         var itemEl = document.createElement('SECTION');
