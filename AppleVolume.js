@@ -297,6 +297,10 @@ function(
             titleEl.appendChild(downloadLink);
             
             itemEl.classList.add('folder');
+            var itemChildrenEl = document.createElement('SECTION');
+            itemChildrenEl.classList.add('folder-children');
+            itemEl.appendChild(itemChildrenEl);
+            itemEl.childrenEl = itemChildrenEl;
             itemEl.addEventListener('click', function(e) {
               e.preventDefault();
               e.stopPropagation();
@@ -314,7 +318,7 @@ function(
               Promise.all([promisedLoader, promisedByteSource])
               .then(function(values) {
                 var open = values[0], finalByteSource = values[1];
-                return open(resourceInfo, finalByteSource, itemEl);
+                return open(resourceInfo, finalByteSource, itemChildrenEl);
               })
               .then(function() {
                 self.classList.remove('loading');
