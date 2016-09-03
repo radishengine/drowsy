@@ -46,17 +46,17 @@ define(['mac/hfs/BTreeNodeView'], function(BTreeNodeView) {
       this.getRootNode = function(){ return promise; };
       return promise;
     },
-    findLeafForParentDirectoryID: function(parentDirectoryID) {
+    findLeafForParentFolderID: function(parentFolderID) {
       var self = this;
       function onNode(node) {
         if (node.nodeType === 'leaf') return node;
         if (node.nodeType !== 'index') return Promise.reject('node is not a leaf or index');
         for (var i = node.records.length - 1; i >= 0; i--) {
-          if (parentDirectoryID >= node.records[i].parentDirectoryID) {
+          if (parentFolderID >= node.records[i].parentFolderID) {
             return self.getNode(records[i].nodeNumber).then(onNode);
           }
         }
-        return Promise.reject('parent directory ID not found: ' + parentDirectoryID);
+        return Promise.reject('parent folder ID not found: ' + parentFolderID);
       }
       return this.getRootNode().then(onNode);
     },
