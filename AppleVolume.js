@@ -242,7 +242,7 @@ function(
             
             var titleEl = document.createElement('HEADER');
             var titleString = '[' + resourceInfo.type + '/' + resourceInfo.id + ']';
-            if (resourceInfo.name) titleString = resourceInfo.name + ' ' + titleString;
+            if (resourceInfo.name) titleString += ' ' + resourceInfo.name;
             titleEl.appendChild(document.createTextNode(titleString));
             itemEl.appendChild(titleEl);
             
@@ -277,6 +277,7 @@ function(
                 allocation.blockSize * extent.offset + record.fileInfo.resourceForkInfo.logicalEOF);
               itemEl.classList.add('folder');
               var childrenEl = document.createElement('SECTION');
+              childrenEl.classList.add('folder-children');
               itemEl.appendChild(childrenEl);
               itemEl.childrenEl = childrenEl;
             }
