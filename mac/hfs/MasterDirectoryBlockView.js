@@ -28,10 +28,10 @@ define(['mac/date', 'mac/roman'], function(macintoshDate, macintoshRoman) {
       return String.fromCharCode(this.bytes[0], this.bytes[1]) === 'BD';
     },
     get createdAt() {
-      return macintoshDate(this.dataView, 2),
+      return macintoshDate(this.dataView, 2);
     },
     get lastModifiedAt() {
-      return macintoshDate(this.dataView, 6),
+      return macintoshDate(this.dataView, 6);
     },
     get isLockedByHardware() {
       return !!( this.dataView.getUint16(10, false) & (1 << 7) );
@@ -46,7 +46,7 @@ define(['mac/date', 'mac/roman'], function(macintoshDate, macintoshRoman) {
       return !!( this.dataView.getUint16(10, false) & (1 << 15) );
     },
     get rootFileCount() {
-      return this.dataView.getUint16(12, false)
+      return this.dataView.getUint16(12, false);
     },
     get bitmapBlockOffset() {
       return this.dataView.getUint16(14, false); // always 3?
