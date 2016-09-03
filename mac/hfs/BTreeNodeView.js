@@ -428,7 +428,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
     },
     id: {
       get: function() {
-        return this.dataView.getUInt32(20, false);
+        return this.dataView.getUint32(20, false);
       },
       enumerable: true,
     },
