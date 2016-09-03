@@ -206,6 +206,25 @@ function(
       function addRecordTo(record, containerEl) {
         var itemEl = document.createElement('SECTION');
         
+        switch (record.leafType) {
+          case 'file':
+            if (record.fileInfo.isInvisible) {
+              itemEl.classList.add('invisible', 'file');
+            }
+            else {
+              itemEl.classList.add('file');
+            }
+            break;
+          case 'folder':
+            if (record.folderInfo.isInvisible) {
+              itemEl.classList.add('invisible', 'folder');
+            }
+            else {
+              itemEl.classList.add('folder');
+            }
+            break;
+        }
+
         var titleEl = document.createElement('HEADER');
         titleEl.appendChild(document.createTextNode(record.name));
         itemEl.appendChild(titleEl);
@@ -222,13 +241,21 @@ function(
           if (i >= leaf.records.length) return Promise.reject('folder not found');
           do {
             if (leaf.records[i].parentFolderID !== folderID) return;
-            addRecordTo(leaf.records[i], containerEl);
+            switch(leaf.records[i].leafType) {
+              case 'file': case 'folder':
+                addRecordTo(leaf.records[i], containerEl);
+                break;
+            }
           } while (++i < leaf.records.length);
           if (!leaf.forwardLink) return;
           function onNextLeaf(nextLeaf) {
             for (var j = 0; j < nextLeaf.records.length; j++) {
-              if (leaf.records[j].parentFolderID !== folderID) return;
-              addRecordTo(leaf.records[j], containerEl);
+              if (nextLeaf.records[j].parentFolderID !== folderID) return;
+              switch(nextLeaf.records[j].leafType) {
+                case 'file': case 'folder':
+                  addRecordTo(nextLeaf.records[j], containerEl);
+                  break;
+              }
             }
             if (!nextLeaf.forwardLink) return;
             return btree.getNode(nextLeaf.forwardLink).then(onNextLeaf);
