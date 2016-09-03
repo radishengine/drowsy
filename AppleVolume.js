@@ -261,6 +261,19 @@ function(
             downloadLink.innerHTML = '&#x1f4be;';
             downloadLink.href = '#';
             
+            var promisedByteSource = dataByteSource.slice(
+              resourceInfo.dataOffset,
+              resourceInfo.dataOffset + 4).getBytes()
+            .then(function(lengthBytes) {
+              var length = new DataView(
+                lengthBytes.buffer,
+                lengthBytes.byteOffset,
+                lengthBytes.byteLength).getUint32(0, false);
+              return dataByteSource.slice(
+                resourceInfo.dataOffset + 4,
+                resourceInfo.dataOffset + 4 + length);
+            });
+            
             function onDownloadClick(e) {
               e.stopPropagation();
               if (this.classList.contains('loaded')) return;
@@ -268,30 +281,49 @@ function(
               if (this.classList.contains('loading')) return;
               this.classList.add('loading');
               var self = this;
-              dataByteSource.slice(
-                resourceInfo.dataOffset,
-                resourceInfo.dataOffset + 4).getBytes()
-              .then(function(lengthBytes) {
-                var length = new DataView(
-                  lengthBytes.buffer,
-                  lengthBytes.byteOffset,
-                  lengthBytes.byteLength).getUint32(0, false);
-                dataByteSource.slice(
-                  resourceInfo.dataOffset + 4,
-                  resourceInfo.dataOffset + 4 + length)
-                .getURL()
-                .then(function(url) {
-                  self.href = url;
-                  self.classList.remove('loading');
-                  self.classList.add('loaded');
-                  self.click();
-                });
+              promisedByteSource.then(function(finalByteSource) {
+                return finalByteSource.getURL()
+              })
+              .then(function(url) {
+                self.href = url;
+                self.classList.remove('loading');
+                self.classList.add('loaded');
+                self.click();
               });
             }
             downloadLink.addEventListener('click', onDownloadClick);
             
             titleEl.appendChild(document.createTextNode(' '));
             titleEl.appendChild(downloadLink);
+            
+            itemEl.classList.add('folder');
+            itemEl.addEventListener('click', function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!this.classList.toggle('open')
+                  || this.classList.contains('loaded')
+                  || this.classList.contains('loading')) {
+                return;
+              }
+              this.classList.add('loading');
+              var loaderImport = 'mac/resources/open_' + encodeURIComponent();
+              var promisedLoader = new Promise(function(resolve, reject) {
+                require([loaderImport], resolve, reject);
+              });
+              var self = this;
+              Promise.all([promisedLoader, promisedByteSource])
+              .then(function(values) {
+                var open = values[0], finalByteSource = values[1];
+                return open(resourceInfo, finalByteSource, itemEl);
+              })
+              .then(function() {
+                self.classList.remove('loading');
+                self.classList.add('loaded');
+              }, function() {
+                self.classList.remove('folder');
+                self.classList.remove('loading');
+              });
+            });
             
             self.childrenEl.appendChild(itemEl);
           });
