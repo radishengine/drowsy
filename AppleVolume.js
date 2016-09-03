@@ -241,7 +241,11 @@ function(
             itemEl.classList.add('invisible', 'file');
             
             var titleEl = document.createElement('HEADER');
-            var titleString = '[' + resourceInfo.type + '/' + resourceInfo.id + ']';
+            var idString = (resourceInfo.id < 0)
+              ? '-' + ('0000' + (-id)).slice(-5)
+              : ' ' + ('0000' +   id ).slice(-5);
+            id = idPrefix + ('0000' + id).slice(-5);
+            var titleString = '[' + resourceInfo.type + '/' + idString + ']';
             if (resourceInfo.name) titleString += ' ' + resourceInfo.name;
             titleEl.appendChild(document.createTextNode(titleString));
             itemEl.appendChild(titleEl);
