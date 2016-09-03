@@ -644,10 +644,10 @@ function(
       return byteSource.slice(0, BTREE_NODE_BYTES).getBytes()
       .then(function(rawHeader) {
         var header = new BTreeNodeView(rawHeader.buffer, rawHeader.byteOffset, rawHeader.byteLength);
-        if (header.type !== 'header') return Promise.reject('node zero is not a header node');
+        if (header.nodeType !== 'header') return Promise.reject('node zero is not a header node');
         function indexRecurser(rawNode) {
           var node = new BTreeNodeView(rawNode.buffer, rawNode.byteOffset, rawNode.byteLength);
-          switch (node.type) {
+          switch (node.nodeType) {
             case 'leaf': return node;
             case 'index':
               return byteSource.slice(
