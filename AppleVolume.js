@@ -274,7 +274,7 @@ function(
               var extent = record.fileInfo.resourceForkFirstExtentRecord[0];
               itemEl.resourceForkByteSource = allocation.slice(
                 allocation.blockSize * extent.offset,
-                allocation.blockSize * extent.offset + fileInfo.resourceForkInfo.logicalEOF);
+                allocation.blockSize * extent.offset + record.fileInfo.resourceForkInfo.logicalEOF);
               itemEl.classList.add('folder');
               var childrenEl = document.createElement('SECTION');
               itemEl.childrenEl = childrenEl;
