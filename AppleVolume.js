@@ -242,8 +242,8 @@ function(
             
             var titleEl = document.createElement('HEADER');
             var idString = (resourceInfo.id < 0)
-              ? '-' + ('0000' + (-id)).slice(-5)
-              : ' ' + ('0000' +   id ).slice(-5);
+              ? '-' + ('0000' + (-resourceInfo.id)).slice(-5)
+              : ' ' + ('0000' +   resourceInfo.id ).slice(-5);
             id = idPrefix + ('0000' + id).slice(-5);
             var titleString = '[' + resourceInfo.type + '/' + idString + ']';
             if (resourceInfo.name) titleString += ' ' + resourceInfo.name;
