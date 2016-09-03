@@ -275,7 +275,7 @@ function(
                 .getURL()
                 .then(function(url) {
                   self.href = url;
-                  self.removeClass('loading');
+                  self.classList.remove('loading');
                   self.click();
                 });
               });
