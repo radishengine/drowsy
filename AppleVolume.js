@@ -203,9 +203,15 @@ function(
       var self = this;
       var folders = {};
       var allocation = byteSource.allocationBlocks;
+      function clickFolderEl(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.target.classList.toggle('open');
+      }
       function makeFolderElement(record) {
         var folderEl = document.createElement('SECTION');
         folderEl.classList.add('folder');
+        folderEl.addEventListener('click', clickFolderEl);
         
         var titleEl = document.createElement('HEADER');
         titleEl.appendChild(document.createTextNode(record.name));
