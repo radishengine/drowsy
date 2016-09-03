@@ -1,9 +1,9 @@
 define([
   'ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView', 'mac/hfs/PartitionRecordView',
-  'mac/hfs/ResourceHeaderView', 'mac/hfs/ResourceMapView'],
+  'mac/hfs/ResourceHeaderView', 'mac/hfs/ResourceMapView', 'mac/hfs/MasterDirectoryBlockView'],
 function(
   ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView,
-  ResourceHeaderView, ResourceMapView) {
+  ResourceHeaderView, ResourceMapView, MasterDirectoryBlockView) {
 
   'use strict';
   
@@ -141,54 +141,14 @@ function(
           }
         },
         onhfs: function(bytes) {
-          var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-          var volumeInfo = {
-            createdAt: macintoshDate(dv, 2),
-            lastModifiedAt: macintoshDate(dv, 6),
-            attributes: dv.getUint16(10, false),
-            rootFileCount: dv.getUint16(12, false),
-            bitmapBlockOffset: dv.getUint16(14, false), // always 3?
-            nextAllocationSearch: dv.getUint16(16, false), // used internally
-            allocationBlockCount: dv.getUint16(18, false),
-            allocationBlockByteLength: dv.getInt32(20, false), // size of one block, always multiple of 512
-            defaultClumpSize: dv.getInt32(24, false),
-            allocationBlocksOffset: dv.getUint16(28, false),
-            nextUnusedCatalogNodeId: dv.getInt32(30, false), // catalog node: file or folder
-            unusedAllocationBlockCount: dv.getUint16(34, false),
-            name: nullTerminate(macintoshRoman(bytes, 36 + 1, bytes[36])),
-            lastBackupAt: macintoshDate(dv, 64),
-            backupSequenceNumber: dv.getUint16(68, false), // used internally
-            writeCount: dv.getInt32(70, false),
-            extentsOverflowFileClumpSize: dv.getInt32(74, false),
-            catalogFileClumpSize: dv.getInt32(78, false),
-            rootFolderCount: dv.getUint16(82, false),
-            fileCount: dv.getInt32(84, false),
-            folderCount: dv.getInt32(88, false),
-            finderInfo: [
-              dv.getInt32(92, false),
-              dv.getInt32(96, false),
-              dv.getInt32(100, false),
-              dv.getInt32(104, false),
-              dv.getInt32(108, false),
-              dv.getInt32(112, false),
-              dv.getInt32(116, false),
-              dv.getInt32(120, false),
-            ],
-            cacheBlockCount: dv.getUint16(124, false), // used internally
-            bitmapCacheBlockCount: dv.getUint16(126, false), // used internally
-            commonCacheBlockCount: dv.getUint16(128, false), // used internally
-            extentsOverflowFileByteLength: dv.getInt32(130, false),
-            extentsOverflowFileExtentRecord: extentDataRecord(dv, 134),
-            catalogFileByteLength: dv.getInt32(146, false),
-            catalogFileExtentRecord: extentDataRecord(dv, 150),
-          };
+          var volumeInfo = new MasterDirectoryBlockView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
           if (typeof reader.onvolumestart === 'function') {
             reader.onvolumestart(volumeInfo);
           }
-          var allocationBlocksAt = PHYSICAL_BLOCK_BYTES * volumeInfo.allocationBlocksOffset;
-          var allocationBlocksLen = volumeInfo.allocationBlockByteLength * volumeInfo.allocationBlockCount;
+          var allocationBlocksAt = PHYSICAL_BLOCK_BYTES * volumeInfo.firstAllocationBlock;
+          var allocationBlocksLen = volumeInfo.allocationChunkByteLength * volumeInfo.allocationChunkCount;
           var allocationBlocks = byteSource.slice(allocationBlocksAt, allocationBlocksAt + allocationBlocksLen);
-          allocationBlocks.blockSize = volumeInfo.allocationBlockByteLength;
+          allocationBlocks.blockSize = volumeInfo.allocationChunkByteLength;
           var catalogExtents = volumeInfo.catalogFileExtentRecord[0];
           catalogExtents = allocationBlocks.slice(
             allocationBlocks.blockSize * catalogExtents.offset,
