@@ -270,8 +270,8 @@ function(
                   lengthBytes.byteOffset,
                   lengthBytes.byteLength).getUint32(0, false);
                 dataByteSource.slice(
-                  resource.dataOffset + 4,
-                  resource.dataOffset + 4 + length)
+                  resourceInfo.dataOffset + 4,
+                  resourceInfo.dataOffset + 4 + length)
                 .getURL()
                 .then(function(url) {
                   self.href = url;
