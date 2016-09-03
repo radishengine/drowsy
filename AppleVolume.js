@@ -203,9 +203,23 @@ function(
       var self = this;
       var folders = {};
       var allocation = byteSource.allocationBlocks;
+      function makeFolderElement(record) {
+        var folderEl = document.createElement('SECTION');
+        folderEl.classList.add('folder');
+        
+        var titleEl = document.createElement('HEADER');
+        titleEl.appendChild(document.createTextNode(record.name));
+        folderEl.appendChild(titleEl);
+        
+        var childrenEl = document.createElement('SECTION');
+        folderEl.appendChild(childrenEl);
+        
+        return folderEl;
+      }
       this.getFirstLeaf(byteSource)
       .then(function(leaf) {
         console.log('first leaf', leaf);
+        document.body.appendChild(makeFolderElement(leaf.records[0]));
       });
       return;
       this.readBTreeNode(byteSource, 0, [], {
