@@ -652,14 +652,14 @@ function(
             case 'index':
               return byteSource.slice(
                 node.records[0].nodeNumber * BTREE_NODE_BYTES,
-                (node.records[0].nodeNumber + 1) * BTREE_NODE_BYTES).then(indexRecurser);
+                (node.records[0].nodeNumber + 1) * BTREE_NODE_BYTES).getBytes().then(indexRecurser);
             default:
               return Promise.reject('node is not an index or leaf node');
           }
         }
         return byteSource.slice(
           header.rootNodeNumber * BTREE_NODE_BYTES,
-          (header.rootNodeNumber + 1) * BTREE_NODE_BYTES).then(indexRecurser);
+          (header.rootNodeNumber + 1) * BTREE_NODE_BYTES).getBytes().then(indexRecurser);
       });
     },
     readBTreeNode: function(byteSource, nodeNumber, chain, reader) {
