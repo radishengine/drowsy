@@ -249,6 +249,42 @@ function(
             titleEl.appendChild(document.createTextNode(titleString));
             itemEl.appendChild(titleEl);
             
+            var downloadLink = document.createElement('A');
+            downloadLink.addClass('download');
+            downloadLink.download = titleString.replace(/[\\\/:"<>\*\?\|]/g, '_') + '.dat';
+            downloadLink.innerHTML = '&#x1f4be;';
+            downloadLink.href = '#';
+            
+            function onDownloadClick(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              this.removeEventListener('click', onDownloadClick);
+              this.classList.add('loading');
+              var self = this;
+              dataByteSource.slice(
+                resourceInfo.dataOffset,
+                resourceInfo.dataOffset + 4).getBytes()
+              .then(function(lengthBYtes) {
+                var length = new DataView(
+                  lengthBytes.buffer,
+                  lengthBytes.byteOffset,
+                  lengthBytes.byteLength).getUint32(0, false);
+                dataByteSource.slice(
+                  resource.dataOffset + 4,
+                  resource.dataOffset + 4 + length)
+                .getURL()
+                .then(function(url) {
+                  self.href = url;
+                  self.removeClass('loading');
+                  self.click();
+                });
+              });
+            }
+            downloadLink.addEventListener('click', onDownloadClick);
+            
+            titleEl.appendChild(document.createTextNode(' '));
+            titleEl.appendChild(downloadLink);
+            
             self.childrenEl.appendChild(itemEl);
           });
         })
