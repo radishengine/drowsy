@@ -262,9 +262,9 @@ function(
             downloadLink.href = '#';
             
             function onDownloadClick(e) {
-              e.preventDefault();
               e.stopPropagation();
-              this.removeEventListener('click', onDownloadClick);
+              if (this.classList.contains('loaded')) return;
+              e.preventDefault();
               this.classList.add('loading');
               var self = this;
               dataByteSource.slice(
@@ -282,6 +282,7 @@ function(
                 .then(function(url) {
                   self.href = url;
                   self.classList.remove('loading');
+                  self.classList.add('loaded');
                   self.click();
                 });
               });
