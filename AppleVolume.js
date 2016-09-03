@@ -206,7 +206,7 @@ function(
       function clickFolderEl(e) {
         e.preventDefault();
         e.stopPropagation();
-        e.target.classList.toggle('open');
+        this.classList.toggle('open');
       }
       function makeFolderElement(record) {
         var folderEl = document.createElement('SECTION');
