@@ -277,6 +277,7 @@ function(
                 allocation.blockSize * extent.offset + record.fileInfo.resourceForkInfo.logicalEOF);
               itemEl.classList.add('folder');
               var childrenEl = document.createElement('SECTION');
+              itemEl.appendChild(childrenEl);
               itemEl.childrenEl = childrenEl;
             }
             itemEl.addEventListener('click', onFileClick);
