@@ -265,6 +265,7 @@ function(
               e.stopPropagation();
               if (this.classList.contains('loaded')) return;
               e.preventDefault();
+              if (this.classList.contains('loading')) return;
               this.classList.add('loading');
               var self = this;
               dataByteSource.slice(
@@ -316,6 +317,37 @@ function(
               itemEl.classList.add('file');
             }
             itemEl.dataset.catalogId = record.fileInfo.id;
+            if (record.fileInfo.dataForkInfo.logicalEOF) {
+              var extent = record.fileInfo.dataForkFirstExtentRecord[0];
+              itemEl.dataForkByteSource = allocation.slice(
+                allocation.blockSize * extent.offset,
+                allocation.blockSize * extent.offset + record.fileInfo.resourceForkInfo.logicalEOF);
+                
+              var downloadLink = document.createElement('A');
+              downloadLink.classList.add('download');
+              downloadLink.download = record.name.replace(/[\\\/:"<>\*\?\|]/g, '_');
+              downloadLink.innerHTML = '&#x1f4be;';
+              downloadLink.href = '#';
+              
+              downloadLink.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (this.classList.contains('loaded')) return;
+                e.stopDefault();
+                if (this.classList.contains('loading')) return;
+                this.classList.add('loading');
+                var self = this;
+                itemEl.dataForkByteSource.getURL()
+                .then(function(url) {
+                  self.href = url;
+                  self.classList.remove('loading');
+                  self.classList.add('loaded');
+                  self.click();
+                });
+              });
+              
+              titleEl.appendChild(document.createTextNode(' '));
+              titleEl.appendChild(downloadLink);
+            }
             if (record.fileInfo.resourceForkInfo.logicalEOF) {
               var extent = record.fileInfo.resourceForkFirstExtentRecord[0];
               itemEl.resourceForkByteSource = allocation.slice(
