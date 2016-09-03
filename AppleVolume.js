@@ -208,7 +208,7 @@ function(
         
         var titleEl = document.createElement('HEADER');
         titleEl.appendChild(document.createTextNode(record.name));
-        itemEl.addChild(titleEl);
+        itemEl.appendChild(titleEl);
         
         containerEl.appendChild(itemEl);
       }
