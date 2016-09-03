@@ -510,7 +510,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
       dataView: {value:new DataView(buffer, byteOffset, 10)},
     });
   }
-  ForkInfoView.prototype = {
+  Object.defineProperties(ForkInfoView.prototype, {
     firstAllocationBlock: {
       get: function() {
         return this.dataView.getUint16(0, false);
@@ -529,7 +529,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macintoshRoman, macin
       },
       enumerable: true,
     },
-  };
+  });
   
   function FolderInfoView(buffer, byteOffset, byteLength) {
     Object.defineProperties(this, {
