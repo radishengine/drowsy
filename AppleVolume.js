@@ -207,6 +207,7 @@ function(
       .then(function(leaf) {
         console.log('first leaf', leaf);
       });
+      return;
       this.readBTreeNode(byteSource, 0, [], {
         onheadernode: function(headerNode, chain) {
           self.readBTreeNode(byteSource, headerNode.rootNodeNumber, chain, this);
