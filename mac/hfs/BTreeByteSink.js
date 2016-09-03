@@ -53,7 +53,7 @@ define(['mac/hfs/BTreeNodeView'], function(BTreeNodeView) {
         if (node.nodeType !== 'index') return Promise.reject('node is not a leaf or index');
         for (var i = node.records.length - 1; i >= 0; i--) {
           if (parentFolderID >= node.records[i].parentFolderID) {
-            return self.getNode(records[i].nodeNumber).then(onNode);
+            return self.getNode(node.records[i].nodeNumber).then(onNode);
           }
         }
         return Promise.reject('parent folder ID not found: ' + parentFolderID);
