@@ -658,8 +658,8 @@ function(
           }
         }
         return byteSource.slice(
-          header.rootNodeNumber * BTREE_NODE_BYTES,
-          (header.rootNodeNumber + 1) * BTREE_NODE_BYTES).getBytes().then(indexRecurser);
+          header.records[0].rootNodeNumber * BTREE_NODE_BYTES,
+          (header.records[0].rootNodeNumber + 1) * BTREE_NODE_BYTES).getBytes().then(indexRecurser);
       });
     },
     readBTreeNode: function(byteSource, nodeNumber, chain, reader) {
