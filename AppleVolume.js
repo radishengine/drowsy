@@ -212,22 +212,22 @@ function(
         
         containerEl.appendChild(itemEl);
       }
-      function listFolderTo(directoryID, containerEl) {
-        return btree.findLeafForParentDirectoryID(directoryID)
+      function listFolderTo(folderID, containerEl) {
+        return btree.findLeafForParentFolderID(folderID)
         .then(function(leaf) {
           var i;
           for (i = 0; i < leaf.records.length; i++) {
-            if (leaf.records[i].parentDirectoryID === directoryID) break;
+            if (leaf.records[i].parentFolderID === folderID) break;
           }
-          if (i >= leaf.records.length) return Promise.reject('directory not found');
+          if (i >= leaf.records.length) return Promise.reject('folder not found');
           do {
-            if (leaf.records[i].parentDirectoryID !== directoryID) return;
+            if (leaf.records[i].parentFolderID !== folderID) return;
             addRecordTo(leaf.records[i], containerEl);
           } while (++i < leaf.records.length);
           if (!leaf.forwardLink) return;
           function onNextLeaf(nextLeaf) {
             for (var j = 0; j < nextLeaf.records.length; j++) {
-              if (leaf.records[j].parentDirectoryID !== directoryID) return;
+              if (leaf.records[j].parentFolderID !== folderID) return;
               addRecordTo(leaf.records[j], containerEl);
             }
             if (!nextLeaf.forwardLink) return;
