@@ -238,7 +238,7 @@ function(
           map.resourceList.forEach(function(resourceInfo) {
             var itemEl = document.createElement('SECTION');
             
-            itemEl.addClass('invisible', 'file');
+            itemEl.classList.add('invisible', 'file');
             
             var titleEl = document.createElement('HEADER');
             var titleString = '[' + resourceInfo.type + '/' + resourceInfo.id + ']';
