@@ -51,6 +51,21 @@ define(function() {
           }
         },
       },
+      addItem: {
+        value: function(item) {
+          this.classList.add('itemizing');
+          if (!this.subitemsElement) {
+            this.appendChild(this.subitemsElement = document.createElement('SECTION'));
+            this.subitemsElement.classList.add('subitems');
+          }
+          this.subitemsElement.appendChild(item);
+        },
+      },
+      confirmAllItemsAdded: {
+        value: function() {
+          this.classList.remove('itemizing');
+        },
+      },
     },
   };
   
