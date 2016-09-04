@@ -301,7 +301,7 @@ function(
           self.confirmAllItemsAdded();
         });
       }
-      function addRecordTo(record, parentItem) {
+      function makeItemForRecord(record) {
         var subitem = itemObjectModel.createItem(record.name);
         
         switch (record.leafType) {
@@ -357,7 +357,7 @@ function(
           },
         });
 
-        parentItem.addItem(subitem);
+        return subitem;
       }
       function listFolderTo(folderID, item) {
         return btree.findLeafForParentFolderID(folderID)
@@ -371,7 +371,7 @@ function(
             if (leaf.records[i].parentFolderID !== folderID) return;
             switch(leaf.records[i].leafType) {
               case 'file': case 'folder':
-                addRecordTo(leaf.records[i], item);
+                item.addItem(makeItemForRecord(leaf.records[i]));
                 break;
             }
           } while (++i < leaf.records.length);
@@ -381,7 +381,7 @@ function(
               if (nextLeaf.records[j].parentFolderID !== folderID) return;
               switch(nextLeaf.records[j].leafType) {
                 case 'file': case 'folder':
-                  addRecordTo(nextLeaf.records[j], item);
+                  item.addItem(makeItemForRecord(nextLeaf.records[j]));
                   break;
               }
             }
@@ -391,7 +391,10 @@ function(
           return btree.getNode(leaf.forwardLink).then(onNextLeaf);
         });
       }
-      listFolderTo(1, document.body);
+      var rootItem = itemObjectModel.createItem('');
+      rootItem.classList.add('has-subitems', 'open');
+      document.body.appendChild(rootItem);
+      listFolderTo(1, rootItem);
       return;
       this.readBTreeNode(byteSource, 0, [], {
         onheadernode: function(headerNode, chain) {
