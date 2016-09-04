@@ -51,9 +51,14 @@ define(function() {
           }
         },
       },
+      startAddingItems: {
+        value: function() {
+          this.classList.add('itemizing');
+        },
+      },
       addItem: {
         value: function(item) {
-          this.classList.add('itemizing');
+          this.startAddingItems();
           if (!this.subitemsElement) {
             this.appendChild(this.subitemsElement = document.createElement('SECTION'));
             this.subitemsElement.classList.add('subitems');
@@ -64,6 +69,7 @@ define(function() {
       confirmAllItemsAdded: {
         value: function() {
           this.classList.remove('itemizing');
+          this.classList.add('itemized');
         },
       },
     },
