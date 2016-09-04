@@ -251,12 +251,6 @@ function(
             
             itemEl.classList.add('invisible', 'file');
             
-            var downloadLink = document.createElement('A');
-            downloadLink.classList.add('download');
-            downloadLink.download = titleString.replace(/[\\\/:"<>\*\?\|]/g, '_') + '.dat';
-            downloadLink.innerHTML = '&#x1f4be;';
-            downloadLink.href = '#';
-            
             var promisedByteSource = dataByteSource.slice(
               resourceInfo.dataOffset,
               resourceInfo.dataOffset + 4).getBytes()
@@ -270,27 +264,9 @@ function(
                 resourceInfo.dataOffset + 4 + length);
             });
             
-            function onDownloadClick(e) {
-              e.stopPropagation();
-              if (this.classList.contains('loaded')) return;
-              e.preventDefault();
-              if (this.classList.contains('loading')) return;
-              this.classList.add('loading');
-              var self = this;
-              promisedByteSource.then(function(finalByteSource) {
-                return finalByteSource.getURL()
-              })
-              .then(function(url) {
-                self.href = url;
-                self.classList.remove('loading');
-                self.classList.add('loaded');
-                self.click();
-              });
-            }
-            downloadLink.addEventListener('click', onDownloadClick);
-            
-            itemEl.titleElement.appendChild(document.createTextNode(' '));
-            itemEl.titleElement.appendChild(downloadLink);
+            promisedByteSource.then(function(byteSource) {
+              itemEl.byteSource = byteSource;
+            });
             
             itemEl.classList.add('folder');
             var itemChildrenEl = document.createElement('SECTION');
@@ -356,34 +332,9 @@ function(
             itemEl.dataset.catalogId = record.fileInfo.id;
             if (record.fileInfo.dataForkInfo.logicalEOF) {
               var extent = record.fileInfo.dataForkFirstExtentRecord[0];
-              itemEl.dataForkByteSource = allocation.slice(
+              itemEl.byteSource = allocation.slice(
                 allocation.blockSize * extent.offset,
                 allocation.blockSize * extent.offset + record.fileInfo.dataForkInfo.logicalEOF);
-                
-              var downloadLink = document.createElement('A');
-              downloadLink.classList.add('download');
-              downloadLink.download = record.name.replace(/[\\\/:"<>\*\?\|]/g, '_');
-              downloadLink.innerHTML = '&#x1f4be;';
-              downloadLink.href = '#';
-              
-              downloadLink.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (this.classList.contains('loaded')) return;
-                e.preventDefault();
-                if (this.classList.contains('loading')) return;
-                this.classList.add('loading');
-                var self = this;
-                itemEl.dataForkByteSource.getURL()
-                .then(function(url) {
-                  self.href = url;
-                  self.classList.remove('loading');
-                  self.classList.add('loaded');
-                  self.click();
-                });
-              });
-              
-              itemEl.titleElement.appendChild(document.createTextNode(' '));
-              itemEl.titleElement.appendChild(downloadLink);
             }
             if (record.fileInfo.resourceForkInfo.logicalEOF) {
               var extent = record.fileInfo.resourceForkFirstExtentRecord[0];
@@ -564,28 +515,11 @@ function(
           }
           if (fileInfo.dataForkInfo.logicalEOF) {
             container.dataset.size = fileInfo.dataForkInfo.logicalEOF;
-            var downloadLink = document.createElement('A');
-            downloadLink.innerHTML = '&#x1f4be;';
-            downloadLink.href = '#';
-            downloadLink.title = 'Download (' + fileInfo.dataForkInfo.logicalEOF + ' bytes)';
-            downloadLink.setAttribute('download', fileInfo.name);
             var extent = fileInfo.dataForkFirstExtentRecord[0];
-            var downloadByteSource = allocation.slice(
+            container.byteSource = allocation.slice(
               allocation.blockSize * extent.offset,
               allocation.blockSize * extent.offset + fileInfo.dataForkInfo.logicalEOF
             );
-            function clickDownloadLink(e) {
-              e.preventDefault();
-              downloadByteSource.getURL()
-                .then(function(url) {
-                  downloadLink.href = url;
-                  downloadLink.click();
-                });
-              downloadLink.removeEventListener('click', clickDownloadLink);
-            }
-            downloadLink.addEventListener('click', clickDownloadLink);
-            container.titleElement.appendChild(document.createTextNode(' '));
-            container.titleElement.appendChild(downloadLink);
           }
           if (fileInfo.resourceForkInfo.logicalEOF) {
             var extent = fileInfo.resourceForkFirstExtentRecord[0];
@@ -639,26 +573,9 @@ function(
                       lengthBytes.buffer,
                       lengthBytes.byteOffset,
                       lengthBytes.byteLength).getUint32(0, false);
-                    resource.byteSource = dataByteSource.slice(
+                    resourceEl.byteSource = dataByteSource.slice(
                       resource.dataOffset + 4,
                       resource.dataOffset + 4 + length);
-                    var downloadLink = document.createElement('A');
-                    downloadLink.innerHTML = '&#x1f4be;';
-                    downloadLink.href = '#';
-                    downloadLink.title = 'Download (' + resource.byteSource.byteLength + ' bytes)';
-                    downloadLink.setAttribute('download', 'resource.dat');
-                    function clickDownloadLink(e) {
-                        e.preventDefault();
-                        resource.byteSource.getURL()
-                            .then(function(url) {
-                                downloadLink.href = url;
-                                downloadLink.click();
-                            });
-                        downloadLink.removeEventListener('click', clickDownloadLink);
-                    }
-                    downloadLink.addEventListener('click', clickDownloadLink);
-                    resourceEl.titleElement.appendChild(document.createTextNode(' '));
-                    resourceEl.titleElement.appendChild(downloadLink);
                   });
                   
                   /*
