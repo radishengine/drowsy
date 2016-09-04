@@ -1,4 +1,9 @@
 
+@font-face {
+  font-family: macintosh-system;
+  src: url(mac/ChicagoFLF.ttf);
+}
+
 body {
   font-family: sans-serif;
 }
@@ -130,4 +135,8 @@ body {
   color: blue;
   content: ' \1f4be';
   vertical-align: top;
+}
+
+.item > header {
+  font-family: macintosh-system, monospace;
 }
