@@ -7,6 +7,7 @@ define(function() {
   var itemObjectModel = {
     createItem: function(title) {
       var itemElement = document.createElement('SECTION');
+      itemElement.classList.add('item');
       
       itemElement.appendChild(itemElement.titleElement = document.createElement('HEADER'));
       
