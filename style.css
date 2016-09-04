@@ -35,18 +35,18 @@ body {
   visibility: hidden;
 }
 
-.file, .folder {
+.file, .folder, .item {
   background-color: white;
   box-shadow: 3px 3px 10px white inset;
 }
 
-.file.invisible, .folder.invisible {
+.file.invisible, .folder.invisible, .item.invisible {
   background-color: #ffc;
   box-shadow: 3px 3px 10px #ffc inset;
   /* display: none; */
 }
 
-.file > header, .folder > header {
+.file > header, .folder > header, .item > header {
   font-family: monospace;
   cursor: default;
 }
@@ -55,15 +55,15 @@ body {
   font-weight: bold;
 }
 
-.folder-children {
+.folder-children, .subitems {
   display: none;
 }
 
-.open > .folder-children {
+.open > .folder-children, .open > .subitems {
   display: block;
 }
 
-.folder > header::before, .file > header::before {
+.folder > header::before, .file > header::before, .item > header::before {
   display: inline-block;
   text-align: center;
   vertical-align: top;
@@ -71,11 +71,11 @@ body {
   content: "\a0";
 }
 
-.folder > header::before {
+.folder > header::before, .has-subitems > header::before {
   content: "\25B6";
 }
 
-.folder.open > header::before {
+.folder.open > header::before, .has-subitems.open > header::before {
   content: "\25BC";
 }
 
@@ -100,7 +100,7 @@ body {
     0% {background-position: 0 0;} 100% {background-position: 60px 60px;}
 }
 
-.folder-children {
+.folder-children, .subitems {
   min-height: 0.5em;
   background: white;
   margin-left: 1em;
@@ -111,11 +111,11 @@ body {
   text-decoration: none;
 }
 
-.file:hover > header .download {
+.file:hover > header .download, .item:hover > header .download {
   visibility: visible;
 }
 
-.folder-children pre {
+.folder-children pre, .subitems pre {
   max-height: 5em;
   overflow: auto;
   margin: 0;
