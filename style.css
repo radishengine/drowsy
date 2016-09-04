@@ -126,11 +126,8 @@ body {
   text-decoration: none;
 }
 
-.item-download:hover {
-  text-decoration: underline;
-}
-
 .item-download:hover:after {
   color: blue;
   content: ' \1f4be';
+  text-align: top;
 }
