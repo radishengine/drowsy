@@ -6,8 +6,7 @@ define(function() {
     createItem: function(title) {
       var itemElement = document.createElement('SECTION');
       
-      itemElement.titleElement = document.createElement('HEADER');
-      itemElement.appendChild(titleElement);
+      itemElement.appendChild(itemElement.titleElement = document.createElement('HEADER'));
       
       itemElement.titleTextElement = itemElement.titleElement;
       
