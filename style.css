@@ -129,5 +129,5 @@ body {
 .item-download:hover:after {
   color: blue;
   content: ' \1f4be';
-  text-align: top;
+  vertical-align: top;
 }
