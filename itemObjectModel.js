@@ -2,7 +2,7 @@ define(function() {
 
   'use strict';
   
-  var _BYTESOURCE = new Symbol('byteSource');
+  var _BYTESOURCE = Symbol('byteSource');
   
   var itemObjectModel = {
     createItem: function(title) {
