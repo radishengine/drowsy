@@ -79,7 +79,7 @@ body {
   content: "\25BC";
 }
 
-.loading {
+.loading, .itemizing {
   background-size: 30px 30px;
   background-image: linear-gradient(
     135deg,
