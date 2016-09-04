@@ -1,9 +1,9 @@
 define([
-  'ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView', 'mac/hfs/PartitionRecordView',
+  'itemObjectModel', 'ByteSource', 'mac/roman', 'mac/hfs/BTreeNodeView', 'mac/hfs/PartitionRecordView',
   'mac/hfs/ResourceHeaderView', 'mac/hfs/ResourceMapView', 'mac/hfs/MasterDirectoryBlockView',
   'mac/hfs/BTreeByteSink'],
 function(
-  ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView,
+  itemObjectModel, ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView,
   ResourceHeaderView, ResourceMapView, MasterDirectoryBlockView,
   BTreeByteSink) {
 
@@ -236,7 +236,12 @@ function(
         .then(function(mapBytes) {
           var map = new ResourceMapView(mapBytes.buffer, mapBytes.byteOffset, mapBytes.byteLength);
           map.resourceList.forEach(function(resourceInfo) {
-            var itemEl = document.createElement('SECTION');
+            var idString = (resourceInfo.id < 0)
+              ? '-' + ('0000' + (-resourceInfo.id)).slice(-5)
+              : '_' + ('0000' +   resourceInfo.id ).slice(-5);
+            var titleString = '[' + resourceInfo.type + idString + ']';
+            if (resourceInfo.name) titleString += ' ' + resourceInfo.name;
+            var itemEl = itemObjectModel.createItem(titleString);
             
             function clickItem(e) {
               e.stopPropagation();
@@ -245,15 +250,6 @@ function(
             itemEl.addEventListener('click', clickItem);
             
             itemEl.classList.add('invisible', 'file');
-            
-            var titleEl = document.createElement('HEADER');
-            var idString = (resourceInfo.id < 0)
-              ? '-' + ('0000' + (-resourceInfo.id)).slice(-5)
-              : '_' + ('0000' +   resourceInfo.id ).slice(-5);
-            var titleString = '[' + resourceInfo.type + idString + ']';
-            if (resourceInfo.name) titleString += ' ' + resourceInfo.name;
-            titleEl.appendChild(document.createTextNode(titleString));
-            itemEl.appendChild(titleEl);
             
             var downloadLink = document.createElement('A');
             downloadLink.classList.add('download');
@@ -293,8 +289,8 @@ function(
             }
             downloadLink.addEventListener('click', onDownloadClick);
             
-            titleEl.appendChild(document.createTextNode(' '));
-            titleEl.appendChild(downloadLink);
+            itemEl.titleElement.appendChild(document.createTextNode(' '));
+            itemEl.titleElement.appendChild(downloadLink);
             
             itemEl.classList.add('folder');
             var itemChildrenEl = document.createElement('SECTION');
@@ -347,11 +343,7 @@ function(
         });
       }
       function addRecordTo(record, containerEl) {
-        var itemEl = document.createElement('SECTION');
-        
-        var titleEl = document.createElement('HEADER');
-        titleEl.appendChild(document.createTextNode(record.name));
-        itemEl.appendChild(titleEl);
+        var itemEl = itemObjectModel.createItem(record.name);
         
         switch (record.leafType) {
           case 'file':
@@ -390,8 +382,8 @@ function(
                 });
               });
               
-              titleEl.appendChild(document.createTextNode(' '));
-              titleEl.appendChild(downloadLink);
+              itemEl.titleElement.appendChild(document.createTextNode(' '));
+              itemEl.titleElement.appendChild(downloadLink);
             }
             if (record.fileInfo.resourceForkInfo.logicalEOF) {
               var extent = record.fileInfo.resourceForkFirstExtentRecord[0];
@@ -485,21 +477,18 @@ function(
         },
         onfolder: function(folderInfo, chain) {
           console.log('folder', chain, folderInfo);
-          var container = document.createElement('SECTION');
+          var container = itemObjectModel.createItem(folderInfo.name);
           if (folderInfo.isInvisible) {
             container.classList.add('invisible');
           }
           container.classList.add('folder');
           container.dataset.name = folderInfo.name;
-          var title = document.createElement('HEADER');
-          title.innerHTML = folderInfo.name;
           function clickExpand(e) {
             container.classList.toggle('open');
             e.preventDefault();
             e.stopPropagation();
           }
           container.addEventListener('click', clickExpand);
-          container.appendChild(title);
           var timestamp = folderInfo.modifiedAt || folderInfo.createdAt;
           if (timestamp) {
             container.dataset.lastModified = timestamp.toISOString();
@@ -557,7 +546,7 @@ function(
         },
         onfile: function(fileInfo, chain) {
           console.log('file', chain, fileInfo);
-          var container = document.createElement('SECTION');
+          var container = itemObjectModel.createItem(fileInfo.name);
           if (fileInfo.isInvisible) {
             container.classList.add('invisible');
           }
@@ -573,7 +562,6 @@ function(
           if (timestamp) {
             container.dataset.lastModified = timestamp.toISOString();
           }
-          var title = document.createElement('HEADER');
           if (fileInfo.dataForkInfo.logicalEOF) {
             container.dataset.size = fileInfo.dataForkInfo.logicalEOF;
             var downloadLink = document.createElement('A');
@@ -596,13 +584,9 @@ function(
               downloadLink.removeEventListener('click', clickDownloadLink);
             }
             downloadLink.addEventListener('click', clickDownloadLink);
-            title.appendChild(document.createTextNode(fileInfo.name + ' '));
-            title.appendChild(downloadLink);
+            container.titleElement.appendChild(document.createTextNode(' '));
+            container.titleElement.appendChild(downloadLink);
           }
-          else {
-            title.appendChild(document.createTextNode(fileInfo.name));
-          }
-          container.appendChild(title);
           if (fileInfo.resourceForkInfo.logicalEOF) {
             var extent = fileInfo.resourceForkFirstExtentRecord[0];
             var resourceForkByteSource = allocation.slice(
@@ -634,20 +618,17 @@ function(
               .then(function(mapBytes) {
                 map = new ResourceMapView(mapBytes.buffer, mapBytes.byteOffset, mapBytes.byteLength);
                 return Promise.all(map.resourceList.map(function(resource) {
-                  var resourceEl = document.createElement('SECTION');
+                  var resourceTitleString = '[' + resource.type + '] #' + resource.id;
+                  if (resource.name) {
+                    resourceTitleString += ' "' + resource.name + '"';
+                  }
+                  var resourceEl = itemObjectModel.createItem(resourceTitleString);
                   resourceEl.classList.add('file');
                   function clickResource(e) {
                     e.preventDefault();
                     e.stopPropagation();
                   }
                   resourceEl.addEventListener('click', clickResource);
-                  var resourceTitleString = '[' + resource.type + '] #' + resource.id;
-                  if (resource.name) {
-                    resourceTitleString += ' "' + resource.name + '"';
-                  }
-                  var resourceTitle = document.createElement('HEADER');
-                  resourceTitle.appendChild(document.createTextNode(resourceTitleString + ' '));
-                  resourceEl.appendChild(resourceTitle);
                   resources.appendChild(resourceEl);
                   return dataByteSource.slice(
                     resource.dataOffset,
@@ -676,7 +657,8 @@ function(
                         downloadLink.removeEventListener('click', clickDownloadLink);
                     }
                     downloadLink.addEventListener('click', clickDownloadLink);
-                    resourceTitle.appendChild(downloadLink);
+                    resourceEl.titleElement.appendChild(document.createTextNode(' '));
+                    resourceEl.titleElement.appendChild(downloadLink);
                   });
                   
                   /*
