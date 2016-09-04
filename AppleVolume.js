@@ -204,27 +204,15 @@ function(
     readCatalog: function(byteSource, reader) {
       var btree = new BTreeByteSink(byteSource);
       var allocation = byteSource.allocationBlocks;
-      function onFolderClick(e) {
-        e.preventDefault();
+      function onFolderPopulate(e) {
         e.stopPropagation();
-        this.classList.toggle('open');
-        if (!this.classList.contains('loaded') && !this.classList.contains('loading')) {
-          this.classList.add('loading');
-          var self = this;
-          listFolderTo(this.catalogID, this.childrenEl)
-          .then(function() {
-            self.classList.add('loaded');
-            self.classList.remove('loading');
-          });
-        }
+        var self = this;
+        listFolderTo(this.catalogID, this).then(function() {
+          self.confirmAllItemsAdded();
+        });
       }
-      function onFileClick(e) {
-        e.preventDefault();
+      function onFilePopulate(e) {
         e.stopPropagation();
-        if (!this.classList.contains('folder')) return;
-        this.classList.toggle('open');
-        if (this.classList.contains('loaded') || this.classList.contains('loading')) return;
-        this.classList.add('loading');
         var self = this;
         var dataByteSource;
         this.resourceForkByteSource.slice(0, ResourceHeaderView.byteLength).getBytes()
@@ -269,10 +257,6 @@ function(
             });
             
             itemEl.classList.add('folder');
-            var itemChildrenEl = document.createElement('SECTION');
-            itemChildrenEl.classList.add('folder-children');
-            itemEl.appendChild(itemChildrenEl);
-            itemEl.childrenEl = itemChildrenEl;
             itemEl.addEventListener('click', function(e) {
               e.preventDefault();
               e.stopPropagation();
@@ -281,13 +265,13 @@ function(
                   || this.classList.contains('loading')) {
                 return;
               }
-              this.classList.add('loading');
               Object.defineProperties(itemEl, {
                 dataObject: {
                   set: function(value) {
                     var dataObjectEl = document.createElement('PRE');
                     dataObjectEl.appendChild(document.createTextNode(JSON.stringify(value, 2)));
-                    itemChildrenEl.appendChild(dataObjectEl);
+                    item.addItem(dataObjectEl);
+                    item.confirmAllItemsAdded();
                   },
                 },
               });
@@ -314,58 +298,57 @@ function(
           });
         })
         .then(function() {
-          self.classList.add('loaded');
-          self.classList.remove('loading');
+          self.confirmAllItemsAdded();
         });
       }
-      function addRecordTo(record, containerEl) {
-        var itemEl = itemObjectModel.createItem(record.name);
+      function addRecordTo(record, parentItem) {
+        var subitem = itemObjectModel.createItem(record.name);
         
         switch (record.leafType) {
           case 'file':
             if (record.fileInfo.isInvisible) {
-              itemEl.classList.add('invisible', 'file');
+              subitem.classList.add('invisible', 'file');
             }
             else {
-              itemEl.classList.add('file');
+              subitem.classList.add('file');
             }
-            itemEl.dataset.catalogId = record.fileInfo.id;
+            subitem.dataset.catalogId = record.fileInfo.id;
             if (record.fileInfo.dataForkInfo.logicalEOF) {
               var extent = record.fileInfo.dataForkFirstExtentRecord[0];
-              itemEl.byteSource = allocation.slice(
+              subitem.byteSource = allocation.slice(
                 allocation.blockSize * extent.offset,
                 allocation.blockSize * extent.offset + record.fileInfo.dataForkInfo.logicalEOF);
             }
             if (record.fileInfo.resourceForkInfo.logicalEOF) {
               var extent = record.fileInfo.resourceForkFirstExtentRecord[0];
-              itemEl.resourceForkByteSource = allocation.slice(
+              subitem.resourceForkByteSource = allocation.slice(
                 allocation.blockSize * extent.offset,
                 allocation.blockSize * extent.offset + record.fileInfo.resourceForkInfo.logicalEOF);
-              itemEl.classList.add('folder');
+              subitem.classList.add('folder');
               var childrenEl = document.createElement('SECTION');
               childrenEl.classList.add('folder-children');
-              itemEl.appendChild(childrenEl);
-              itemEl.childrenEl = childrenEl;
+              subitem.appendChild(childrenEl);
+              subitem.childrenEl = childrenEl;
             }
-            itemEl.addEventListener('click', onFileClick);
+            subitem.addEventListener(itemObjectModel.EVT_POPULATE, onFilePopulate);
             break;
           case 'folder':
             if (record.folderInfo.isInvisible) {
-              itemEl.classList.add('invisible', 'folder');
+              subitem.classList.add('invisible', 'folder');
             }
             else {
-              itemEl.classList.add('folder');
+              subitem.classList.add('folder');
             }
-            itemEl.dataset.catalogId = record.folderInfo.id;
+            subitem.dataset.catalogId = record.folderInfo.id;
             var childrenEl = document.createElement('SECTION');
             childrenEl.classList.add('folder-children');
-            itemEl.appendChild(childrenEl);
-            itemEl.childrenEl = childrenEl;
-            itemEl.addEventListener('click', onFolderClick);
+            subitem.appendChild(childrenEl);
+            subitem.childrenEl = childrenEl;
+            subitem.addEventListener(itemObjectModel.EVT_POPULATE, onFolderPopulate);
             break;
         }
         
-        Object.defineProperties(itemEl, {
+        Object.defineProperties(subitem, {
           catalogID: {
             get: function() {
               return +this.dataset.catalogId
@@ -374,9 +357,9 @@ function(
           },
         });
 
-        containerEl.appendChild(itemEl);
+        parentItem.addItem(subitem);
       }
-      function listFolderTo(folderID, containerEl) {
+      function listFolderTo(folderID, item) {
         return btree.findLeafForParentFolderID(folderID)
         .then(function(leaf) {
           var i;
@@ -388,7 +371,7 @@ function(
             if (leaf.records[i].parentFolderID !== folderID) return;
             switch(leaf.records[i].leafType) {
               case 'file': case 'folder':
-                addRecordTo(leaf.records[i], containerEl);
+                addRecordTo(leaf.records[i], item);
                 break;
             }
           } while (++i < leaf.records.length);
@@ -398,7 +381,7 @@ function(
               if (nextLeaf.records[j].parentFolderID !== folderID) return;
               switch(nextLeaf.records[j].leafType) {
                 case 'file': case 'folder':
-                  addRecordTo(nextLeaf.records[j], containerEl);
+                  addRecordTo(nextLeaf.records[j], item);
                   break;
               }
             }
