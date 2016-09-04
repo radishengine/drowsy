@@ -3,7 +3,7 @@ define(function() {
   'use strict';
   
   var itemObjectModel = {
-    createItem: function() {
+    createItem: function(title) {
       var itemElement = document.createElement('SECTION');
       
       itemElement.titleElement = document.createElement('HEADER');
@@ -12,6 +12,8 @@ define(function() {
       itemElement.titleTextElement = itemElement.titleElement;
       
       Object.defineProperties(itemElement, this.itemProperties);
+      
+      if (title) itemElement.itemTitle = title;
 
       return item;
     },
