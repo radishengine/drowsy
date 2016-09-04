@@ -14,7 +14,7 @@ define(function() {
       
       if (title) itemElement.itemTitle = title;
 
-      return item;
+      return itemElement;
     },
     itemProperties: {
       itemTitle: {
