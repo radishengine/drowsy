@@ -60,6 +60,7 @@ define(function() {
         value: function(item) {
           this.startAddingItems();
           if (!this.subitemsElement) {
+            this.classList.add('has-subitems');
             this.appendChild(this.subitemsElement = document.createElement('SECTION'));
             this.subitemsElement.classList.add('subitems');
           }
@@ -87,7 +88,16 @@ define(function() {
       }
       return;
     }
+    if (this.classList.contains('has-subitems')) {
+      if (this.classList.toggle('open')) {
+        this.dispatchEvent(new Event(itemObjectModel.EVT_POPULATE));
+      }
+    }
   }
+  
+  Object.setProperties(itemObjectModel, {
+    EVT_POPULATE: {value:'item-populate'},
+  });
   
   return itemObjectModel;
 
