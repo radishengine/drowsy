@@ -95,7 +95,7 @@ define(function() {
     }
   }
   
-  Object.setProperties(itemObjectModel, {
+  Object.defineProperties(itemObjectModel, {
     EVT_POPULATE: {value:'item-populate'},
   });
   
