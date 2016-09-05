@@ -23,7 +23,7 @@ define(function() {
           dataObject.push({
             offset: patchOffset,
             patch: [].map.call(patch, function(v) {
-              return ('0' + v.tostring(16)).slice(-2);
+              return ('0' + v.toString(16)).slice(-2);
             }).join(' '),
           });
         }
