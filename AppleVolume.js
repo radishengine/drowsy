@@ -355,8 +355,9 @@ function(
       rootItem.classList.add('open');
       listFolderTo(1, rootItem).then(function() {
         rootItem.confirmAllItemsAdded();
-        document.body.appendChild(rootItem.children[0]);
-        rootItem.children[0].click();
+        var volumeItem = rootItem.childrenElement.children[0];
+        document.body.appendChild(volumeItem);
+        volumeItem.click();
       });
       return;
       this.readBTreeNode(byteSource, 0, [], {
