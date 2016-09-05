@@ -137,7 +137,7 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
           item.withPixels(width, height, function(pixelData) {
             for (var y = 0; y < height; y++) {
               for (var x = 0; x < width; x++) {
-                pixels.data.set(
+                pixelData.set(
                   palette[bytes[pixmap.offset + y*pixmap.rowBytes + x]] || [0,0,0,0],
                   pixelPitch * y + 4 * x);
               }
