@@ -30,9 +30,10 @@ define(function() {
           if (newY === 0x7fff) {
             break;
           }
-          while (++y <= newY) {
+          while (++y < newY) {
             ctx.putImageData(lastRow, 0, y);
           }
+          ctx.putImageData(lastRow, 0, y);
           pos += 2;
           var x = 0;
           var runLength = dv.getUint16(pos, false);
