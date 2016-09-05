@@ -355,7 +355,7 @@ function(
       rootItem.classList.add('open');
       listFolderTo(1, rootItem).then(function() {
         rootItem.confirmAllItemsAdded();
-        var volumeItem = rootItem.childrenElement.children[0];
+        var volumeItem = rootItem.subitemsElement.children[0];
         document.body.appendChild(volumeItem);
         volumeItem.click();
       });
