@@ -4,6 +4,34 @@ define(function() {
   
   var _BYTESOURCE = Symbol('byteSource');
   
+  var wavHeaderTemplate = new Uint8Array([
+  	'R'.charCodeAt(0),
+  	'I'.charCodeAt(0),
+  	'F'.charCodeAt(0),
+  	'F'.charCodeAt(0),
+  	0,0,0,0, // uint32 @ 4: set to wavHeaderTemplate.length + data length (aligned to 2)
+  	'W'.charCodeAt(0),
+  	'A'.charCodeAt(0),
+  	'V'.charCodeAt(0),
+  	'E'.charCodeAt(0),
+  	'f'.charCodeAt(0),
+  	'm'.charCodeAt(0),
+  	't'.charCodeAt(0),
+  	' '.charCodeAt(0),
+  	16,0,0,0,
+  	1,0,
+  	1,0,     // uint16 @ 22: number of channels
+  	22,56,0,0, // uint32 @ 24: sampling rate
+  	22,56,0,0, // uint32 @ 28: sampling rate * channels * bytes per sample
+  	1,0, // uint16 @ 32: block align, channels * bytes per sample
+  	8,0, // uint16 @ 34: bytes per sample * 8
+  	'd'.charCodeAt(0),
+  	'a'.charCodeAt(0),
+  	't'.charCodeAt(0),
+  	'a'.charCodeAt(0),
+  	0,0,0,0 // uint32 @ 40: number of bytes
+  	]);
+  
   var itemObjectModel = {
     createItem: function(title) {
       var itemElement = document.createElement('SECTION');
@@ -125,6 +153,33 @@ define(function() {
         value: function(x, y) {
           this.dataset.offsetX = x;
           this.dataset.offsetY = y;
+        },
+      },
+      setRawAudio: {
+        value: function(audioInfo) {
+          var channelCount = audioInfo.channels || 1;
+          var samplingRate = audioInfo.samplingRate || 22050;
+          var samples = audioInfo.samples;
+          var bytesPerSample = audioInfo.bytesPerSample || 1;
+          
+          var wavHeader = new Uint8Array(wavHeaderTemplate.length);
+          wavHeader.set(wavHeaderTemplate);
+          
+          var wavFooter = new Uint8Array(samples.byteLength % 2);
+  
+          var wavView = new DataView(wavHeader.buffer, wavHeader.byteOffset, wavHeader.byteLength);
+          wavView.setUint32(4, wavHeader.byteLength + samples.byteLength + wavFooter.byteLength, true);
+          wavView.setUint16(22, channelCount, true);
+          wavView.setUint32(24, samplingRate, true);
+          wavView.setUint32(28, samplingRate * channelCount * bytesPerSample, true);
+          wavView.setUint16(32, channelCount * bytesPerSample, true);
+          wavView.setUint16(34, bytesPerSample * 8, true);
+          wavView.setUint32(40, samples.byteLength, true);
+          
+          var resourceEl = document.createElement('AUDIO');
+          resourceEl.src = URL.createObjectURL(new Blob([wavHeader, samples, wavFooter], {type:'audio/wav'}));
+          resourceEl.controls = true;
+          this.addItem(resourceEl);
         },
       },
     },
