@@ -114,6 +114,32 @@ define(function() {
     Object.defineProperty(this, 'dv', {value:new DataView(buffer, byteOffset, byteLength)});
   }
   Object.defineProperties(FrameSpriteView.prototype, {
+    ink: {
+      get: function() {
+        var v = this.dv.getUint8(5) & 0xf;
+        switch (v) {
+          case 0x00: return 'copy';
+          case 0x01: return 'transparent';
+          case 0x02: return 'reverse';
+          case 0x03: return 'ghost';
+          case 0x04: return 'notCopy';
+          case 0x05: return 'notTransparent';
+          case 0x06: return 'notReverse';
+          case 0x07: return 'notGhost';
+          case 0x08: return 'matte';
+          case 0x09: return 'mask';
+          case 0x20: return 'blend';
+          case 0x21: return 'addPin';
+          case 0x22: return 'add';
+          case 0x23: return 'subtractPin';
+          case 0x25: return 'lightest';
+          case 0x26: return 'subtract';
+          case 0x27: return 'darkest';
+          default: return v;
+        }
+      },
+      enumerable: true,
+    },
     cast: {
       get: function() {
         return this.dv.getUint16(6, false);
@@ -144,38 +170,14 @@ define(function() {
       },
       enumerable: true,
     },
+    /*
     script: {
       get: function() {
         return this.dv.getUint16(16, false);
       },
       enumerable: true,
     },
-    ink: {
-      get: function() {
-        var v = this.dv.getUint8(5) & 0xf;
-        switch (v) {
-          case 0x00: return 'copy';
-          case 0x01: return 'transparent';
-          case 0x02: return 'reverse';
-          case 0x03: return 'ghost';
-          case 0x04: return 'notCopy';
-          case 0x05: return 'notTransparent';
-          case 0x06: return 'notReverse';
-          case 0x07: return 'notGhost';
-          case 0x08: return 'matte';
-          case 0x09: return 'mask';
-          case 0x20: return 'blend';
-          case 0x21: return 'addPin';
-          case 0x22: return 'add';
-          case 0x23: return 'subtractPin';
-          case 0x25: return 'lightest';
-          case 0x26: return 'subtract';
-          case 0x27: return 'darkest';
-          default: return v;
-        }
-      },
-      enumerable: true,
-    },
+    */
     toJSON: {
       value: function() {
         return {
@@ -184,7 +186,7 @@ define(function() {
           left: this.left,
           bottom: this.bottom,
           right: this.right,
-          script: this.script,
+          //script: this.script,
           ink: this.ink,
         };
       },
