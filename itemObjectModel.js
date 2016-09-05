@@ -80,12 +80,17 @@ define(function() {
   function clickItem(e) {
     e.stopPropagation();
     if (e.target.classList.contains('item-download')) {
-      if (e.target.href === '#') {
+      if (!e.target.classList.contains('prepared')) {
         e.preventDefault();
-        this.byteSource.getURL().then(function(url) {
-          e.target.href = url;
-          e.target.click();
-        });
+        if (!e.target.classList.contains('preparing')) {
+          e.target.classList.add('preparing');
+          this.byteSource.getURL().then(function(url) {
+            e.target.classList.remove('preparing');
+            e.target.classList.add('prepared');
+            e.target.href = url;
+            e.target.click();
+          });
+        }
       }
       return;
     }
