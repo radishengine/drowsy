@@ -96,7 +96,7 @@ define(function() {
       enumerable: true,
     },
     toJSON: {
-      get: function() {
+      value: function() {
         return {
           duration: this.duration,
           transition: this.transition,
@@ -177,7 +177,7 @@ define(function() {
       enumerable: true,
     },
     toJSON: {
-      get: function() {
+      value: function() {
         return {
           cast: this.cast,
           top: this.top,
