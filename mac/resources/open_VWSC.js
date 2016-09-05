@@ -21,7 +21,7 @@ define(function() {
           var patch = bytes.subarray(pos, pos + patchLength);
           pos += patchLength;
           dataObject.push({
-            offset: offset,
+            offset: patchOffset,
             patch: [].map.call(patch, function(v) {
               return ('0' + v.tostring(16)).slice(-2);
             }).join(' '),
