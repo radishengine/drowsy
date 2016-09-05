@@ -72,8 +72,8 @@ define(['mac/roman'], function(macintoshRoman) {
           default:
             return Promise.reject('unsupported item type: ' + itemType);
         }
-        item.setDataObject(dataObject);
       }
+      item.setDataObject(dataObject);
     });
   };
 
