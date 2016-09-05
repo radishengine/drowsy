@@ -353,9 +353,10 @@ function(
       var rootItem = itemObjectModel.createItem('');
       rootItem.startAddingItems();
       rootItem.classList.add('open');
-      document.body.appendChild(rootItem);
       listFolderTo(1, rootItem).then(function() {
         rootItem.confirmAllItemsAdded();
+        document.body.appendChild(rootItem.children[0]);
+        rootItem.children[0].click();
       });
       return;
       this.readBTreeNode(byteSource, 0, [], {
