@@ -18,14 +18,14 @@ define(['mac/roman'], function(macintoshRoman) {
         while (pos < bytes.length && bytes[pos] !== 0) {
           var text = macintoshRoman(bytes, pos + 1, bytes[pos]);
           pos += 1 + text.length;
-          var item = {
+          var menuItem = {
             text: text,
             iconNumberOrScriptCode: bytes[pos],
             keyboardEquivalent: bytes[pos + 1],
             markingCharacterOrSubmenuID: bytes[pos + 2],
             style: bytes[pos + 3],
           };
-          dataObject.items.push(item);
+          dataObject.items.push(menuItem);
           pos += 4;
         }
       }
