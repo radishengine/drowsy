@@ -117,7 +117,7 @@ define(function() {
       setDataObject: {
         value: function(value) {
           var textContainer = document.createElement('PRE');
-          textContainer.appendChild(document.createTextNode(JSON.stringify(value, 2)));
+          textContainer.appendChild(document.createTextNode(JSON.stringify(value, null, 2)));
           this.addItem(textContainer);
         },
       },
