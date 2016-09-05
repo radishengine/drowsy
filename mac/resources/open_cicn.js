@@ -6,7 +6,7 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
     return item.getBytes().then(function(bytes) {
       var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       var pixmap = {
-        baseAddr: dv.getUint32(0, false),
+        baseAddr: dv.getUint32(0, false),ca
         rowBytes: dv.getUint16(4, false) & 0x3fff,
         flags: dv.getUint16(4, false) & 0xC000,
         bounds: {
@@ -135,8 +135,8 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
           break;
         case 8:
           item.withPixels(width, height, function(pixelData) {
-            for (var y = 0; y < canvas.height; y++) {
-              for (var x = 0; x < canvas.width; x++) {
+            for (var y = 0; y < height; y++) {
+              for (var x = 0; x < width; x++) {
                 pixels.data.set(
                   palette[bytes[pixmap.offset + y*pixmap.rowBytes + x]] || [0,0,0,0],
                   pixelPitch * y + 4 * x);
