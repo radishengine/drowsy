@@ -205,14 +205,14 @@ function(
       var btree = new BTreeByteSink(byteSource);
       var allocation = byteSource.allocationBlocks;
       function onFolderPopulate(e) {
-        e.stopPropagation();
+        this.removeEventListener(itemObjectModel.EVT_POPULATE, onFolderPopulate);
         var self = this;
         listFolderTo(this.catalogID, this).then(function() {
           self.confirmAllItemsAdded();
         });
       }
       function onFilePopulate(e) {
-        e.stopPropagation();
+        this.removeEventListener(itemObjectModel.EVT_POPULATE, onFilePopulate);
         var self = this;
         var dataByteSource;
         this.resourceForkByteSource.slice(0, ResourceHeaderView.byteLength).getBytes()
