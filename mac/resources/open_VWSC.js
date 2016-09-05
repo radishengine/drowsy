@@ -4,7 +4,7 @@ define(function() {
   
   return function(item) {
     return item.getBytes().then(function(bytes) {
-      var dv = new DataView(bytes.buffer, bytes.byteOffset, byte.byteLength);
+      var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       if (dv.getUint32(0, false) !== bytes.length) {
         return Promise.reject('length does not match data');
       }
