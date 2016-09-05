@@ -29,6 +29,7 @@ define(['mac/palette2'], function(palette) {
           for (var ibyte = 0; ibyte < 32; ibyte++) {
             var databyte = bytes[ibyte];
             for (var ibit = 0; ibit < 8; ibit++) {
+              var imask = 0x80 >> ibit;
               pixelData.set(palette[databyte & imask ? 1 : 0], (ibyte*8 + ibit) * 4);
             }
           }
