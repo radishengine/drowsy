@@ -2,28 +2,24 @@ define(['mac/palette2'], function(palette) {
 
   'use strict';
   
-  return function(resource) {
-    if (resource.data.length !== 128 && resource.data.length !== 256) {
-      console.error('ICON resource expected to be 128 bytes, got ' + resource.data.length);
-      return;
-    }
-    var img = document.createElement('CANVAS');
-    img.width = 32;
-    img.height = 32;
-    var ctx = img.getContext('2d');
-    var pix = ctx.createImageData(32, 32);
-    var mask = resource.data.length === 256 ? resource.data.subarray(128, 256) : null;
-    for (var ibyte = 0; ibyte < 128; ibyte++) {
-      var databyte = resource.data[ibyte], maskbyte = mask ? mask[ibyte] : 255;
-      for (var ibit = 0; ibit < 8; ibit++) {
-        var imask = 0x80 >> ibit;
-        if (maskbyte & imask) {
-          pix.data.set(palette[databyte & imask ? 1 : 0], (ibyte*8 + ibit) * 4);
-        }
+  return function(item) {
+    return item.getBytes().then(function(bytes) {
+      if (bytes.length !== 128 && bytes.length !== 256) {
+        return Promise.reject('ICON resource expected to be 128 bytes, got ' + bytes.length);
       }
-    }
-    ctx.putImageData(pix, 0, 0);
-    resource.image = {url: img.toDataURL(), width:32, height:32};
+      item.withPixels(32, 32, function(pixelData) {
+        var mask = bytes.length === 256 ? bytes.subarray(128, 256) : null;
+        for (var ibyte = 0; ibyte < 128; ibyte++) {
+          var databyte = bytes[ibyte], maskbyte = mask ? mask[ibyte] : 255;
+          for (var ibit = 0; ibit < 8; ibit++) {
+            var imask = 0x80 >> ibit;
+            if (maskbyte & imask) {
+              pixelData.set(palette[databyte & imask ? 1 : 0], (ibyte*8 + ibit) * 4);
+            }
+          }
+        }
+      });
+    });
   };
 
 });
