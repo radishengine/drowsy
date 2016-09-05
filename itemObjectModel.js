@@ -105,6 +105,16 @@ define(function() {
           ctx.putImageData(imageData, 0, 0);
         },
       },
+      with2DContext: {
+        value: function(width, height, callback) {
+          var canvas = document.createElement('CANVAS');
+          canvas.width = width;
+          canvas.height = height;
+          this.addItem(canvas);
+          var ctx = canvas.getContext('2d');
+          callback(ctx);
+        },
+      },
       setHotspot: {
         value: function(x, y) {
           this.dataset.hotspotX = x;
