@@ -35,16 +35,12 @@ define(function() {
           }
           ctx.putImageData(lastRow, 0, y);
           pos += 2;
-          var x = 0;
-          var runLength = dv.getUint16(pos, false);
-          while (runLength !== 0x7fff) {
-            x += runLength;
-            pos += 2;
-            runLength = dv.getUint16(pos, false);
-            ctx.fillRect(x, y, runLength, 1);
-            x += runLength;
-            pos += 2;
-            runLength = dv.getUint16(pos, false);
+          var x1 = dv.getUint16(pos, false);
+          while (x1 !== 0x7fff) {
+            x2 = dv.getUint16(pos + 2, false);
+            ctx.fillRect(x1, y, x2 - x1, 1);
+            pos += 4;
+            x1 = dv.getUint16(pos, false);
           }
           lastRow = ctx.getImageData(0, y, width, 1);
           pos += 2;
