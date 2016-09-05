@@ -60,7 +60,7 @@ define(function() {
       addItem: {
         value: function(item) {
           this.startAddingItems();
-          if (!this.subitemsElement) {
+          if (!this.classList.contains('has-subitems')) {
             this.classList.add('has-subitems');
             this.appendChild(this.subitemsElement = document.createElement('SECTION'));
             this.subitemsElement.classList.add('subitems');
