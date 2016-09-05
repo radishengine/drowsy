@@ -122,7 +122,7 @@ body {
 }
 
 .folder-children pre, .subitems pre {
-  max-height: 5em;
+  max-height: 15em;
   overflow: auto;
   margin: 0;
 }
