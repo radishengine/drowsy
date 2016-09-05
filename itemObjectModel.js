@@ -81,6 +81,11 @@ define(function() {
           this.addItem(textContainer);
         },
       },
+      getBytes: {
+        value: function() {
+          return this.byteSource.getBytes();
+        },
+      },
     },
   };
   
