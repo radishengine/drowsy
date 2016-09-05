@@ -1,36 +1,30 @@
 define(function() {
 
-  return function(resource) {
-    var dv = new DataView(resource.data.buffer, resource.data.byteOffset, resource.data.byteLength);
-    var entryCount = dv.getInt16(6, false) + 1;
-    if (entryCount < 0) {
-      console.error('color table resource: invalid number of entries');
-    }
-    if (entryCount === 0) {
-      resource.dataObject = null;
-      return;
-    }
-    var palCanvas = document.createElement('CANVAS');
-    palCanvas.width = entryCount;
-    palCanvas.height = 1;
-    var palCtx = palCanvas.getContext('2d');
-    var palData = palCtx.createImageData(entryCount, 1);
-    for (var icolor = 0; icolor < entryCount; icolor++) {
-      var offset = dv.getInt16(8 + icolor*8, false) * 4;
-      if (offset >= 0) {
-        palData.data[offset] = resource.data[8 + icolor*8 + 2];
-        palData.data[offset + 1] = resource.data[8 + icolor*8 + 4];
-        palData.data[offset + 2] = resource.data[8 + icolor*8 + 6];
-        palData.data[offset + 3] = 255;
-      }
-    }
-    palCtx.putImageData(palData, 0, 0);
-    resource.image = {
-      width: entryCount,
-      height: 1,
-      url: palCanvas.toDataURL(),
-    };
+  'use strict';
 
+  return function(item) {
+    return item.getBytes().then(function(bytes) {
+      var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      var entryCount = dv.getInt16(6, false) + 1;
+      if (entryCount < 0) {
+        return Promise.reject('color table resource: invalid number of entries');
+      }
+      if (entryCount === 0) {
+        item.setDataObject(null);
+        return;
+      }
+      item.withPixels(entryCount, 1, function(pixelData) {
+        for (var icolor = 0; icolor < entryCount; icolor++) {
+          var offset = dv.getInt16(8 + icolor*8, false) * 4;
+          if (offset >= 0) {
+            pixelData[offset] = bytes[8 + icolor*8 + 2];
+            pixelData[offset + 1] = bytes[8 + icolor*8 + 4];
+            pixelData[offset + 2] = bytes[8 + icolor*8 + 6];
+            pixelData[offset + 3] = 255;
+          }
+        }
+      });
+    });
   };
 
 });
