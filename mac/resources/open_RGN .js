@@ -43,7 +43,7 @@ define(function() {
             pos += 4;
             x1 = dv.getUint16(pos, false);
           }
-          lastRow = ctx.getImageData(0, y, width, 1);
+          lastRow = ctx.getImageData(0, y - offsetY, width, 1);
           pos += 2;
         }
       });
