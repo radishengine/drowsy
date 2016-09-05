@@ -231,15 +231,9 @@ function(
             if (resourceInfo.name) titleString += ' ' + resourceInfo.name;
             var itemEl = itemObjectModel.createItem(titleString);
             
-            function clickItem(e) {
-              e.stopPropagation();
-              e.preventDefault();
-            }
-            itemEl.addEventListener('click', clickItem);
+            itemEl.classList.add('invisible');
             
-            itemEl.classList.add('invisible', 'file');
-            
-            var promisedByteSource = dataByteSource.slice(
+            dataByteSource.slice(
               resourceInfo.dataOffset,
               resourceInfo.dataOffset + 4).getBytes()
             .then(function(lengthBytes) {
@@ -250,47 +244,45 @@ function(
               return dataByteSource.slice(
                 resourceInfo.dataOffset + 4,
                 resourceInfo.dataOffset + 4 + length);
-            });
-            
-            promisedByteSource.then(function(byteSource) {
+            })
+            .then(function(byteSource) {
               itemEl.byteSource = byteSource;
+              var loaderImport = 'mac/resources/open_' + encodeURIComponent(resourceInfo.type);
+              require([loaderImport],
+                function(open) {
+                  itemEl.startAddingItems();
+                  itemEl.addEventListener(itemObjectModel.EVT_POPULATE, onPopulateResource);
+                },
+                function() {
+                });
             });
-            
-            itemEl.startAddingItems();
-            itemEl.addEventListener('click', function(e) {
-              e.preventDefault();
-              e.stopPropagation();
-              if (!this.classList.toggle('open')
-                  || this.classList.contains('loaded')
-                  || this.classList.contains('loading')) {
-                return;
-              }
-              Object.defineProperties(itemEl, {
+
+            function onPopulateResource(e) {
+              this.removeEventListener(itemObjectModel.EVT_POPULATE, onPopulateResource);
+              Object.defineProperties(this, {
                 dataObject: {
                   set: function(value) {
                     var dataObjectEl = document.createElement('PRE');
                     dataObjectEl.appendChild(document.createTextNode(JSON.stringify(value, 2)));
-                    item.addItem(dataObjectEl);
-                    item.confirmAllItemsAdded();
+                    itemEl.addItem(dataObjectEl);
+                    itemEl.confirmAllItemsAdded();
                   },
                 },
               });
-              var loaderImport = 'mac/resources/open_' + encodeURIComponent(resourceInfo.type);
-              var promisedLoader = new Promise(function(resolve, reject) {
-                require([loaderImport], resolve, reject);
-              });
-              var self = this;
-              Promise.all([promisedLoader, promisedByteSource])
-              .then(function(values) {
-                var open = values[0], finalByteSource = values[1];
-                return open(resourceInfo, finalByteSource, itemChildrenEl);
-              })
-              .then(function() {
-                self.confirmAllItemsAdded();
-              }, function() {
-                self.confirmAllItemsAdded();
-              });
-            });
+              require(
+                [loaderImport],
+                function(open) {
+                  open(itemEl).then(
+                    function() {
+                      itemEl.confirmAllItemsAdded();
+                    },
+                    function() {
+                      itemEl.confirmAllItemsAdded();
+                    }
+                  );
+                }
+              );
+            }
             
             self.addItem(itemEl);
           });
@@ -305,10 +297,7 @@ function(
         switch (record.leafType) {
           case 'file':
             if (record.fileInfo.isInvisible) {
-              subitem.classList.add('invisible', 'file');
-            }
-            else {
-              subitem.classList.add('file');
+              subitem.classList.add('invisible');
             }
             subitem.dataset.catalogId = record.fileInfo.id;
             if (record.fileInfo.dataForkInfo.logicalEOF) {
@@ -394,7 +383,6 @@ function(
           if (fileInfo.isInvisible) {
             container.classList.add('invisible');
           }
-          container.classList.add('file');
           container.dataset.name = fileInfo.name;
           if (fileInfo.type !== null) {
             container.dataset.macType = fileInfo.type;
