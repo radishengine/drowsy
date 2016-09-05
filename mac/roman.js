@@ -20,6 +20,9 @@ define(function() {
     return String.fromCharCode.apply(null, u8array)
       .replace(/[\x80-\xFF]/g, function(c) {
         return MAC_CHARSET_128_255[c.charCodeAt(0) - 128];
+      })
+      .replace(/[\r\n]/g, function(c) {
+        return (c === '\r') ? '\n' : '\r';
       });
   }
   
