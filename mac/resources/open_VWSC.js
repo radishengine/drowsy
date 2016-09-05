@@ -95,16 +95,18 @@ define(function() {
       },
       enumerable: true,
     },
-    toJSON: function() {
-      return {
-        duration: this.duration,
-        transition: this.transition,
-        audio1: this.audio1,
-        audio2: this.audio2,
-        script: this.script,
-        palette: this.palette,
-        sprites: this.sprites,
-      };
+    toJSON: {
+      get: function() {
+        return {
+          duration: this.duration,
+          transition: this.transition,
+          audio1: this.audio1,
+          audio2: this.audio2,
+          script: this.script,
+          palette: this.palette,
+          sprites: this.sprites,
+        };
+      },
     },
   });
   
@@ -174,16 +176,18 @@ define(function() {
       },
       enumerable: true,
     },
-    toJSON: function() {
-      return {
-        cast: this.cast,
-        top: this.top,
-        left: this.left,
-        bottom: this.bottom,
-        right: this.right,
-        script: this.script,
-        ink: this.ink,
-      };
+    toJSON: {
+      get: function() {
+        return {
+          cast: this.cast,
+          top: this.top,
+          left: this.left,
+          bottom: this.bottom,
+          right: this.right,
+          script: this.script,
+          ink: this.ink,
+        };
+      },
     },
   });
   
