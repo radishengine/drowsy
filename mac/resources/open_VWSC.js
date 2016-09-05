@@ -12,6 +12,7 @@ define(function() {
       var dataObject = [];
       var pos = 4;
       while (pos < bytes.length) {
+        var frame = [];
         var endPos = pos + dv.getUint16(pos);
         if (endPos === pos) break;
         pos += 2;
@@ -20,13 +21,14 @@ define(function() {
           pos += 2;
           var patch = bytes.subarray(pos, pos + patchLength);
           pos += patchLength;
-          dataObject.push({
+          frame.push({
             offset: patchOffset,
             patch: [].map.call(patch, function(v) {
               return ('0' + v.toString(16)).slice(-2);
             }).join(' '),
           });
         }
+        dataObject.push(frame);
       }
       item.setDataObject(dataObject);
     });
