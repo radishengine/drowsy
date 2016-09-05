@@ -233,6 +233,8 @@ function(
             
             itemEl.classList.add('invisible');
             
+            var loaderImport = 'mac/resources/open_' + encodeURIComponent(resourceInfo.type);
+            
             dataByteSource.slice(
               resourceInfo.dataOffset,
               resourceInfo.dataOffset + 4).getBytes()
@@ -247,7 +249,6 @@ function(
             })
             .then(function(byteSource) {
               itemEl.byteSource = byteSource;
-              var loaderImport = 'mac/resources/open_' + encodeURIComponent(resourceInfo.type);
               require([loaderImport],
                 function(open) {
                   itemEl.startAddingItems();
