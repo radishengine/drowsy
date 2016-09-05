@@ -13,7 +13,7 @@ define(function() {
       for (var i = 0; i < count; i++) {
         dataObject[i] = dv.getInt16(2 + 2*i);
       }
-      resource.setDataObject(dataObject);
+      item.setDataObject(dataObject);
     });
   };
 
