@@ -231,6 +231,15 @@ function(
             if (resourceInfo.name) titleString += ' ' + resourceInfo.name;
             var itemEl = itemObjectModel.createItem(titleString);
             
+            Object.defineProperties(itemEl, {
+              resourceID: {
+                get: function() {
+                  return +this.dataset.resourceId;
+                },
+              },
+            });
+            itemEl.dataset.resourceId = resourceInfo.id;
+            
             itemEl.classList.add('invisible');
             
             var loaderImport = 'mac/resources/open_' + encodeURIComponent(resourceInfo.type);
