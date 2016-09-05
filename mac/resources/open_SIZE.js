@@ -4,7 +4,7 @@ define(function() {
   
   return function(item) {
     return item.getBytes().then(function(bytes) {
-      if (bytes.data.length !== 10) {
+      if (bytes.length !== 10) {
         return Promise.reject('SIZE: expected length 10, got ' + bytes.length);
       }
       var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
