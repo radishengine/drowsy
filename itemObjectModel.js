@@ -54,7 +54,6 @@ define(function() {
       },
       startAddingItems: {
         value: function() {
-          this.classList.add('itemizing');
           if (!this.classList.contains('has-subitems')) {
             this.classList.add('has-subitems');
             this.appendChild(this.subitemsElement = document.createElement('SECTION'));
@@ -65,6 +64,7 @@ define(function() {
       addItem: {
         value: function(item) {
           this.startAddingItems();
+          this.classList.add('itemizing');
           this.subitemsElement.appendChild(item);
         },
       },
