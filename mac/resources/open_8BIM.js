@@ -3,7 +3,7 @@ define(['mac/roman', 'mac/fixedPoint'], function(macintoshRoman, fixedPoint) {
   'use strict';
   
   return function(item) {
-    item.getBytes().then(function(bytes) {
+    return item.getBytes().then(function(bytes) {
       var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       switch(item.resourceID) {
         case 1000: // 2-byte values: number of channels, rows, columns, depth, mode
