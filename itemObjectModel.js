@@ -55,16 +55,16 @@ define(function() {
       startAddingItems: {
         value: function() {
           this.classList.add('itemizing');
-        },
-      },
-      addItem: {
-        value: function(item) {
-          this.startAddingItems();
           if (!this.classList.contains('has-subitems')) {
             this.classList.add('has-subitems');
             this.appendChild(this.subitemsElement = document.createElement('SECTION'));
             this.subitemsElement.classList.add('subitems');
           }
+        },
+      },
+      addItem: {
+        value: function(item) {
+          this.startAddingItems();
           this.subitemsElement.appendChild(item);
         },
       },
