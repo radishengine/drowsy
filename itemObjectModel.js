@@ -121,6 +121,12 @@ define(function() {
           this.dataset.hotspotY = y;
         },
       },
+      setOffset: {
+        value: function(x, y) {
+          this.dataset.offsetX = x;
+          this.dataset.offsetY = y;
+        },
+      },
     },
   };
   
