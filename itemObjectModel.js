@@ -86,8 +86,8 @@ define(function() {
           return this.byteSource.getBytes();
         },
       },
-      dataObject: {
-        set: function(value) {
+      setDataObject: {
+        value: function(value) {
           var textContainer = document.createElement('PRE');
           textContainer.appendChild(document.createTextNode(JSON.stringify(value, 2)));
           this.addItem(textContainer);
