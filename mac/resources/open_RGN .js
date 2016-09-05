@@ -18,7 +18,7 @@ define(function() {
         item.setDataObject(bounds);
         return;
       }
-      item.setOffset(bounds.left, bound.top);
+      item.setOffset(bounds.left, bounds.top);
       var width = bounds.right - bounds.left, height = bounds.bottom - bounds.top;
       item.with2DContext(width, height, function(ctx) {
         ctx.fillStyle = 'black';
