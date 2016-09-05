@@ -18,12 +18,13 @@ define(function() {
         item.setDataObject(bounds);
         return;
       }
-      item.setOffset(bounds.left, bounds.top);
+      var offsetX = bounds.left, offsetY = bounds.top;
+      item.setOffset(offsetX, offsetY);
       var width = bounds.right - bounds.left, height = bounds.bottom - bounds.top;
       item.with2DContext(width, height, function(ctx) {
         ctx.fillStyle = 'black';
         ctx.globalCompositeOperation = 'xor';
-        var y = -1;
+        var y = offsetY - 1;
         var lastRow = ctx.createImageData(width, 1);
         for (var pos = 10; pos < bytes.length; ) {
           var newY = dv.getUint16(pos, false);
@@ -38,7 +39,7 @@ define(function() {
           var x1 = dv.getUint16(pos, false);
           while (x1 !== 0x7fff) {
             var x2 = dv.getUint16(pos + 2, false);
-            ctx.fillRect(x1, y, x2 - x1, 1);
+            ctx.fillRect(x1 - offsetX, y - offsetY, (x2 - x1) - offsetX, 1);
             pos += 4;
             x1 = dv.getUint16(pos, false);
           }
