@@ -105,6 +105,12 @@ define(function() {
           ctx.putImageData(imageData, 0, 0);
         },
       },
+      setHotspot: {
+        value: function(x, y) {
+          this.dataset.hotspotX = x;
+          this.dataset.hotspotY = y;
+        },
+      },
     },
   };
   
