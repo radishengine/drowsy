@@ -37,7 +37,7 @@ define(function() {
           pos += 2;
           var x1 = dv.getUint16(pos, false);
           while (x1 !== 0x7fff) {
-            x2 = dv.getUint16(pos + 2, false);
+            var x2 = dv.getUint16(pos + 2, false);
             ctx.fillRect(x1, y, x2 - x1, 1);
             pos += 4;
             x1 = dv.getUint16(pos, false);
