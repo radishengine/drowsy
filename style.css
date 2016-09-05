@@ -2,6 +2,7 @@
 @font-face {
   font-family: macintosh-system;
   src: url(mac/ChicagoFLF.ttf);
+  font-weight: bold;
 }
 
 body {
@@ -139,5 +140,6 @@ body {
 
 .item > header {
   font-family: macintosh-system, monospace;
+  font-weight: bold;
   font-size: 9pt;
 }
