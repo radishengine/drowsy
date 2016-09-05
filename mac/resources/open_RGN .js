@@ -32,9 +32,9 @@ define(function() {
             break;
           }
           while (++y < newY) {
-            ctx.putImageData(lastRow, 0, y);
+            ctx.putImageData(lastRow, 0, y - offsetY);
           }
-          ctx.putImageData(lastRow, 0, y);
+          ctx.putImageData(lastRow, 0, y - offsetY);
           pos += 2;
           var x1 = dv.getUint16(pos, false);
           while (x1 !== 0x7fff) {
