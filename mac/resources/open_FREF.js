@@ -8,8 +8,8 @@ define(['mac/roman'], function(macintoshRoman) {
         return Promise.reject('FREF resource expected to be 7 bytes, got ' + bytes.length);
       }
       item.setDataObject({
-        fileType: macintoshRoman(resource.data, 0, 4),
-        iconListID: (resource.data[4] << 8) | resource.data[5],
+        fileType: macintoshRoman(bytes, 0, 4),
+        iconListID: (bytes[4] << 8) | bytes[5],
       });
     });
   };
