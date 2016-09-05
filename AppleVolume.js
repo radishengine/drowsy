@@ -383,7 +383,9 @@ function(
       rootItem.startAddingItems();
       rootItem.classList.add('open');
       document.body.appendChild(rootItem);
-      listFolderTo(1, rootItem);
+      listFolderTo(1, rootItem).then(function() {
+        rootItem.confirmAllItemsAdded();
+      });
       return;
       this.readBTreeNode(byteSource, 0, [], {
         onfile: function(fileInfo, chain) {
