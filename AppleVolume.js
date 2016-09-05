@@ -292,7 +292,7 @@ function(
               });
             });
             
-            self.childrenEl.appendChild(itemEl);
+            self.addItem(itemEl);
           });
         })
         .then(function() {
