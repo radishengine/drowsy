@@ -39,7 +39,7 @@ define(function() {
           var x1 = dv.getUint16(pos, false);
           while (x1 !== 0x7fff) {
             var x2 = dv.getUint16(pos + 2, false);
-            ctx.fillRect(x1 - offsetX, y - offsetY, (x2 - x1) - offsetX, 1);
+            ctx.fillRect(x1 - offsetX, y - offsetY, x2 - x1, 1);
             pos += 4;
             x1 = dv.getUint16(pos, false);
           }
