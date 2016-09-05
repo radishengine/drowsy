@@ -256,7 +256,7 @@ function(
               itemEl.byteSource = byteSource;
             });
             
-            itemEl.classList.add('folder');
+            itemEl.startAddingItems();
             itemEl.addEventListener('click', function(e) {
               e.preventDefault();
               e.stopPropagation();
@@ -286,11 +286,9 @@ function(
                 return open(resourceInfo, finalByteSource, itemChildrenEl);
               })
               .then(function() {
-                self.classList.remove('loading');
-                self.classList.add('loaded');
+                self.confirmAllItemsAdded();
               }, function() {
-                self.classList.remove('folder');
-                self.classList.remove('loading');
+                self.confirmAllItemsAdded();
               });
             });
             
@@ -324,26 +322,16 @@ function(
               subitem.resourceForkByteSource = allocation.slice(
                 allocation.blockSize * extent.offset,
                 allocation.blockSize * extent.offset + record.fileInfo.resourceForkInfo.logicalEOF);
-              subitem.classList.add('folder');
-              var childrenEl = document.createElement('SECTION');
-              childrenEl.classList.add('folder-children');
-              subitem.appendChild(childrenEl);
-              subitem.childrenEl = childrenEl;
+              subitem.startAddingItems();
             }
             subitem.addEventListener(itemObjectModel.EVT_POPULATE, onFilePopulate);
             break;
           case 'folder':
+            subitem.startAddingItems();
             if (record.folderInfo.isInvisible) {
-              subitem.classList.add('invisible', 'folder');
-            }
-            else {
-              subitem.classList.add('folder');
+              subitem.classList.add('invisible');
             }
             subitem.dataset.catalogId = record.folderInfo.id;
-            var childrenEl = document.createElement('SECTION');
-            childrenEl.classList.add('folder-children');
-            subitem.appendChild(childrenEl);
-            subitem.childrenEl = childrenEl;
             subitem.addEventListener(itemObjectModel.EVT_POPULATE, onFolderPopulate);
             break;
         }
@@ -397,90 +385,6 @@ function(
       listFolderTo(1, rootItem);
       return;
       this.readBTreeNode(byteSource, 0, [], {
-        onheadernode: function(headerNode, chain) {
-          self.readBTreeNode(byteSource, headerNode.rootNodeNumber, chain, this);
-        },
-        onindexnode: function(indexNode, chain) {
-          console.log('index', chain, indexNode);
-          for (var i = 0; i < indexNode.pointers.length; i++) {
-            self.readBTreeNode(byteSource, indexNode.pointers[i].nodeNumber, chain, this);
-          }
-        },
-        onfolderthread: function(threadInfo, chain) {
-          console.log('folder thread', chain, threadInfo);
-        },
-        onfilethread: function(threadInfo, chain) {
-          console.log('file thread', chain, threadInfo);
-        },
-        onfolder: function(folderInfo, chain) {
-          console.log('folder', chain, folderInfo);
-          var container = itemObjectModel.createItem(folderInfo.name);
-          if (folderInfo.isInvisible) {
-            container.classList.add('invisible');
-          }
-          container.classList.add('folder');
-          container.dataset.name = folderInfo.name;
-          function clickExpand(e) {
-            container.classList.toggle('open');
-            e.preventDefault();
-            e.stopPropagation();
-          }
-          container.addEventListener('click', clickExpand);
-          var timestamp = folderInfo.modifiedAt || folderInfo.createdAt;
-          if (timestamp) {
-            container.dataset.lastModified = timestamp.toISOString();
-          }
-          if (folderInfo.id in folders) {
-            container.appendChild(folders[folderInfo.id]);
-          }
-          else {
-            var children = document.createElement('SECTION');
-            children.classList.add('folder-children');
-            container.appendChild(children);
-            folders[folderInfo.id] = children;
-          }
-          if (folderInfo.parentFolderID === 1) {
-            container.classList.add('open');
-            document.body.appendChild(container);
-          }
-          else if (folderInfo.parentFolderID in folders) {
-            folders[folderInfo.parentFolderID].appendChild(container);
-          }
-          else {
-            var siblings = document.createElement('SECTION');
-            siblings.classList.add('folder-children');
-            siblings.appendChild(container);
-            folders[folderInfo.parentFolderID] = siblings;
-          }
-        },
-        onleafnode: function(leaf, chain) {
-          console.log('leaf', chain, leaf);
-          for (var i = 0; i < leaf.records.length; i++) {
-            var record = leaf.records[i];
-            record.leafNodeNumber = leaf.number;
-            switch(record.leafType) {
-              case 'folder':
-                record.folderInfo.name = record.name;
-                record.folderInfo.parentFolderID = record.parentFolderID;
-                this.onfolder(record.folderInfo, chain.concat(i));
-                break;
-              case 'file':
-                record.fileInfo.name = record.name;
-                record.fileInfo.parentFolderID = record.parentFolderID;
-                this.onfile(record.fileInfo, chain.concat(i));
-                break;
-              case 'folderthread':
-                this.onfolderthread(record.threadInfo, chain.concat(i));
-                break;
-              case 'filethread':
-                this.onfilethread(record.threadInfo, chain.concat(i));
-                break;
-              default:
-                console.error('unknown folder record type');
-                break;
-            }
-          }
-        },
         onfile: function(fileInfo, chain) {
           console.log('file', chain, fileInfo);
           var container = itemObjectModel.createItem(fileInfo.name);
@@ -512,10 +416,7 @@ function(
             var resourceForkByteSource = allocation.slice(
               allocation.blockSize * extent.offset,
               allocation.blockSize * extent.offset + fileInfo.resourceForkInfo.logicalEOF);
-            var resources = document.createElement('SECTION');
-            resources.classList.add('folder-children');
-            container.appendChild(resources);
-            container.classList.add('folder');
+            container.startAddingItems();
             function clickExpand(e) {
               container.classList.toggle('open');
               e.preventDefault();
