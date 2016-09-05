@@ -4,8 +4,8 @@ define(function() {
   
   var transitionNames = [
     null,
-		'wipeRight', 'wipeLeft', 'wipeDown', 'wipeUp',
-		'centerOutHorizontal', 'edgesInHorizontal',
+    'wipeRight', 'wipeLeft', 'wipeDown', 'wipeUp',
+    'centerOutHorizontal', 'edgesInHorizontal',
       'centerOutVertical', 'edgesInVertical',
       'centerOutSquare', 'edgesInSquare',
     'pushLeft', 'pushRight', 'pushDown', 'pushUp',
@@ -26,8 +26,8 @@ define(function() {
     'dissolveBitsFast', 'dissolvePixels', 'dissolveBits',
   ];
   
-	var SPRITE_BYTES = 16; // 20
-	var SPRITE_COUNT = 49;
+  var SPRITE_BYTES = 16; // 20
+  var SPRITE_COUNT = 49;
   
   function FrameView(buffer, byteOffset, byteLength) {
     Object.defineProperty(this, 'dv', {value:new DataView(buffer, byteOffset, byteLength)});
@@ -72,10 +72,10 @@ define(function() {
     },
     palette: {
       get: function() {
-      	var v = this.dv.getInt16(0x14, false);
-      	return (v === 0) ? 'default'
-      	  : (v < 0) ? ('system' + (-v))
-      	  : v;
+        var v = this.dv.getInt16(0x14, false);
+        return (v === 0) ? 'default'
+          : (v < 0) ? ('system' + (-v))
+          : v;
       },
       enumerable: true,
     },
@@ -159,7 +159,7 @@ define(function() {
           case 0x26: return 'subtract';
           case 0x27: return 'darkest';
           default: return v;
-    		}
+        }
       },
       enumerable: true,
     },
