@@ -15,7 +15,7 @@ define(['mac/roman'], function(macintoshRoman) {
         list.push(macintoshRoman(bytes, pos, len));
         pos += len;
       }
-      resource.setDataObject(list);
+      item.setDataObject(list);
     });
   };
 
