@@ -93,6 +93,18 @@ define(function() {
           this.addItem(textContainer);
         },
       },
+      withPixels: {
+        value: function(width, height, callback) {
+          var canvas = document.createElement('CANVAS');
+          canvas.width = width;
+          canvas.height = height;
+          this.addItem(canvas);
+          var ctx = canvas.getContext('2d');
+          var imageData = ctx.createImageData(width, height);
+          callback(imageData.data);
+          ctx.putImageData(imageData, 0, 0);
+        },
+      },
     },
   };
   
