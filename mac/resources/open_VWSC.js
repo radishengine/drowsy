@@ -60,7 +60,7 @@ define(function() {
   function FrameView(buffer, byteOffset, byteLength) {
     Object.defineProperty(this, 'dv', {value:new DataView(buffer, byteOffset, byteLength)});
   }
-  Object.defineProperties(FrameView.prototype, {
+  Object.defineProperties(FrameView.prototype = {}, {
     duration: {
       get: function() {
         var v = this.dv.getInt8(4);
@@ -128,7 +128,7 @@ define(function() {
   function FrameSpriteView(buffer, byteOffset, byteLength) {
     Object.defineProperty(this, 'dv', {value:new DataView(buffer, byteOffset, byteLength)});
   }
-  Object.defineProperties(FrameSpriteView.prototype, {
+  Object.defineProperties(FrameSpriteView.prototype = {}, {
     cast: {
       get: function() {
         return this.dv.getUint16(6, false);
