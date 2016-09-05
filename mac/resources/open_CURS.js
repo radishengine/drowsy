@@ -35,7 +35,7 @@ define(['mac/palette2'], function(palette) {
           }
         });
       }
-      var hotspotDV = new DataView(bytes.buffer, bytes.byteOffset + (hasMask ? 64 : 32), 8);
+      var hotspotDV = new DataView(bytes.buffer, bytes.byteOffset + (hasMask ? 64 : 32), 4);
       resource.setHotspot(hotspotDV.getInt16(2), hotspotDV.getInt16(0));
     });
   };
