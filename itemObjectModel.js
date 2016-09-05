@@ -74,6 +74,13 @@ define(function() {
           this.classList.add('itemized');
         },
       },
+      text: {
+        set: function(text) {
+          var textContainer = document.createElement('PRE');
+          textContainer.appendChild(document.createTextNode(text));
+          this.addItem(textContainer);
+        },
+      },
     },
   };
   
