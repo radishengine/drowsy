@@ -380,7 +380,8 @@ function(
         });
       }
       var rootItem = itemObjectModel.createItem('');
-      rootItem.classList.add('has-subitems', 'open');
+      rootItem.startAddingItems();
+      rootItem.classList.add('open');
       document.body.appendChild(rootItem);
       listFolderTo(1, rootItem);
       return;
