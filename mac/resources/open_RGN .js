@@ -45,7 +45,7 @@ define(function() {
             pos += 2;
             runLength = dv.getUint16(pos, false);
           }
-          lastRow = ctx.getImageData(0, y, canvas.width, 1);
+          lastRow = ctx.getImageData(0, y, width, 1);
           pos += 2;
         }
       });
