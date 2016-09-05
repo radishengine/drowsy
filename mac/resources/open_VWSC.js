@@ -215,9 +215,9 @@ define(function() {
           frameData.set(patch, patchOffset);
         }
         dataObject.push(new FrameView(frameData.buffer, frameData.byteOffset, frameData.byteLength));
+        previousData = frameData;
       }
       item.setDataObject(dataObject);
-      previousData = frameData;
     });
   };
   
