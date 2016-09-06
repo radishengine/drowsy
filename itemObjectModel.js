@@ -160,7 +160,15 @@ define(function() {
         value: function() {
           var promises = [];
           this.dispatchEvent(new CustomEvent(itemObjectModel.EVT_POPULATE, {detail:{promises:promises /* and relax */}}));
-          return Promise.all(promises).then(Promise.resolve(this));
+          if (promises.length === 0) {
+            return Promise.resolve(this);
+          }
+          this.dispatchEvent(new Event(itemObjectModel.EVT_POPULATE_STARTED));
+          var self = this;
+          return Promise.all(promises).then(function() {
+            self.dispatchEvent(new Event(itemObjectModel.EVT_POPULATE_ENDED));
+            return self;
+          });
         },
       },
       setRawAudio: {
@@ -219,6 +227,8 @@ define(function() {
   
   Object.defineProperties(itemObjectModel, {
     EVT_POPULATE: {value:'item-populate'},
+    EVT_POPULATE_STARTED: {value:'item-populate-started'},
+    EVT_POPULATE_ENDED: {value: 'item-populate-ended'},
     EVT_ITEM_ADDED: {value:'item-added'},
   });
   
