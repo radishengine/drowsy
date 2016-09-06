@@ -8,6 +8,9 @@ define(function() {
       var seed = clut.getInt32(0, false); // resource ID
       var flags = clut.getUint16(4, false); // 0x8000: color map for indexed device
       var entryCount = clut.getUint16(6, false) + 1;
+      if (bytes.length < 8 + entryCount * 8) {
+        return Promise.reject('bad length for clut');
+      }
       item.withPixels(entryCount, 1, function(pixelData) {
         for (var icolor = 0; icolor < entryCount; icolor++) {
           var offset = clut.getInt16(8 + icolor*8, false) * 4;
