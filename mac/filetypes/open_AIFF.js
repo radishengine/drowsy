@@ -51,7 +51,7 @@ define(['mac/extendedFloat'], function(extendedFloat) {
             audioInfo.samples = bytes.subarray(
               pos + 12,
               pos + 12 + dataLength);
-            if (audioInfo.bytesPerSample === 8) {
+            if (audioInfo.bytesPerSample === 1) {
               var signed = new Int8Array(
                 audioInfo.samples.buffer,
                 audioInfo.samples.byteOffset,
