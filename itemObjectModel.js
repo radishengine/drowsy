@@ -195,7 +195,7 @@ define(function() {
               }
             },
             function(reason) {
-              self.dispatchEvent(new CustomEvent(itemObjectModel.EVT_POPULATE_ERROR. {detail:{message:reason}}));
+              self.dispatchEvent(new CustomEvent(itemObjectModel.EVT_POPULATE_ERROR, {detail:{message:reason}}));
               if (--self.populatorCount === 0) {
                 self.dispatchEvent(new Event(itemObjectModel.EVT_POPULATE_ENDED));
               }
