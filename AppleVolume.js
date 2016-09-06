@@ -281,6 +281,7 @@ function(
             if (record.fileInfo.isInvisible) {
               subitem.classList.add('invisible');
             }
+            subitem.setAttribute('title', 'File Type: ' + record.fileInfo.type + '\nCreator: ' + record.fileInfo.creator);
             subitem.dataset.catalogId = record.fileInfo.id;
             if (record.fileInfo.dataForkInfo.logicalEOF) {
               var extent = record.fileInfo.dataForkFirstExtentRecord[0];
