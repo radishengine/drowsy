@@ -97,7 +97,7 @@ define(function() {
     },
     toJSON: {
       value: function() {
-        return {
+        var value = {
           duration: this.duration,
           transition: this.transition,
           audio1: this.audio1,
@@ -106,6 +106,14 @@ define(function() {
           palette: this.palette,
           sprites: this.sprites,
         };
+        if (value.duration === 'default') delete value.duration;
+        if (!value.transition) delete value.transition;
+        if (!value.audio1) delete value.audio1;
+        if (!value.audio2) delete value.audio2;
+        if (!value.script) delete value.script;
+        if (!value.palette) delete value.palette;
+        if (Object.keys(value.sprites).length === 0) delete value.sprites;
+        return value;
       },
     },
   });
@@ -180,7 +188,7 @@ define(function() {
     */
     toJSON: {
       value: function() {
-        return {
+        var value = {
           cast: this.cast,
           top: this.top,
           left: this.left,
@@ -189,6 +197,9 @@ define(function() {
           //script: this.script,
           ink: this.ink,
         };
+        if (!value.cast) return null;
+        if (value.ink === 'copy') delete value.ink;
+        return value;
       },
     },
   });
