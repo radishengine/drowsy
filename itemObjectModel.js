@@ -171,7 +171,7 @@ define(function() {
           var self = this;
           return new Promise(function(resolve, reject) {
             function onPopulateEnd() {
-              self.removeEventListener(itemObjectModel.EVT_POPULATE_ENDED);
+              self.removeEventListener(itemObjectModel.EVT_POPULATE_ENDED, onPopulateEnd);
               resolve(self);
             }
             self.addEventListener(itemObjectModel.EVT_POPULATE_ENDED, onPopulateEnd);
