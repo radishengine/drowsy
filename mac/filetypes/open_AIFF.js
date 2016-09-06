@@ -16,7 +16,7 @@ define(['mac/extendedFloat'], function(extendedFloat) {
         return Promise.reject('AIFF header not found');
       }
       var audioInfo = {};
-      for (var pos = 12; pos < length; pos += dv.getUint32(pos + 4, false)) {
+      for (var pos = 12; pos < length; pos += 8 + dv.getUint32(pos + 4, false)) {
         var chunkName = String.fromCharCode.apply(null, bytes.subarray(pos, pos + 4));
         switch (chunkName) {
           case 'COMM':
