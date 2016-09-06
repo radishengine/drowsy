@@ -167,6 +167,15 @@ define(function() {
       populate: {
         value: function() {
           this.dispatchEvent(new Event(itemObjectModel.EVT_POPULATE));
+          if (this.populatorCount === 0) return Promise.resolve(this);
+          var self = this;
+          return new Promise(function(resolve, reject) {
+            function onPopulateEnd() {
+              self.removeEventListener(itemObjectModel.EVT_POPULATE_ENDED);
+              resolve(self);
+            }
+            self.addEventListener(itemObjectModel.EVT_POPULATE_ENDED, onPopulateEnd);
+          });
         },
       },
       populatorCount: {
@@ -242,7 +251,7 @@ define(function() {
     }
     if (this.classList.contains('has-subitems')) {
       if (this.classList.toggle('open')) {
-        this.dispatchEvent(new Event(itemObjectModel.EVT_POPULATE));
+        this.populate();
       }
     }
   }
