@@ -53,6 +53,7 @@ define(function() {
     },
     startItemPopulate: function() {
       this.startAddingItems();
+      this.classList.add('itemizing');
     },
     endItemPopulate: function() {
       this.confirmAllItemsAdded();
@@ -100,7 +101,6 @@ define(function() {
       addItem: {
         value: function(item) {
           this.startAddingItems();
-          this.classList.add('itemizing');
           this.subitemsElement.appendChild(item);
           this.dispatchEvent(new CustomEvent(itemObjectModel.EVT_ITEM_ADDED, {detail:{item:item}}));
         },
