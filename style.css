@@ -5,6 +5,12 @@
   font-weight: bold;
 }
 
+@font-face {
+  font-family: ms-dos-system;
+  src: url(MorePerfectDOSVGA.ttf);
+  font-weight: bold;
+}
+
 body {
   font-family: sans-serif;
 }
@@ -140,6 +146,12 @@ body {
 
 .item > header {
   font-family: macintosh-system, monospace;
+  font-weight: bold;
+  font-size: 9pt;
+}
+
+.item.creator-mdos > header {
+  font-family: ms-dos, monospace;
   font-weight: bold;
   font-size: 9pt;
 }
