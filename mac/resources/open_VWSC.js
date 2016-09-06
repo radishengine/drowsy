@@ -111,7 +111,7 @@ define(function() {
         if (!value.audio1) delete value.audio1;
         if (!value.audio2) delete value.audio2;
         if (!value.script) delete value.script;
-        if (!value.palette) delete value.palette;
+        if (value.palette === 'default') delete value.palette;
         if (Object.keys(value.sprites).length === 0) delete value.sprites;
         return value;
       },
