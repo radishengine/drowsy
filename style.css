@@ -158,3 +158,9 @@ body {
   font-weight: bold;
   font-size: 12pt;
 }
+
+canvas {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
