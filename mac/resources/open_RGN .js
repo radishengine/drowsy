@@ -25,25 +25,19 @@ define(function() {
         ctx.fillStyle = 'black';
         ctx.globalCompositeOperation = 'xor';
         var y = offsetY - 1;
-        var lastRow = ctx.createImageData(width, 1);
         for (var pos = 10; pos < bytes.length; ) {
           var newY = dv.getUint16(pos, false);
           if (newY === 0x7fff) {
             break;
           }
-          while (++y < newY) {
-            ctx.putImageData(lastRow, 0, y - offsetY);
-          }
-          ctx.putImageData(lastRow, 0, y - offsetY);
           pos += 2;
           var x1 = dv.getUint16(pos, false);
           while (x1 !== 0x7fff) {
             var x2 = dv.getUint16(pos + 2, false);
-            ctx.fillRect(x1 - offsetX, y - offsetY, x2 - x1, 1);
+            ctx.fillRect(x1 - offsetX, y - offsetY, x2 - x1, height);
             pos += 4;
             x1 = dv.getUint16(pos, false);
           }
-          lastRow = ctx.getImageData(0, y - offsetY, width, 1);
           pos += 2;
         }
       });
