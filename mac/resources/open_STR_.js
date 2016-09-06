@@ -2,7 +2,14 @@ define(['mac/roman'], function(macintoshRoman) {
 
   'use strict';
   
-  return function(item) {
+  return function(item, typeName) {
+    if (typeName === 'STR ') {
+      // single string
+      return item.getBytes().then(function(bytes) {
+        item.text = macintoshRoman(bytes, 1, bytes[0]);
+      });      
+    }
+    // string table
     return item.getBytes().then(function(bytes) {
       var strcount = new DataView(bytes.buffer, bytes.byteOffset, 2).getInt16(0, false);
       if (strcount < 0) {
