@@ -235,7 +235,7 @@ function(
                   this.notifyPopulating(
                     promisedByteSource
                     .then(function() {
-                      open(itemEl);
+                      open(itemEl, resourceInfo.type);
                     })
                   );
                 }
@@ -288,7 +288,7 @@ function(
                   subitem.startAddingItems();
                   function onTypedFilePopulate() {
                     this.removeEventListener(itemObjectModel.EVT_POPULATE, onTypedFilePopulate);
-                    open(this);
+                    open(this, record.fileInfo.type);
                   }
                   subitem.addEventListener(itemObjectModel.EVT_POPULATE, onTypedFilePopulate);
                 },
