@@ -94,6 +94,7 @@ define(function() {
           this.startAddingItems();
           this.classList.add('itemizing');
           this.subitemsElement.appendChild(item);
+          this.dispatchEvent(new CustomEvent(itemObjectModel.EVT_ITEM_ADDED, {detail:{item:item}}));
         },
       },
       confirmAllItemsAdded: {
@@ -211,6 +212,7 @@ define(function() {
   
   Object.defineProperties(itemObjectModel, {
     EVT_POPULATE: {value:'item-populate'},
+    EVT_ITEM_ADDED: {value:'item-added'},
   });
   
   return itemObjectModel;
