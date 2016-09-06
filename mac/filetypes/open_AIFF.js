@@ -51,6 +51,15 @@ define(['mac/extendedFloat'], function(extendedFloat) {
             audioInfo.samples = bytes.subarray(
               pos + 12,
               pos + 12 + dataLength);
+            if (audioInfo.bytesPerSample === 8) {
+              var signed = new Int8Array(
+                audioInfo.samples.buffer,
+                audioInfo.samples.byteOffset,
+                audioInfo.samples.byteLength);
+              for (var i = 0; i < signed.length; i++) {
+                audioInfo.samples[i] = signed[i] + 128;
+              }
+            }
             break;
           default:
             console.log('AIFF chunk: ' + chunkName);
