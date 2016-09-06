@@ -46,8 +46,16 @@ define(function() {
       if (title) itemElement.itemTitle = title;
       
       itemElement.addEventListener('click', clickItem);
+      itemElement.addEventListener(itemObjectModel.EVT_POPULATE_STARTED, itemObjectModel.startItemPopulate);
+      itemElement.addEventListener(itemObjectModel.EVT_POPULATE_ENDED, itemObjectModel.endItemPopulate);
 
       return itemElement;
+    },
+    startItemPopulate: function() {
+      this.startAddingItems();
+    },
+    endItemPopulate: function() {
+      this.confirmAllItemsAdded();
     },
     itemProperties: {
       itemTitle: {
@@ -158,17 +166,31 @@ define(function() {
       },
       populate: {
         value: function() {
-          var promises = [];
-          this.dispatchEvent(new CustomEvent(itemObjectModel.EVT_POPULATE, {detail:{promises:promises /* and relax */}}));
-          if (promises.length === 0) {
-            return Promise.resolve(this);
+          this.dispatchEvent(new Event(itemObjectModel.EVT_POPULATE));
+        },
+      },
+      populatorCount: {
+        value: 0,
+        writable: true,
+      },
+      notifyPopulating: {
+        value: function(promise) {
+          if (++this.populatorCount === 1) {
+            this.dispatchEvent(new Event(itemObjectModel.EVT_POPULATE_STARTED));
           }
-          this.dispatchEvent(new Event(itemObjectModel.EVT_POPULATE_STARTED));
           var self = this;
-          return Promise.all(promises).then(function() {
-            self.dispatchEvent(new Event(itemObjectModel.EVT_POPULATE_ENDED));
-            return self;
-          });
+          promise.then(
+            function() {
+              if (--self.populatorCount === 0) {
+                self.dispatchEvent(new Event(itemObjectModel.EVT_POPULATE_ENDED));
+              }
+            },
+            function(reason) {
+              self.dispatchEvent(new CustomEvent(itemObjectModel.EVT_POPULATE_ERROR. {detail:{message:reason}}));
+              if (--self.populatorCount === 0) {
+                self.dispatchEvent(new Event(itemObjectModel.EVT_POPULATE_ENDED));
+              }
+            });
         },
       },
       setRawAudio: {
@@ -227,6 +249,7 @@ define(function() {
   
   Object.defineProperties(itemObjectModel, {
     EVT_POPULATE: {value:'item-populate'},
+    EVT_POPULATE_ERROR: {value:'item-population-error'},
     EVT_POPULATE_STARTED: {value:'item-populate-started'},
     EVT_POPULATE_ENDED: {value: 'item-populate-ended'},
     EVT_ITEM_ADDED: {value:'item-added'},
