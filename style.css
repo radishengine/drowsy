@@ -76,6 +76,9 @@ body {
 }
 
 .folder > header::before, .file > header::before, .item > header::before {
+  font-family: macintosh-system, monospace;
+  font-weight: bold;
+  font-size: 9pt;
   display: inline-block;
   text-align: center;
   vertical-align: top;
@@ -153,5 +156,5 @@ body {
 .item.creator-mdos > header {
   font-family: ms-dos, monospace;
   font-weight: bold;
-  font-size: 9pt;
+  font-size: 12pt;
 }
