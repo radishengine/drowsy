@@ -156,6 +156,13 @@ define(function() {
           this.dataset.offsetY = y;
         },
       },
+      populate: {
+        value: function() {
+          var promises = [];
+          this.dispatchEvent(new CustomEvent(itemObjectModel.EVT_POPULATE, {detail:{promises:promises /* and relax */}}));
+          return Promise.all(promises).then(Promise.resolve(this));
+        },
+      },
       setRawAudio: {
         value: function(audioInfo) {
           var channelCount = audioInfo.channels || 1;
