@@ -24,20 +24,11 @@ define(function() {
       item.with2DContext(width, height, function(ctx) {
         ctx.fillStyle = 'black';
         ctx.globalCompositeOperation = 'xor';
-        for (var pos = 10; pos < bytes.length; ) {
-          var y = dv.getUint16(pos, false);
-          if (y === 0x7fff) {
-            break;
+        var y, x;
+        for (var pos = 10; 0x7fff !== (y = dv.getUint16(pos, false)); pos += 2) {
+          for (pos += 2; 0x7fff !== (x = dv.getUint16(pos, false)); pos += 2) {
+            ctx.fillRect(x - offsetX, y - offsetY, width, height);
           }
-          pos += 2;
-          var x1 = dv.getUint16(pos, false);
-          while (x1 !== 0x7fff) {
-            var x2 = dv.getUint16(pos + 2, false);
-            ctx.fillRect(x1 - offsetX, y - offsetY, x2 - x1, height);
-            pos += 4;
-            x1 = dv.getUint16(pos, false);
-          }
-          pos += 2;
         }
       });
     });
