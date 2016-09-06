@@ -280,6 +280,19 @@ function(
               subitem.startAddingItems();
             }
             subitem.addEventListener(itemObjectModel.EVT_POPULATE, onFilePopulate);
+            var importString = 'mac/filetypes/open_' + encodeURIComponent(record.fileInfo.type);
+            require(
+              [importString],
+              function(open) {
+                subitem.startAddingItems();
+                function onTypedFilePopulate() {
+                  this.removeEventHandler(itemObjectModel.EVT_POPULATE, onTypedFilePopulate);
+                  open(this);
+                }
+                subitem.addEventListener(itemObjectModel.EVT_POPULATE, onTypedFilePopulate);
+              },
+              function() {
+              });
             break;
           case 'folder':
             subitem.startAddingItems();
