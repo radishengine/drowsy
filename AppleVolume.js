@@ -224,7 +224,7 @@ function(
                 resourceInfo.dataOffset + 4 + length);
             });
 
-            var loaderImport = 'mac/resources/open_' + encodeURIComponent(resourceInfo.type);
+            var loaderImport = 'mac/resources/open_' + resourceInfo.type.toUpperCase().replace(/[^A-Z0-9]/g, '_');
             
             require(
               [loaderImport],
@@ -281,7 +281,7 @@ function(
               subitem.addEventListener(itemObjectModel.EVT_POPULATE, onFilePopulate);
             }
             if (record.fileInfo.type) {
-              var importString = 'mac/filetypes/open_' + encodeURIComponent(record.fileInfo.type);
+              var importString = 'mac/filetypes/open_' + record.fileInfo.type.toUpperCase().replace(/[^A-Z0-9]/g, '_'));
               require(
                 [importString],
                 function(open) {
