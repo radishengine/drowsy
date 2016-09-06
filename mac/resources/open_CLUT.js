@@ -7,10 +7,6 @@ define(function() {
       var clut = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       var seed = clut.getInt32(0, false); // resource ID
       var flags = clut.getUint16(4, false); // 0x8000: color map for indexed device
-      if (flags !== 0x0000) {
-        console.log(resource.type, resource.name, bytes);
-        return;
-      }
       var entryCount = clut.getUint16(6, false) + 1;
       item.withPixels(entryCount, 1, function(pixelData) {
         for (var icolor = 0; icolor < entryCount; icolor++) {
