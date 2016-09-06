@@ -281,6 +281,12 @@ function(
             if (record.fileInfo.isInvisible) {
               subitem.classList.add('invisible');
             }
+            if (record.fileInfo.creator) {
+              subitem.classList.add('creator-' + record.fileInfo.creator);
+            }
+            if (record.fileInfo.type) {
+              subitem.classList.add('filetype-' + record.fileInfo.type);
+            }
             subitem.setAttribute('title', 'File Type: ' + record.fileInfo.type + '\nCreator: ' + record.fileInfo.creator);
             subitem.dataset.catalogId = record.fileInfo.id;
             if (record.fileInfo.dataForkInfo.logicalEOF) {
