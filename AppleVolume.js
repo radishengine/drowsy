@@ -178,16 +178,13 @@ function(
       var allocation = byteSource.allocationBlocks;
       function onFolderPopulate(e) {
         this.removeEventListener(itemObjectModel.EVT_POPULATE, onFolderPopulate);
-        var self = this;
-        listFolderTo(this.catalogID, this).then(function() {
-          self.confirmAllItemsAdded();
-        });
+        this.notifyPopulating(listFolderTo(this.catalogID, this));
       }
       function onFilePopulate(e) {
         this.removeEventListener(itemObjectModel.EVT_POPULATE, onFilePopulate);
         var self = this;
         var dataByteSource;
-        this.resourceForkByteSource.slice(0, ResourceHeaderView.byteLength).getBytes()
+        this.notifyPopulating(this.resourceForkByteSource.slice(0, ResourceHeaderView.byteLength).getBytes()
         .then(function(headerBytes) {
           var header = new ResourceHeaderView(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
           dataByteSource = self.resourceForkByteSource.slice(header.dataOffset, header.dataOffset + header.dataLength);
@@ -214,9 +211,7 @@ function(
             
             itemEl.classList.add('invisible');
             
-            var loaderImport = 'mac/resources/open_' + encodeURIComponent(resourceInfo.type);
-            
-            dataByteSource.slice(
+            var promisedByteSource = dataByteSource.slice(
               resourceInfo.dataOffset,
               resourceInfo.dataOffset + 4).getBytes()
             .then(function(lengthBytes) {
@@ -224,54 +219,36 @@ function(
                 lengthBytes.buffer,
                 lengthBytes.byteOffset,
                 lengthBytes.byteLength).getUint32(0, false);
-              return dataByteSource.slice(
+              itemEl.byteSource = dataByteSource.slice(
                 resourceInfo.dataOffset + 4,
                 resourceInfo.dataOffset + 4 + length);
-            })
-            .then(function(byteSource) {
-              itemEl.byteSource = byteSource;
-              require([loaderImport],
-                function(open) {
-                  itemEl.startAddingItems();
-                  itemEl.addEventListener(itemObjectModel.EVT_POPULATE, onPopulateResource);
-                },
-                function() {
-                });
             });
 
-            function onPopulateResource(e) {
-              this.removeEventListener(itemObjectModel.EVT_POPULATE, onPopulateResource);
-              Object.defineProperties(this, {
-                dataObject: {
-                  set: function(value) {
-                    var dataObjectEl = document.createElement('PRE');
-                    dataObjectEl.appendChild(document.createTextNode(JSON.stringify(value, 2)));
-                    itemEl.addItem(dataObjectEl);
-                    itemEl.confirmAllItemsAdded();
-                  },
-                },
-              });
-              require(
-                [loaderImport],
-                function(open) {
-                  open(itemEl).then(
-                    function() {
-                      itemEl.confirmAllItemsAdded();
-                    },
-                    function() {
-                      itemEl.confirmAllItemsAdded();
-                    }
+            var loaderImport = 'mac/resources/open_' + encodeURIComponent(resourceInfo.type);
+            
+            require(
+              [loaderImport],
+              function(open) {
+                itemEl.startAddingItems();
+                function onResourcePopulate() {
+                  this.removeEventListener(itemObjectModel.EVT_POPULATE, onResourcePopulate);
+                  this.notifyPopulating(
+                    promisedByteSource
+                    .then(function() {
+                      open(itemEl);
+                    })
                   );
                 }
-              );
-            }
+                promisedByteSource.then(function() {
+                  itemEl.addEventListener(itemObjectModel.EVT_POPULATE, onResourcePopulate);
+                });
+              },
+              function() {
+              });
             
             self.addItem(itemEl);
           });
-        })
-        .then(function() {
-          self.confirmAllItemsAdded();
-        });
+        }));
       }
       function makeItemForRecord(record) {
         var subitem = itemObjectModel.createItem(record.name);
