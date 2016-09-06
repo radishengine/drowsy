@@ -281,7 +281,7 @@ function(
               subitem.addEventListener(itemObjectModel.EVT_POPULATE, onFilePopulate);
             }
             if (record.fileInfo.type) {
-              var importString = 'mac/filetypes/open_' + record.fileInfo.type.toUpperCase().replace(/[^A-Z0-9]/g, '_'));
+              var importString = 'mac/filetypes/open_' + record.fileInfo.type.toUpperCase().replace(/[^A-Z0-9]/g, '_');
               require(
                 [importString],
                 function(open) {
