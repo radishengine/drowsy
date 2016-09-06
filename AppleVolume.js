@@ -287,7 +287,7 @@ function(
                 function(open) {
                   subitem.startAddingItems();
                   function onTypedFilePopulate() {
-                    this.removeEventHandler(itemObjectModel.EVT_POPULATE, onTypedFilePopulate);
+                    this.removeEventListener(itemObjectModel.EVT_POPULATE, onTypedFilePopulate);
                     open(this);
                   }
                   subitem.addEventListener(itemObjectModel.EVT_POPULATE, onTypedFilePopulate);
