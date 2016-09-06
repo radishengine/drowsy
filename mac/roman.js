@@ -23,7 +23,11 @@ define(function() {
       })
       .replace(/[\r\n]/g, function(c) {
         return (c === '\r') ? '\n' : '\r';
-      });
+      })
+      .replace('\x11', '\u2318') // command
+      .replace('\x12', '\u21E7') // shift
+      .replace('\x13', '\u2325') // option
+      .replace('\x14', '\u2303'); // control
   }
   
   return macintoshRoman;
