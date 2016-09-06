@@ -24,10 +24,9 @@ define(function() {
       item.with2DContext(width, height, function(ctx) {
         ctx.fillStyle = 'black';
         ctx.globalCompositeOperation = 'xor';
-        var y = offsetY - 1;
         for (var pos = 10; pos < bytes.length; ) {
-          var newY = dv.getUint16(pos, false);
-          if (newY === 0x7fff) {
+          var y = dv.getUint16(pos, false);
+          if (y === 0x7fff) {
             break;
           }
           pos += 2;
