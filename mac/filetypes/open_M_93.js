@@ -56,6 +56,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
   }
   
   function uint32ArrayItemPopulator() {
+    this.removeEventListener(itemObjectModel.EVT_POPULATE, uint32ArrayItemPopulator);
     var item = this;
     item.notifyPopulating(item.getBytes().then(function(bytes) {
       var array = new Array(bytes.length / 4);
@@ -68,6 +69,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
   }
   
   function LnamItemPopulator() {
+    this.removeEventListener(itemObjectModel.EVT_POPULATE, LnamItemPopulator);
     var item = this;
     item.notifyPopulating(item.getBytes().then(function(bytes) {
       var array = new Array(new DataView(bytes.buffer, bytes.byteOffset + 18, 2).getUint16(0, false));
@@ -85,6 +87,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
     });
   }
   MMapView.itemPopulator = function() {
+    this.removeEventListener(itemObjectModel.EVT_POPULATE, MMapView.itemPopulator);
     var self = this;
     this.notifyPopulating(this.getBytes().then(function(bytes) {
       var mmap = new MMapView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -204,6 +207,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
     });
   }
   KeyStarView.itemPopulator = function() {
+    this.removeEventListener(itemObjectModel.EVT_POPULATE, KeyStarView.itemPopulator);
     var self = this;
     this.notifyPopulating(this.getBytes().then(function(bytes) {
       self.setDataObject(new KeyStarView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
@@ -306,6 +310,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
     },
   };
   VWCFView.itemPopulator = function() {
+    this.removeEventListener(itemObjectModel.EVT_POPULATE, VWCFView.itemPopulator);
     var item = this;
     item.notifyPopulating(item.getBytes().then(function(bytes) {
       item.setDataObject(new VWCFView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
@@ -340,6 +345,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
   });
   
   function CAStItemPopulator() {
+    this.removeEventListener(itemObjectModel.EVT_POPULATE, CAStItemPopulator);
     var item = this;
     item.notifyPopulating(item.getBytes().then(function(bytes) {
       var CASt = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
