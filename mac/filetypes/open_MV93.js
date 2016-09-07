@@ -46,7 +46,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
               chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, LnamItemPopulator);
               break;
             case 'VWLB':
-              chunkItem.startAddingItem();
+              chunkItem.startAddingItems();
               chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, populateVWLB);
               break;
           }
