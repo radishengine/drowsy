@@ -63,10 +63,10 @@ define(['itemObjectModel'], function(itemObjectModel) {
         var entries = new Array(this.entryCount);
         var buffer = this.dataView.buffer, byteOffset = this.dataView.byteOffset;
         for (var i = 0; i < entries.length; i++) {
-          entries.push(new MMapRecordView(
+          entries[i] = new MMapRecordView(
             buffer,
             byteOffset + (i + 1) * MMapRecordView.byteLength,
-            MMapRecordView.byteLength));
+            MMapRecordView.byteLength);
         }
         return entries;
       },
