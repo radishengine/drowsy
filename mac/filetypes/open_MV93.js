@@ -49,6 +49,16 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
               chunkItem.startAddingItems();
               chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, populateVWLB);
               break;
+            case 'snd ':
+              require(['mac/resources/open_SND_'], function(open) {
+                chunkItem.startAddingItems();
+                function onPopulate() {
+                  this.removeEventListener(itemObjectModel.EVT_POPULATE, onPopulate);
+                  this.notifyPopulating(open(this, 'snd '));
+                }
+                chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, onPopulate);
+              });
+              break;
           }
           item.addItem(chunkItem);
           pos += 8 + chunkLen + chunkLen % 2;
