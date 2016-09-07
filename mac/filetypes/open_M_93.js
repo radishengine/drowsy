@@ -325,7 +325,8 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
   
   function CAStItemPopulator() {
     var item = this;
-    item.notifyPopulating(item.getBytes().then(function(CASt) {
+    item.notifyPopulating(item.getBytes().then(function(bytes) {
+      var CASt = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       var data1 = new DataView(
         CASt.buffer,
         CASt.byteOffset + 2 + 4,
