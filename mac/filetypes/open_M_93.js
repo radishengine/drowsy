@@ -25,6 +25,10 @@ define(['itemObjectModel'], function(itemObjectModel) {
               chunkItem.startAddingItems();
               chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, MMapView.itemPopulator);
               break;
+            case 'KEY*':
+              chunkItem.startAddingItems();
+              chunkItem.addEventLitener(itemObjectModel.EVT_POPULATE, KeyStarView.itemPopulator);
+              break;
           }
           item.addItem(chunkItem);
           pos += 8 + chunkLen + chunkLen % 2;
@@ -153,6 +157,95 @@ define(['itemObjectModel'], function(itemObjectModel) {
     },
   });
   MMapRecordView.byteLength = 20;
+  
+  function KeyStarView(buffer, byteOffset, byteLength) {
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+    });
+  }
+  KeyStarView.itemPopulator = function() {
+    var self = this;
+    this.notifyPopulating(this.getBytes().then(function(bytes) {
+      self.setDataObject(new KeyStarView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+    }));
+  };
+  KeyStarView.prototype = {
+    toJSON: function() {
+      return {
+        unknown_0x00: this.unknown_0x00,
+        unknown_0x02: this.unknown_0x02,
+      };
+    },
+  };
+  Object.defineProperties(KeyStarView.prototype, {
+    unknown_0x00: {
+      get: function() {
+        return this.dataView.getUint16(0, false);
+      },
+    },
+    unknown_0x02: {
+      get: function() {
+        return this.dataView.getUint16(2, false);
+      },
+    },
+    unknown_0x04: {
+      get: function() {
+        return this.dataView.getUint32(4, false);
+      },
+    },
+    entryCount: {
+      get: function() {
+        return this.dataView.getUint32(8, false);
+      },
+    },
+    entries: {
+      get: function() {
+        var entries = new Array(this.entryCount);
+        var buffer = this.dataView.buffer, byteOffset = this.dataView.byteOffset;
+        for (var i = 0; i < entries.length; i++) {
+          entries[i] = new KeyStarRecordView(
+            buffer,
+            byteOffset + (i + 1) * KeyStarRecordView.byteLength,
+            KeyStarRecordView.byteLength);
+        }
+        return entries;
+      },
+    },
+  });
+  
+  function KeyStarRecordView(buffer, byteOffset, byteLength) {
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+      bytes: {value:new Uint8Array(buffer, byteOffset, byteLength)},
+    });
+  }
+  KeyStarRecordView.prototype = {
+    toJSON: function() {
+      return {
+        parentNumber: this.parentNumber,
+        childNumber: this.childNumber,
+        childName: this.childName,
+      };
+    },
+  };
+  Object.defineProperties(KeyStarRecordView.prototype, {
+    childNumber: {
+      get: function() {
+        return this.dataView.getUint32(0, false);
+      },
+    },
+    parentNumber: {
+      get: function() {
+        return this.dataView.getUint32(4, false);
+      },
+    },
+    childName: {
+      get: function() {
+        return String.fromCharCode.apply(null, this.bytes.subarray(8, 12));
+      },
+    },
+  });
+  KeyStarRecordView.byteLength = 12;
   
   return open;
 
