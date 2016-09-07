@@ -33,6 +33,10 @@ define(['itemObjectModel'], function(itemObjectModel) {
               chunkItem.startAddingItems();
               chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, VWCFView.itemPopulator);
               break;
+            case 'CAS*':
+              chunkItem.startAddingItems();
+              chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, uint32ArrayItemPopulator);
+              break;
           }
           item.addItem(chunkItem);
           pos += 8 + chunkLen + chunkLen % 2;
@@ -41,6 +45,18 @@ define(['itemObjectModel'], function(itemObjectModel) {
       }));
 
     });
+  }
+  
+  function uint32ArrayItemPopulator() {
+    var item = this;
+    item.notifyPopulating(item.getBytes().then(function(bytes) {
+      var array = new Array(bytes.length / 4);
+      var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      for (var i = 0; i < array.length; i++) {
+        array[i] = dv.getUint32(i * 4, false);
+      }
+      item.setDataObject(array);
+    }));
   }
   
   function MMapView(buffer, byteOffset, byteLength) {
