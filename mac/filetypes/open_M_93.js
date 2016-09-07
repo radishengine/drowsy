@@ -27,7 +27,7 @@ define(['itemObjectModel'], function(itemObjectModel) {
               break;
             case 'KEY*':
               chunkItem.startAddingItems();
-              chunkItem.addEventLitener(itemObjectModel.EVT_POPULATE, KeyStarView.itemPopulator);
+              chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, KeyStarView.itemPopulator);
               break;
           }
           item.addItem(chunkItem);
