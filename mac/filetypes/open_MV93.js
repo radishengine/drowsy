@@ -45,6 +45,10 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
               chunkItem.startAddingItems();
               chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, LnamItemPopulator);
               break;
+            case 'VWLB':
+              chunkItem.startAddingItem();
+              chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, populateVWLB);
+              break;
           }
           item.addItem(chunkItem);
           pos += 8 + chunkLen + chunkLen % 2;
@@ -410,6 +414,26 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
         }
       }
       item.setDataObject(dataObject);
+    }));
+  }
+  
+  function populateVWLB() {
+    var item = this;
+    item.removeEventListener(itemObjectModel.EVT_POPULATE, populateVWLB);
+    item.notifyPopulating(item.getBytes().then(function(bytes) {
+      var VWLB = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+			var markerCount = VWLB.getUint16(0, false);
+			var textBase = 2 + 4 * (markerCount + 1);
+			var totalTextLen = VWLB.getUint16(2 + (4 * markerCount) + 2, false);
+			var markerText = macintoshRoman(bytes, textBase, totalTextLen);
+			var names = markerText.match(/^[^\r\n]*/)[0];
+			for (var i = 0; i < markerCount; i++) {
+				var markerBase = 2 + (4 * i);
+				markers[names.substring(
+  				VWLB.getUint16(markerBase + 2, false),
+  				VWLB.getUint16(markerBase + 4 + 2, false))] = VWLB.getUint16(markerBase, false);
+			}
+			item.setDataObject(markers);
     }));
   }
 
