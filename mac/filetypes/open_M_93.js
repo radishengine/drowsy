@@ -174,6 +174,8 @@ define(['itemObjectModel'], function(itemObjectModel) {
       return {
         unknown_0x00: this.unknown_0x00,
         unknown_0x02: this.unknown_0x02,
+        unknown_0x04: this.unknown_0x04,
+        entries: this.entries,
       };
     },
   };
