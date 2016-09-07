@@ -347,7 +347,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
         CASt.buffer,
         CASt.byteOffset + 2 + 4,
         CASt.getUint16(0, false));
-      var dataObject;
+      var dataObject = {};
       if (data1.byteLength >= 12) {
         dataObject.rectTop = data1.getInt16(4, false);
         dataObject.rectLeft = data1.getInt16(6, false);
