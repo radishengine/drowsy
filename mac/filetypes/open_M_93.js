@@ -1,4 +1,4 @@
-define(['itemObjectModel'], function(itemObjectModel) {
+define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoman) {
 
   'use strict';
 
@@ -36,6 +36,10 @@ define(['itemObjectModel'], function(itemObjectModel) {
             case 'CAS*':
               chunkItem.startAddingItems();
               chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, uint32ArrayItemPopulator);
+              break;
+            case 'CASt':
+              chunkItem.startAddingItems();
+              chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, CastView.itemPopulator);
               break;
           }
           item.addItem(chunkItem);
@@ -314,11 +318,77 @@ define(['itemObjectModel'], function(itemObjectModel) {
     },
     defaultPalette: {
       get: function() {
-				return this.dataView.getInt16(0x46, false);
+        return this.dataView.getInt16(0x46, false);
       },
     },
   });
   
+  function CAStItemPopulator() {
+    var item = this;
+    item.notifyPopulating(item.getBytes().then(function(CASt) {
+      var data1 = new DataView(
+        CASt.buffer,
+        CASt.byteOffset + 2 + 4,
+        CASt.getUint16(0, false));
+      var dataObject;
+      if (data1.byteLength >= 12) {
+        dataObject.rectTop = data1.getInt16(4, false);
+        dataObject.rectLeft = data1.getInt16(6, false);
+        dataObject.rectBottom = data1.getInt16(8, false);
+        dataObject.rectRight = data1.getInt16(10, false);
+        if (data1.byteLength >= 24) {
+          dataObject.regPointY = data1.getInt16(20, false);
+          dataObject.regPointX = data1.getInt16(22, false);
+          if (data1.byteLength >= 26) {
+            dataObject.bitsPerPixel = data1.getUint8(25);
+            if (data1.byteLength >= 28) {
+              dataObject.palette = data1.getUint16(26, false);
+            }
+          }
+        }
+      }
+      var data2Len = CASt.getUint32(2, false);
+      if (data2Len > 0) {
+        var pos = 2 + 4 + data1.byteLength;
+        var data2 = new DataView(CASt.buffer, CASt.byteOffset + pos, 20);
+        if (data2.getUint32(0, false) !== 20) {
+          return Promise.reject('CASt data chunk is not 20 bytes as expected');
+        }
+        pos += 20;
+        var moreData = [];
+        var moreDataCount = CASt.getUint16(pos, false);
+        pos += 2;
+        var moreDataBase = pos + (moreDataCount + 1) * 4;
+        for (var i = 0; i < moreDataCount; i++) {
+          var offset = CASt.getUint32(pos + i * 4, false);
+          var length = CASt.getUint32(pos + (i + 1) * 4, false) - offset;
+          if (length === 0) {
+            moreData.push(null);
+          }
+          else {
+            moreData.push(new Uint8Array(CASt.buffer, CASt.byteOffset + moreDataBase + offset, length));
+          }
+        }
+        if (moreData[0]) {
+          itemObject.scriptText = macintoshRoman(moreData[0], 0, moreData[0].byteLength);
+        }
+        if (moreData[1]) {
+          itemObject.castName = macintoshRoman(moreData[1], 1, moreData[1][0]);
+        }
+        if (moreData[2]) {
+          itemObject.folder = macintoshRoman(moreData[2], 1, moreData[2][0]);
+        }
+        if (moreData[3]) {
+          itemObject.fileName = macintoshRoman(moreData[3], 1, moreData[3][0]);
+        }
+        if (moreData[4]) {
+          itemObject.fileType = macintoshRoman(moreData[4], 0, 4);
+        }
+      }
+      item.setDataObject(dataObject);
+    }));
+  }
+
   return open;
 
 });
