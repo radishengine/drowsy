@@ -13,13 +13,14 @@ define(['itemObjectModel'], function(itemObjectModel) {
         return Promise.reject('bad length');
       }
       item.notifyPopulating(new Promise(function(resolve, reject) {
-        for (var pos = 12; pos < bytes.length; pos += 8 + dv.getUint32(pos + 4)) {
+        for (var pos = 12; pos < bytes.length; ) {
           var chunkItem = itemObjectModel.createItem(String.fromCharCode.apply(null, bytes.subarray(pos, pos+4)));
           var chunkLen = dv.getUint32(pos + 4);
           if (chunkLen !== 0) {
             chunkItem.byteSource = item.byteSource.slice(pos + 8, pos + 8 + dv.getUint32(pos + 4));
           }
           item.addItem(chunkItem);
+          pos += 8 + chunkLen + chunkLen % 2;
         }
       }));
 
