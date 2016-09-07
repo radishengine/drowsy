@@ -22,6 +22,7 @@ define(['itemObjectModel'], function(itemObjectModel) {
           item.addItem(chunkItem);
           pos += 8 + chunkLen + chunkLen % 2;
         }
+        resolve(item);
       }));
 
     });
