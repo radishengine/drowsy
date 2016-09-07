@@ -49,13 +49,39 @@ define(['itemObjectModel'], function(itemObjectModel) {
   };
   MMapView.prototype = {
     toJSON: function() {
-      return this.entries;
+      return {
+        unknown_0x00: this.unknown_0x00,
+        unknown_0x04: this.unknown_0x04,
+        entries: this.entries,
+        unknown_0x0C: this.unknown_0x0C,
+        unknown_0x10: this.unknown_0x10,
+      };
     },
   };
   Object.defineProperties(MMapView.prototype, {
+    unknown_0x00: {
+      get: function() {
+        return this.dataView.getUint32(0, false);
+      },
+    },
+    unknown_0x04: {
+      get: function() {
+        return this.dataView.getUint32(4, false);
+      },
+    },
     entryCount: {
       get: function() {
         return this.dataView.getUint32(8, false);
+      },
+    },
+    unknown_0x0C: {
+      get: function() {
+        return this.dataView.getUint32(12, false);
+      },
+    },
+    unknown_0x10: {
+      get: function() {
+        return this.dataView.getUint32(16, false);
       },
     },
     entries: {
