@@ -55,7 +55,7 @@ define(['itemObjectModel'], function(itemObjectModel) {
   Object.defineProperties(MMapView.prototype, {
     entryCount: {
       get: function() {
-        return this.dv.getUint32(0, false);
+        return this.dataView.getUint32(0, false);
       },
     },
     entries: {
