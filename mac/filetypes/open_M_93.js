@@ -269,7 +269,7 @@ define(['itemObjectModel'], function(itemObjectModel) {
       };
     },
   };
-  VWCF.itemPopulator = function() {
+  VWCFView.itemPopulator = function() {
     var item = this;
     item.notifyPopulating(item.getBytes().then(function(bytes) {
       item.setDataObject(new VWCFView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
