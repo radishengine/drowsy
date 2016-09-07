@@ -266,7 +266,7 @@ define(['itemObjectModel'], function(itemObjectModel) {
         frameDuration: this.frameDuration,
         stageColor: this.stageColor,
         defaultPalette: this.defaultPalette,
-      },
+      };
     },
   };
   VWCF.itemPopulator = function() {
