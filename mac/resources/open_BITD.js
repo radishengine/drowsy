@@ -1,13 +1,21 @@
-define(['mac/bitpacking'], function(bitpacking) {
+define(['ByteSource', 'itemObjectModel', 'mac/bitpacking'], function(ByteSource, itemObjectModel, bitpacking) {
 
   'use strict';
   
-  return function(item) {
-    return item.getBytes().then(function(bytes) {
-      item.getUnpackedData = function() {
-        return bitpacking.unpackBits(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-      };
-    });
-  };
+  function open(item) {
+    item.startAddingItems();
+    item.addEventListener(itemObjectModel.EVT_POPULATE, onPopulateUnpacked);
+    return Promise.resolve(item);
+  }
+  
+  function onPopulateUnpacked() {
+    this.removeEventListener(itemObjectModel.EVT_POPULATE, onPopulateUnpacked);
+    this.notifyPopulating(this.getBytes().then(function(bytes) {
+      var unpackedItem = itemObjectModel.createItem('unpacked');
+      unpackedItem.byteSource = ByteSource.from(bitpacking.unpackBits(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+    }));
+  }
+  
+  return open;
 
 });
