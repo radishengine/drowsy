@@ -75,7 +75,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
       var array = new Array(new DataView(bytes.buffer, bytes.byteOffset + 18, 2).getUint16(0, false));
       var pos = 20;
       for (var i = 0; i < array.length; i++) {
-        array.push(macintoshRoman(bytes, pos + 1, bytes[pos]));
+        array[i] = macintoshRoman(bytes, pos + 1, bytes[pos]);
         pos += 1 + bytes[pos];
       }
       item.setDataObject(array);
