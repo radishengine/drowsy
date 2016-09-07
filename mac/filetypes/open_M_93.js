@@ -39,7 +39,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
               break;
             case 'CASt':
               chunkItem.startAddingItems();
-              chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, CastView.itemPopulator);
+              chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, CAStItemPopulator);
               break;
           }
           item.addItem(chunkItem);
