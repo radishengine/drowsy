@@ -29,6 +29,10 @@ define(['itemObjectModel'], function(itemObjectModel) {
               chunkItem.startAddingItems();
               chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, KeyStarView.itemPopulator);
               break;
+            case 'VWCF':
+              chunkItem.startAddingItems();
+              chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, VWCFView.itemPopulator);
+              break;
           }
           item.addItem(chunkItem);
           pos += 8 + chunkLen + chunkLen % 2;
@@ -248,6 +252,56 @@ define(['itemObjectModel'], function(itemObjectModel) {
     },
   });
   KeyStarRecordView.byteLength = 12;
+  
+  function VWCFView(buffer, byteOffset, byteLength) {
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+    });
+  }
+  VWCFView.prototype = {
+    toJSON: function() {
+      return {
+        width: this.width,
+        height: this.height,
+        frameDuration: this.frameDuration,
+        stageColor: this.stageColor,
+        defaultPalette: this.defaultPalette,
+      },
+    },
+  };
+  VWCF.itemPopulator = function() {
+    var item = this;
+    item.notifyPopulating(item.getBytes().then(function(bytes) {
+      item.setDataObject(new VWCFView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+    }));
+  };
+  Object.defineProperties(VWCFView.prototype, {
+    frameDuration: {
+      get: function() {
+        return 1000/this.dataView.getUint8(0x37);
+      },
+    },
+    height: {
+      get: function() {
+        return this.dataView.getUint16(0x8, false);
+      },
+    },
+    width: {
+      get: function() {
+        return this.dataView.getUint16(0xA, false);
+      },
+    },
+    stageColor: {
+      get: function() {
+        return this.dataView.getUint8(0x1B);
+      },
+    },
+    defaultPalette: {
+      get: function() {
+				return this.dataView.getInt16(0x46, false);
+      },
+    },
+  });
   
   return open;
 
