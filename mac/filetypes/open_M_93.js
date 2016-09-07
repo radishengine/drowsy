@@ -387,19 +387,19 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
           }
         }
         if (moreData[0]) {
-          itemObject.scriptText = macintoshRoman(moreData[0], 0, moreData[0].byteLength);
+          dataObject.scriptText = macintoshRoman(moreData[0], 0, moreData[0].byteLength);
         }
         if (moreData[1]) {
-          itemObject.castName = macintoshRoman(moreData[1], 1, moreData[1][0]);
+          dataObject.castName = macintoshRoman(moreData[1], 1, moreData[1][0]);
         }
         if (moreData[2]) {
-          itemObject.folder = macintoshRoman(moreData[2], 1, moreData[2][0]);
+          dataObject.folder = macintoshRoman(moreData[2], 1, moreData[2][0]);
         }
         if (moreData[3]) {
-          itemObject.fileName = macintoshRoman(moreData[3], 1, moreData[3][0]);
+          dataObject.fileName = macintoshRoman(moreData[3], 1, moreData[3][0]);
         }
         if (moreData[4]) {
-          itemObject.fileType = macintoshRoman(moreData[4], 0, 4);
+          dataObject.fileType = macintoshRoman(moreData[4], 0, 4);
         }
       }
       item.setDataObject(dataObject);
