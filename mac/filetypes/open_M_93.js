@@ -41,6 +41,10 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
               chunkItem.startAddingItems();
               chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, CAStItemPopulator);
               break;
+            case 'Lnam':
+              chunkItem.startAddingItems();
+              chunkItem.addEventListener(itemObjectModel.EVT_POPULATE, LnamItemPopulator);
+              break;
           }
           item.addItem(chunkItem);
           pos += 8 + chunkLen + chunkLen % 2;
@@ -60,6 +64,18 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
         array[i] = dv.getUint32(i * 4, false);
       }
       item.setDataObject(array);
+    }));
+  }
+  
+  function LnamItemPopulator() {
+    var item = this;
+    item.notifyPopulating(item.getBytes().then(function(bytes) {
+      var array = new Array(new DataView(bytes.buffer, bytes.byteOffset + 18, 2).getUint16(0, false));
+      var pos = 20;
+      for (var i = 0; i < array.length; i++) {
+        array.push(macintoshRoman(bytes, pos + 1, bytes[pos]));
+        pos += 1 + bytes[pos];
+      }
     }));
   }
   
