@@ -98,12 +98,12 @@ define(['itemObjectModel'], function(itemObjectModel) {
       },
     },
     chunkName: {
-      get {
+      get: function() {
         return String.fromCharCode.apply(null, this.bytes.subarray(4, 8));
       },
     },
     isUnused: {
-      get {
+      get: function() {
         switch (this.chunkName) {
           case 'free': case 'junk': return true;
           default: return false;
@@ -111,17 +111,17 @@ define(['itemObjectModel'], function(itemObjectModel) {
       },
     },
     chunkLength: {
-      get {
+      get: function() {
         return this.dataView.getUint32(8, false);
       },
     },
     chunkOffset: {
-      get {
+      get: function() {
         return this.dataView.getUint32(12, false);
       },
     },
     unknown2: {
-      get: {
+      get: function() {
         return this.dataView.getUint32(16, false);
       },
     },
