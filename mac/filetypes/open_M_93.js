@@ -78,6 +78,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemObjectModel, macintoshRoma
         array.push(macintoshRoman(bytes, pos + 1, bytes[pos]));
         pos += 1 + bytes[pos];
       }
+      item.setDataObject(array);
     }));
   }
   
