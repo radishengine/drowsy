@@ -47,19 +47,19 @@ define(function() {
     get unknown_0x03() {
       return this.dataView.getUint8(0x03, false);
     },
-    get unknown 0x04() {
+    get unknown_0x04() {
       return this.dataView.getInt16(0x04, false);
     },
-    get unknown 0x06() {
+    get unknown_0x06() {
       return this.dataView.getInt16(0x06, false);
     },
-    get unknown 0x08() {
+    get unknown_0x08() {
       return this.dataView.getInt16(0x08, false);
     },
-    get unknown 0x0A() {
+    get unknown_0x0A() {
       return this.dataView.getInt16(0x0A, false);
     },
-    get unknown 0x0C() {
+    get unknown_0x0C() {
       return this.dataView.getInt16(0x0C, false);
     },
   };
