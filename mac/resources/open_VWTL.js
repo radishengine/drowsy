@@ -64,6 +64,6 @@ define(function() {
     },
   };
   
-  return item;
+  return open;
 
 });
