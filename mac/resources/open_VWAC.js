@@ -9,8 +9,10 @@ define(['mac/roman'], function(macintoshRoman) {
       var list = [];
       var base = 2 + (4 * (count + 1));
       for (var i = 0; i < count; i++) {
-        if (bytes[2 + 4*i] !== (i+1)) {
-          return Promise.reject('expected ' + (i+1) + ', got ' + bytes[2 + 4*i]);
+        switch(bytes[2 + 4*i]) {
+          case 0: continue;
+          case (list.length + 1): break;
+          default: return Promise.reject('expected ' + (i+1) + ', got ' + bytes[2 + 4*i]);
         }
         if (bytes[2 + 4*i + 1] !== 1) {
           return Promise.reject('second byte expected to be 1, got ' + bytes[2 + 4*i + 1]);
