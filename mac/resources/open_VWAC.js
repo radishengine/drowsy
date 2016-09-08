@@ -19,9 +19,7 @@ define(['mac/roman'], function(macintoshRoman) {
         var nextPos = dv.getUint16(2 + 4*(i+1) + 2, false);
         list.push(macintoshRoman(bytes, base + thisPos, nextPos - thisPos));
       }
-      if (bytes[2 + 4*count] !== (count+1) || bytes[2 + 4*count + 1] !== 0) {
-        return Promise.reject('unexpected end for VWAC');
-      }
+      // last record's first 2 bytes may be (count+1), 0 may be 0, 0 -- guessing it is meaningless
       item.setDataObject(list);
     });
   }
