@@ -16,8 +16,8 @@ define(function() {
   }
   
   function EntryView(buffer, byteOffset, byteLength) {
-    if (byteLength < 0x1C) {
-      var bytes = new Uint8Array(0x1C);
+    if (byteLength < EntryView.byteLength) {
+      var bytes = new Uint8Array(EntryView.byteLength);
       bytes.set(new Uint8Array(buffer, byteOffset, byteLength));
       buffer = bytes.buffer;
       byteOffset = bytes.byteOffset;
@@ -27,6 +27,7 @@ define(function() {
       dataView: {value:new DataView(buffer, byteOffset, byteLength)},
     });
   }
+  EntryView.byteLength = 0x1E;
   EntryView.prototype = {
     toJSON: function() {
       return {
@@ -46,6 +47,7 @@ define(function() {
         unknown_0x16: this.unknown_0x16,
         unknown_0x18: this.unknown_0x18,
         unknown_0x1A: this.unknown_0x1A,
+        unknown_0x1C: this.unknown_0x1C,
       };
     },
     get unknown_0x00() {
@@ -95,6 +97,9 @@ define(function() {
     },
     get unknown_0x1A() {
       return this.dataView.getInt16(0x1A, false);
+    },
+    get unknown_0x1C() {
+      return this.dataView.getInt16(0x1C, false);
     },
   };
 
