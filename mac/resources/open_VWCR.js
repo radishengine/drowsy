@@ -8,7 +8,10 @@ define(function() {
       var pos = 0;
       while (pos < bytes.length) {
         var chunkLength = bytes[pos++];
-        chunks.push(new EntryView(bytes.buffer, pos, pos + chunkLength));
+        chunks.push(new EntryView(
+          bytes.buffer,
+          bytes.byteOffset + pos,
+          bytes.byteOffset + pos + chunkLength));
         pos += chunkLength;
       }
       item.setItemObject(chunks);
