@@ -11,6 +11,7 @@ define(function() {
         chunks.push(new EntryView(bytes.buffer, pos, pos + chunkLength));
         pos += chunkLength;
       }
+      item.setItemObject(chunks);
     });
   }
   
