@@ -113,9 +113,7 @@ define(function() {
       },
       text: {
         set: function(text) {
-          var textContainer = document.createElement('PRE');
-          textContainer.appendChild(document.createTextNode(text));
-          this.addItem(textContainer);
+          this.setDataObject(text);
         },
       },
       getBytes: {
@@ -125,9 +123,24 @@ define(function() {
       },
       setDataObject: {
         value: function(value) {
+          this.dispatchEvent(new CustomEvent(itemObjectModel.EVT_ITEM_DATA_OBJECT, {detail:{dataObject:value}}));
+          this.dataObject = value;
           var textContainer = document.createElement('PRE');
           textContainer.appendChild(document.createTextNode(JSON.stringify(value, null, 2)));
           this.addItem(textContainer);
+        },
+      },
+      getDataObject: {
+        value: function() {
+          if ('dataObject' in this) return Promise.resolve(this.dataObject);
+          var item = this;
+          return new Promise(function(resolve, reject) {
+            function onDataObject(e) {
+              item.removeEventListener(itemObjectModel.EVT_ITEM_DATA_OBJECT, onDataObject);
+              resolve(e.detail.dataObject);
+            }
+            item.addEventListener(itemObjectModel.EVT_ITEM_DATA_OBJECT, onDataObject);
+          });
         },
       },
       withPixels: {
@@ -262,6 +275,7 @@ define(function() {
     EVT_POPULATE_STARTED: {value:'item-populate-started'},
     EVT_POPULATE_ENDED: {value: 'item-populate-ended'},
     EVT_ITEM_ADDED: {value:'item-added'},
+    EVT_ITEM_DATA_OBJECT: {value:'item-data-object'},
   });
   
   return itemObjectModel;
