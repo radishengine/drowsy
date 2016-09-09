@@ -7,7 +7,7 @@ define(['itemObjectModel'], function(itemOM) {
       if (resourceName === 'PAT#') {
         var count = bytes[0] * 0x100 + bytes[1];
         for (var i = 0; i < count; i++) {
-          var patItem = itemOM.createItem(i);
+          var patItem = itemOM.createItem('#'+i);
           item.addItem(patItem);
           drawPattern(patItem, bytes, 2 + i*8);
         }
@@ -23,7 +23,7 @@ define(['itemObjectModel'], function(itemOM) {
       for (var y = 0; y < 8; y++) {
         for (var x = 0; x < 8; x++) {
           if (bytes[y] & (0x80 >> x)) {
-            pixelData[(y * 8 * 4) + (x * 4) + 3] = 0xff;
+            pixelData[4 * (y * 8 + x) + 3] = 0xff;
           }
         }
       }
