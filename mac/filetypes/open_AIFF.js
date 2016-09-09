@@ -16,6 +16,7 @@ define(['mac/extendedFloat'], function(extendedFloat) {
         return Promise.reject('AIFF header not found');
       }
       var audioInfo = {};
+      var loop;
       for (var pos = 12; pos < length; pos += 8 + dv.getUint32(pos + 4, false)) {
         var chunkName = String.fromCharCode.apply(null, bytes.subarray(pos, pos + 4));
         switch (chunkName) {
@@ -60,6 +61,27 @@ define(['mac/extendedFloat'], function(extendedFloat) {
                 audioInfo.samples[i] = signed[i] + 128;
               }
             }
+            break;
+          case 'INST':
+            var chunkLength = dv.getUint32(pos + 4, false);
+            if (chunkLength !== 6) {
+              return Promise.reject('bad length for INST chunk (' + chunkLength + ' bytes)');
+            }
+            var chunkDV = new DataView(
+              bytes.buffer,
+              bytes.byteOffset + pos + 8,
+              bytes.byteOffset + pos + 8 + chunkLength);
+            switch(chunkDV.getUint16(0)) {
+              case 0: loop = null; break;
+              case 1: loop = {}; break;
+              case 2: loop = {pingpong: true}; break;
+              default: return Promise.reject('unknown AIFF INST play mode: ' + chunkDV.getUint16(0));
+            }
+            if (loop) {
+              loop.startMarker = dv.getUint16(2, false);
+              loop.endMarker = dv.getUint16(4, false);
+            }
+            console.log(loop);
             break;
           default:
             console.log('AIFF chunk: ' + chunkName);
