@@ -13,7 +13,7 @@ define(function() {
         for (var j = 0; j < sublist.length; j++) {
           list[i][j] = {
             unknown_0x00: bytes[pos],
-            unknown_0x01: dv.getInt32(pos) << 2 >> 2, // 24-bit signed integer
+            unknown_0x01: dv.getInt32(pos, false) << 2 >> 2, // 24-bit signed integer
           };
           pos += 4;
         }
