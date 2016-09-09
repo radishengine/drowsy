@@ -134,13 +134,15 @@ define(function() {
         value: function() {
           if ('dataObject' in this) return Promise.resolve(this.dataObject);
           var item = this;
-          return new Promise(function(resolve, reject) {
+          var promise = new Promise(function(resolve, reject) {
             function onDataObject(e) {
               item.removeEventListener(itemObjectModel.EVT_ITEM_DATA_OBJECT, onDataObject);
               resolve(e.detail.dataObject);
             }
             item.addEventListener(itemObjectModel.EVT_ITEM_DATA_OBJECT, onDataObject);
           });
+          this.populate();
+          return promise;
         },
       },
       withPixels: {
