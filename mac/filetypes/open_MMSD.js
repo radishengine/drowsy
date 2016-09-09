@@ -10,11 +10,11 @@ define(['itemObjectModel'], function(itemOM) {
           subitem.getDataObject()
             .then(function(names) {
               names = names.split(/;/g);
+              for (var i = 0; i < names.length; i++) {
+                var namedItem = itemOM.createItem(names[i]);
+                item.addItem(namedItem);
+              }
             });
-            for (var i = 0; i < names.length; i++) {
-              var namedItem = itemOM.createItem(names[i]);
-              item.addItem(namedItem);
-            }
           break;
         case 'CSND':
           break;
