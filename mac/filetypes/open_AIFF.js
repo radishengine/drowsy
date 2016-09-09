@@ -16,7 +16,7 @@ define(['mac/extendedFloat'], function(extendedFloat) {
         return Promise.reject('AIFF header not found');
       }
       var audioInfo = {};
-      var loop;
+      var instrument;
       for (var pos = 12; pos < length; pos += 8 + dv.getUint32(pos + 4, false)) {
         var chunkName = String.fromCharCode.apply(null, bytes.subarray(pos, pos + 4));
         switch (chunkName) {
@@ -64,33 +64,86 @@ define(['mac/extendedFloat'], function(extendedFloat) {
             break;
           case 'INST':
             var chunkLength = dv.getUint32(pos + 4, false);
-            if (chunkLength !== 6) {
+            if (chunkLength !== InstrumentView.byteLength) {
               return Promise.reject('bad length for INST chunk (' + chunkLength + ' bytes)');
             }
-            var chunkDV = new DataView(
+            instrument = new InstrumentView(
               bytes.buffer,
               bytes.byteOffset + pos + 8,
-              bytes.byteOffset + pos + 8 + chunkLength);
-            switch(chunkDV.getUint16(0)) {
-              case 0: loop = null; break;
-              case 1: loop = {}; break;
-              case 2: loop = {pingpong: true}; break;
-              default: return Promise.reject('unknown AIFF INST play mode: ' + chunkDV.getUint16(0));
-            }
-            if (loop) {
-              loop.startMarker = dv.getUint16(2, false);
-              loop.endMarker = dv.getUint16(4, false);
-            }
-            console.log(loop);
+              InstrumentView.byteLength);
             break;
           default:
             console.log('AIFF chunk: ' + chunkName);
             break;
         }
       }
+      if (instrument) {
+        console.log(instrument);
+      }
       item.setRawAudio(audioInfo);
     });
   };
+  
+  function InstrumentView(buffer, byteOffset, byteLength) {
+    Object.defineProperties({
+      bytes: {value:new Uint8Array(buffer, byteOffset, byteLength)},
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+    });
+  }
+  InstrumentView.prototype = {
+    get baseNote() {
+      return this.bytes[0]; // MIDI note 0..127, 60 = middle C
+    },
+    get detune() {
+      return this.bytes[1]; // pitch shift -50..+50 cents (-0.5..+0.5 semitone)
+    },
+    get lowNote() {
+      return this.bytes[2]; // MIDI note 0..127
+    },
+    get highNote() {
+      return this.bytes[3]; // MIDI note 0..127
+    },
+    get lowVelocity() {
+      return this.bytes[4]; // MIDI velocity 1..127
+    },
+    get highVelocity() {
+      return this.bytes[5]; // MIDI velocity 1..127
+    },
+    get gain() {
+      return this.dataView.getInt16(6, false); // decibels, e.g. +6=double each sample point, -6=halve each
+    },
+    get sustainPlayMode() {
+      var v;
+      switch(v = this.dataView.getUint16(8, false)) {
+        case 0: return 'normal';
+        case 1: return 'loop';
+        case 2: return 'pingpong';
+        default: return v;
+      }
+    },
+    get sustainMarker1() {
+      return this.dataView.getUint16(10, false);
+    },
+    get sustainMarker2() {
+      return this.dataView.getUint16(12, false);
+    },
+    get releasePlayMode() {
+      var v;
+      switch(v = this.dataView.getUint16(14, false)) {
+        case 0: return 'normal';
+        case 1: return 'loop';
+        case 2: return 'pingpong';
+        default: return v;
+      }
+    },
+    get releaseMarker1() {
+      return this.dataView.getUint16(16, false);
+    },
+    get releaseMarker2() {
+      return this.dataView.getUint16(17, false);
+    },
+  };
+  InstrumentView.byteLength = 20;
   
   return open;
 
