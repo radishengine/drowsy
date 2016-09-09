@@ -85,7 +85,7 @@ define(['mac/extendedFloat'], function(extendedFloat) {
   };
   
   function InstrumentView(buffer, byteOffset, byteLength) {
-    Object.defineProperties({
+    Object.defineProperties(this, {
       bytes: {value:new Uint8Array(buffer, byteOffset, byteLength)},
       dataView: {value:new DataView(buffer, byteOffset, byteLength)},
     });
