@@ -8,7 +8,7 @@ define(['mac/roman'], function(macRoman) {
       for (var i = 0; i < list.length; i++) {
         list[i] = macRoman(bytes, i*4, 4);
       }
-      return list;
+      item.setDataObject(list);
     });
   }
   
