@@ -2,6 +2,8 @@ define(['itemObjectModel', 'mac/roman', 'mac/extendedFloat'], function(itemOM, m
 
   'use strict';
   
+  function wordAlign(v) { return v + v % 2; }
+  
   function open(item) {
     return item.getBytes().then(function(bytes) {
       if (String.fromCharCode.apply(null, bytes.subarray(0, 4)) !== 'FORM') {
@@ -17,7 +19,7 @@ define(['itemObjectModel', 'mac/roman', 'mac/extendedFloat'], function(itemOM, m
       }
       var audioInfo = {};
       var instrument;
-      for (var pos = 12; pos < length; pos += 8 + dv.getUint32(pos + 4, false)) {
+      for (var pos = 12; pos < length; pos += 8 + wordAlign(dv.getUint32(pos + 4, false))) {
         var chunkName = String.fromCharCode.apply(null, bytes.subarray(pos, pos + 4));
         switch (chunkName) {
           case 'COMM':
