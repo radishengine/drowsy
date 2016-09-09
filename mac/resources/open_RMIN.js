@@ -9,7 +9,7 @@ define(['mac/roman'], function(macRoman) {
       for (var i = 0; i < list.length; i++) {
         list[i] = {
           type: macRoman(bytes, i*6, 4),
-          id: dv.getUint16(i*6 + 4, false),
+          id: dv.getInt16(i*6 + 4, false),
         };
       }
       item.setDataObject(list);
