@@ -208,6 +208,7 @@ function(
               },
             });
             itemEl.dataset.resourceId = resourceInfo.id;
+            itemEl.dataset.resourceType = resourceInfo.type;
             
             itemEl.classList.add('invisible');
             
