@@ -89,7 +89,9 @@ define(['itemObjectModel', 'mac/roman', 'mac/extendedFloat'], function(itemOM, m
           case 'APPL':
             var applicationSignature = macRoman(bytes, pos + 8, 4);
             var appDataItem = itemOM.createItem('APPL-' + applicationSignature);
-            appDataItem.byteSource = item.byteSource.slice(pos + 8 + 4, dv.getUint32(pos + 4, false) - 4);
+            appDataItem.byteSource = item.byteSource.slice(
+              pos + 8 + 4,
+              pos + 8 + dv.getUint32(pos + 4, false));
             item.addItem(appDataItem);
             break;
           default:
