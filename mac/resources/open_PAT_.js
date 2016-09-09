@@ -22,7 +22,7 @@ define(['itemObjectModel'], function(itemOM) {
     item.withPixels(8, 8, function(pixelData) {
       for (var y = 0; y < 8; y++) {
         for (var x = 0; x < 8; x++) {
-          if (bytes[y] & (0x80 >> x)) {
+          if (bytes[offset + y] & (0x80 >> x)) {
             pixelData[4 * (y * 8 + x) + 3] = 0xff;
           }
         }
