@@ -1,4 +1,4 @@
-define(['mac/extendedFloat'], function(extendedFloat) {
+define(['itemObjectModel', 'mac/roman', 'mac/extendedFloat'], function(itemOM, macRoman, extendedFloat) {
 
   'use strict';
   
@@ -43,9 +43,9 @@ define(['mac/extendedFloat'], function(extendedFloat) {
             var chunkDV = new DataView(
               bytes.buffer,
               bytes.byteOffset + pos + 8,
-              bytes.byteOffset + pos + 8 + 8);
+              4);
             var offset = chunkDV.getUint16(0, false);
-            var blockLength = chunkDV.getUint16(0, false);
+            var blockLength = chunkDV.getUint16(2, false);
             if (offset !== 0 || blockLength !== 0) {
               return Promise.reject('AIFF: offset/blockLength not yet supported');
             }
@@ -71,6 +71,18 @@ define(['mac/extendedFloat'], function(extendedFloat) {
               bytes.buffer,
               bytes.byteOffset + pos + 8,
               InstrumentView.byteLength);
+            break;
+          case 'MARK':
+            var markerCount = dv.getUint16(pos + 8, false);
+            for (var markerPos = pos + 8 + 2; markerCount--; ) {
+              var markerId = dv.getUint16(markerPos, false);
+              var markerPos = dv.getUint32(markerPos + 2, false);
+              var markerName = macRoman(bytes, markerPos + 6 + 1, bytes[markerPos + 6]);
+              var markerItem = itemOM.createItem('marker ' + markerId + ' ' + markerName);
+              markerItem.setDataObject(markerPos);
+              item.addItem(markerItem);
+              markerPos += 6 + 1 + markerName.length + markerName.length % 2;
+            }
             break;
           default:
             console.log('AIFF chunk: ' + chunkName);
