@@ -12,7 +12,7 @@ define(['mac/roman'], function(macRoman) {
           id: dv.getUint16(i*6 + 4, false),
         };
       }
-      return list;
+      item.setDataObject(list);
     });
   }
   
