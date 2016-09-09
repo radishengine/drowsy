@@ -99,9 +99,6 @@ define(['itemObjectModel', 'mac/roman', 'mac/extendedFloat'], function(itemOM, m
             break;
         }
       }
-      if (instrument) {
-        console.log(instrument);
-      }
       item.setRawAudio(audioInfo);
     });
   };
