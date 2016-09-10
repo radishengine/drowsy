@@ -86,6 +86,18 @@ function(itemOM, macRoman, macDate, fixedPoint) {
                 atomItem.setDataObject(new Uint32ListView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
               }));
               break;
+            case 'stts':
+              atomItem.startAddingItems();
+              atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
+                atomItem.setDataObject(new TimeToSampleView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+              }));
+              break;
+            case 'stsc':
+              atomItem.startAddingItems();
+              atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
+                atomItem.setDataObject(new SampleToChunkView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+              }));
+              break;
           }
         }
         if (byteSource.byteLength >= (length + 8)) {
@@ -546,6 +558,53 @@ function(itemOM, macRoman, macDate, fixedPoint) {
       var entries = new Array(this.entryCount);
       for (var i = 0; i < entries.length; i++) {
         entries[i] = this.dataView.getUint32(8 + i * 4, false);
+      }
+      Object.defineProperty(this, 'entries', entries);
+      return entries;
+    },
+  };
+  
+  function TimeToSampleView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+  }
+  TimeToSampleView.prototype = {
+    toJSON: function() {
+      return this.entries;
+    },
+    get entryCount() {
+      return this.dataView.getUint32(4, false);
+    },
+    get entries() {
+      var entries = new Array(this.entryCount);
+      for (var i = 0; i < entries.length; i++) {
+        entries[i] = {
+          sampleCount: this.dataView.getUint32(8 + i * 8, false),
+          sampleDuration: this.dataView.getUint32(8 + i * 8 + 4, false),
+        };
+      }
+      Object.defineProperty(this, 'entries', entries);
+      return entries;
+    },
+  };
+  
+  function SampleToChunkView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+  }
+  SampleToChunkView.prototype = {
+    toJSON: function() {
+      return this.entries;
+    },
+    get entryCount() {
+      return this.dataView.getUint32(4, false);
+    },
+    get entries() {
+      var entries = new Array(this.entryCount);
+      for (var i = 0; i < entries.length; i++) {
+        entries[i] = {
+          firstChunk: this.dataView.getUint32(8 + i * 12, false),
+          samplesPerChunk: this.dataView.getUint32(8 + i * 12 + 4, false),
+          sampleDescriptionID: this.dataView.getUint32(8 + i * 12 + 8, false),
+        };
       }
       Object.defineProperty(this, 'entries', entries);
       return entries;
