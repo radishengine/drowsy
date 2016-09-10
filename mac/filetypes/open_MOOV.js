@@ -510,7 +510,7 @@ function(itemOM, macRoman, macDate, fixedPoint) {
         var size = this.dataView.getUint32(pos);
         entries[i] = {
           type: macRoman(this.bytes, pos + 4, 4),
-          dataReferenceIndex: this.dataView.getUint16(14, false),
+          dataReferenceIndex: this.dataView.getUint16(pos + 14, false),
         };
         if (size > 16) {
           switch(entries[i].type) {
