@@ -526,23 +526,109 @@ function(itemOM, macRoman, macDate, fixedPoint) {
       var pos = 8;
       for (var i = 0; i < entries.length; i++) {
         var size = this.dataView.getUint32(pos);
-        entries[i] = {
-          type: macRoman(this.bytes, pos + 4, 4),
-          dataReferenceIndex: this.dataView.getUint16(pos + 14, false),
-        };
-        if (size > 16) {
-          switch(entries[i].type) {
-            default:
+        var type = macRoman(this.bytes, pos + 4, 4);
+        var data;
+        switch(type) {
+          case 'cvid': case 'jpeg': case 'raw ': case 'Yuv2':
+          case 'smc ': case 'rle ': case 'rpza': case 'kpcd':
+          case 'mpeg': case 'mjpa': case 'mjpb': case 'svqi':
+            entries[i] = new VideoSampleDescriptionView(
+              this.bytes.buffer,
+              this.bytes.byteOffset + pos + 16,
+              VideoSampleDescriptionView.byteLength);
+            if (size > (16 + VideoSampleDescriptionView.byteLength)) {
+              entries[i].data = this.bytes.subarray(
+                pos + 16 + VideoSampleDescriptionView.byteLength,
+                pos + size);
+            }
+            break;
+          default:
+            entries[i] = {};
+            if (size > 16) {
               entries[i].data = this.bytes.subarray(pos + 16, pos + size);
-              break;
-          }
+            }
+            break;
         }
+        entries[i].type = type;
+        entries[i].dataReferenceIndex = this.dataView.getUint16(pos + 14, false),
         pos += size;
       }
       Object.defineProperty(this, 'entries', entries);
       return entries;
     },
   };
+  
+  function VideoSampleDescriptionView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+  }
+  VideoSampleDescriptionView.prototype = {
+    toJSON: function() {
+      return {
+        version: this.version,
+        revisionLevel: this.revisionLevel,
+        vendor: this.vendor,
+        temporalQuality: this.temporalQuality,
+        spatialQuality: this.spatialQuality,
+        pixelWidth: this.pixelWidth,
+        pixelHeight: this.pixelHeight,
+        pixelsPerInchX: this.pixelsPerInchX,
+        pixelsPerInchY: this.pixelsPerInchY,
+        dataSize: this.dataSize,
+        framesPerSample: this.framesPerSample,
+        compressorName: this.compressorName,
+        depth: this.depth,
+        colorTableID: this.colorTableID,
+      },
+    },
+    get version() {
+      return this.dataView.getUint16(0, false);
+    },
+    get revisionLevel() {
+      return this.dataView.getUint16(2, false); // must be 0, apparently
+    },
+    get vendor() {
+      return macRoman(this.bytes, 4, 4);
+    },
+    get temporalQuality() {
+      return this.dataView.getUint32(8, false); // degree of compression 0 to 1023
+    },
+    get spatialQuality() {
+      return this.dataView.getUint32(12, false); // degree of compression 0 to 1024
+    },
+    get pixelWidth() {
+      return this.dataView.getUint16(16, false);
+    },
+    get pixelHeight() {
+      return this.dataView.getUint16(18, false);
+    },
+    get pixelsPerInchX() {
+      return fixedPoint.fromInt32(this.dataView.getInt32(20, false));
+    },
+    get pixelsPerInchY() {
+      return fixedPoint.fromInt32(this.dataView.getInt32(24, false));
+    },
+    get dataSize() {
+      return this.dataView.getUint32(28, false); // must be 0
+    },
+    get framesPerSample() {
+      return this.dataView.getUint16(32, false); // usually 1
+    },
+    get compressorName() {
+      return macRoman(this.bytes, 35, this.bytes[34]); // 32-byte buffer for Pascal string
+    },
+    get depth() {
+      // 1,2,4,8,16,24,32 (alpha)
+      // 34: 2-bit grayscale
+      // 36: 4-bit grayscale
+      // 40: 8-bit grayscale
+      return this.dataView.getUint16(66, false);
+    },
+    get colorTableID() {
+      return this.dataView.getInt16(68, false); // -1: default palette
+    },
+  };
+  VideoSampleDescriptionView.byteLength = 70;
   
   function Uint32ListView(buffer, byteOffset, byteLength) {
     this.dataView = new DataView(buffer, byteOffset, byteLength);
