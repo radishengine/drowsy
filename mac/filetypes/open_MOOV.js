@@ -526,18 +526,21 @@ function(itemOM, macRoman, macDate, fixedPoint) {
       var pos = 8;
       for (var i = 0; i < entries.length; i++) {
         var size = this.dataView.getUint32(pos);
-        var type = macRoman(this.bytes, pos + 4, 4);
+        entries[i] = {
+          type: macRoman(this.bytes, pos + 4, 4),
+          dataReferenceIndex: this.dataView.getUint16(pos + 14, false),
+        };
         var data;
-        switch(type) {
+        switch(entries[i].type) {
           case 'cvid': case 'jpeg': case 'Yuv2':
           case 'smc ': case 'rle ': case 'rpza': case 'kpcd':
           case 'mpeg': case 'mjpa': case 'mjpb': case 'svqi':
-            entries[i] = new VideoSampleDescriptionView(
+            entries[i].description = new VideoSampleDescriptionView(
               this.bytes.buffer,
               this.bytes.byteOffset + pos + 16,
               VideoSampleDescriptionView.byteLength);
             if (size > (16 + VideoSampleDescriptionView.byteLength)) {
-              entries[i].data = this.bytes.subarray(
+              entries[i].extraData = this.bytes.subarray(
                 pos + 16 + VideoSampleDescriptionView.byteLength,
                 pos + size);
             }
@@ -548,39 +551,41 @@ function(itemOM, macRoman, macDate, fixedPoint) {
           case 'QDMC': case 'QDM2': case 'Qclp':
           case 'ms\x00\x02': case 'ms\x00\x11': case 'ms\x00\x55':
           case '.mp3':
-            entries[i] = new SoundSampleDescriptionView(
+            entries[i].description = new SoundSampleDescriptionView(
               this.bytes.buffer,
               this.bytes.byteOffset + pos + 16,
               size - 16);
-            if (size > entries[i].byteLength) {
-              entries[i].data = this.bytes.subarray(pos + entries[i].byteLength, pos + size);
+            if (size > 16 + entries[i].description.byteLength) {
+              entries[i].extraData = this.bytes.subarray(
+                pos + 16 + entries[i].description.byteLength,
+                pos + size);
             }
             break;
           default: // e.g. 'raw ' -- may be audio or video
             if (size >= (16 + VideoSampleDescriptionView.byteLength)) {
-              entries[i] = new VideoSampleDescriptionView(
+              entries[i].description = new VideoSampleDescriptionView(
                 this.bytes.buffer,
                 this.bytes.byteOffset + pos + 16,
                 VideoSampleDescriptionView.byteLength);
               if (size > (16 + VideoSampleDescriptionView.byteLength)) {
-                entries[i].data = this.bytes.subarray(
+                entries[i].extraData = this.bytes.subarray(
                   pos + 16 + VideoSampleDescriptionView.byteLength,
                   pos + size);
               }
             }
             else {
-              entries[i] = new SoundSampleDescriptionView(
+              entries[i].description = new SoundSampleDescriptionView(
                 this.bytes.buffer,
                 this.bytes.byteOffset + pos + 16,
                 size - 16);
-              if (size > entries[i].byteLength) {
-                entries[i].data = this.bytes.subarray(pos + entries[i].byteLength, pos + size);
+              if (size > 16 + entries[i].description.byteLength) {
+                entries[i].extraData = this.bytes.subarray(
+                  pos + 16 + entries[i].description.byteLength,
+                  pos + size);
               }
             }
             break;
         }
-        entries[i].type = type;
-        entries[i].dataReferenceIndex = this.dataView.getUint16(pos + 14, false),
         pos += size;
       }
       Object.defineProperty(this, 'entries', entries);
