@@ -24,6 +24,12 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
                 atomItem.setDataObject(new MovieHeaderView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
               }));
               break;
+            case 'tkhd':
+              atomItem.startAddingItems();
+              atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
+                atomItem.setDataObject(new TrackHeaderView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+              }));
+              break;
           }
         }
         if (byteSource.byteLength >= (length + 8)) {
@@ -136,6 +142,90 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
     get w() { return fixedPoint.fromInt32_2_30(this.dataView.getInt32(32, false)) },
   };
   MatrixView.byteLength = 4 * 9;
+  
+  function TrackHeaderView(buffer, byteOffset, byteLength) {
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+    });
+  }
+  TrackHeaderView.prototype = {
+    toJSON: function() {
+      return {
+        version: this.version,
+        isEnabled: this.isEnabled,
+        isUsedInMovie: this.isUsedInMovie,
+        isUsedInPreview: this.isUsedInPreview,
+        isUsedInPoster: this.isUsedInPoster,
+        creationTime: this.creationTime,
+        modificationTime: this.modificationTime,
+        timeScale: this.timeScale,
+        duration: this.duration,
+        preferredRate: this.preferredRate,
+        preferredVolume: this.preferredVolume,
+        matrix: this.matrix,
+        previewTime: this.previewTime,
+        previewDuration: this.previewDuration,
+        posterTime: this.posterTime,
+        selectionTime: this.selectionTime,
+        selectionDuration: this.selectionDuration,
+        currentTime: this.currentTime,
+        nextTrackID: this.nextTrackID,
+      };
+    },
+    get version() {
+      return this.dataView.getUint8(0);
+    },
+    get isEnabled() {
+      return !!(this.dataView.getUint8(3) & 1);
+    },
+    get isUsedInMovie() {
+      return !!(this.dataView.getUint8(3) & 2);
+    },
+    get isUsedInPreview() {
+      return !!(this.dataView.getUint8(3) & 4);
+    },
+    get isUsedInPoster() {
+      return !!(this.dataView.getUint8(3) & 8);
+    },
+    get creationTime() {
+      return macDate(this.dataView, 4);
+    },
+    get modificationTime() {
+      return macDate(this.dataView, 8);
+    },
+    get trackID() {
+      return this.dataView.getUint32(12, false); // time units per second
+    },
+    // reserved: 4 bytes
+    get duration() {
+      // if edit list is present: the sum of track's edits
+      // otherwise: the sum of sample durations, converted to time units
+      return this.dataView.getUint32(20, false); // in time units
+    },
+    // reserved: 8 bytes
+    get layer() {
+      return this.dataView.getUint16(32, false); // z-ordering: lower-numbered layers appear first
+    },
+    get alternateGroup() {
+      return this.dataView.getUint16(34, false);
+    },
+    get preferredVolume() {
+      return fixedPoint.fromUint16(this.dataView.getUint16(36, false)); // 1.0 = normal
+    },
+    // reserved: 2 bytes
+    get matrix() {
+      var matrix = new MatrixView(this.dataView.buffer, this.dataView.byteOffset + 40, MatrixView.byteLength);
+      Object.defineProperty(this, 'matrix', {value:matrix});
+      return matrix;
+    },
+    get pixelWidth() {
+      return this.dataView.getUint32(76, false);
+    },
+    get pixelHeight() {
+      return this.dataView.getUint32(80, false);
+    },
+  };
+  TrackHeaderView.byteLength = 84;
   
   return open;
 
