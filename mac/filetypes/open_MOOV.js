@@ -1,4 +1,6 @@
-define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(itemOM, macRoman, macDate, fixedPoint) {
+define(
+['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint', 'mac/AliasView'],
+function(itemOM, macRoman, macDate, fixedPoint, AliasView) {
 
   'use strict';
   
@@ -456,15 +458,11 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
     toJSON: function() {
       return {
         version: this.version,
-        isThisFile: this.isThisFile,
         entries: this.entries,
       };
     },
     get version() {
       return this.dataView.getUint8(0);
-    },
-    get isThisFile() {
-      return !!(this.dataView.getUint8(3) & 1);
     },
     get entries() {
       var entries = new Array(this.dataView.getUint32(4, false));
@@ -473,14 +471,13 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
         var size = this.dataView.getUint32(pos, false);
         var type = macRoman(this.bytes, pos + 4, 4);
         var version = this.bytes[pos + 8];
-        var flags = this.dataView.getUint32(pos + 8) & 0xffffff;
-        var data = this.bytes.subarray(pos + 12, pos + size);
         entries[i] = {
           type: type,
           version: version,
-          flags: flags,
-          data: data,
         };
+        var data = this.bytes.subarray(pos + 12, pos + size);
+        if (data.length === 0) entries[i].data = data;
+        if (this.dataView.getUint32(pos + 11) & 1) entries[i].isThisFile = true;
         pos += size;
       }
       Object.defineProperty(this, 'entries', entries);
