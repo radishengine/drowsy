@@ -48,6 +48,12 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
                 atomItem.setDataObject(new MediaHeaderView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
               }));
               break;
+            case 'hdlr':
+              atomItem.startAddingItems();
+              atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
+                atomItem.setDataObject(new HandlerReferenceView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+              }));
+              break;
           }
         }
         if (byteSource.byteLength >= (length + 8)) {
@@ -322,6 +328,38 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
   };
   MediaHeaderView.byteLength = 24;
   
+  function HandlerReferenceView(buffer, byteOffset, byteLength) {
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+      bytes: {value:new Uint8Array(buffer, byteOffset, byteLength)},
+    });
+  }
+  HandlerReferenceView.prototype = {
+    toJSON: function() {
+      return {
+        version: this.version,
+        componentType: this.componentType,
+        componentSubtype: this.componentSubtype,
+        name: this.name,
+      };
+    },
+    get version() {
+      return this.dataView.getUint8(0);
+    },
+    // unused: 24 bits of flags
+    get componentType() {
+      // mhlr for media handlers, dhlr for data handlers
+      return macRoman(this.bytes, 4, 4);
+    },
+    get componentSubtype() {
+      return macRoman(this.bytes, 8, 4);
+    },
+    // reserved: 12 bytes
+    get name() {
+      return macRoman(this.bytes, 25, this.bytes[24]);
+    },
+  };
+
   return open;
 
 });
