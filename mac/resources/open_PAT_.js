@@ -5,7 +5,10 @@ define(['itemObjectModel'], function(itemOM) {
   function open(item, resourceName) {
     return item.getBytes().then(function(bytes) {
       if (resourceName === 'PAT#') {
-        var count = bytes[0] * 0x100 + bytes[1];
+        var count = new DataView(bytes.buffer, bytes.byteOffset, 2).getInt16(0);
+        if (count < 0 || bytes.length < 2 * count*8) {
+          return Promise.reject('bad length for PAT# table');
+        }
         for (var i = 0; i < count; i++) {
           var patItem = itemOM.createItem('#'+i);
           item.addItem(patItem);
