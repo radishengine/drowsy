@@ -74,6 +74,12 @@ function(itemOM, macRoman, macDate, fixedPoint) {
                 atomItem.setDataObject(new DataReferenceView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
               }));
               break;
+            case 'stsd':
+              atomItem.startAddingItems();
+              atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
+                atomItem.setDataObject(new SampleDescriptionView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+              }));
+              break;
           }
         }
         if (byteSource.byteLength >= (length + 8)) {
@@ -478,6 +484,40 @@ function(itemOM, macRoman, macDate, fixedPoint) {
         if (this.bytes[pos + 11] & 1) entries[i].isThisFile = true;
         if (size > 12) {
           entries[i].data = this.bytes.subarray(pos + 12, pos + size);
+        }
+        pos += size;
+      }
+      Object.defineProperty(this, 'entries', entries);
+      return entries;
+    },
+  };
+  
+  function SampleDescriptionView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+  }
+  SampleDescriptionView.prototype = {
+    toJSON: function() {
+      return this.entries;
+    },
+    get entryCount() {
+      return this.dataView.getUint32(4);
+    },
+    get entries() {
+      var entries = new Array(this.entryCount);
+      var pos = 8;
+      for (var i = 0; i < entries.length; i++) {
+        entries[i] = {
+          size: this.dataView.getUint32(pos),
+          type: macRoman(this.bytes, pos + 4, 4),
+          dataReferenceIndex: this.dataView.getUint16(14, false),
+        };
+        if (entries[i].size > 16) {
+          switch(entries[i].type) {
+            default:
+              entries[i].data = this.bytes.subarray(pos + 16, pos + size);
+              break;
+          }
         }
         pos += size;
       }
