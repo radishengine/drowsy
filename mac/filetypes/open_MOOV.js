@@ -8,10 +8,18 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
         var length = new DataView(headerBytes.buffer, headerBytes.byteOffset, 4).getUint32(0, false);
         var name = macRoman(headerBytes, 4, 4);
         var atomItem = itemOM.createItem(name);
+        item.addItem(atomItem);
         if (length > 8) {
           atomItem.byteSource = byteSource.slice(8, length);
+          switch (name) {
+            case 'moov': case 'trak': case 'clip': case 'udta': case 'matt':
+            case 'edts': case 'mdia': case 'minf': case 'stbl': case 'tref':
+            case 'imap': case 'dinf':
+              atomItem.startAddingItems();
+              onAtom(atomItem, atomItem.byteSource);
+              break;
+          }
         }
-        item.addItem(atomItem);
         if (byteSource.byteLength >= (length + 8)) {
           return onAtom(item, byteSource.slice(length));
         }
