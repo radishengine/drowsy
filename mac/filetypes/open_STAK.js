@@ -1,4 +1,4 @@
-define(['mac/roman'], function(macRoman) {
+define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
 
   'use strict';
   
