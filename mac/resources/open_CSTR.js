@@ -1,4 +1,4 @@
-define(['mac/roman'], function() {
+define(['mac/roman'], function(macRoman) {
 
   'use strict';
   
