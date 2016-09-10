@@ -16,7 +16,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
             case 'edts': case 'mdia': case 'minf': case 'stbl': case 'tref':
             case 'imap': case 'dinf':
               atomItem.startAddingItems();
-              onAtom(atomItem, atomItem.byteSource);
+              atomItem.notifyPopulating(onAtom(atomItem, atomItem.byteSource));
               break;
           }
         }
