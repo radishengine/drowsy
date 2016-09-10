@@ -36,6 +36,12 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
                 atomItem.setDataObject(new EditListView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
               }));
               break;
+            case 'WLOC':
+              atomItem.startAddingItems();
+              atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
+                atomItem.setDataObject(new WindowLocationView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+              }));
+              break;
           }
         }
         if (byteSource.byteLength >= (length + 8)) {
@@ -249,6 +255,24 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
       return entries;
     },
   };
+  
+  function WindowLocationView(buffer, byteOffset, byteLength) {
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+    });
+  }
+  TrackHeaderView.prototype = {
+    toJSON: function() {
+      return {x:this.x, y:this.y};
+    },
+    get x() {
+      return this.dataView.getInt16(0, false),
+    },
+    get y() {
+      return this.dataView.getInt16(2, false),
+    },
+  };
+  WindowLocationView.byteLength = 4;
   
   return open;
 
