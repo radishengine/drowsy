@@ -475,9 +475,10 @@ function(itemOM, macRoman, macDate, fixedPoint) {
           type: type,
           version: version,
         };
-        var data = this.bytes.subarray(pos + 12, pos + size);
-        if (data.length !== 0) entries[i].data = data;
-        if (this.dataView.getUint32(pos + 11) & 1) entries[i].isThisFile = true;
+        if (this.bytes[pos + 11] & 1) entries[i].isThisFile = true;
+        if (size > 12) {
+          entries[i].data = this.bytes.subarray(pos + 12, pos + size);
+        }
         pos += size;
       }
       Object.defineProperty(this, 'entries', entries);
