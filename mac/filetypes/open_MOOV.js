@@ -261,7 +261,7 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
       dataView: {value:new DataView(buffer, byteOffset, byteLength)},
     });
   }
-  TrackHeaderView.prototype = {
+  WindowLocationView.prototype = {
     toJSON: function() {
       return {x:this.x, y:this.y};
     },
