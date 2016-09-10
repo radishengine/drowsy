@@ -21,6 +21,15 @@ define(function() {
       }
       return (i32 >>> 30) + frac;
     },
+    fromUint16: function(u16) {
+      var frac = 0;
+      for (var i = 0; i < 8; i++) {
+        if (u16 & (0x80 >> i)) {
+          frac += 1 / (2 << i);
+        }
+      }
+      return (u16 >>> 8) + frac;
+    },
   };
 
 });
