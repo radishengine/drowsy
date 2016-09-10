@@ -1,6 +1,6 @@
 define(
-['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint', 'mac/AliasView'],
-function(itemOM, macRoman, macDate, fixedPoint, AliasView) {
+['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'],
+function(itemOM, macRoman, macDate, fixedPoint) {
 
   'use strict';
   
