@@ -54,6 +54,18 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
                 atomItem.setDataObject(new HandlerReferenceView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
               }));
               break;
+            case 'smhd':
+              atomItem.startAddingItems();
+              atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
+                atomItem.setDataObject(new SoundHeaderView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+              }));
+              break;
+            case 'vmhd':
+              atomItem.startAddingItems();
+              atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
+                atomItem.setDataObject(new VideoHeaderView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+              }));
+              break;
           }
         }
         if (byteSource.byteLength >= (length + 8)) {
@@ -359,6 +371,74 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
       return macRoman(this.bytes, 25, this.bytes[24]);
     },
   };
+  
+  function SoundHeaderView(buffer, byteOffset, byteLength) {
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+    });
+  }
+  SoundHeaderView.prototype = {
+    toJSON: function() {
+      return {
+        version: this.version,
+        balance: this.balance,
+      };
+    },
+    get version() {
+      return this.dataView.getUint8(0);
+    },
+    // unused: 24 bits of flags
+    get balance() {
+      return fixedPoint.fromUint16(this.dataView.getUint16(4, false)); // -1..+1 = full left to full right
+    },
+    // reserved: 2 bytes
+  };
+  SoundHeaderView.byteLength = 8;
+  
+  function VideoHeaderView(buffer, byteOffset, byteLength) {
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+    });
+  }
+  VideoHeaderView.prototype = {
+    toJSON: function() {
+      return {
+        version: this.version,
+        noLeanAhead: this.noLeanAhead,
+        graphicsMode: this.graphicsMode,
+        opColor: this.opColor,
+      };
+    },
+    get version() {
+      return this.dataView.getUint8(0);
+    },
+    get noLeanAhead() {
+      return !!(this.dataView.getUint8(3) & 1); // should only ever be zero in a Quicktime 1.0 file
+    },
+    get graphicsMode() {
+      var mode = this.dataView.getUint16(4, false);
+      switch(mode) {
+        case 0x0000: return 'copy';
+        case 0x0040: return 'ditherCopy';
+        case 0x0020: return 'blend';
+        case 0x0024: return 'transparent';
+        case 0x0100: return 'straightAlpha';
+        case 0x0101: return 'premulWhiteAlpha';
+        case 0x0102: return 'premulBlackAlpha';
+        case 0x0104: return 'straightAlphaBlend';
+        case 0x0103: return 'composition'; // drawn offscreen, then composed on screen with dither copy
+      }
+      return mode;
+    },
+    get opColor() {
+      return {
+        red: this.dataView.getUint16(6, false),
+        green: this.dataView.getUint16(8, false),
+        blue: this.dataView.getUint16(10, false),
+      };
+    },
+  };
+  VideoHeaderView.byteLength = 12;
 
   return open;
 
