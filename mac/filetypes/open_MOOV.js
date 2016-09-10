@@ -42,6 +42,12 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
                 atomItem.setDataObject(new WindowLocationView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
               }));
               break;
+            case 'mdhd':
+              atomItem.startAddingItems();
+              atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
+                atomItem.setDataObject(new MediaHeaderView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+              }));
+              break;
           }
         }
         if (byteSource.byteLength >= (length + 8)) {
@@ -273,6 +279,48 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
     },
   };
   WindowLocationView.byteLength = 4;
+  
+  function MediaHeaderView(buffer, byteOffset, byteLength) {
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+    });
+  }
+  MediaHeaderView.prototype = {
+    toJSON: function() {
+      return {
+        version: this.version,
+        creationTime: this.creationTime,
+        modificationTime: this.modificationTime,
+        timeScale: this.timeScale,
+        duration: this.duration,
+        languageCode: this.languageCode,
+        quality: this.quality,
+      };
+    },
+    get version() {
+      return this.dataView.getUint8(0);
+    },
+    // unused: 24 bits of flags
+    get creationTime() {
+      return macDate(this.dataView, 4);
+    },
+    get modificationTime() {
+      return macDate(this.dataView, 8);
+    },
+    get timeScale() {
+      return this.dataView.getUint32(12, false); // time units per second
+    },
+    get duration() {
+      return this.dataView.getUint32(16, false); // time units
+    },
+    get languageCode() {
+      return this.dataView.getUint16(20, false);
+    },
+    get quality() {
+      return this.dataView.getUint16(22, false);
+    },
+  };
+  MediaHeaderView.byteLength = 24;
   
   return open;
 
