@@ -80,10 +80,16 @@ function(itemOM, macRoman, macDate, fixedPoint) {
                 atomItem.setDataObject(new SampleDescriptionView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
               }));
               break;
-            case 'stss': case 'stsz': case 'stco':
+            case 'stss': case 'stco':
               atomItem.startAddingItems();
               atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
                 atomItem.setDataObject(new Uint32ListView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+              }));
+              break;
+            case 'stsz':
+              atomItem.startAddingItems();
+              atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
+                atomItem.setDataObject(new SampleSizeView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
               }));
               break;
             case 'stts':
@@ -848,6 +854,37 @@ function(itemOM, macRoman, macDate, fixedPoint) {
   SoundSampleDescriptionView.v0ByteLength = 20;
   SoundSampleDescriptionView.v1ByteLength = 36;
   SoundSampleDescriptionView.v2ByteLength = 56;
+  
+  function SampleSizeView(buffer, byteSource, byteLength) {
+    this.dataView = new DataView(buffer, byteSource, byteLength);
+  }
+  SampleSizeView.prototype = {
+    toJSON: function() {
+      return {
+        sampleSize: this.sampleSize,
+        entries: this.entries,
+      };
+    },
+    get sampleSize() {
+      return this.dataView.getUint32(4, false);
+    },
+    get entryCount() {
+      return this.dataView.getUint32(8, false);
+    },
+    get entries() {
+      var entries = new Array(this.entryCount);
+      if (this.dataView.byteLength < 12 + entries.length * 4) {
+        entries = {length: entries.length, present:false};
+      }
+      else {
+        for (var i = 0; i < entries.length; i++) {
+          entries[i] = this.dataView.getUint32(12 + i * 4);
+        }
+      }
+      Object.defineProperty(this, 'entries', entries);
+      return entries;
+    },
+  };
   
   return open;
 
