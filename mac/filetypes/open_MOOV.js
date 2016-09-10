@@ -12,7 +12,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
           atomItem.byteSource = byteSource.slice(8, length);
         }
         item.addItem(atomItem);
-        if (byteSource.byteLength > (length + 8)) {
+        if (byteSource.byteLength >= (length + 8)) {
           return onAtom(item, byteSource.slice(length));
         }
       });
