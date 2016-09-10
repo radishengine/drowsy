@@ -529,7 +529,7 @@ function(itemOM, macRoman, macDate, fixedPoint) {
         var type = macRoman(this.bytes, pos + 4, 4);
         var data;
         switch(type) {
-          case 'cvid': case 'jpeg': case 'raw ': case 'Yuv2':
+          case 'cvid': case 'jpeg': case 'Yuv2':
           case 'smc ': case 'rle ': case 'rpza': case 'kpcd':
           case 'mpeg': case 'mjpa': case 'mjpb': case 'svqi':
             entries[i] = new VideoSampleDescriptionView(
@@ -540,6 +540,25 @@ function(itemOM, macRoman, macDate, fixedPoint) {
               entries[i].data = this.bytes.subarray(
                 pos + 16 + VideoSampleDescriptionView.byteLength,
                 pos + size);
+            }
+            break;
+          case 'raw ': // may be audio or video
+            if (size >= (16 + VideoSampleDescriptionView.byteLength)) {
+              entries[i] = new VideoSampleDescriptionView(
+                this.bytes.buffer,
+                this.bytes.byteOffset + pos + 16,
+                VideoSampleDescriptionView.byteLength);
+              if (size > (16 + VideoSampleDescriptionView.byteLength)) {
+                entries[i].data = this.bytes.subarray(
+                  pos + 16 + VideoSampleDescriptionView.byteLength,
+                  pos + size);
+              }
+            }
+            else {
+              entries[i] = {};
+              if (size > 16) {
+                entries[i].data = this.bytes.subarray(pos + 16, pos + size);
+              }
             }
             break;
           default:
