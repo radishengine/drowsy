@@ -579,7 +579,7 @@ function(itemOM, macRoman, macDate, fixedPoint) {
         compressorName: this.compressorName,
         depth: this.depth,
         colorTableID: this.colorTableID,
-      },
+      };
     },
     get version() {
       return this.dataView.getUint16(0, false);
