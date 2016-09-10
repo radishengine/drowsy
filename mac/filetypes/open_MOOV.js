@@ -66,6 +66,12 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
                 atomItem.setDataObject(new VideoHeaderView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
               }));
               break;
+            case 'dref':
+              atomItem.startAddingItems();
+              atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
+                atomItem.setDataObject(new DataReferenceView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+              }));
+              break;
           }
         }
         if (byteSource.byteLength >= (length + 8)) {
@@ -439,6 +445,48 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
     },
   };
   VideoHeaderView.byteLength = 12;
+  
+  function DataReferenceView(buffer, byteOffset, byteLength) {
+    Object.defineProperties(this, {
+      dataView: {value:new DataView(buffer, byteOffset, byteLength)},
+      bytes: {value:new Uint8Array(buffer, byteOffset, byteLength)},
+    });
+  }
+  DataReferenceView.prototype = {
+    toJSON: function() {
+      return {
+        version: this.version,
+        isThisFile: this.isThisFile,
+        entries: this.entries,
+      };
+    },
+    get version() {
+      return this.dataView.getUint8(0);
+    },
+    get isThisFile() {
+      return !!(this.dataView.getUint8(3) & 1);
+    },
+    get entries() {
+      var entries = new Array(this.dataView.getUint32(4, false));
+      var pos = 8;
+      for (var i = 0; i < entries.length; i++) {
+        var size = this.dataView.getUint32(pos, false);
+        var type = macRoman(this.bytes, pos + 4, 4);
+        var version = this.bytes[pos + 8];
+        var flags = this.dataView.getUint32(pos + 8) & 0xffffff;
+        var data = this.bytes.subarray(pos + 12, pos + size);
+        entries[i] = {
+          type: type,
+          version: version,
+          flags: flags,
+          data: data,
+        };
+        pos += size;
+      }
+      Object.defineProperty(this, 'entries', entries);
+      return entries;
+    },
+  };
 
   return open;
 
