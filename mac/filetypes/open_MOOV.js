@@ -80,6 +80,12 @@ function(itemOM, macRoman, macDate, fixedPoint) {
                 atomItem.setDataObject(new SampleDescriptionView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
               }));
               break;
+            case 'stss': case 'stsz': case 'stco':
+              atomItem.startAddingItems();
+              atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
+                atomItem.setDataObject(new Uint32ListView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+              }));
+              break;
           }
         }
         if (byteSource.byteLength >= (length + 8)) {
@@ -525,7 +531,27 @@ function(itemOM, macRoman, macDate, fixedPoint) {
       return entries;
     },
   };
-
+  
+  function Uint32ListView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+  }
+  Uint32ListView.prototype = {
+    toJSON: function() {
+      return this.entries;
+    },
+    get entryCount() {
+      return this.getUint32(4, false);
+    },
+    get entries() {
+      var entries = new Array(this.entryCount);
+      for (var i = 0; i < entries.length; i++) {
+        entries[i] = this.dataView.getUint32(8 + i * 4, false);
+      }
+      Object.defineProperty(this, 'entries', entries);
+      return entries;
+    },
+  };
+  
   return open;
 
 });
