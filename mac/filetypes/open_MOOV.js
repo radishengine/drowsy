@@ -860,25 +860,37 @@ function(itemOM, macRoman, macDate, fixedPoint) {
   }
   SampleSizeView.prototype = {
     toJSON: function() {
-      return {
-        sampleSize: this.sampleSize,
-        entries: this.entries,
-      };
+      var object = {mode:this.mode};
+      if (object.mode === 'constant') {
+        object.constantSampleSize = this.constantSampleSize;
+        object.entryCount = this.entryCount;
+      }
+      else {
+        object.sampleSizeTable = this.sampleSizeTable;
+      }
+      return object;
     },
-    get sampleSize() {
-      return this.dataView.getUint32(4, false);
+    get constantSampleSize() {
+      var value = this.dataView.getUint32(4, false);
+      return (value === 0) ? null : value;
+    },
+    get mode() {
+      return this.constantSampleSize ? 'constant' : 'table';
     },
     get entryCount() {
       return this.dataView.getUint32(8, false);
     },
-    get entries() {
+    get sampleSizeTable() {
       var entries = new Array(this.entryCount);
-      if (this.dataView.byteLength < 12 + entries.length * 4) {
-        entries = {length: entries.length, present:false};
+      var constantSampleSize = this.constantSampleSize;
+      if (constantSampleSize === null) {
+        for (var i = 0; i < entries.length; i++) {
+          entries[i] = this.dataView.getUint32(12 + i * 4);
+        }
       }
       else {
         for (var i = 0; i < entries.length; i++) {
-          entries[i] = this.dataView.getUint32(12 + i * 4);
+          entries[i] = constantSampleSize;
         }
       }
       Object.defineProperty(this, 'entries', entries);
