@@ -540,7 +540,7 @@ function(itemOM, macRoman, macDate, fixedPoint) {
       return this.entries;
     },
     get entryCount() {
-      return this.getUint32(4, false);
+      return this.dataView.getUint32(4, false);
     },
     get entries() {
       var entries = new Array(this.entryCount);
