@@ -199,6 +199,7 @@ function(
             var titleString = '[' + resourceInfo.type + idString + ']';
             if (resourceInfo.name) titleString += ' ' + resourceInfo.name;
             var itemEl = itemObjectModel.createItem(titleString);
+            if (resourceInfo.isCompressed) itemEl.dataset.compressed = true;
             
             Object.defineProperties(itemEl, {
               resourceID: {
