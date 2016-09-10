@@ -126,7 +126,12 @@ define(function() {
           this.dispatchEvent(new CustomEvent(itemObjectModel.EVT_ITEM_DATA_OBJECT, {detail:{dataObject:value}}));
           this.dataObject = value;
           var textContainer = document.createElement('PRE');
-          textContainer.appendChild(document.createTextNode(JSON.stringify(value, null, 2)));
+          if (typeof value === 'string') {
+            textContainer.appendChild(document.createTextNode(value));
+          }
+          else {
+            textContainer.appendChild(document.createTextNode(JSON.stringify(value, null, 2)));
+          }
           this.addItem(textContainer);
         },
       },
