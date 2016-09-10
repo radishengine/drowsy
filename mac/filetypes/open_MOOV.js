@@ -266,10 +266,10 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
       return {x:this.x, y:this.y};
     },
     get x() {
-      return this.dataView.getInt16(0, false),
+      return this.dataView.getInt16(0, false);
     },
     get y() {
-      return this.dataView.getInt16(2, false),
+      return this.dataView.getInt16(2, false);
     },
   };
   WindowLocationView.byteLength = 4;
