@@ -215,10 +215,10 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
       return matrix;
     },
     get pixelWidth() {
-      return this.dataView.getUint32(76, false);
+      return fixedPoint.fromInt32(this.dataView.getInt32(76, false));
     },
     get pixelHeight() {
-      return this.dataView.getUint32(80, false);
+      return fixedPoint.fromInt32(this.dataView.getInt32(80, false));
     },
   };
   TrackHeaderView.byteLength = 84;
