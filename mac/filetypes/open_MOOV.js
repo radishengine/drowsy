@@ -18,7 +18,8 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
               atomItem.startAddingItems();
               atomItem.notifyPopulating(onAtom(atomItem, atomItem.byteSource));
               break;
-            case 'mhvd':
+            case 'mvhd':
+              atomItem.startAddingItems();
               atomItem.notifyPopulating(atomItem.byteSource.getBytes().then(function(bytes) {
                 atomItem.setDataObject(new MovieHeaderView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
               }));
