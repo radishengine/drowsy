@@ -507,12 +507,12 @@ function(itemOM, macRoman, macDate, fixedPoint) {
       var entries = new Array(this.entryCount);
       var pos = 8;
       for (var i = 0; i < entries.length; i++) {
+        var size = this.dataView.getUint32(pos);
         entries[i] = {
-          size: this.dataView.getUint32(pos),
           type: macRoman(this.bytes, pos + 4, 4),
           dataReferenceIndex: this.dataView.getUint16(14, false),
         };
-        if (entries[i].size > 16) {
+        if (size > 16) {
           switch(entries[i].type) {
             default:
               entries[i].data = this.bytes.subarray(pos + 16, pos + size);
