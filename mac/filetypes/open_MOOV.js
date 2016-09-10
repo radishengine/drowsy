@@ -542,7 +542,21 @@ function(itemOM, macRoman, macDate, fixedPoint) {
                 pos + size);
             }
             break;
-          case 'raw ': // may be audio or video
+          case 'NONE': case 'twos': case 'sowt': case 'MAC3': case 'MAC6':
+          case 'ima4': case 'fl32': case 'fl64': case 'in24': case 'in32':
+          case 'ulaw': case 'alaw': case 'dvca':
+          case 'QDMC': case 'QDM2': case 'Qclp':
+          case 'ms\x00\x02': case 'ms\x00\x11': case 'ms\x00\x55':
+          case '.mp3':
+            entries[i] = new SoundSampleDescriptionView(
+              this.bytes.buffer,
+              this.bytes.byteOffset + pos + 16,
+              size - 16);
+            if (size > entries[i].byteLength) {
+              entries[i].data = this.bytes.subarray(pos + entries[i].byteLength, pos + size);
+            }
+            break;
+          default: // e.g. 'raw ' -- may be audio or video
             if (size >= (16 + VideoSampleDescriptionView.byteLength)) {
               entries[i] = new VideoSampleDescriptionView(
                 this.bytes.buffer,
@@ -555,16 +569,13 @@ function(itemOM, macRoman, macDate, fixedPoint) {
               }
             }
             else {
-              entries[i] = {};
-              if (size > 16) {
-                entries[i].data = this.bytes.subarray(pos + 16, pos + size);
+              entries[i] = new SoundSampleDescriptionView(
+                this.bytes.buffer,
+                this.bytes.byteOffset + pos + 16,
+                size - 16);
+              if (size > entries[i].byteLength) {
+                entries[i].data = this.bytes.subarray(pos + entries[i].byteLength, pos + size);
               }
-            }
-            break;
-          default:
-            entries[i] = {};
-            if (size > 16) {
-              entries[i].data = this.bytes.subarray(pos + 16, pos + size);
             }
             break;
         }
@@ -715,6 +726,123 @@ function(itemOM, macRoman, macDate, fixedPoint) {
       return entries;
     },
   };
+  
+  function SoundSampleDescriptionView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+  }
+  SoundSampleDescriptionView.prototype = {
+    toJSON: function() {
+      switch (this.version) {
+        case 0: case 1:
+          var obj = {
+            version: this.version,
+            numberOfChannels: this.numberOfChannels,
+            sampleSize: this.sampleSize,
+            compressionID: this.compressionID,
+            sampleRate: this.sampleRate,
+          };
+          if (obj.version === 1) {
+            obj.samplesPerPacket = this.samplePerPacket;
+            obj.bytesPerPacket = this.bytesPerPacket;
+            obj.bytesPerFrame = this.bytesPerFrame;
+            obj.bytesPerSample = this.bytesPerSample;
+          }
+          return obj;
+        case 2:
+          return {
+            version: 2,
+            sizeOfStructOnly: this.sizeOfStructOnly,
+            sampleRate: this.sampleRate,
+            numberOfChannels: this.numberOfChannels,
+            constBitsPerChannel: this.constBitsPerChannel,
+            formatSpecificFlags: this.formatSpecificFlags,
+            constBytesPerAudioPacket: this.constBytesPerAudioPacket,
+            constLPCMFramesPerAudioPacket: this.constLPCMFramesPerAudioPacket,
+          };
+        default: return {version: this.version};
+      }
+    },
+    get version() {
+      return this.dataView.getUint16(0, false);
+    },
+    get byteLength() {
+      switch(this.version) {
+        case 0: return SoundSampleDescriptionView.v0ByteLength;
+        case 1: return SoundSampleDescriptionView.v1ByteLength;
+        case 2: return SoundSampleDescriptionView.v2ByteLength;
+        default: return 2;
+      }
+    },
+    // always zero: revision level (2 bytes)
+    // always zero: vendor (4 bytes)
+    get numberOfChannels() {
+      return (this.version < 2)
+        ? this.dataView.getUint16(8, false)
+        : this.dataView.getUint32(32, false);
+    },
+    get sampleSize() {
+      return (this.version < 2)
+        ? this.dataView.getUint16(10, false)
+        : null;
+    },
+    get compressionID() {
+      return (this.version < 2) ? this.dataView.getInt16(12, false) : null;
+    },
+    // always zero: packet size (2 bytes)
+    get sampleRate() {
+      return (this.version < 2)
+        ? fixedPoint.fromInt32(this.dataView.getInt32(16, false))
+        : this.dataView.getFloat64(24, false);
+    },
+    get samplesPerPacket() {
+      return (this.version === 1)
+        ? this.dataView.getInt32(20, false)
+        : null;
+    },
+    get bytesPerPacket() {
+      return (this.version === 1)
+        ? this.dataView.getInt32(24, false)
+        : null;
+    },
+    get bytesPerFrame() {
+      return (this.version === 1)
+        ? this.dataView.getInt32(28, false)
+        : null;
+    },
+    get bytesPerSample() {
+      return (this.version === 1)
+        ? this.dataView.getInt32(32, false)
+        : null;
+    },
+    get sizeOfStructOnly() {
+      return (this.version === 2)
+        ? this.dataView.getUint32(20, false)
+        : null;
+    },
+    get constBitsPerChannel() {
+      return (this.version === 2)
+        ? this.dataView.getUint32(40, false)
+        : null;
+    },
+    get formatSpecificFlags() {
+      return (this.version === 2)
+        ? this.dataView.getUint32(44, false)
+        : null;
+    },
+    get constBytesPerAudioPacket() {
+      return (this.version === 2)
+        ? this.dataView.getUint32(48, false)
+        : null;
+    },
+    get constLPCMFramesPerAudioPacket() {
+      return (this.version === 2)
+        ? this.dataView.getUint32(52, false)
+        : null;
+    },
+  };
+  SoundSampleDescriptionView.v0ByteLength = 20;
+  SoundSampleDescriptionView.v1ByteLength = 36;
+  SoundSampleDescriptionView.v2ByteLength = 56;
   
   return open;
 
