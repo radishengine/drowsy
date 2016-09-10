@@ -855,8 +855,8 @@ function(itemOM, macRoman, macDate, fixedPoint) {
   SoundSampleDescriptionView.v1ByteLength = 36;
   SoundSampleDescriptionView.v2ByteLength = 56;
   
-  function SampleSizeView(buffer, byteSource, byteLength) {
-    this.dataView = new DataView(buffer, byteSource, byteLength);
+  function SampleSizeView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
   }
   SampleSizeView.prototype = {
     toJSON: function() {
