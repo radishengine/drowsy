@@ -13,7 +13,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
         }
         item.addItem(atomItem);
         if (byteSource.length > (length + 8)) {
-          return onAtom(atomItem, byteSource.slice(length));
+          return onAtom(item, byteSource.slice(length));
         }
       });
     }
