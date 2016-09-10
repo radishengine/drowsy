@@ -230,7 +230,7 @@ define(['itemObjectModel', 'mac/roman', 'mac/date', 'mac/fixedPoint'], function(
   TrackHeaderView.byteLength = 84;
   
   function EditListView(buffer, byteOffset, byteLength) {
-    this.dataView = new DataView(buffer, byteOffet, byteLength);
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
   }
   EditListView.prototype = {
     toJSON: function() {
