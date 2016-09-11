@@ -12,7 +12,7 @@ define(function() {
         var index = 20 + i >> 1;
         value += (i % 2) ? DELTAS[bytes[index] >> 4] : DELTAS[bytes[index] & 0xf];
         value |= 0;
-        samples[i] = (value << 24 >> 24) + 128;
+        samples[i] = value & 0xff; // (value << 24 >> 24) + 128;
       }
       item.setRawAudio({
         channels: 1,
