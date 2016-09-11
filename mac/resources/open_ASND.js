@@ -10,9 +10,11 @@ define(function() {
       var value = 0x80;
       for (var i = 0; i < bytes.length; i++) {
         value += deltas[bytes[i] & 0xf];
-        samples[i*2] = (value << 24 >> 24) + 128;
+        value = value << 24 >> 24;
+        samples[i*2] = value & 0xff;
         value += deltas[(bytes[i] >> 4) & 0xf];
-        samples[i*2 + 1] = (value << 24 >> 24) + 128;
+        value = value << 24 >> 24;
+        samples[i*2 + 1] = value & 0xff;
       }
       item.setRawAudio({
         channels: 1,
