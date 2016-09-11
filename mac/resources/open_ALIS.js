@@ -173,7 +173,7 @@ define(['mac/roman', 'mac/date'], function(macRoman, macDate) {
           key: valueName,
           value: value,
         });
-        pos += afterPos;
+        pos = afterPos;
       }
       Object.defineProperty(this, 'extraStrings', {value:values});
       return values;
