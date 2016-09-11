@@ -258,8 +258,8 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
       return this.cardNameAfterPos;
     },
     get cardScript() {
-      var len = findNullOffset(this.bytes, this.partContents.afterPos + this.cardName.length + 1);
-      var val = macRoman(this.bytes, this.partContents.afterPos, len);
+      var len = findNullOffset(this.bytes, this.cardScriptPos);
+      var val = macRoman(this.bytes, this.cardScriptPos, len);
       Object.defineProperty(this, 'cardScript', {value:val});
       return val;
     },
