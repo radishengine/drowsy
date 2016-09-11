@@ -551,14 +551,15 @@ define(['itemObjectModel', 'mac/roman', 'ByteSource'], function(itemOM, macRoman
       var v = this.dataView.getInt16(0, false);
       return (v < 0) ? {type:'card', id:-v} : {type:'background', id:v};
     },
-    get styleOffset() {
-      return 6;
-    },
-    get styleLength() {
-      return this.dataView.getUint16(4, false);
-    },
     get text() {
-      return macRoman(this.bytes, this.styleOffset + this.styleLength).replace(/\0.*/, '');
+      var len = this.dataView.getUint16(4, false);
+      if (len > 32767) {
+        len -= 32770;
+        return macRoman(this.bytes, 6 + len).replace(/\0.*/, '');
+      }
+      else {
+        return macRoman(this.bytes, 7).replace(/\0.*/, '');
+      }
     },
   };
   
