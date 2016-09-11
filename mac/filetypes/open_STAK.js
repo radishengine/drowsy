@@ -205,7 +205,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
     get backgroundID() {
       return this.isBackground ? null : this.dataView.getInt32(0x18, false);
     },
-    get offsetForBackground(v) {
+    offsetForBackground: function(v) {
       return this.isBackground ? v - 4 : v;
     },
     get partCount() {
