@@ -8,6 +8,10 @@ define(['itemObjectModel', 'mac/roman', 'ByteSource'], function(itemOM, macRoman
     return offset;
   }
   
+  function wordAlign(v) {
+    return v + v % 1;
+  }
+  
   function versionString(bytes, pos) {
     if (!bytes[pos + 3]) return null;
     var versionString = bytes[pos] + '.' + (bytes[pos + 1] >> 4);
@@ -514,7 +518,7 @@ define(['itemObjectModel', 'mac/roman', 'ByteSource'], function(itemOM, macRoman
       return this.dataView.getUint16(28, false);
     },
     get namePos() {
-      return 30;
+      return 29;
     },
     get name() {
       var name = macRoman(this.bytes, this.namePos, findNullOffset(this.bytes, this.namePos));
@@ -522,7 +526,7 @@ define(['itemObjectModel', 'mac/roman', 'ByteSource'], function(itemOM, macRoman
       return name;
     },
     get nameAfterPos() {
-      return this.namePos + (this.name || '').length + 1;
+      return this.namePos + wordAlign((this.name || '').length + 1);
     },
     get scriptPos() {
       return this.nameAfterPos;
