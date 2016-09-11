@@ -182,7 +182,7 @@ define(['mac/roman', 'mac/date'], function(macRoman, macDate) {
       return macRoman(this.bytes, this.extraStrings.afterPos, 4);
     },
     get resourceID() {
-      return this.dataView.getInt16(this.extraStrings.afterPo + 4);
+      return this.dataView.getInt16(this.extraStrings.afterPos + 4);
     },
   };
   
