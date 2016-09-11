@@ -144,7 +144,7 @@ define(['mac/roman', 'mac/date'], function(macRoman, macDate) {
         var len = this.dataView.getUint16(pos + 2, false);
         var afterPos = pos + 4 + len + len % 2;
         if (valueID === -1) {
-          values.afterPos = endPos;
+          values.afterPos = afterPos;
           break;
         }
         var valueName;
