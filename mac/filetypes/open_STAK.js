@@ -8,6 +8,22 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
     return offset;
   }
   
+  function numVersion(bytes, pos) {
+    var versionString = bytes[pos] + '.' + (bytes[pos + 1] >> 4);
+    if (bytes[pos + 1] & 7) versionString += '.' + (bytes[pos + 1] & 7);
+    switch(bytes[pos + 2]) {
+      case 0x20: versionString += 'dev'; break;
+      case 0x40: versionString += 'a'; break;
+      case 0x60: versionString += 'b'; break;
+      case 0x80:
+        if (bytes[pos + 3]) versionString += 'rel';
+        break;
+      default: versionString += '[u' + bytes[pos+2] + ']'; break;
+    }
+    if (bytes[pos + 3]) versionString += bytes[pos + 3];
+    return versionString;
+  }
+  
   function open(item) {
     function onBlock(item, byteSource) {
       return byteSource.slice(0, 12).getBytes().then(function(headerBytes) {
@@ -45,6 +61,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
                 blockItem.addItem(scriptItem);
               }));
               break;
+            /*
             case 'CARD': case 'BKGD':
               blockItem.startAddingItems();
               blockItem.notifyPopulating(blockItem.getBytes().then(function(bytes) {
@@ -52,6 +69,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
                 blockItem.setDataObject(card);
               }));
               break;
+            */
           }
         }
         if (byteSource.byteLength >= (length + 12)) {
@@ -69,6 +87,10 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
   StackView.prototype = {
     toJSON: function() {
       return {
+        version1: this.version1,
+        version2: this.version2,
+        version3: this.version3,
+        version4: this.version4,
         cardCount: this.cardCount,
         listBlockID: this.listBlockID,
         userLevelSetting: this.userLevelSetting,
@@ -113,6 +135,18 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
       return !(this.flags & (1 << 15));
     },
     // unknown_0x42: 0x12 bytes
+    get version1() {
+      return versionString(this.bytes, 0x54);
+    },
+    get version2() {
+      return versionString(this.bytes, 0x58);
+    },
+    get version3() {
+      return versionString(this.bytes, 0x5C);
+    },
+    get version4() {
+      return versionString(this.bytes, 0x60);
+    },
     // unknown_0x64: 0x148 bytes
     get screenHeight() {
       return this.dataView.getUint16(0x1ac, false);
@@ -131,7 +165,6 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
     getScript: function() {
       return macRoman(this.bytes, 0x5F4).replace(/\0.*/, '');
     },
-    // TODO: support NumVersion info for HyperCard version numbers
   };
   
   function CardView(buffer, byteOffset, byteLength) {
