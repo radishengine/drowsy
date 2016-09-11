@@ -72,7 +72,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
                   partItem.setDataObject(card.parts[i]);
                   if (card.parts[i].script) {
                     var scriptItem = itemOM.createItem('script');
-                    scriptItem.setDataObject(card.parts[i].cript);
+                    scriptItem.setDataObject(card.parts[i].script);
                     partItem.addItem(scriptItem);
                   }
                   blockItem.addItem(partItem);
