@@ -62,15 +62,13 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
                 blockItem.addItem(scriptItem);
               }));
               break;
-            /*
             case 'CARD': case 'BKGD':
               blockItem.startAddingItems();
               blockItem.notifyPopulating(blockItem.getBytes().then(function(bytes) {
-                var card = new CardView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+                var card = new CardView(name === 'BKGD', bytes.buffer, bytes.byteOffset, bytes.byteLength);
                 blockItem.setDataObject(card);
               }));
               break;
-            */
           }
         }
         if (byteSource.byteLength >= (length + 12)) {
@@ -168,7 +166,8 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
     },
   };
   
-  function CardView(buffer, byteOffset, byteLength) {
+  function CardView(isBackground, buffer, byteOffset, byteLength) {
+    this.isBackground = isBackground;
     this.dataView = new DataView(buffer, byteOffset, byteLength);
     this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
@@ -204,21 +203,24 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
     },
     // unknown_0x0A: 0xE bytes
     get backgroundID() {
-      return this.dataView.getInt32(0x18, false);
+      return this.isBackground ? null : this.dataView.getInt32(0x18, false);
+    },
+    get offsetForBackground(v) {
+      return this.isBackground ? v - 4 : v;
     },
     get partCount() {
-      return this.dataView.getUint16(0x1C, false);
+      return this.dataView.getUint16(this.offsetForBackground(0x1C), false);
     },
     // unknown_0x1E: 0x6 bytes
     get partContentCount() {
-      return this.dataView.getUint16(0x24, false);
+      return this.dataView.getUint16(this.offsetForBackground(0x24), false);
     },
     get scriptType() {
-      return this.dataView.getUint32(0x24, false);
+      return this.dataView.getUint32(this.offsetForBackground(0x24), false);
     },
     get parts() {
       var parts = new Array(this.partCount);
-      var pos = 0x2A;
+      var pos = this.offsetForBackground(0x2A);
       for (var i = 0; i < parts.length; i++) {
         var len = this.dataView.getUint16(pos, false);
         parts[i] = new PartView(this.bytes.buffer, this.bytes.byteOffset + pos, len);
