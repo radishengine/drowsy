@@ -5,7 +5,8 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
   function open(item) {
     function onBlock(item, byteSource) {
       return byteSource.slice(0, 12).getBytes().then(function(headerBytes) {
-        var dv = new DataView(headerBytes.buffer, headerBytes.byteOffset, 4);
+        var dv = new DataView(
+          headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
         var length = dv.getUint32(0, false);
         var name = macRoman(headerBytes, 4, 4);
         var id = dv.getInt32(8, false);
