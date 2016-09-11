@@ -9,7 +9,7 @@ define(['itemObjectModel', 'mac/roman', 'ByteSource'], function(itemOM, macRoman
   }
   
   function wordAlign(v) {
-    return v + v % 1;
+    return v + v % 2;
   }
   
   function versionString(bytes, pos) {
