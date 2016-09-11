@@ -558,7 +558,7 @@ define(['itemObjectModel', 'mac/roman', 'ByteSource'], function(itemOM, macRoman
         return macRoman(this.bytes, 6 + len).replace(/\0.*/, '');
       }
       else {
-        return macRoman(this.bytes, 7).replace(/\0.*/, '');
+        return macRoman(this.bytes, 5).replace(/\0.*/, '');
       }
     },
   };
