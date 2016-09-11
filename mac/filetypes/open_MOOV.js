@@ -16,6 +16,11 @@ function(itemOM, macRoman, macDate, fixedPoint) {
         var length = new DataView(headerBytes.buffer, headerBytes.byteOffset, 4).getUint32(0, false);
         var atomItem = itemOM.createItem(name);
         item.addItem(atomItem);
+        if (length === 0) {
+          // sometimes the data fork is '\0\0\0\0mdat...'
+          atomItem.byteSource = byteSource.slice(8);
+          return;
+        }
         if (length > 8) {
           atomItem.byteSource = byteSource.slice(8, length);
           switch (name) {
