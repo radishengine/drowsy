@@ -67,6 +67,11 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
               blockItem.notifyPopulating(blockItem.getBytes().then(function(bytes) {
                 var card = new CardView(name === 'BKGD', bytes.buffer, bytes.byteOffset, bytes.byteLength);
                 blockItem.setDataObject(card);
+                if (card.cardScript) {
+                  var scriptItem = itemOM.createItem('script');
+                  scriptItem.setDataObject(card.cardScript);
+                  blockItem.addItem(scriptItem);
+                }
               }));
               break;
           }
@@ -181,7 +186,6 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
         parts: this.parts,
         partContents: this.partContents,
         cardName: this.cardName,
-        cardScript: this.cardScript,
         osaScript: this.osaScript,
       };
     },
@@ -259,7 +263,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
     },
     get cardScript() {
       var len = findNullOffset(this.bytes, this.cardScriptPos);
-      var val = macRoman(this.bytes, this.cardScriptPos, len);
+      var val = len === 0 ? null : macRoman(this.bytes, this.cardScriptPos, len);
       Object.defineProperty(this, 'cardScript', {value:val});
       return val;
     },
