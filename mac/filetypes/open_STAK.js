@@ -268,7 +268,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
       return val;
     },
     get cardScriptAfterPos() {
-      return this.cardScriptPos + this.cardScript.length + 1;
+      return this.cardScriptPos + (this.cardScript || '').length + 1;
     },
     get osaScript() {
       var pos = this.cardScriptAfterPos;
