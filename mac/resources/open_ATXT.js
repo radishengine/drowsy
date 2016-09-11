@@ -10,6 +10,7 @@ define(['mac/roman'], function(macRoman) {
   
   function TextView(buffer, byteOffset, byteLength) {
     this.dataView = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   };
   TextView.prototype = {
     toJSON: function() {
