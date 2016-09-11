@@ -16,7 +16,7 @@ define(function() {
       }
       item.setRawAudio({
         channels: 1,
-        samplingRate: 11050,
+        samplingRate: 11000,
         bytesPerSample: 1,
         samples: samples,
       });
