@@ -108,10 +108,10 @@ define(['mac/roman', 'mac/date'], function(macRoman, macDate) {
       return fourCC;
     },
     get nextLevelUp() {
-      return this.getInt16(130, false);
+      return this.dataView.getInt16(130, false);
     },
     get nextLevelDown() {
-      return this.getInt16(132, false);
+      return this.dataView.getInt16(132, false);
     },
     get volumeAttributes() {
       /*
@@ -122,7 +122,7 @@ define(['mac/roman', 'mac/date'], function(macRoman, macDate) {
         busy = 0x0040
         fault was found = 0x0007
       */   
-      return this.getUint32(134, false);
+      return this.dataView.getUint32(134, false);
     },
     get volumeFileSystemID() {
       var fs = macRoman(this.bytes, 136);
