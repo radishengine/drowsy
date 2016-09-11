@@ -94,7 +94,7 @@ define(function() {
             // TODO: string operand
             throw new Error('unknown operand');
         }
-	    }
+      }
       
       item.setDataObject(block());
     
