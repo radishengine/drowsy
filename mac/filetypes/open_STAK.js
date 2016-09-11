@@ -526,7 +526,7 @@ define(['itemObjectModel', 'mac/roman', 'ByteSource'], function(itemOM, macRoman
       return name;
     },
     get nameAfterPos() {
-      return this.namePos + wordAlign((this.name || '').length + 1);
+      return this.namePos + (this.name || '').length + 2;
     },
     get scriptPos() {
       return this.nameAfterPos;
