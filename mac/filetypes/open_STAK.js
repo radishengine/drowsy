@@ -534,7 +534,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
     this.dataView = new DataView(buffer, byteOffset, byteLength);
     this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
-  ContentView.prototype = {
+  ContentsView.prototype = {
     toJSON: function() {
       return {
         forPart: this.forPart,
