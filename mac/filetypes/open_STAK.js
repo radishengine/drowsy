@@ -168,29 +168,27 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
     get dontSearch() {
       return !!(this.flags & (1 << 11));
     },
-    // unknown_0x10: 0xE bytes
+    // unknown_0x0A: 0xE bytes
     get backgroundID() {
-      return this.dataView.getInt32(0x1E, false);
+      return this.dataView.getInt32(0x18, false);
     },
     get partCount() {
-      return this.dataView.getUint16(0x20, false);
+      return this.dataView.getUint16(0x1C, false);
     },
-    // unknown_0x22: 0x6 bytes
+    // unknown_0x1E: 0x6 bytes
     get partContentCount() {
-      return this.dataView.getUint16(0x28, false);
+      return this.dataView.getUint16(0x24, false);
     },
     get scriptType() {
-      var type = macRoman(this.bytes, 0x2A, 4);
-      if (type === '\0\0\0\0') return 'HyperTalk';
-      return type;
+      return this.dataView.getUint32(0x24, false);
     },
     get parts() {
       var parts = new Array(this.partCount);
-      var pos = 0x2E;
+      var pos = 0x2A;
       for (var i = 0; i < parts.length; i++) {
         var len = this.dataView.getUint16(pos, false);
         parts[i] = new PartView(this.bytes.buffer, this.bytes.byteOffset + pos, len);
-        pos += len + len % 2;
+        pos += len + len%2;
       }
       parts.afterPos = pos;
       Object.defineProperty(this, 'parts', {value:parts});
@@ -201,8 +199,8 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
       var pos = this.parts.afterPos;
       for (var i = 0; i < contents.length; i++) {
         var len = this.dataView.getUint16(pos + 2, false);
-        contents[i] = new ContentsView(this.bytes.buffer, this.bytes.byteOffset + pos, len);
-        pos += len + len % 2;
+        contents[i] = new ContentsView(this.bytes.buffer, this.bytes.byteOffset + pos, 4 + len);
+        pos += 4 + len + len%2;
       }
       contents.afterPos = pos;
       Object.defineProperty(this, 'partContents', {value:contents});
