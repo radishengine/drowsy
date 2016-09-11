@@ -263,7 +263,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
     },
     get cardScript() {
       var len = findNullOffset(this.bytes, this.cardScriptPos);
-      var val = len === 0 ? null : macRoman(this.bytes, this.cardScriptPos, len);
+      var val = macRoman(this.bytes, this.cardScriptPos, len);
       Object.defineProperty(this, 'cardScript', {value:val});
       return val;
     },
