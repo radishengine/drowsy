@@ -268,7 +268,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
     },
     get osaScript() {
       var pos = this.cardScriptAfterPos;
-      if (pos >= this.bytes.length) return null;
+      if (pos + 4 >= this.bytes.length) return null;
       var offset = this.dataView.getUint16(pos, false);
       var len = this.dataView.getUint16(pos + 2, false);
       if (len === 0) return null;
