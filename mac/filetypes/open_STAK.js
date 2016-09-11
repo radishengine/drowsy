@@ -549,7 +549,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
       return 6;
     },
     get styleLength() {
-      return this.getUint16(4, false);
+      return this.dataView.getUint16(4, false);
     },
     get text() {
       return macRoman(this.bytes, this.styleOffset + this.styleLength).replace(/\0.*/, '');
