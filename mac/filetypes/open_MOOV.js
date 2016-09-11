@@ -7,8 +7,13 @@ function(itemOM, macRoman, macDate, fixedPoint) {
   function open(item) {
     function onAtom(item, byteSource) {
       return byteSource.slice(0, 8).getBytes().then(function(headerBytes) {
-        var length = new DataView(headerBytes.buffer, headerBytes.byteOffset, 4).getUint32(0, false);
         var name = macRoman(headerBytes, 4, 4);
+        if (!/[a-z]{4}/.test(name)) {
+          // some QuickTime files store data directly in the data fork,
+          // with an mdat-less MooV atom structure in the resource fork
+          return;
+        }
+        var length = new DataView(headerBytes.buffer, headerBytes.byteOffset, 4).getUint32(0, false);
         var atomItem = itemOM.createItem(name);
         item.addItem(atomItem);
         if (length > 8) {
