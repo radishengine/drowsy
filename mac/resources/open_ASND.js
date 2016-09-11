@@ -13,7 +13,7 @@ define(function() {
         value += DELTAS[bytes[i] & 0xf];
         value &= 0xff;
         samples[i*2] = value;
-        value += deltas[(bytes[i] >> 4) & 0xf];
+        value += DELTAS[(bytes[i] >> 4) & 0xf];
         value &= 0xff;
         samples[i*2 + 1] = value;
       }
