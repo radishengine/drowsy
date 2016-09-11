@@ -9,10 +9,10 @@ define(['mac/roman'], function(macRoman) {
       var pos = dv.getUint16(0, false);
       
       var obj = {
-        top: this.getInt16(pos, false),
-        left: this.getInt16(pos + 2, false),
-        bottom: this.getInt16(pos + 4, false),
-        right: this.getInt16(pos + 6, false),
+        top: dv.getInt16(pos, false),
+        left: dv.getInt16(pos + 2, false),
+        bottom: dv.getInt16(pos + 4, false),
+        right: dv.getInt16(pos + 6, false),
         isPlural: !!bytes[pos + 8],
         // unknown: 4 bytes
         accuracy: bytes[pos + 13],
