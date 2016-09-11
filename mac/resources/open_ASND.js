@@ -6,13 +6,16 @@ define(function() {
 
   function open(item) {
     return item.getBytes().then(function(bytes) {
-      var samples = new Uint8Array(2 * (bytes.length - 20));
+      bytes = bytes.subarray(20);
+      var samples = new Uint8Array(2 * bytes.length);
       var value = 0x80;
-      for (var i = 0; i < samples.length; i++) {
-        var index = 20 + (i >> 1);
-        value += (i % 2) ? DELTAS[bytes[index] >> 4] : DELTAS[bytes[index] & 0xf];
+      for (var i = 0; i < bytes.length; i++) {
+        value += DELTAS[bytes[i] & 0xf];
         value &= 0xff;
-        samples[i] = value; // (value << 24 >> 24) + 128;
+        samples[i*2] = value;
+        value += deltas[(bytes[i] >> 4) & 0xf];
+        value &= 0xff;
+        samples[i*2 + 1] = value;
       }
       item.setRawAudio({
         channels: 1,
