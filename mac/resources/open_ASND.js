@@ -9,7 +9,7 @@ define(function() {
       var samples = new Uint8Array(2 * (bytes.length - 20));
       var value = 0x80;
       for (var i = 0; i < samples.length; i++) {
-        var index = 20 + i >> 1;
+        var index = 20 + (i >> 1);
         value += (i % 2) ? DELTAS[bytes[index] >> 4] : DELTAS[bytes[index] & 0xf];
         value &= 0xff;
         samples[i] = (value << 24 >> 24) + 128;
