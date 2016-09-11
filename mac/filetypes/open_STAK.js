@@ -22,9 +22,15 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
                 blockItem.setDataObject(stack);
                 for (var i = 0; i < stack.patternCount; i++) {
                   var patternItem = itemOM.createItem('pattern ' + i);
-                  var patternData = 
+                  var patternData = stack.getRawPattern(i);
                   patternItem.withPixels(8, 8, function(pixelData) {
-                    
+                    for (var y = 0; y < 8; y++) {
+                      for (var x = 0; x < 8; x++) {
+                        if (patternData[y] & (0x80 >> x)) {
+                          pixelData[4 * (y*8 + x) + 3] = 0xff;
+                        }
+                      }
+                    }
                   });
                   blockItem.addItem(patternItem);
                 }
