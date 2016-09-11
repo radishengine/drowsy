@@ -200,11 +200,11 @@ define(['itemObjectModel', 'mac/roman', 'ByteSource'], function(itemOM, macRoman
   CardView.prototype = {
     toJSON: function() {
       return {
+        cardName: this.cardName,
         pictureBitmapID: this.pictureBitmapID,
         flags: this.flags,
         backgroundID: this.backgroundID,
         scriptType: this.scriptType,
-        cardName: this.cardName,
         osaScript: this.osaScript,
       };
     },
@@ -307,6 +307,7 @@ define(['itemObjectModel', 'mac/roman', 'ByteSource'], function(itemOM, macRoman
   PartView.prototype = {
     toJSON: function() {
       return {
+        name: this.name,
         type: this.type,
         flags: this.flags,
         isHidden: this.isHidden,
@@ -349,7 +350,6 @@ define(['itemObjectModel', 'mac/roman', 'ByteSource'], function(itemOM, macRoman
         hasTextStyleItalic: this.hasTextStyleItalic,
         hasTextStyleBold: this.hasTextStyleBold,
         lineHeight2: this.lineHeight2,
-        name: this.name,
       };
     },
     get type() {
