@@ -60,7 +60,7 @@ define(['mac/roman', 'mac/date'], function(macRoman, macDate) {
       }
     },
     get volumeName() {
-      return macRoman(this.bytes, 11, bytes[10]);
+      return macRoman(this.bytes, 11, this.bytes[10]);
     },
     get creationDate() {
       return macDate(this.dataView, 38);
