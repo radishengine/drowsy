@@ -163,7 +163,7 @@ define(['mac/roman', 'mac/date'], function(macRoman, macDate) {
         if (valueName === 'directoryIDs') {
           value = [];
           for (var i = 0; i < len/4; i++) {
-            ids.push(this.dataView.getUint32(pos + 4 + 4*i, false));
+            value.push(this.dataView.getUint32(pos + 4 + 4*i, false));
           }
         }
         else {
