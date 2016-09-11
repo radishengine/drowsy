@@ -190,7 +190,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
       for (var i = 0; i < parts.length; i++) {
         var len = this.dataView.getUint16(pos, false);
         parts[i] = new PartView(this.bytes.buffer, this.bytes.byteOffset + pos, len);
-        pos += len;
+        pos += len + len % 2;
       }
       parts.afterPos = pos;
       Object.defineProperty(this, 'parts', {value:parts});
@@ -202,7 +202,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
       for (var i = 0; i < contents.length; i++) {
         var len = this.dataView.getUint16(pos + 2, false);
         contents[i] = new ContentsView(this.bytes.buffer, this.bytes.byteOffset + pos, len);
-        pos += len;
+        pos += len + len % 2;
       }
       contents.afterPos = pos;
       Object.defineProperty(this, 'partContents', {value:contents});
