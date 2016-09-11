@@ -8,7 +8,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
     return offset;
   }
   
-  function numVersion(bytes, pos) {
+  function versionString(bytes, pos) {
     var versionString = bytes[pos] + '.' + (bytes[pos + 1] >> 4);
     if (bytes[pos + 1] & 7) versionString += '.' + (bytes[pos + 1] & 7);
     switch(bytes[pos + 2]) {
