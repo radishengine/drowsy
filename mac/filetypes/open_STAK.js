@@ -2,6 +2,12 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
 
   'use strict';
   
+  function findNullOffset(bytes, pos) {
+    var offset = 0;
+    while (bytes[pos + offset]) offset++;
+    return offset;
+  }
+  
   function open(item) {
     function onBlock(item, byteSource) {
       return byteSource.slice(0, 12).getBytes().then(function(headerBytes) {
@@ -37,6 +43,13 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
                 var scriptItem = itemOM.createItem('script');
                 scriptItem.setDataObject(stack.getScript());
                 blockItem.addItem(scriptItem);
+              }));
+              break;
+            case 'CARD': case 'BKGD':
+              blockItem.startAddingItems();
+              blockItem.notifyPopulating(blockItem.getBytes().then(function(bytes) {
+                var card = new CardView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+                blockItem.setDataObject(card);
               }));
               break;
           }
@@ -120,6 +133,123 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
     },
     // TODO: support NumVersion info for HyperCard version numbers
   };
+  
+  function CardView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+  }
+  CardView.prototype = {
+    toJSON: function() {
+      return {
+        pictureBitmapID: this.pictureBitmapID,
+        flags: this.flags,
+        backgroundID: this.backgroundID,
+        scriptType: this.scriptType,
+        parts: this.parts,
+        partContents: this.partContents,
+        cardName: this.cardName,
+        cardScript: this.cardScript,
+        osaScript: this.osaScript,
+      };
+    },
+    // unknown_0x0000: 4 bytes
+    get pictureBitmapID() {
+      return this.dataView.getInt32(0x4, false); // 0 = transparent
+    },
+    get flags() {
+      return this.dataView.getUint16(0x8, false);
+    },
+    get canDelete() {
+      return !(this.flags & (1 << 14));
+    },
+    get hideCardPicture() {
+      return !!(this.flags & (1 << 13));
+    },
+    get dontSearch() {
+      return !!(this.flags & (1 << 11));
+    },
+    // unknown_0x10: 0xE bytes
+    get backgroundID() {
+      return this.dataView.getInt32(0x1E, false);
+    },
+    get partCount() {
+      return this.dataView.getUint16(0x20, false);
+    },
+    // unknown_0x22: 0x6 bytes
+    get partContentCount() {
+      return this.dataView.getUint16(0x28, false);
+    },
+    get scriptType() {
+      var type = macRoman(this.bytes, 0x2A, 4);
+      if (type === '\0\0\0\0') return 'HyperTalk';
+      return type;
+    },
+    get parts() {
+      var parts = new Array(this.partCount);
+      var pos = 0x2E;
+      for (var i = 0; i < parts.length; i++) {
+        var len = this.dataView.getUint16(pos, false);
+        parts[i] = new PartView(this.bytes.buffer, this.bytes.byteOffset + pos, len);
+        pos += len;
+      }
+      parts.afterPos = pos;
+      Object.defineProperty(this, 'parts', {value:parts});
+      return parts;
+    },
+    get partContents() {
+      var contents = new Array(this.partContentCount);
+      var pos = this.parts.afterPos;
+      for (var i = 0; i < contents.length; i++) {
+        var len = this.dataView.getUint16(pos + 2, false);
+        contents[i] = new ContentsView(this.bytes.buffer, this.bytes.byteOffset + pos, len);
+        pos += len;
+      }
+      contents.afterPos = pos;
+      Object.defineProperty(this, 'partContents', {value:contents});
+      return contents;
+    },
+    get cardNamePos() {
+      return this.partContents.afterPos;
+    },
+    get cardName() {
+      var len = findNullOffset(this.bytes, this.cardNamePos);
+      var val = macRoman(this.bytes, this.partContents.afterPos, len);
+      Object.defineProperty(this, 'cardName', {value:val});
+      return val;
+    },
+    get cardNameAfterPos() {
+      return this.cardNamePos + this.cardName.length + 1;
+    },
+    get cardScriptPos() {
+      return this.cardNameAfterPos;
+    },
+    get cardScript() {
+      var len = findNullOffset(this.bytes, this.partContents.afterPos + this.cardName.length + 1);
+      var val = macRoman(this.bytes, this.partContents.afterPos, len);
+      Object.defineProperty(this, 'cardScript', {value:val});
+      return val;
+    },
+    get cardScriptAfterPos() {
+      return this.cardScriptPos + this.cardScript.length + 1;
+    },
+    get osaScript() {
+      var pos = this.cardScriptAfterPos;
+      if (pos >= this.bytes.length) return null;
+      var offset = this.dataView.getUint16(pos, false);
+      var len = this.dataView.getUint16(pos + 2, false);
+      if (len === 0) return null;
+      pos = pos + 2 + offset;
+      return macRoman(this.bytes, pos, len);
+    },
+  };
+  
+  function PartView(buffer, byteOffset, byteLength) {
+    
+  }
+  
+  function ContentsView(buffer, byteOffset, byteLength) {
+    
+  }
   
   return open;
 
