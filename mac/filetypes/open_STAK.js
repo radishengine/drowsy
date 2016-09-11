@@ -67,6 +67,21 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
               blockItem.notifyPopulating(blockItem.getBytes().then(function(bytes) {
                 var card = new CardView(name === 'BKGD', bytes.buffer, bytes.byteOffset, bytes.byteLength);
                 blockItem.setDataObject(card);
+                for (var i = 0; i < card.parts.length; i++) {
+                  var partItem = itemOM.createItem('part');
+                  partItem.setDataObject(card.parts[i]);
+                  if (card.parts[i].script) {
+                    var scriptItem = itemOM.createItem('script');
+                    scriptItem.setDataObject(card.parts[i].cript);
+                    partItem.addItem(scriptItem);
+                  }
+                  blockItem.addItem(partItem);
+                }
+                for (var i = 0; i < card.partContents.length; i++) {
+                  var contentsItem = itemOM.createItem('part contents');
+                  contentsItem.setDataObject(card.partContents[i]);
+                  blockItem.addItem(contentsItem);
+                }
                 if (card.cardScript) {
                   var scriptItem = itemOM.createItem('script');
                   scriptItem.setDataObject(card.cardScript);
@@ -183,8 +198,6 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
         flags: this.flags,
         backgroundID: this.backgroundID,
         scriptType: this.scriptType,
-        parts: this.parts,
-        partContents: this.partContents,
         cardName: this.cardName,
         osaScript: this.osaScript,
       };
@@ -282,12 +295,266 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
   };
   
   function PartView(buffer, byteOffset, byteLength) {
-    
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
+  PartView.prototype = {
+    toJSON: function() {
+      return {
+        type: this.type,
+        flags: this.flags,
+        isHidden: this.isHidden,
+        doNotWrap: this.doNotWrap,
+        doNotSearch: this.doNotSearch,
+        hasSharedText: this.hasSharedText,
+        hasFixedLineHeight: this.hasFixedLineHeight,
+        isAutoTab: this.isAutoTab,
+        isEnabled: this.isEnabled,
+        top: this.top,
+        left: this.left,
+        bottom: this.bottom,
+        right: this.right,
+        flags2: this.flags2,
+        showName: this.showName,
+        autoSelect: this.autoSelect,
+        highlight: this.highlight,
+        showLines: this.showLines,
+        wideMargins: this.wideMargins,
+        autoHighlight: this.autoHighlight,
+        sharedHighlight: this.sharedHighlight,
+        multipleLines: this.multipleLines,
+        buttonFamilyNumber: this.buttonFamilyNumber,
+        style: this.style,
+        titleWidth: this.titleWidth,
+        lastSelectedLine: this.lastSelectedLine,
+        iconID: this.iconID,
+        firstSelectedLine: this.firstSelectedLine,
+        textAlignment: this.textAlignment,
+        textFontID: this.textFontID,
+        textFontSize: this.textFontSize,
+        lineHeight: this.lineHeight,
+        textStyleFlags: this.textStyleFlags,
+        hasTextStyleGroup: this.hasTextStyleGroup,
+        hasTextStyleExtend: this.hasTextStyleExtend,
+        hasTextStyleCondense: this.hasTextStyleCondense,
+        hasTextStyleShadow: this.hasTextStyleShadow,
+        hasTextStyleOutline: this.hasTextStyleOutline,
+        hasTextStyleUnderline: this.hasTextStyleUnderline,
+        hasTextStyleItalic: this.hasTextStyleItalic,
+        hasTextStyleBold: this.hasTextStyleBold,
+        lineHeight2: this.lineHeight2,
+        name: this.name,
+      };
+    },
+    get type() {
+      var value = this.bytes[2];
+      switch(value) {
+        case 1: return 'button';
+        case 2: return 'field';
+        default: return value;
+      }
+    },
+    get flags() {
+      return this.bytes[3];
+    },
+    get isHidden() {
+      return !!(this.flags & (1 << 7));
+    },
+    get doNotWrap() {
+      return !!(this.flags & (1 << 5));
+    },
+    get doNotSearch() {
+      return !!(this.flags & (1 << 4));
+    },
+    get hasSharedText() {
+      return !!(this.flags & (1 << 3));
+    },
+    get hasFixedLineHeight() {
+      return !!(this.flags & (1 << 2));
+    },
+    get isAutoTab() {
+      return !!(this.flags & (1 << 1));
+    },
+    get isEnabled() {
+      return !(this.flags & (1 << 0));
+    },
+    get top() {
+      return this.dataView.getInt16(4, false);
+    },
+    get left() {
+      return this.dataView.getInt16(6, false);
+    },
+    get bottom() {
+      return this.dataView.getInt16(8, false);
+    },
+    get right() {
+      return this.dataView.getInt16(10, false);
+    },
+    get flags2() {
+      return this.dataView.getUint16(12, false);
+    },
+    get showName() {
+      return !!(this.flags2 & (1 << 15));
+    },
+    get autoSelect() {
+      return this.showName;
+    },
+    get highlight() {
+      return !!(this.flags2 & (1 << 14));
+    },
+    get showLines() {
+      return this.highlight;
+    },
+    get wideMargins() {
+      return !!(this.flags2 & (1 << 13));
+    },
+    get autoHighlight() {
+      return this.wideMargins;
+    },
+    get sharedHighlight() {
+      return !!(this.flags2 & (1 << 12));
+    },
+    get multipleLines() {
+      return this.sharedHighlight;
+    },
+    get buttonFamilyNumber() {
+      return (this.flags2 >> 8) & 0xf;
+    },
+    get style() {
+      var v = (this.flags2 & 0xf);
+      switch(this.type) {
+        default: return v;
+        case 'button':
+          switch(v) {
+            case 0: return 'transparent';
+            case 1: return 'opaque';
+            case 2: return 'rectangle';
+            case 3: return 'roundrect';
+            case 4: return 'shadow';
+            case 5: return 'checkbox';
+            case 6: return 'radiobutton';
+            case 8: return 'standard';
+            case 9: return 'default';
+            case 10: return 'oval';
+            case 11: return 'popup';
+            default: return v;
+          }
+        case 'field':
+          switch(v) {
+            case 0: return 'transparent';
+            case 1: return 'opaque';
+            case 2: return 'rectangle';
+            case 4: return 'shadow';
+            case 7: return 'scrolling';
+            default: return v;
+          }
+      }
+    },
+    get titleWidth() {
+      return this.dataView.getUint16(14, false);
+    },
+    get lastSelectedLine() {
+      return this.titleWidth;
+    },
+    get iconID() {
+      return this.dataView.getInt16(16, false);
+    },
+    get firstSelectedLine() {
+      return this.iconID;
+    },
+    get textAlignment() {
+      var v = this.dataView.getInt16(18, false);
+      switch(v) {
+        case 0: return 'default';
+        case 1: return 'center';
+        case -1: return 'right';
+        case -2: return 'left';
+        default: return v;
+      }
+    },
+    get textFontID() {
+      return this.dataView.getInt16(20, false);
+    },
+    get textFontSize() {
+      return this.dataView.getUint16(22, false);
+    },
+    get lineHeight() {
+      return this.dataView.getInt16(24, false);
+    },
+    get textStyleFlags() {
+      return this.dataView.getUint16(26, false);
+    },
+    get hasTextStyleGroup() {
+      return !!(this.textStyleFlags & (1 << 15));
+    },
+    get hasTextStyleExtend() {
+      return !!(this.textStyleFlags & (1 << 14));
+    },
+    get hasTextStyleCondense() {
+      return !!(this.textStyleFlags & (1 << 13));
+    },
+    get hasTextStyleShadow() {
+      return !!(this.textStyleFlags & (1 << 12));
+    },
+    get hasTextStyleOutline() {
+      return !!(this.textStyleFlags & (1 << 11));
+    },
+    get hasTextStyleUnderline() {
+      return !!(this.textStyleFlags & (1 << 10));
+    },
+    get hasTextStyleItalic() {
+      return !!(this.textStyleFlags & (1 << 9));
+    },
+    get hasTextStyleBold() {
+      return !!(this.textStyleFlags & (1 << 8));
+    },
+    get lineHeight2() {
+      return this.dataView.getUint16(28, false);
+    },
+    get namePos() {
+      return 30;
+    },
+    get name() {
+      var name = macRoman(this.bytes, this.namePos, findNullOffset(this.bytes, this.namePos));
+      Object.defineProperty(this, 'name', {value:name});
+      return name;
+    },
+    get nameAfterPos() {
+      return this.namePos + (this.name || '').length + 1;
+    },
+    get scriptPos() {
+      return this.nameAfterPos;
+    },
+    get script() {
+      return macRoman(this.bytes, this.scriptPos).replace(/\0.*/, '');
+    },
+  };
   
   function ContentsView(buffer, byteOffset, byteLength) {
-    
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
+  ContentView.prototype = {
+    toJSON: function() {
+      return {
+        forPart: this.forPart,
+        text: this.text,
+      };
+    },
+    get forPart() {
+      var v = this.dataView.getInt16(0, false);
+      return (v < 0) ? {type:'card', id:-v} : {type:'background', id:v};
+    },
+    get styleOffset() {
+      return 6;
+    },
+    get styleLength() {
+      return this.getUint16(4, false);
+    },
+    get text() {
+      return macRoman(this.bytes, this.styleOffset + this.styleLength).replace(/\0.*/, '');
+    },
+  };
   
   return open;
 
