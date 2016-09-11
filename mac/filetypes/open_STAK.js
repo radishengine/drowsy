@@ -518,7 +518,7 @@ define(['itemObjectModel', 'mac/roman', 'ByteSource'], function(itemOM, macRoman
       return this.dataView.getUint16(28, false);
     },
     get namePos() {
-      return 29;
+      return 30;
     },
     get name() {
       var name = macRoman(this.bytes, this.namePos, findNullOffset(this.bytes, this.namePos));
