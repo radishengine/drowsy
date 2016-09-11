@@ -36,6 +36,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
                 }
                 var scriptItem = itemOM.createItem('script');
                 scriptItem.setDataObject(stack.getScript());
+                blockItem.addItem(scriptItem);
               }));
               break;
           }
