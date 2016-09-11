@@ -6,7 +6,7 @@ define(['itemObjectModel'], function(itemOM) {
     return item.getBytes().then(function(bytes) {
       if (resourceName === 'PAT#') {
         var count = new DataView(bytes.buffer, bytes.byteOffset, 2).getInt16(0);
-        if (count < 0 || bytes.length < 2 * count*8) {
+        if (count < 0 || bytes.length < 2 + count*8) {
           return Promise.reject('bad length for PAT# table');
         }
         for (var i = 0; i < count; i++) {
