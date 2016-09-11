@@ -1,4 +1,4 @@
-define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
+define(['itemObjectModel', 'mac/roman', 'ByteSource'], function(itemOM, macRoman, ByteSource) {
 
   'use strict';
   
@@ -69,6 +69,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
                 blockItem.setDataObject(card);
                 for (var i = 0; i < card.parts.length; i++) {
                   var partItem = itemOM.createItem('part');
+                  partItem.byteSource = ByteSource.from(card.parts[i].bytes);
                   partItem.setDataObject(card.parts[i]);
                   if (card.parts[i].script) {
                     var scriptItem = itemOM.createItem('script');
@@ -79,6 +80,7 @@ define(['itemObjectModel', 'mac/roman'], function(itemOM, macRoman) {
                 }
                 for (var i = 0; i < card.partContents.length; i++) {
                   var contentsItem = itemOM.createItem('part contents');
+                  contentsItem.byteSource = ByteSource.from(card.partContents[i].bytes);
                   contentsItem.setDataObject(card.partContents[i]);
                   blockItem.addItem(contentsItem);
                 }
