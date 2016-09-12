@@ -187,7 +187,7 @@ function(
                   this.notifyPopulating(
                     promisedByteSource
                     .then(function() {
-                      open(itemEl, resourceInfo.type);
+                      itemEl.notifyPopulating(open(itemEl, resourceInfo.type));
                     })
                   );
                 }
