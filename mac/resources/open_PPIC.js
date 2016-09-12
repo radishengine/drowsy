@@ -57,21 +57,21 @@ define(function() {
           values: new Array(17),
         };
         var v = unsigned(8);
-        huffman.values[0] = v/15; huffman.values[2] = v%15;
+        huffman.values[0] = (v/15)|0; huffman.values[2] = v%15;
         v = unsigned(4);
         huffman.values[1] = v;
         v = unsigned(7);
-        huffman.values[3] = v/9; huffman.values[8] = v%9;
+        huffman.values[3] = (v/9)|0; huffman.values[8] = v%9;
         v = unsigned(4);
         huffman.values[4] = v;
         v = unsigned(10);
-        huffman.values[5] = v/77; huffman.values[6] = (v/7)%11; huffman.values[10] = v%7;
+        huffman.values[5] = (v/77)|0; huffman.values[6] = ((v/7)|0)%11; huffman.values[10] = v%7;
         v = unsigned(6);
-        huffman.values[7] = v/6; huffman.values[11] = v%6;
+        huffman.values[7] = (v/6)|0; huffman.values[11] = v%6;
         v = unsigned(3);
         huffman.values[9] = v;
         v = unsigned(4);
-        huffman.values[12] = v/3; huffman.values[14] = v%3;
+        huffman.values[12] = (v/3)|0; huffman.values[14] = v%3;
         v = unsigned(2);
         huffman.values[13] = v;
         v = unsigned(1);
