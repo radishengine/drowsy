@@ -249,6 +249,37 @@ define(function() {
           this.addItem(resourceEl);
         },
       },
+      getSubitem: {
+        value: function(matcher) {
+          if (typeof matcher === 'string') {
+            var str = matcher;
+            matcher = function(item){ return item.itemName === str; };
+          }
+          if (matcher instanceof RegExp) {
+            var rex = matcher;
+            matcher = function(item){ return rex.test(item.itemName); };
+          }
+          if (this.subitemsElement) {
+            for (var i = 0; i < this.subitemsElement.children.length; i++) {
+              if (matcher(this.subitemsElement.children[i])) {
+                return Promise.resolve(this.subitemsElement.children[i]);
+              }
+            }
+          }
+          var self = this;
+          var promise = new Promise(function(resolve, reject) {
+            function onAddItem(e) {
+              if (matcher(e.detail.item)) {
+                self.removeEventListener(itemObjectModel.EVT_ITEM_ADDED, onAddItem);
+                resolve(e.detail.item);
+              }
+            }
+            self.addEventListener(itemObjectModel.EVT_ITEM_ADDED, onAddItem);
+          });
+          this.populate();
+          return promise;
+        },
+      },
     },
   };
   
