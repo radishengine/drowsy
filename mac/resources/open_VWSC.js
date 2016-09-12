@@ -29,6 +29,34 @@ define(function() {
   var SPRITE_BYTES = 16; // 20
   var SPRITE_COUNT = 49;
   
+  function open(item) {
+    return item.getBytes().then(function(bytes) {
+      var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      if (dv.getUint32(0, false) !== bytes.length) {
+        return Promise.reject('length does not match data');
+      }
+      var previousData = new Uint8Array(1024);
+      var dataObject = [];
+      var pos = 4;
+      while (pos < bytes.length) {
+        var frameData = new Uint8Array(previousData);
+        var endPos = pos + dv.getUint16(pos);
+        if (endPos === pos) break;
+        pos += 2;
+        while (pos < endPos) {
+          var patchLength = bytes[pos] * 2, patchOffset = bytes[pos + 1] * 2;
+          pos += 2;
+          var patch = bytes.subarray(pos, pos + patchLength);
+          pos += patchLength;
+          frameData.set(patch, patchOffset);
+        }
+        dataObject.push(new FrameView(frameData.buffer, frameData.byteOffset, frameData.byteLength));
+        previousData = frameData;
+      }
+      item.setDataObject(dataObject);
+    });
+  }
+  
   function FrameView(buffer, byteOffset, byteLength) {
     Object.defineProperty(this, 'dv', {value:new DataView(buffer, byteOffset, byteLength)});
   }
@@ -204,32 +232,6 @@ define(function() {
     },
   });
   
-  return function(item) {
-    return item.getBytes().then(function(bytes) {
-      var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-      if (dv.getUint32(0, false) !== bytes.length) {
-        return Promise.reject('length does not match data');
-      }
-      var previousData = new Uint8Array(1024);
-      var dataObject = [];
-      var pos = 4;
-      while (pos < bytes.length) {
-        var frameData = new Uint8Array(previousData);
-        var endPos = pos + dv.getUint16(pos);
-        if (endPos === pos) break;
-        pos += 2;
-        while (pos < endPos) {
-          var patchLength = bytes[pos] * 2, patchOffset = bytes[pos + 1] * 2;
-          pos += 2;
-          var patch = bytes.subarray(pos, pos + patchLength);
-          pos += patchLength;
-          frameData.set(patch, patchOffset);
-        }
-        dataObject.push(new FrameView(frameData.buffer, frameData.byteOffset, frameData.byteLength));
-        previousData = frameData;
-      }
-      item.setDataObject(dataObject);
-    });
-  };
+  return open;
   
 });
