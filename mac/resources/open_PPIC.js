@@ -118,7 +118,7 @@ define(function() {
       
       console.log(huffmanTable);
       
-      image.withPixels(width, height, function(pixelData) {
+      item.withPixels(width, height, function(pixelData) {
       });
 
     });
