@@ -11,7 +11,8 @@ define(function() {
         if (available < bits) {
           var topBits = bytes[ibyte] << (32 - available) >>> (32 - available);
           ibyte++; ibit = 0;
-          return (topBits << bits) | unsigned(bits - available);
+          bits -= available;
+          return (topBits << bits) | unsigned(bits);
         }
         var value = bytes[ibyte] << (24 + ibit) >>> (32 - bits);
         ibit += bits;
