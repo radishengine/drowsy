@@ -122,8 +122,6 @@ define(function() {
         case 51: return 'dissolveBits';
         default: return this.dataView.getUint8(5);
       }
-      var v = this.dataView.getUint8(5);
-      return (v >= transitionNames.length) ? v : transitionNames[v];
     },
     get audio1() {
       return this.dataView.getUint16(6, false);
