@@ -10,6 +10,9 @@ define(function() {
         case 0x80:
           item.setDataObject(new GeneralSettingsView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
           break;
+        case 0x81:
+          item.setDataObject(new DiplomaGeometryView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+          break;
         default:
           console.warn('unsupported GNRL resource ID: ' + item.resourceID);
           break;
@@ -153,6 +156,40 @@ define(function() {
       }
       Object.defineProperty(this, 'commands', {value:commands});
       return commands;
+    },
+  };
+  
+  function DiplomaGeometryView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+  }
+  DiplomaGeometryView.prototype = {
+    toJSON: function() {
+      return {
+        signatureFont: this.signatureFont,
+        signatureSize: this.signatureSize,
+        top: this.top,
+        left: this.left,
+        bottom: this.bottom,
+        right: this.right,
+      };
+    },
+    get signatureFont() {
+      return this.dataView.getUint16(0, false);
+    },
+    get signatureSize() {
+      return this.dataView.getUint16(2, false);
+    },
+    get top() {
+      return this.dataView.getUint16(4, false);
+    },
+    get left() {
+      return this.dataView.getUint16(6, false);
+    },
+    get bottom() {
+      return this.dataView.getUint16(8, false);
+    },
+    get right() {
+      return this.dataView.getUint16(10, false);
     },
   };
   
