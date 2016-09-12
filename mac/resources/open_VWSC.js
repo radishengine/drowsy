@@ -10,10 +10,24 @@ define(function() {
         return Promise.reject('length does not match data');
       }
       item.playHeadFactory = {
-        createPlayHead: function() {
+        create: function() {
           return new FramePlayHead(bytes.buffer, bytes.byteOffset + 4, len - 4);
         },
       };
+      var testScreen = document.createElement('CANVAS');
+      testScreen.width = 640;
+      testScreen.height = 400;
+      var ctx = testScreen.getContext('2d');
+      testScreen.playHead = item.playHeadFactory.create();
+      testScreen.playHead.eventTarget = testScreen;
+      testScreen.addEventListener('enter-frame', function() {
+        ctx.fillStyle = 'rgb(' + Math.floor(Math.random() * 255)
+          + ',' + Math.floor(Math.random() * 255)
+          + ',' + Math.floor(Math.random() * 255) + ')';
+        ctx.fillRect(0, 0, 640, 480);
+      });
+      item.addItem(testScreen);
+      testScreen.playHead.next();
     });
   }
   
@@ -53,12 +67,15 @@ define(function() {
       }
       this.firstByteChanged = firstByteChanged;
       this.lastByteChanged = lastByteChanged;
+      
+      this.eventTarget.dispatchEvent(new Event('enter-frame'));
 
       var remaining = this.duration;
       if (typeof remaining === 'number') {
         window.setTimeout(this.next, remaining);
       }
     },
+    eventTarget: window,
     defaultDuration: 1000/15,
     get duration() {
       var v = this.dataView.getInt8(4);
