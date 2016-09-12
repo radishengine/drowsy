@@ -31,7 +31,7 @@ define(function() {
         inventory: {
           top: this.inventoryTop,
           left: this.inventoryLeft,
-          height: this.inventoryHeight;
+          height: this.inventoryHeight,
           width: this.inventoryWidth,
           offsetX: this.inventoryOffsetX,
           offsetY: this.inventoryOffsetY,
