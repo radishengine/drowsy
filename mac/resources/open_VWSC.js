@@ -45,9 +45,9 @@ define(function() {
     this.sourceNextPos = 0;
     this.currentBytes = new Uint8Array(BUFFER_BYTES);
     this.dataView = new DataView(this.currentBytes.buffer, this.currentBytes.byteOffset, SPRITE_OFFSET);
-    var sprites = new Array();
+    this.sprites = new Array();
     for (var i = SPRITE_OFFSET; i < BUFFER_BYTES; i += SPRITE_BYTES) {
-      sprites.push(new SpriteView(this.currentBytes.buffer, this.currentBytes.byteOffset + i, SPRITE_BYTES));
+      this.sprites.push(new SpriteView(this.currentBytes.buffer, this.currentBytes.byteOffset + i, SPRITE_BYTES));
     }
     this.next = this.next.bind(this);
   }
