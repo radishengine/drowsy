@@ -55,7 +55,7 @@ define(function() {
       
       var height = unsigned(1) ? unsigned(10) : unsigned(6);
       var width = unsigned(1) ? unsigned(10) : unsigned(6);
-      var stride = (width % 16) ? width + 16 - (width % 16) : width;
+      var stride = Math.floor((width + 15) / 16) * 8;
       
       function readMode3HuffmanTable() {
         var huffman = {
@@ -251,7 +251,8 @@ define(function() {
       item.withPixels(width, height, function(pixelData) {
         for (var y = 0; y < height; y++) {
           for (var x = 0; x < width; x++) {
-            var pixelValue = image[(y * stride) + x];
+            var pixelValue = image[(y * stride) + (x >> 1)];
+            pixelValue = (x & 1) ? pixelValue & 0xf : pixelValue >> 4;
             pixelData[4 * (y*width + x)] = pixelValue;
             pixelData[4 * (y*width + x) + 1] = pixelValue;
             pixelData[4 * (y*width + x) + 2] = pixelValue;
