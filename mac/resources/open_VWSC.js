@@ -18,13 +18,17 @@ define(function() {
       testScreen.width = 640;
       testScreen.height = 400;
       var ctx = testScreen.getContext('2d');
-      testScreen.playHead = item.playHeadFactory.create();
+      var playHead = testScreen.playHead = item.playHeadFactory.create();
       testScreen.playHead.eventTarget = testScreen;
       testScreen.addEventListener('enter-frame', function() {
+        ctx.clearRect(0, 0, 640, 480);
         ctx.fillStyle = 'rgb(' + Math.floor(Math.random() * 255)
           + ',' + Math.floor(Math.random() * 255)
           + ',' + Math.floor(Math.random() * 255) + ')';
-        ctx.fillRect(0, 0, 640, 480);
+        for (var i = 0; i < playHead.sprites.length; i++) {
+          if (!sprites[i].cast) continue;
+          ctx.fillRect(sprites[i].top, sprites[i].left, sprites[i].width, sprites[i].height);
+        }
       });
       item.addItem(testScreen);
       testScreen.playHead.next();
@@ -210,6 +214,12 @@ define(function() {
     },
     get right() {
       return this.dataView.getInt16(14, false);
+    },
+    get width() {
+      return this.right - this.left;
+    },
+    get height() {
+      return this.bottom - this.top;
     },
   };
 
