@@ -253,11 +253,11 @@ define(function() {
         value: function(matcher) {
           if (typeof matcher === 'string') {
             var str = matcher;
-            matcher = function(item){ return item.itemName === str; };
+            matcher = function(item){ return item.itemTitle === str; };
           }
           if (matcher instanceof RegExp) {
             var rex = matcher;
-            matcher = function(item){ return rex.test(item.itemName); };
+            matcher = function(item){ return rex.test(item.itemTitle); };
           }
           if (this.subitemsElement) {
             for (var i = 0; i < this.subitemsElement.children.length; i++) {
