@@ -3,7 +3,7 @@ define(function() {
   'use strict';
   
   function open(item) {
-    var promise = item.getBytes().then(function(bytes) {
+    return item.getBytes().then(function(bytes) {
       var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       var len = dv.getUint32(0, false);
       if (len > bytes.length) {
@@ -15,8 +15,6 @@ define(function() {
         },
       };
     });
-    item.notifyPopulating(promise);
-    return promise;
   }
   
   var BUFFER_BYTES = 1024;
