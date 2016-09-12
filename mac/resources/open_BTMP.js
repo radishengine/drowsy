@@ -18,7 +18,7 @@ define(['mac/palette2'], function(palette) {
             var bit = (byte >> (7 - (x & 7))) & 1;
             pixelData.set(palette[bit], 4 * (y*width + x));
           }
-          pos += pixmap.rowBytes;
+          pos += bitmapInfo.rowBytes;
         }
       });
     
