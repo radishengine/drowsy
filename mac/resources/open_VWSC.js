@@ -22,11 +22,11 @@ define(function() {
       testScreen.playHead.eventTarget = testScreen;
       testScreen.addEventListener('enter-frame', function() {
         ctx.clearRect(0, 0, 640, 480);
-        ctx.fillStyle = 'rgb(' + Math.floor(Math.random() * 255)
-          + ',' + Math.floor(Math.random() * 255)
-          + ',' + Math.floor(Math.random() * 255) + ')';
         for (var i = 0; i < playHead.sprites.length; i++) {
           if (!sprites[i].cast) continue;
+          ctx.fillStyle = 'rgb(' + Math.floor(Math.random() * 255)
+            + ',' + Math.floor(Math.random() * 255)
+            + ',' + Math.floor(Math.random() * 255) + ')';
           ctx.fillRect(sprites[i].top, sprites[i].left, sprites[i].width, sprites[i].height);
         }
       });
