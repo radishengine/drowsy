@@ -19,10 +19,11 @@ define(function() {
       testScreen.height = 400;
       var ctx = testScreen.getContext('2d');
       var playHead = testScreen.playHead = item.playHeadFactory.create();
+      var sprites = playHead.sprites;
       testScreen.playHead.eventTarget = testScreen;
       testScreen.addEventListener('enter-frame', function() {
         ctx.clearRect(0, 0, 640, 480);
-        for (var i = 0; i < playHead.sprites.length; i++) {
+        for (var i = 0; i < sprites.length; i++) {
           if (!sprites[i].cast) continue;
           ctx.fillStyle = 'rgb(' + Math.floor(Math.random() * 255)
             + ',' + Math.floor(Math.random() * 255)
