@@ -210,10 +210,10 @@ define(function() {
     get entryCount() {
       return this.dataView.getUint16(0, false);
     },
-    // unknown: 2 bytes
+    // maybe a 2-byte reserved field here, or not?
     get masks() {
       var masks = new Array(this.entryCount);
-      var pos = 4;
+      var pos = this.dataView.byteLength < (4 * (1 + masks.length)) ? 2 : 4;
       for (var i = 0; i < masks.length; i++) {
         masks[i] = this.dataView.getUint16(pos, false);
         pos += 2;
