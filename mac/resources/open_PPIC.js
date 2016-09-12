@@ -1,4 +1,4 @@
-define(['mac/palette16'], function(palette) {
+define(['mac/palette2'], function(palette) {
 
   'use strict';
   
@@ -251,8 +251,9 @@ define(['mac/palette16'], function(palette) {
       item.withPixels(width, height, function(pixelData) {
         for (var y = 0; y < height; y++) {
           for (var x = 0; x < width; x++) {
-            var pixelValue = image[(y * stride) + (x >> 1)];
-            pixelValue = (x & 1) ? pixelValue & 0xf : pixelValue >> 4;
+            var pixelValue = image[(y * stride) + (x >> 3)];
+            pixelValue = (pixelValue >> (7 - (x & 7))) & 1;
+            //pixelValue = (x & 1) ? pixelValue & 0xf : pixelValue >> 4;
             pixelData.set(palette[pixelValue], 4 * (y*width + x));
           }
         }
