@@ -87,7 +87,7 @@ define(function() {
         indices[i] = this.dataView.getUint8(pos++);
       }
       indices.afterPos = pos;
-      Object.defineProperty(this, 'attributeIndices', indices);
+      Object.defineProperty(this, 'attributeIndices', {value:indices});
       return indices;
     },
     get attributeMasks() {
@@ -98,7 +98,7 @@ define(function() {
         pos += 2;
       }
       masks.afterPos = pos;
-      Object.defineProperty(this, 'attributeMasks', masks);
+      Object.defineProperty(this, 'attributeMasks', {value:masks});
       return masks;
     },
     get attributeBitShifts() {
@@ -108,7 +108,7 @@ define(function() {
         shifts[i] = this.dataView.getUint8(pos++);
       }
       shifts.afterPos = pos;
-      Object.defineProperty(this, 'attributeBitShifts', shifts);
+      Object.defineProperty(this, 'attributeBitShifts', {value:shifts});
       return shifts;
     },
     get commandArgumentCounts() {
@@ -118,7 +118,7 @@ define(function() {
         counts[i] = this.dataView.getUint8(pos++);
       }
       counts.afterPos = pos;
-      Object.defineProperty(this, 'commandArgumentCounts', counts);
+      Object.defineProperty(this, 'commandArgumentCounts', {value:counts});
       return counts;
     },
     get commandButtons() {
@@ -128,7 +128,7 @@ define(function() {
         buttons[i] = this.dataView.getUint8(pos++);
       }
       buttons.afterPos = pos;
-      Object.defineProperty(this, 'commandButtons', buttons);
+      Object.defineProperty(this, 'commandButtons', {value:buttons});
       return buttons;
     },
     get attributes() {
@@ -140,7 +140,7 @@ define(function() {
           bitShift: this.attributeBitShifts[i],
         };
       }
-      Object.defineProperty(this, 'attributes', attributes);
+      Object.defineProperty(this, 'attributes', {value:attributes});
       return attributes;
     },
     get commands() {
@@ -151,7 +151,7 @@ define(function() {
           button: this.commandButtons[i],
         };
       }
-      Object.defineProperty(this, 'commands', commands);
+      Object.defineProperty(this, 'commands', {value:commands});
       return commands;
     },
   };
