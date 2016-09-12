@@ -14,7 +14,7 @@ define(['mac/palette2'], function(palette) {
         var pos = BitmapHeaderView.byteLength;
         for (var y = 0; y < height; y++) {
           for (var x = 0; x < width; x++) {
-            var byte = bytes[pos + (x >> 8)];
+            var byte = bytes[pos + (x >> 3)];
             var bit = (byte >> (7 - (x & 7))) & 1;
             pixelData.set(palette[bit], 4 * (y*width + x));
           }
