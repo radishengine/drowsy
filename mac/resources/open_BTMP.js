@@ -5,7 +5,7 @@ define(['mac/palette2'], function(palette) {
   function open(item) {
     return item.getBytes().then(function(bytes) {
     
-      var bitmapInfo = new BitmapHeaderView(bytes, bytes.byteOffset, BitmapHeaderView.byteLength);
+      var bitmapInfo = new BitmapHeaderView(bytes.buffer, bytes.byteOffset, BitmapHeaderView.byteLength);
       
       var width = bitmapInfo.right - bitmapInfo.left;
       var height = bitmapInfo.bottom - bitmapInfo.top;
