@@ -44,6 +44,13 @@ define(function() {
         return value;
       }
       
+      function skip(bits) {
+        ibit += bits;
+        var byteOffset = Math.floor(ibit / 8);
+        ibyte += byteOffset;
+        ibit -= (byteOffset * 8);
+      }
+      
       var mode = unsigned(3);
       
       var height = unsigned(1) ? unsigned(10) : unsigned(6);
@@ -107,18 +114,150 @@ define(function() {
         return huffman;
       }
 
-      var huffmanTable;
+      var huffman;
 
       switch (mode) {
         default: return Promise.reject('unsupported PPIC mode: ' + mode);
-        case 1: huffmanTable = mode1HuffmanTable; break;
-        case 2: huffmanTable = mode2HuffmanTable; break;
-        case 3: huffmanTable = readMode3HuffmanTable(); break;
+        //case 0: huffman = null; break;
+        case 1: huffman = mode1HuffmanTable; break;
+        case 2: huffman = mode2HuffmanTable; break;
+        case 3: huffman = readMode3HuffmanTable(); break;
       }
       
-      console.log(huffmanTable);
+      if (!huffman) {
+        // TODO
+        return Promise.reject('uncompressed mode not yet supported');
+      }
       
+      function swap16(v) {
+        return ((v >> 8) & 0xff) | ((v & 0xff) << 8);
+      }
+      var walkHuffRepeat = 0, walkHuffLast = 0x0000;
+      function walkHuff() {
+        if (walkHuffRepeat > 0) {
+          walkHuffRepeat--;
+          walkHuffLast = swap16(walkHuffLast);
+          return walkHuffLast & 0xff;
+        }
+        var dw = unsigned(16); skip(-16);
+        var i;
+        for (i = 0; i < 16; i++) {
+          if (huffman.masks[i+1] > dw) break;
+        }
+        skip(huffman.lengths[i]);
+        var v = huffman.values[i];
+        if (v === 0xff) {
+          if (!unsigned(1)) {
+            walkHuffLast &= 0xff;
+            walkHuffLast |= walkHuffLast << 8;
+          }
+          walkHuffRepeat = unsigned(3);
+          if (walkHuffRepeat < 3) {
+            walkHuffRepeat = (walkHuffRepeat << 4) | unsigned(4);
+            if (walkHuffRepeat < 8) {
+              walkHuffRepeat = (walkHuffRepeat << 8) | unsigned(8);
+            }
+          }
+          walkHuffRepeat -= 2;
+          walkHuffLast = swap16(walkHuffLast);
+          return walkHuffLast & 0xff;
+        }
+        else {
+          walkHuffLast = (walkHuffLast << 8) | v;
+        }
+        return v;
+      }
+      
+      var edge = width % 4;
+      var flags = edge ? unsigned(5) : unsigned(4) << 1;
+      var odd = 0;
+      var blank = width % 16;
+      if (blank) {
+        blank = (blank / 4) | 0;
+        odd = blank % 2;
+        blank = 2 - ((blank/2) | 0);
+      }
+      
+      var image = new Uint8Array(stride * height);
+      
+      var p = 0;
+      for (var y = 0; y < height; y++) {
+        for (var x = 0; x < (width/8); x++) {
+          var hi = walkHuff();
+          image[p++] = walkHuff() | (hi << 4);
+        }
+        if (odd) {
+          image[p] = walkHuff() << 4;
+        }
+        p += blank;
+      }
+      
+      if (edge) {
+        var p = stride - blank;
+        var bits = 0, val = 0;
+        for (var y = 0; y < height; y++) {
+          if (flags & 1) {
+            if (bits < edge) {
+              v = walkHuff() << 4;
+              val |= v >> bits;
+              bits += 4;
+            }
+            bits -= edge;
+            v = val;
+            val <<= edge;
+            val &= 0xff;
+          }
+          else {
+            v = unsigned(edge);
+            v <<= 8 - edge;
+          }
+          if (odd) v >>= 4;
+          image[p] |= v & 0xff;
+          p += stride;
+        }
+      }
+      if (flags & 8) {
+        var p = 0;
+        for (var y = 0; y < height; y++) {
+          var v = 0;
+          if (flags & 2) {
+            for (var x = 0; x < stride; x++) {
+              image[p] ^= v;
+              v = image[p++];
+            }
+          }
+          else {
+            for (var x = 0; x < stride; x++) {
+              val = image[p] ^ v;
+              val ^= (val >> 4) & 0xf;
+              image[p++] = val;
+              v = val << 4;
+            }
+          }
+        }
+      }
+      if (flags & 4) {
+        var delta = stride * 4;
+        if (flags & 2) {
+          delta *= 2;
+        }
+        var p = 0;
+        var q = delta;
+        for (var i = 0; i <= height * stride - delta; i++) {
+          image[q++] ^= image[p++];
+        }
+      }
+
       item.withPixels(width, height, function(pixelData) {
+        for (var y = 0; y < height; y++) {
+          for (var x = 0; x < width; x++) {
+            var pixelValue = image[(y * stride) + x];
+            pixelData[4 * (y*width + x)] = pixelValue;
+            pixelData[4 * (y*width + x) + 1] = pixelValue;
+            pixelData[4 * (y*width + x) + 2] = pixelValue;
+            pixelData[4 * (y*width + x) + 3] = 0xff;
+          }
+        }
       });
 
     });
