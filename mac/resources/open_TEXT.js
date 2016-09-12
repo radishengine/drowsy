@@ -4,7 +4,7 @@ define(['mac/roman'], function(macRoman) {
   
   function open(item) {
     return item.getBytes().then(function(bytes) {
-      return macRoman(bytes, 0);
+      item.setDataObject(macRoman(bytes, 0));
     });
   }
   
