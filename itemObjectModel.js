@@ -192,7 +192,7 @@ define(function() {
       populate: {
         value: function() {
           this.dispatchEvent(new Event(itemObjectModel.EVT_POPULATE));
-          if (populatedOnce && this.populatorCount === 0) return Promise.resolve(this);
+          if (this.populatedOnce && this.populatorCount === 0) return Promise.resolve(this);
           var self = this;
           return new Promise(function(resolve, reject) {
             function onPopulateEnd() {
