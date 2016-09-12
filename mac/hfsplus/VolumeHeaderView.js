@@ -34,7 +34,7 @@ define(['mac/roman', 'mac/date'], function(macRoman, macDate) {
         catalogFile: this.catalogFile,
         attributesFile: this.attributesFile,
         startupFile: this.startupFile,
-      },
+      };
     },
     get version() {
       return this.dataView.getUint16(2, false);
