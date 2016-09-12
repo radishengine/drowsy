@@ -13,6 +13,9 @@ define(function() {
         case 0x81:
           item.setDataObject(new DiplomaGeometryView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
           break;
+        case 0x83:
+          item.setDataObject(new TextHuffmanView(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+          break;
         default:
           console.warn('unsupported GNRL resource ID: ' + item.resourceID);
           break;
@@ -190,6 +193,54 @@ define(function() {
     },
     get right() {
       return this.dataView.getUint16(10, false);
+    },
+  };
+  
+  function TextHuffmanView(buffer, byteOffset, byteLength) {
+    this.dataView = new DataView(buffer, byteOffset, byteLength);
+  }
+  TextHuffmanView.prototype = {
+    toJSON: function() {
+      return {
+        masks: this.masks,
+        lengths: this.lengths,
+        values: this.values,
+      };
+    },
+    get entryCount() {
+      this.dataView.getUint16(0, false);
+    },
+    // unknown: 2 bytes
+    get masks() {
+      var masks = new Array(this.entryCount);
+      var pos = 4;
+      for (var i = 0; i < masks.length; i++) {
+        masks[i] = this.dataView.getUint16(pos, false);
+        pos += 2;
+      }
+      masks.afterPos = pos;
+      Object.defineProperty(this, 'masks', {value:masks});
+      return masks;
+    },
+    get lengths() {
+      var lengths = new Array(this.entryCount);
+      var pos = this.masks.afterPos;
+      for (var i = 0; i < lengths.length; i++) {
+        lengths[i] = this.dataView.getUint8(pos++);
+      }
+      lengths.afterPos = pos;
+      Object.defineProperty(this, 'lengths', {value:lengths});
+      return lengths;
+    },
+    get values() {
+      var values = new Array(this.entryCount);
+      var pos = this.lengths.afterPos;
+      for (var i = 0; i < values.length; i++) {
+        values[i] = this.dataView.getUint8(pos++);
+      }
+      values.afterPos = pos;
+      Object.defineProperty(this, 'values', {value:values});
+      return values;
     },
   };
   
