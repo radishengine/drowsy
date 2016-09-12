@@ -112,7 +112,7 @@ define(['mac/roman', 'mac/date'], function(macRoman, macDate) {
         files[i] = new ForkDataView(buffer, byteOffset, ForkDataView.byteLength);
         byteOffset += ForkDataView.byteLength;
       }
-      Object.defineProperty(this, 'files', files);
+      Object.defineProperty(this, 'files', {value:files});
       return files;
     },
     get allocationFile() {
@@ -156,7 +156,7 @@ define(['mac/roman', 'mac/date'], function(macRoman, macDate) {
           blockCount: this.dataView.getUint32(16 + (i * 8) + 4, false),
         };
       }
-      Object.defineProperty(this, 'extents', extents);
+      Object.defineProperty(this, 'extents', {value:extents});
       return extents;
     },
   };
