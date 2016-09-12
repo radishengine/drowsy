@@ -1,4 +1,4 @@
-define(function() {
+define(['mac/palette16'], function(palette) {
 
   'use strict';
   
@@ -253,10 +253,7 @@ define(function() {
           for (var x = 0; x < width; x++) {
             var pixelValue = image[(y * stride) + (x >> 1)];
             pixelValue = (x & 1) ? pixelValue & 0xf : pixelValue >> 4;
-            pixelData[4 * (y*width + x)] = pixelValue;
-            pixelData[4 * (y*width + x) + 1] = pixelValue;
-            pixelData[4 * (y*width + x) + 2] = pixelValue;
-            pixelData[4 * (y*width + x) + 3] = 0xff;
+            pixelData.set(palette[pixelValue], 4 * (y*width + x));
           }
         }
       });
