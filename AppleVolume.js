@@ -5,7 +5,7 @@ define([
 function(
   itemObjectModel, ByteSource, macintoshRoman, BTreeNodeView, PartitionRecordView,
   ResourceHeaderView, ResourceMapView, MasterDirectoryBlockView,
-  BTreeByteSink) {
+  BTreeByteSink, VolumeHeaderView) {
 
   'use strict';
   
