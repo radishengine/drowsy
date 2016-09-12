@@ -31,6 +31,7 @@ define(function() {
     for (var i = SPRITE_OFFSET; i < BUFFER_BYTES; i += SPRITE_BYTES) {
       sprites.push(new SpriteView(this.currentBytes.buffer, this.currentBytes.byteOffset + i, SPRITE_BYTES));
     }
+    this.next = this.next.bind(this);
   }
   FramePlayHead.prototype = {
     next: function() {
@@ -52,10 +53,16 @@ define(function() {
       }
       this.firstByteChanged = firstByteChanged;
       this.lastByteChanged = lastByteChanged;
+
+      var remaining = this.duration;
+      if (typeof remaining === 'number') {
+        window.setTimeout(this.next, remaining);
+      }
     },
+    defaultDuration: 1000/15,
     get duration() {
       var v = this.dataView.getInt8(4);
-      return (v === 0) ? 'default'
+      return (v === 0) ? this.defaultDuration
         : (v >= 1 && v <= 60) ? (1000 / v)
         : (v <= -1 && v >= -30) ? (250 * -v)
         : (v === -128) ? 'untilUserAction'
@@ -133,7 +140,7 @@ define(function() {
       return this.dataView.getInt16(0x14, false);
     },
   };
-  
+
   function SpriteView(buffer, byteOffset, byteLength) {
     this.dataView = new DataView(buffer, byteOffset, byteLength);
   }
