@@ -208,7 +208,7 @@ define(function() {
       };
     },
     get entryCount() {
-      this.dataView.getUint16(0, false);
+      return this.dataView.getUint16(0, false);
     },
     // unknown: 2 bytes
     get masks() {
