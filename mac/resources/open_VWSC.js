@@ -2,33 +2,6 @@ define(function() {
   
   'use strict';
   
-  var transitionNames = [
-    null,
-    'wipeRight', 'wipeLeft', 'wipeDown', 'wipeUp',
-    'centerOutHorizontal', 'edgesInHorizontal',
-      'centerOutVertical', 'edgesInVertical',
-      'centerOutSquare', 'edgesInSquare',
-    'pushLeft', 'pushRight', 'pushDown', 'pushUp',
-    'revealUp', 'revealUpRight', 'revealRight', 'revealDownRight',
-      'revealDown', 'revealDownLeft', 'revealLeft', 'revealUpLeft',
-    'dissolvePixelsFast', 'dissolveBoxyRectangles',
-      'dissolveBoxySquares', 'dissolvePatterns',
-    'randomRows', 'randomColumns',
-    'coverDown', 'coverDownLeft', 'coverDownRight', 'coverLeft',
-      'coverRight', 'coverUp', 'coverUpLeft', 'coverUpRight',
-    'venetianBlinds', 'checkerboard',
-    'stripsBottomBuildLeft', 'stripsBottomBuildRight',
-      'stripsLeftBuildDown', 'stripsLeftBuildUp',
-      'stripsRightBuildDown', 'stripsRightBuildUp',
-      'stripsTopBuildLeft', 'stripsTopBuildRight',
-    'zoomOpen', 'zoomClose',
-    'verticalBlinds',
-    'dissolveBitsFast', 'dissolvePixels', 'dissolveBits',
-  ];
-  
-  var SPRITE_BYTES = 16; // 20
-  var SPRITE_COUNT = 49;
-  
   function open(item) {
     return item.getBytes().then(function(bytes) {
       var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -56,6 +29,33 @@ define(function() {
       item.setDataObject(dataObject);
     });
   }
+  
+  var transitionNames = [
+    null,
+    'wipeRight', 'wipeLeft', 'wipeDown', 'wipeUp',
+    'centerOutHorizontal', 'edgesInHorizontal',
+      'centerOutVertical', 'edgesInVertical',
+      'centerOutSquare', 'edgesInSquare',
+    'pushLeft', 'pushRight', 'pushDown', 'pushUp',
+    'revealUp', 'revealUpRight', 'revealRight', 'revealDownRight',
+      'revealDown', 'revealDownLeft', 'revealLeft', 'revealUpLeft',
+    'dissolvePixelsFast', 'dissolveBoxyRectangles',
+      'dissolveBoxySquares', 'dissolvePatterns',
+    'randomRows', 'randomColumns',
+    'coverDown', 'coverDownLeft', 'coverDownRight', 'coverLeft',
+      'coverRight', 'coverUp', 'coverUpLeft', 'coverUpRight',
+    'venetianBlinds', 'checkerboard',
+    'stripsBottomBuildLeft', 'stripsBottomBuildRight',
+      'stripsLeftBuildDown', 'stripsLeftBuildUp',
+      'stripsRightBuildDown', 'stripsRightBuildUp',
+      'stripsTopBuildLeft', 'stripsTopBuildRight',
+    'zoomOpen', 'zoomClose',
+    'verticalBlinds',
+    'dissolveBitsFast', 'dissolvePixels', 'dissolveBits',
+  ];
+  
+  var SPRITE_BYTES = 16; // 20
+  var SPRITE_COUNT = 49;
   
   function FrameView(buffer, byteOffset, byteLength) {
     Object.defineProperty(this, 'dv', {value:new DataView(buffer, byteOffset, byteLength)});
