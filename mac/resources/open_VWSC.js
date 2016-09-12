@@ -53,9 +53,6 @@ define(function() {
       this.firstByteChanged = firstByteChanged;
       this.lastByteChanged = lastByteChanged;
     },
-    get lastSpriteChanged() {
-      return Math.floor((this.lastByteChanged - SPRITE_OFFSET) / SPRITE_BYTES);
-    },
     get duration() {
       var v = this.dataView.getInt8(4);
       return (v === 0) ? 'default'
