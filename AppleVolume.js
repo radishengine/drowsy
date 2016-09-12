@@ -110,6 +110,11 @@ function(
               this.onhfsplus(bytes);
               break;
             default:
+              if (macintoshRoman(bytes, 0x54, 2) === 'BD') {
+                // DiskCopy 4.2 header
+                self.readHFS(byteSource.slice(0x54), reader);
+                break;
+              }
               console.error('Unknown master directory block signature: ' + tag);
               break;
           }
