@@ -115,9 +115,7 @@ function(
             allocationBlocks.blockSize * catalogExtents.offset,
             allocationBlocks.blockSize * catalogExtents.offset + volumeInfo.catalogFileByteLength);
           catalogExtents.allocationBlocks = allocationBlocks;
-          self.readCatalog(catalogExtents, {
-            
-          });
+          self.readCatalog(catalogExtents);
         },
         onhfsplus: function(bytes) {
           var volumeInfo = new VolumeHeaderView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -125,7 +123,7 @@ function(
         },
       });
     },
-    readCatalog: function(byteSource, reader) {
+    readCatalog: function(byteSource) {
       var btree = new BTreeByteSink(byteSource);
       var allocation = byteSource.allocationBlocks;
       function onFolderPopulate(e) {
