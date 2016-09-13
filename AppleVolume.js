@@ -195,7 +195,9 @@ function(
                     itemEl.addEventListener(itemObjectModel.EVT_POPULATE, onResourcePopulate);
                   });
                 },
-                reject);
+                function(v) {
+                  reject(v);
+                });
             }));
             
             self.addItem(itemEl);
