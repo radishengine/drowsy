@@ -187,7 +187,7 @@ function(
                     this.removeEventListener(itemObjectModel.EVT_POPULATE, onResourcePopulate);
                     promisedByteSource
                     .then(function() {
-                      return open(itemEl, resourceInfo.type));
+                      return open(itemEl, resourceInfo.type);
                     })
                     .then(resolve, reject);
                   }
