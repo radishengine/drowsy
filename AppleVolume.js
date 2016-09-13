@@ -178,28 +178,24 @@ function(
 
             var loaderImport = 'mac/resources/open_' + resourceInfo.type.toUpperCase().replace(/[^A-Z0-9]/g, '_');
             
-            itemEl.notifyPopulating(new Promise(function(resolve, reject) {
-              require(
-                [loaderImport],
-                function(open) {
-                  itemEl.startAddingItems();
-                  function onResourcePopulate() {
-                    this.removeEventListener(itemObjectModel.EVT_POPULATE, onResourcePopulate);
-                    promisedByteSource
-                    .then(function() {
-                      return open(itemEl, resourceInfo.type);
-                    })
-                    .then(resolve, reject);
-                  }
-                  promisedByteSource.then(function() {
-                    itemEl.addEventListener(itemObjectModel.EVT_POPULATE, onResourcePopulate);
+            require(
+              [loaderImport],
+              function(open) {
+                itemEl.startAddingItems();
+                function onResourcePopulate() {
+                  this.removeEventListener(itemObjectModel.EVT_POPULATE, onResourcePopulate);
+                  promisedByteSource
+                  .then(function() {
+                    return open(itemEl, resourceInfo.type);
                   });
-                },
-                function(v) {
-                  reject(v);
+                }
+                promisedByteSource.then(function() {
+                  itemEl.addEventListener(itemObjectModel.EVT_POPULATE, onResourcePopulate);
                 });
-            }));
-            
+              },
+              function() {
+              });
+
             self.addItem(itemEl);
           });
         }));
