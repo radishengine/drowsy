@@ -21,7 +21,7 @@ define(function() {
       return this.eventTarget.dispatchEvent.apply(this.eventTarget, arguments);
     },
     add: function(item) {
-      this.dipatchEvent(new CustomEvent('item-added', {detail:{item:item}}));
+      this.dispatchEvent(new CustomEvent('item-added', {detail:{item:item}}));
     },
   };
 
