@@ -35,13 +35,20 @@ require(['ByteSource', 'AppleVolume'], function(ByteSource, AppleVolume) {
   
   makeFileDrop('drop-zone', function(droppedFile) {
     
-    var byteSource = ByteSource.from(droppedFile);
-    var appleVolume = new AppleVolume(byteSource);
-    appleVolume.read({
-      onvolumestart: function(masterDirectoryBlock) {
-        console.log(masterDirectoryBlock);
-      }
-    });
+    if (\.(iso|toast|dsk|img)$/i.test(droppedFile.name)) {
+      
+      var byteSource = ByteSource.from(droppedFile);
+      var appleVolume = new AppleVolume(byteSource);
+      appleVolume.read({
+        onvolumestart: function(masterDirectoryBlock) {
+          console.log(masterDirectoryBlock);
+        }
+      });
+    
+    }
+    else {
+      console.log(droppedFile.name);
+    }
 
   });
   
