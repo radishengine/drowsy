@@ -43,22 +43,6 @@ define(function() {
         };
         expedition.go();
       });
-      var expedition = {
-        listing: [],
-        foundItem: function(item) {
-          this.listing.push(item);
-        },
-        explorers: this.explorers.slice(),
-        go: function(resolve, reject) {
-          if (this.explorers.length === 0) {
-            return Promise.resolve(this.listing);
-          }
-          for (var i = 0; i < this.explorers.length; i++) {
-            this.explorers[i](this);
-          }
-        },
-      };
-      return new Promise(expedition.go.bind(expedition));
     },
   };
 
