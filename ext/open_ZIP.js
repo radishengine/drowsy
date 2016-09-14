@@ -38,7 +38,7 @@ define(['msdos/util', 'text'], function(dosUtil, text) {
           else {
             compressedLength = fixedPart.compressedSize32;
           }
-          console.log(path, compressedLength, extra);
+          console.log(path, compressedLength, fixedPart, extra);
           byteSource = byteSource.slice(compressedLength);
           return byteSource.slice(0, LocalFileHeaderFixedView.byteLength).getBytes().then(onLocalFileHeader);
         });
