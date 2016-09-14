@@ -37,7 +37,7 @@ define(function() {
               return;
             }
             for (var i = 0; i < this.explorers.length; i++) {
-              this.explorers[i].apply(self, this);
+              this.explorers[i].call(self, this);
             }
           },
         };
