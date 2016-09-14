@@ -269,7 +269,7 @@ define(['msdos/util', 'text', 'Item'], function(dosUtil, text, Item) {
     var list = [];
     var pos = 0;
     for (; count > 0; count--) {
-      var record = new CentralFileHeaderFixedView(buffer, byteOffset + pos, byteLength - pos);
+      var record = new CentralFileRecordView(buffer, byteOffset + pos, byteLength - pos);
       pos += record.byteLength;
       list.push(record);
     }
