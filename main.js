@@ -1,5 +1,5 @@
 
-require(['ByteSource', 'AppleVolume'], function(ByteSource, AppleVolume) {
+require(['ByteSource', 'Item', 'AppleVolume'], function(ByteSource, Item, AppleVolume) {
   
   'use strict';
   
@@ -43,11 +43,18 @@ require(['ByteSource', 'AppleVolume'], function(ByteSource, AppleVolume) {
     
     }
     else {
+      var item = new Item(ByteSource.from(droppedFile));
       var extension = droppedFile.name.match(/\.([^\.]+)$/);
       if (extension) {
         extension = extension && encodeURIComponent(extension[1].toUpperCase().replace(/[\\\/\*\"\:\?\|<>]/g, '_'));
         var importString = 'ext/open_' + extension;
-        console.log(importString);
+        require([importString],
+        function(open) {
+          open(item);
+        },
+        function() {
+          console.log('Unsupported extension: ' + extension);
+        });
       }
     }
 
