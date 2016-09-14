@@ -17,7 +17,7 @@ define(['msdos/util', 'text'], function(dosUtil, text) {
           throw new Exception('data descriptor not yet supported');
         }
         byteSource = byteSource.slice(LocalFileHeaderFixedView.byteLength);
-        return byteSource.slice(0, fixedPart.pathByteLength + fixedPart.extraByteLength)
+        return byteSource.slice(0, fixedPart.pathByteLength + fixedPart.extraByteLength).getBytes()
         .then(function(bytes) {
           var pathBytes = bytes.subarray(0, fixedPart.pathByteLength);
           var extraBytes = bytes.subarray(fixedPart.pathByteLength);
