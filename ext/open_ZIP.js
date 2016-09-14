@@ -1,4 +1,4 @@
-define(['msdos/util', 'utf8'], function(dosUtil, utf8) {
+define(['msdos/util', 'text'], function(dosUtil, text) {
 
   'use strict';
   
@@ -23,7 +23,7 @@ define(['msdos/util', 'utf8'], function(dosUtil, utf8) {
           var extraBytes = bytes.subarray(fixedPart.pathByteLength);
           var path;
           if (fixedPart.hasUTF8Encoding) {
-            path = utf8.decode(pathBytes);
+            path = text.decodeUTF8(pathBytes);
           }
           else {
             path = dosUtil.decodeLatinUS(pathBytes);
