@@ -9,7 +9,7 @@ define(['msdos/util', 'text'], function(dosUtil, text) {
         var signature = String.fromCharCode.apply(null, bytes.subarray(0, 4));
         switch (signature) {
           case LocalFileHeaderFixedView.signature: break;
-          default: expedition.conclude();
+          default: return expedition.conclude();
         }
         var fixedPart = new LocalFileHeaderFixedView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
         if (fixedPart.hasDataDescriptor) {
