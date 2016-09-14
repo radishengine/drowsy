@@ -43,7 +43,12 @@ require(['ByteSource', 'AppleVolume'], function(ByteSource, AppleVolume) {
     
     }
     else {
-      console.log(droppedFile.name);
+      var extension = droppedFile.name.match(/\.([^\.]+)$/);
+      if (extension) {
+        extension = extension && extension[1].toUpperCase();
+        var importString = 'ext/open_' + extension;
+        console.log(importString);
+      }
     }
 
   });
