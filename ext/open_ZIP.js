@@ -6,6 +6,6 @@ define(function() {
     console.log(item);
   }
   
-  return item;
+  return open;
 
 });
