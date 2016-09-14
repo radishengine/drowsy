@@ -5,7 +5,6 @@ define(['msdos/util', 'text'], function(dosUtil, text) {
   function open() {
     var byteSource = this.byteSource;
     this.addExplorer(function(expedition) {
-      var pos = 0;
       function onLocalFileHeader(bytes) {
         var signature = String.fromCharCode.apply(null, bytes.subarray(0, 4));
         switch (signature) {
@@ -17,7 +16,8 @@ define(['msdos/util', 'text'], function(dosUtil, text) {
           // TODO: support this (requires skipping past the compressed data manually)
           throw new Exception('data descriptor not yet supported');
         }
-        byteSource.slice(pos + 0x1d, pos + 0x1d + fixedPart.pathByteLength + fixedPart.extraByteLength)
+        byteSource = byteSource.slice(LocalFileHeaderFixedView.byteLength);
+        return byteSource.slice(0, fixedPart.pathByteLength + fixedPart.extraByteLength)
         .then(function(bytes) {
           var pathBytes = bytes.subarray(0, fixedPart.pathByteLength);
           var extraBytes = bytes.subarray(fixedPart.pathByteLength);
@@ -39,11 +39,11 @@ define(['msdos/util', 'text'], function(dosUtil, text) {
             compressedLength = fixedPart.compressedSize32;
           }
           console.log(path, compressedLength, extra);
-          pos += 0x1d + fixedPart.pathByteLength + fixedPart.extraByteLength + compressedLength;
-          return byteSource.slice(pos, pos + 0x1d).getBytes().then(onLocalFileHeader);
+          byteSource = byteSource.slice(compressedLength);
+          return byteSource.slice(0, LocalFileHeaderFixedView.byteLength).getBytes().then(onLocalFileHeader);
         });
       }
-      byteSource.slice(pos, pos + 0x1d).getBytes().then(onLocalFileHeader);
+      byteSource.slice(0, LocalFileHeaderFixedView.byteLength).getBytes().then(onLocalFileHeader);
     });
   }
   
@@ -131,7 +131,7 @@ define(['msdos/util', 'text'], function(dosUtil, text) {
       return this.dataView.getInt16(0x1c, true);
     },
   };
-  LocalFileHeaderFixedView.byteLength = 0x1d;
+  LocalFileHeaderFixedView.byteLength = 0x1e;
   LocalFileHeaderFixedView.signature = 'PK\x03\x04';
   
   function ExtraFieldView(buffer, byteOffset, byteLength) {
