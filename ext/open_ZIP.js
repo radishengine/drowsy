@@ -5,18 +5,18 @@ define(['msdos/util', 'text', 'Item'], function(dosUtil, text, Item) {
   function open() {
     var byteSource = this.byteSource;
     this.addExplorer(function(expedition) {
-      byteSource.slice(-TrailerFixedView.byteLength).getBytes()
+      byteSource.slice(-TrailerView.byteLength).getBytes()
       .then(function(rawTrailer) {
-        var fixedPart = new TrailerFixedView(rawTrailer.buffer, rawTrailer.byteOffset, rawTrailer.byteLength);
-        if (!fixedPart.hasValidSignature) {
+        var trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset, rawTrailer.byteLength);
+        if (!trailer.hasValidSignature) {
           // TODO: support comments
           throw new Exception('ZIP files with comments not supported');
         }
-        if (fixedPart.currentDiskEntryCount !== fixedPart.totalEntryCount) {
+        if (trailer.currentDiskEntryCount !== trailer.totalEntryCount) {
           // TODO: support multi-part ZIP files
           throw new Exception('multi-part ZIP files not supported');
         }
-        var pos = fixedPart.centralDirectoryFirstDiskOffset, len = fixedPart.centralDirectoryByteLength;
+        var pos = trailer.centralDirectoryFirstDiskOffset, len = trailer.centralDirectoryByteLength;
         return byteSource.slice(pos, pos + len).getBytes()
         .then(function(rawCentralDirectory) {
           var fileRecords = CentralFileRecordView.getList(
@@ -75,13 +75,13 @@ define(['msdos/util', 'text', 'Item'], function(dosUtil, text, Item) {
     });
   }
   
-  function TrailerFixedView(buffer, byteSource, byteLength) {
+  function TrailerView(buffer, byteSource, byteLength) {
     this.dataView = new DataView(buffer, byteSource, byteLength);
     this.bytes = new Uint8Array(buffer, byteSource, byteLength);
   }
-  TrailerFixedView.prototype = {
+  TrailerView.prototype = {
     get hasValidSignature() {
-      return String.fromCharCode.apply(null, this.bytes.subarray(0, 4)) === TrailerFixedView.signature;
+      return String.fromCharCode.apply(null, this.bytes.subarray(0, 4)) === TrailerView.signature;
     },
     get diskNumber() {
       return this.dataView.getUint16(4, true);
@@ -105,8 +105,8 @@ define(['msdos/util', 'text', 'Item'], function(dosUtil, text, Item) {
       return this.dataView.getUint16(20, true);
     },
   };
-  TrailerFixedView.signature = 'PK\x05\x06';
-  TrailerFixedView.byteLength = 22;
+  TrailerView.signature = 'PK\x05\x06';
+  TrailerView.fixedByteLength = 22;
   
   function CentralFileRecordView(buffer, byteOffset, byteLength) {
     this.dataView = new DataView(buffer, byteOffset, byteLength);
