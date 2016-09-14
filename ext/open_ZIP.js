@@ -28,7 +28,7 @@ define(['msdos/util', 'text'], function(dosUtil, text) {
           else {
             path = dosUtil.decodeLatinUS(pathBytes);
           }
-          var extra = ExtraFieldView.getMap(extraBytes.buffer, extra.byteOffset, extra.byteLength);
+          var extra = ExtraFieldView.getMap(extraBytes.buffer, extraBytes.byteOffset, extraBytes.byteLength);
           var compressedLength;
           if (fixedPart.isZip64) {
             if (!('zip64' in extra)) throw new Exception('missing zip64 info');
