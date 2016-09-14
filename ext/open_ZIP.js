@@ -132,7 +132,7 @@ define(['msdos/util', 'utf8'], function(dosUtil, utf8) {
     },
   };
   LocalFileHeaderFixedView.byteLength = 0x1d;
-  LocalFileHeaderFixedView.signature = 'PK\3\4';
+  LocalFileHeaderFixedView.signature = 'PK\x03\x04';
   
   function ExtraFieldView(buffer, byteOffset, byteLength) {
     this.dataView = new DataView(buffer, byteOffset, byteLength);
