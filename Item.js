@@ -2,7 +2,8 @@ define(function() {
 
   'use strict';
   
-  function Item() {
+  function Item(byteSource) {
+    this.byteSource = byteSource;
   }
   
   Item.prototype = {
