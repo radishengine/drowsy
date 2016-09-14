@@ -1,5 +1,6 @@
-
-require(['ByteSource', 'Item', 'AppleVolume'], function(ByteSource, Item, AppleVolume) {
+require(['ByteSource', 'Item', 'AppleVolume'],
+function(ByteSource, Item, AppleVolume)
+{
   
   'use strict';
   
@@ -50,7 +51,7 @@ require(['ByteSource', 'Item', 'AppleVolume'], function(ByteSource, Item, AppleV
         var importString = 'ext/open_' + extension;
         require([importString],
         function(open) {
-          open(item);
+          open.apply(item);
           item.getListing()
           .then(function(listing) {
             console.log(listing);
