@@ -5,7 +5,7 @@ define(['msdos/util', 'text', 'Item'], function(dosUtil, text, Item) {
   function open() {
     var byteSource = this.byteSource;
     this.addExplorer(function(expedition) {
-      byteSource.slice(-TrailerView.byteLength).getBytes()
+      byteSource.slice(-TrailerView.fixedByteLength).getBytes()
       .then(function(rawTrailer) {
         var trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset, rawTrailer.byteLength);
         if (!trailer.hasValidSignature) {
