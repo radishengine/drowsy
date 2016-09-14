@@ -30,6 +30,7 @@ define(function() {
               resolve(this.listing);
             }
           },
+          abandon: reject,
           go: function() {
             if (this.explorers.length === 0) {
               resolve([]);
