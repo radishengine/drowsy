@@ -189,7 +189,7 @@ define(['msdos/util', 'text'], function(dosUtil, text) {
       return this.dataView.getUint16(2, true);
     },
     get dataBuffer() {
-      return this.dataView.getBuffer();
+      return this.dataView.buffer;
     },
     get dataByteOffset() {
       return this.dataView.byteOffset + 4;
