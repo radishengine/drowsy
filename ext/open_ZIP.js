@@ -13,7 +13,7 @@ define(['msdos/util', 'utf8'], function(dosUtil, utf8) {
           default: expedition.conclude();
         }
         var fixedPart = new LocalFileHeaderFixedView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-        if (fixedFile.hasDataDescriptor) {
+        if (fixedPart.hasDataDescriptor) {
           // TODO: support this (requires skipping past the compressed data manually)
           throw new Exception('data descriptor not yet supported');
         }
