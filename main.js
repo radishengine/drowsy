@@ -45,7 +45,7 @@ require(['ByteSource', 'AppleVolume'], function(ByteSource, AppleVolume) {
     else {
       var extension = droppedFile.name.match(/\.([^\.]+)$/);
       if (extension) {
-        extension = extension && extension[1].toUpperCase();
+        extension = extension && encodeURIComponent(extension[1].toUpperCase().replace(/[\\\/\*\"\:\?\|<>]/g, '_'));
         var importString = 'ext/open_' + extension;
         console.log(importString);
       }
