@@ -36,7 +36,7 @@ define(function() {
               resolve([]);
               return;
             }
-            for (var i = 0; i < this.explorers.count; i++) {
+            for (var i = 0; i < this.explorers.length; i++) {
               this.explorers[i].apply(self, this);
             }
           },
