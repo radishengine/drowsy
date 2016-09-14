@@ -39,11 +39,7 @@ require(['ByteSource', 'AppleVolume'], function(ByteSource, AppleVolume) {
       
       var byteSource = ByteSource.from(droppedFile);
       var appleVolume = new AppleVolume(byteSource);
-      appleVolume.read({
-        onvolumestart: function(masterDirectoryBlock) {
-          console.log(masterDirectoryBlock);
-        }
-      });
+      appleVolume.read({});
     
     }
     else {
