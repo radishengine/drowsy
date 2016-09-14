@@ -56,10 +56,10 @@ define(['msdos/util', 'text'], function(dosUtil, text) {
       return String.fromCharCode.apply(null, this.bytes.subarray(0, 4)) === LocalFileHeaderFixedView.signature;
     },
     get version() {
-      return this.getUint16(4, true) / 10;
+      return this.dataView.getUint16(4, true) / 10;
     },
     get flags() {
-      return this.getUint16(6, true) / 10;
+      return this.dataView.getUint16(6, true) / 10;
     },
     get isEncrypted() {
       return !!(this.flags & (1 << 0));
