@@ -1,4 +1,4 @@
-define(['msdos/util', 'text'], function(dosUtil, text) {
+define(['msdos/util', 'text', 'Item'], function(dosUtil, text, Item) {
 
   'use strict';
   
@@ -39,6 +39,10 @@ define(['msdos/util', 'text'], function(dosUtil, text) {
             compressedLength = fixedPart.compressedSize32;
           }
           console.log(path, compressedLength, fixedPart, extra);
+          var compressedByteSource = byteSource.slice(0, compressedLength);
+          var entryItem = new Item(compressedByteSource);
+          entryItem.path = path;
+          expedition.foundItem(entryItem);
           byteSource = byteSource.slice(compressedLength);
           return byteSource.slice(0, LocalFileHeaderFixedView.byteLength).getBytes().then(onLocalFileHeader);
         });
