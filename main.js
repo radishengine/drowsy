@@ -51,6 +51,10 @@ require(['ByteSource', 'Item', 'AppleVolume'], function(ByteSource, Item, AppleV
         require([importString],
         function(open) {
           open(item);
+          item.getListing()
+          .then(function(listing) {
+            console.log(listing);
+          });
         },
         function() {
           console.log('Unsupported extension: ' + extension);
