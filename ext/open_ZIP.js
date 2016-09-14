@@ -245,7 +245,7 @@ define(['msdos/util', 'text', 'Item'], function(dosUtil, text, Item) {
       return CentralFileRecordView.fixedByteLength;
     },
     get decode() {
-      return this.hasUTF8Encoding() ? text.decodeUTF8 : dosUtil.decodeLatinUS;
+      return this.hasUTF8Encoding ? text.decodeUTF8 : dosUtil.decodeLatinUS;
     },
     get path() {
       return this.decode(this.bytes, this.pathPos, this.pathByteLength);
