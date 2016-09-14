@@ -163,7 +163,7 @@ define(['msdos/util', 'utf8'], function(dosUtil, utf8) {
         case 0x2805: return 'mac_zipIt1_3_5+';
         case 0x334d: return 'mac_infoZipNew';
         case 0x4154: return 'tandemNSK';
-        case 0x4341: return 'acorn/SparkFS';'
+        case 0x4341: return 'acorn/SparkFS';
         case 0x4453: return 'winNTSecurityDescriptor';
         case 0x4704: return 'VM/CMS';
         case 0x470f: return 'MVS';
