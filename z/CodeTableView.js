@@ -114,11 +114,11 @@ define(function() {
     for (;;) {
       /* create table entry */
       var here_op, here_val, here_bits = (len - drop) & 0xff;
-      if ((work[sym] >> 0) < end) {
+      if (work[sym] < end) {
         here_op = 0;
         here_val = work[sym];
       }
-      else if ((work[sym] >> 0) > end) {
+      else if (work[sym] > end) {
         here_op = extra[work[sym]] & 0xff;
         here_val = base[work[sym]];
       }
