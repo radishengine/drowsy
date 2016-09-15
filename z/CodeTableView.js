@@ -4,7 +4,7 @@ define(function() {
   
   function CodeTableView(mode, bits, lens) {
     this.bits = bits;
-    this.bytes = new Uint8Array(Math.pow(2, bits-1) * 4);
+    this.bytes = new Uint8Array(Math.pow(2, bits) * 4);
     this.dataView = new DataView(
       this.bytes.buffer,
       this.bytes.byteOffset,
