@@ -151,7 +151,7 @@ define(function() {
   lens = new Uint16Array(32);
   sym = 0;
   while (sym < lens.length) lens[sym++] = 5;
-  CodeTableView.fixedDistanceTable = new CodeTableView('dists', 5, lenx);
+  CodeTableView.fixedDistanceTable = new CodeTableView('dists', 5, lens);
 
   return CodeTableView;
 
