@@ -36,6 +36,10 @@ define(function() {
     0xbdbdf21c, 0xcabac28a, 0x53b39330, 0x24b4a3a6, 0xbad03605, 0xcdd70693, 0x54de5729, 0x23d967bf,
     0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94, 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d,
   ]);
+  
+  function CHOP(a) {
+    return (a & 0xffff) + (a >>> 16 << 4) - (a >>> 16);
+  }
 
   return {
     crc32: function(crc, bytes, offset, length) {
@@ -56,6 +60,32 @@ define(function() {
         crc = CRC[(crc ^ bytes[offset + i]) & 0xff] ^ (crc >> 8);
       }
       return crc ^ -1;
+    },
+    adler32: function(adler, bytes, offset, length) {
+      switch (arguments.length) {
+        case 0: return 0;
+        case 2:
+          offset = 0;
+          length = bytes.byteLength;
+          break;
+        case 3:
+          length = bytes.byteLength - offset;
+          break;
+        case 4: break;
+        default: throw new Error('unexpected number of arguments');
+      }
+      var sum2 = (adler >>> 16);
+      adler &= 0xffff;
+      while (length-- > 0) {
+        adler += bytes[offset++];
+        sum2 += adler;
+      }
+      // 65521: largest prime smaller than 65536
+      adler = CHOP(CHOP(adler)) % 65521;
+      sum2 = CHOP(CHOP(sum2)) % 65521;
+
+      /* return recombined sums */
+      return adler | (sum2 << 16);
     },
   };
 
