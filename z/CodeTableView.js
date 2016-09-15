@@ -2,7 +2,7 @@ define(function() {
 
   'use strict';
   
-  function CodeTableView(bits, lens) {
+  function CodeTableView(mode, bits, lens) {
     this.bits = bits;
     this.bytes = new Uint8Array(Math.pow(2, bits-1) * 4);
     this.dataView = new DataView(
@@ -146,12 +146,12 @@ define(function() {
   while (sym < 256) lens[sym++] = 9;
   while (sym < 280) lens[sym++] = 7;
   while (sym < lens.length) lens[sym++] = 8;
-  CodeTableView.fixedLengthTable = new CodeTableView(10, lens);
+  CodeTableView.fixedLengthTable = new CodeTableView('lens', 9, lens);
 
   lens = new Uint16Array(32);
   sym = 0;
   while (sym < lens.length) lens[sym++] = 5;
-  CodeTableView.fixedDistanceTable = new CodeTableView(6, lenx);
+  CodeTableView.fixedDistanceTable = new CodeTableView('dists', 5, lenx);
 
   return CodeTableView;
 
