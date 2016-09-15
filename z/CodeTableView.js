@@ -59,6 +59,20 @@ define(function() {
       this.dataView.setUint16(n*4 + 2, v);
     },
   };
+  
+  // initialize fixed tables
+  CodeTableView.fixedLengthTable = new CodeTableView(512);
+  var lens = new Uint16Array(288);
+  var sym = 0;
+  while (sym < 144) lens[sym++] = 8;
+  while (sym < 256) lens[sym++] = 9;
+  while (sym < 280) lens[sym++] = 7;
+  while (sym < lens.length) lens[sym++] = 8;
+
+  CodeTableView.fixedDistanceTable = new CodeTableView(32);
+  lens = new Uint16Array(32);
+  sym = 0;
+  while (sym < lens.length) lens[sym++] = 5;
 
   return CodeTableView;
 
