@@ -373,7 +373,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
           this.lencode = this.next = this.codes;
           this.lens.bits = 7;
-          var inflatedOk = this.lens.inflate('codes', 19, this.next));
+          var inflatedOk = this.lens.inflate('codes', 19, this.next);
           if (!inflatedOk) {
             this.mode = 'bad';
             throw new Error("invalid code lengths set");
