@@ -60,6 +60,9 @@ define(function() {
     },
   };
   
+  CodeTableView.ENOUGH_LENS = 852;
+  CodeTableView.ENOUGH_DISTS = 592;
+
   // initialize fixed tables
   CodeTableView.fixedLengthTable = new CodeTableView(512);
   var lens = new Uint16Array(288);
