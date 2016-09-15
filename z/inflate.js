@@ -33,7 +33,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
     if (this.wrap) this.adler = this.wrap & 1;
     this.lencode = this.distcode = this.next = this.codes;
   }
-  InflateState.prototype = Object.assign(new ZStream, {
+  InflateState.prototype = {
     next_in: NO_BYTES,
     total_in: 0,
     next_out: NO_BYTES,
@@ -892,7 +892,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
       this.hold = hold;
       this.bits = bits;
     },
-  });
+  };
   
   function inflate(compressedBytes) {
     var state = new InflateState();
