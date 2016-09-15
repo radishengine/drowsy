@@ -373,7 +373,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
           this.lencode = this.next = this.codes;
           this.lens.bits = 7;
-          var inflatedOk = inflate_table('codes', this.lens, 19, &(this.next));
+          var inflatedOk = this.lens.inflate('codes', 19, this.next));
           if (!inflatedOk) {
             this.mode = 'bad';
             throw new Error("invalid code lengths set");
@@ -444,7 +444,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           this.next = this.codes;
           this.lencode = (const code FAR *)(this.next);
           this.lens.bits = 9;
-          ret = inflate_table('lens', this.lens, this.nlen, &(this.next));
+          ret = this.lens.inflate('lens', this.lens, this.nlen, this.next);
           if (ret) {
             this.mode = 'bad';
             throw new Error("invalid literal/lengths set");
@@ -452,7 +452,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           this.distcode = (const code FAR *)(this.next);
           var dists = this.lens + this.nlen;
           dists.bits = 6;
-          ret = inflate_table('dists', dists, this.ndist, &(this.next));
+          ret = dists.inflate('dists', this.ndist, this.next);
           if (ret) {
             this.mode = 'bad';
             throw new Error("invalid distances set");
