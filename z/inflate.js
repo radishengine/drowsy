@@ -442,14 +442,14 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
              values here (9 and 6) without reading the comments in inftrees.h
              concerning the ENOUGH constants, which depend on those values */
           this.next = this.codes;
-          this.lencode = (const code FAR *)(this.next);
+          this.lencode = this.next;
           this.lens.bits = 9;
           ret = this.lens.inflate('lens', this.lens, this.nlen, this.next);
           if (ret) {
             this.mode = 'bad';
             throw new Error("invalid literal/lengths set");
           }
-          this.distcode = (const code FAR *)(this.next);
+          this.distcode = this.next;
           var dists = this.lens + this.nlen;
           dists.bits = 6;
           ret = dists.inflate('dists', this.ndist, this.next);
