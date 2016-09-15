@@ -92,6 +92,105 @@ define(function() {
         break;
       default: throw new Error('unknown mode: ' + mode);
     }
+    
+    /* initialize state for loop */
+    var huff = 0,       //  starting code
+      sym = 0,          // starting code symbol
+      len = min,        // starting code length
+      next = 0,         // current table to fill in
+      curr = root,      // current table index bits
+      drop = 0,         // current bits to drop from code for index
+      low = -1 >>> 0,   // trigger new sub-table when len > root
+      used = 1 << root; // use root table entries
+    var mask = used - 1;  // mask for comparing low
+
+    /* check available table space */
+    if ((mode === 'lens' && used > CodeTableView.ENOUGH_LENS)
+    ||  (mode === 'dists' && used > CodeTableView.ENOUGH_DISTS)) {
+      throw new Error('not enough table space');
+    }
+
+    /* process all codes and make table entries */
+    for (;;) {
+      /* create table entry */
+      var here_op, here_val, here_bits = (len - drop) & 0xff;
+      if ((work[sym] >> 0) < end) {
+        here_op = 0;
+        here_val = work[sym];
+      }
+      else if ((work[sym] >> 0) > end) {
+        here_op = extra[work[sym]] & 0xff;
+        here_val = base[work[sym]];
+      }
+      else {
+        here_op = 32 + 64; // end of block
+        here_val = 0;
+      }
+
+      /* replicate for those indices with low len bits equal to huff */
+      var incr = 1 << (len - drop);
+      var fill = 1 << curr;
+      min = fill; // save offset to next table
+      do {
+        fill -= incr;
+        this.setOpBitsVal(next + (huff >> drop) + fill, here_op, here_bits, here_val);
+      } while (fill !== 0);
+
+      /* backwards increment the len-bit code huff */
+      incr = 1 << (len - 1);
+      while (huff & incr) incr >>= 1;
+      if (incr !== 0) {
+        huff &= incr - 1;
+        huff += incr;
+      }
+      else huff = 0;
+
+      /* go to next symbol, update count, len */
+      sym++;
+      if (--count[len] == 0) {
+        if (len === max) break;
+        len = lens[work[sym]];
+      }
+
+      /* create new sub-table if needed */
+      if (len > root && (huff & mask) !== low) {
+        /* if first time, transition to sub-tables */
+        if (drop === 0) drop = root;
+
+        /* increment past last table */
+        next += min; // here min is 1 << curr
+
+        /* determine length of next table */
+        curr = len - drop;
+        left = 1 << curr;
+        while (curr + drop < max) {
+          left -= count[curr + drop];
+          if (left <= 0) break;
+          curr++;
+          left <<= 1;
+        }
+
+        /* check for enough space */
+        used += 1 << curr;
+        if ((mode === 'lens' && used > CodeTableView.ENOUGH_LENS)
+        ||  (mode === 'dists' && used > CodeTableView.ENOUGH_DISTS)) {
+          throw new Error('not enough space');
+        }
+
+        /* point entry in root table to sub-table */
+        low = huff & mask;
+        this.setOpBitsVal(low, cur & 0xff, root & 0xff, next & 0xffff);
+      }
+    }
+
+    /*
+    fill in remaining table entry if code is incomplete (guaranteed to have
+    at most one remaining entry, since if the code is incomplete, the
+    maximum code length that was allowed to get this far is one bit)
+    */
+    if (huff !== 0) {
+      this.setOpBitsVal(next + huff, 64, (len - drop) & 0xff, 0); // invalid code marker
+    }
   }
   CodeTableView.prototype = {
     get length() {
