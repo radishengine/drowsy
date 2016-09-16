@@ -873,7 +873,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
           break dolen;
         }
-      } while (_in.length >= 6 && out.length >= 258);
+      } while (_in.length > 5 && out.length > 257);
 
       /* return unused bytes (on entry, bits < 8, so in won't go too far back) */
       var len = bits >> 3;
