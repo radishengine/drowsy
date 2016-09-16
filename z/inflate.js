@@ -28,7 +28,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
     }
 
     /* update state and reset the rest of it */
-    this.wbits = this.windowBits;
+    this.wbits = windowBits;
     if (this.wrap) this.adler = this.wrap & 1;
   }
   InflateState.prototype = {
