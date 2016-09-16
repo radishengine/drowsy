@@ -444,7 +444,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
 
           /* build code tables */
           this.lencode = new CodeTableView('lens', 9, this.lens.subarray(0, this.nlen));
-          this.distcode = new CodeTableView('dists', 6, this.lens.subarray(this.nlen, this.nlnen + this.ndist));
+          this.distcode = new CodeTableView('dists', 6, this.lens.subarray(this.nlen, this.nlen + this.ndist));
           this.mode = 'len_';
           if (flush === 'trees') break inflateLoop;
           //continue inflateLoop;
