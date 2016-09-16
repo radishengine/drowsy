@@ -6,12 +6,10 @@ define(function() {
     this.bitWidth = bitWidth;
     this.length = (1 << bitWidth);
     this.mask = this.length - 1;
-    this.bytes = new Uint8Array(this.length * 4);
-    this.dataView = new DataView(
-      this.bytes.buffer,
-      this.bytes.byteOffset,
-      this.bytes.byteLength);
-      
+    this.bits = new Uint8Array(this.length);
+    this.op = new Uint8Array(this.length);
+    this.val = new Uint16Array(this.length);
+
     var count = new Uint16Array(16 /*MAXBITS+1*/); // number of codes of each length
     for (var sym = 0; sym < lens.length; sym++) {
       count[lens[sym]]++;
@@ -196,16 +194,18 @@ define(function() {
   }
   CodeTableView.prototype = {
     setOpBitsVal: function(n, op, bits, val) {
-      this.bytes.set([op, bits, val & 0xff, (val >> 8) & 0xff], n * 4);
+      this.op[n] = op;
+      this.bits[n] = bits;
+      this.val[n] = val;
     },
     getOp: function(n) {
-      return this.bytes[n * 4];
+      return this.op[n];
     },
     getBits: function(n) {
-      return this.bytes[n*4 + 1];
+      return this.bits[n];
     },
     getVal: function(n) {
-      return this.dataView.getUint16(n*4 + 2, true);
+      return this.val[n];
     },
   };
   
