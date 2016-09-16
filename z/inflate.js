@@ -381,22 +381,24 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           this.mode = 'codelens';
           //continue inflateLoop;
         case 'codelens':
+          var lcode = this.lencode;
           while (this.have < this.nlen + this.ndist) {
             var here;
             for (;;) {
-              here = BITS(this.lencode.bitWidth);
-              if (this.lencode.bits[here] <= bits) break;
+              here = BITS(lcode.bitWidth);
+              if (lcode.bits[here] <= bits) break;
               if (!PULLBYTE()) break inflateLoop;
             }
-            if (this.lencode.val[here] < 16) {
-              DROPBITS(this.lencode.bits[here]);
-              this.lens[this.have++] = this.lencode.val[here];
+            var here_val = lcode.val[here], here_bits = lcode.bits[here];
+            if (here_val < 16) {
+              DROPBITS(here_bits);
+              this.lens[this.have++] = here_val;
             }
             else {
               var len, copy;
-              if (this.lencode.val[here] === 16) {
-                if (!NEEDBITS(this.lencode.bits[here] + 2)) break inflateLoop;
-                DROPBITS(this.lencode.bits[here]);
+              if (here_val === 16) {
+                if (!NEEDBITS(here_bits + 2)) break inflateLoop;
+                DROPBITS(here_bits);
                 if (this.have === 0) {
                   this.mode = 'bad';
                   throw new Error("invalid bit length repeat");
@@ -405,16 +407,16 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 copy = 3 + BITS(2);
                 DROPBITS(2);
               }
-              else if (this.lencode.val[here] === 17) {
-                if (!NEEDBITS(this.lencode.bits[here] + 3)) break inflateLoop;
-                DROPBITS(this.lencode.bits[here]);
+              else if (here_val === 17) {
+                if (!NEEDBITS(here_bits + 3)) break inflateLoop;
+                DROPBITS(here_bits);
                 len = 0;
                 copy = 3 + BITS(3);
                 DROPBITS(3);
               }
               else {
-                if (!NEEDBITS(this.lencode.bits[here] + 7)) break inflateLoop;
-                DROPBITS(this.lencode.bits[here]);
+                if (!NEEDBITS(here_bits + 7)) break inflateLoop;
+                DROPBITS(here_bits);
                 len = 0;
                 copy = 11 + BITS(7);
                 DROPBITS(7);
@@ -428,9 +430,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
               }
             }
           }
-
-          /* handle error breaks in while */
-          if (this.mode === 'bad') continue inflateLoop;
 
           /* check for end-of-block code (better have one) */
           if (this.lens[256] === 0) {
