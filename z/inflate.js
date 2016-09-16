@@ -288,7 +288,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             RESTORE();
             return 'needDictionary';
           }
-          this.adler = this.check = zutil.adler32(0, null, 0);
+          this.adler = this.check = zutil.adler32();
           this.mode = 'type';
           //continue inflateLoop;
         case 'type':
@@ -383,13 +383,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           while (this.have < 19) {
             this.lens[order[this.have++]] = 0;
           }
-          this.lencode = this.next = this.codes;
-          this.lens.bits = 7;
-          var inflatedOk = this.lens.inflate('codes', 19, this.next);
-          if (!inflatedOk) {
-            this.mode = 'bad';
-            throw new Error("invalid code lengths set");
-          }
+          this.lencode = new CodeTableView('codes', 7, this.lens.subarray(0, 19));
           this.have = 0;
           this.mode = 'codelens';
           //continue inflateLoop;
@@ -474,7 +468,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           var here;
           for (;;) {
             here = BITS(this.lencode.bits);
-            if ((this.lencode.getBits(here) >>> 0) <= bits) break;
+            if (this.lencode.getBits(here) <= bits) break;
             if (!PULLBYTE()) break inflateLoop;
           }
           if (this.lencode.getOp(here) && !(this.lencode.getOp(here) & 0xf0)) {
@@ -571,10 +565,10 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             }
             if (copy > this.wnext) {
               copy -= this.wnext;
-              from = this.window + (this.wsize - copy);
+              from = this.window.subarray(this.wsize - copy);
             }
             else {
-              from = this.window + (this.wnext - copy);
+              from = this.window.subarray(this.wnext - copy);
             }
             if (copy > this.length) copy = this.length;
           }
