@@ -663,8 +663,8 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
     },
     _update: function(bytes, length) {
       this.adler = this.check = this.flags
-      ? zutil.crc32(this.check, bytes, length)
-      : zutil.adler32(this.check, bytes, length);
+      ? zutil.crc32(this.check, bytes, 0, length)
+      : zutil.adler32(this.check, bytes, 0, length);
     },
     _updateWindow: function(end, copy) {
       /* if it hasn't been done already, allocate space for the window */
