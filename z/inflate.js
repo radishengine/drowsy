@@ -37,7 +37,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
     next_out: NO_BYTES,
     total_out: 0,
     data_type: 0,
-    adler: 0,
+    adler: 1,
     
     mode: 'head',
     last: 0,
@@ -270,8 +270,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             this.head.hcrc = (this.flags >> 9) & 1;
             this.head.done = 1;
           }
-          delete this.adler;
-          delete this.check;
+          this.adler = this.check = zutil.crc32();
           this.mode = 'type';
           continue inflateLoop;
         case 'dictid':
