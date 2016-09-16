@@ -113,7 +113,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
 
       var _in = next.length, out = put.length;
 
-      var ret = 'ok';
+      var ret = 'more';
 
       inflation: for (;;) switch (this.mode) {
         case 'head':
@@ -640,7 +640,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
         + (this.last ? 64 : 0)
         + (this.mode === 'type' ? 128 : 0)
         + (this.mode === 'len_' || this.mode === 'copy_' ? 256 : 0);
-      if (((!_in && !out) || flush === 'finish') && ret === 'ok') {
+      if (((!_in && !out) || flush === 'finish') && ret === 'more') {
         throw new Error('buffer error');
       }
       return ret;
