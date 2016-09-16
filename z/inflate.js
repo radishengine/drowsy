@@ -92,8 +92,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
 
       LOAD();
 
-      var _in = next.length, out = put.length;
-
       function PULLBYTE() {
         if (next.length === 0) return false;
         hold += next[0] << bits;
@@ -119,20 +117,22 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
         bits -= n;
       }
 
+      var _in = next.length, out = put.length;
+
       var ret = 'ok';
 
       inflateLoop: for (;;) switch (this.mode) {
-        case 'head': // TODO: adler32
+        case 'head':
           if (this.wrap === 0) {
             this.mode = 'typedo';
-            continue;
+            continue inflateLoop;
           }
           if (!NEEDBITS(16)) break inflateLoop;
           if ((this.wrap & 2) && hold === 0x8b1f) {  /* gzip header */
             this._crc2(hold);
             hold = bits = 0;
             this.mode = 'flags';
-            continue;
+            continue inflateLoop;
           }
           this.flags = 0; //  expect zlib header
           if (this.head) this.head.done = -1;
@@ -153,11 +153,11 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             throw new Error("invalid window size");
           }
           this.dmax = 1 << len;
-          this.adler = this.check = adler32(0, null, 0);
+          this.adler = this.check = zutil.adler32();
           this.mode = hold & 0x200 ? 'dictid' : 'type';
           hold = bits = 0;
-          continue;
-        case 'flags': // LOOKSGOOD
+          continue inflateLoop;
+        case 'flags':
           if (!NEEDBITS(16)) break inflateLoop;
           this.flags = hold;
           if ((this.flags & 0xff) !== 8 /* Z_DEFLATED */) {
@@ -172,13 +172,15 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           if (this.flags & 0x0200) this._crc2(hold);
           hold = bits = 0;
           this.mode = 'time';
-        case 'time': // LOOKSGOOD
+          //continue inflateLoop;
+        case 'time':
           if (!NEEDBITS(32)) break inflateLoop;
           if (this.head) this.head.time = hold;
           if (this.flags & 0x0200) this._crc4(hold);
           hold = bits = 0;
           this.mode = 'os';
-        case 'os': // LOOKSGOOD
+          //continue inflateLoop;
+        case 'os':
           if (!NEEDBITS(16)) break inflateLoop;
           if (this.head) {
             this.head.xflags = hold & 0xff;
@@ -187,7 +189,8 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           if (this.flags & 0x0200) this._crc2(hold);
           hold = bits = 0;
           this.mode = 'exlen';
-        case 'exlen': // LOOKSGOOD
+          //continue inflateLoop;
+        case 'exlen':
           if (this.flags & 0x0400) {
             if (!NEEDBITS(16)) break inflateLoop;
             this.length = hold >>> 0;
@@ -197,22 +200,21 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
           else if (this.head) this.head.extra = null;
           this.mode = 'extra';
-        case 'extra': // LOOKSGOOD
+          //continue inflateLoop;
+        case 'extra':
           if (this.flags & 0x0400) {
             var copy = Math.min(this.length, next.length);
             if (copy > 0) {
               if (this.head && this.head.extra) {
                 var len = this.head.extra_len - this.length;
-                this.head.extra.set(
-                  next.subarray(0, 
-                    len + copy > this.head.extra_max
-                    ? this.head.extra_max - len
-                    : copy),
-                  len);
+                if (len + copy > this.head.extra_max) {
+                  this.head.extra.set(next.subarray(0, this.head.extra_max - len), len);
+                }
+                else {
+                  this.head.extra.set(next.subarray(0, copy), len);
+                }
               }
-              if (this.flags & 0x0200) {
-                this._crc(next, copy);
-              }
+              if (this.flags & 0x0200) this._crc(next, copy);
               next = next.subarray(copy);
               this.length -= copy;
             }
@@ -220,7 +222,8 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
           this.length = 0;
           this.mode = 'name';
-        case 'name': // LOOKSGOOD
+          //continue inflateLoop;
+        case 'name':
           if (this.flags & 0x0800) {
             if (next.length === 0) break inflateLoop;
             var len, copy = 0;
@@ -239,7 +242,8 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           else if (this.head) this.head.name = null;
           this.length = 0;
           this.mode = 'comment';
-        case 'comment': // LOOKSGOOD
+          //continue inflateLoop;
+        case 'comment':
           if (this.flags & 0x1000) {
             if (next.length === 0) break inflateLoop;
             var copy = 0, len;
@@ -255,7 +259,8 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
           else if (this.head) this.head.comment = null;
           this.mode = 'hcrc';
-        case 'hcrc': // LOOKSGOOD
+          //continue inflateLoop;
+        case 'hcrc':
           if (this.flags & 0x0200) {
             if (!NEEDBITS(16)) break inflateLoop;
             if (hold !== (this.check & 0xffff)) {
@@ -271,26 +276,29 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           delete this.adler;
           delete this.check;
           this.mode = 'type';
-          continue;
-        case 'dictid': // LOOKSGOOD
+          continue inflateLoop;
+        case 'dictid':
           if (!NEEDBITS(32)) break inflateLoop;
           this.adler = this.check = zutil.swap32(hold);
           hold = bits = 0;
           this.mode = 'dict';
-        case 'dict': // TODO: adler32
+          //continue inflateLoop;
+        case 'dict':
           if (!this.havedict) {
             RESTORE();
             return 'needDictionary';
           }
-          this.adler = this.check = adler32(0, null, 0);
+          this.adler = this.check = zutil.adler32(0, null, 0);
           this.mode = 'type';
-        case 'type': // LOOKSGOOD
+          //continue inflateLoop;
+        case 'type':
           if (flush === 'block' || flush === 'trees') break inflateLoop;
+          //continue inflateLoop;
         case 'typedo':
           if (this.last) {
             hold >>= bits & 7; bits -= bits & 7;
             this.mode = 'check';
-            continue;
+            continue inflateLoop;
           }
           if (!NEEDBITS(3)) break inflateLoop;
           this.last = BITS(1);
@@ -300,7 +308,8 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
               this.mode = 'stored';
               break;
             case 1: // fixed block
-              this.fixedtables();
+              this.lencode = CodeTableView.fixedLengthTable;
+              this.distcode = CodeTableView.fixedDistanceTable;
               this.mode = 'len_'; // decode codes
               if (flush === 'trees') {
                 DROPBITS(2);
@@ -315,7 +324,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
               throw new Error("invalid block type");
           }
           DROPBITS(2);
-          continue;
+          continue inflateLoop;
         case 'stored':
           // go to byte boundary
           hold >>= bits & 7; bits -= bits & 7;
@@ -328,8 +337,10 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           hold = bits = 0;
           this.mode = 'copy_';
           if (flush === 'trees') break inflateLoop;
+          //continue inflateLoop;
         case 'copy_':
           this.mode = 'copy';
+          //continue inflateLoop;
         case 'copy':
           var copy = this.length;
           if (copy > 0) {
@@ -340,10 +351,10 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             next = next.subarray(copy);
             put = put.subarray(copy);
             this.length -= copy;
-            continue;
+            continue inflateLoop;
           }
           this.mode = 'type';
-          continue;
+          continue inflateLoop;
         case 'table':
           if (!NEEDBITS(14)) break inflateLoop;
           this.nlen = BITS(5) + 257;
@@ -362,6 +373,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           */
           this.have = 0;
           this.mode = 'lenlens';
+          //continue inflateLoop;
         case 'lenlens':
           while (this.have < this.ncode) {
             if (!NEEDBITS(3)) break inflateLoop;
@@ -380,23 +392,24 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
           this.have = 0;
           this.mode = 'codelens';
+          //continue inflateLoop;
         case 'codelens':
           while (this.have < this.nlen + this.ndist) {
             var here;
             for (;;) {
-              here = this.lencode[BITS(this.lens.bits)];
-              if (here.bits <= bits) break;
+              here = BITS(this.lencode.bits);
+              if (this.lencode.getBits(here) <= bits) break;
               if (!PULLBYTE()) break inflateLoop;
             }
-            if (here.val < 16) {
-              DROPBITS(here.bits);
-              this.lens[this.have++] = here.val;
+            if (this.lencode.getVal(here) < 16) {
+              DROPBITS(this.lencode.getBits(here));
+              this.lens[this.have++] = this.lencode.getVal(here);
             }
             else {
               var len, copy;
-              if (here.val === 16) {
-                if (!NEEDBITS(here.bits + 2)) break inflateLoop;
-                DROPBITS(here.bits);
+              if (this.lencode.getVal(here) === 16) {
+                if (!NEEDBITS(this.lencode.getBits(here) + 2)) break inflateLoop;
+                DROPBITS(this.lencode.getBits(here));
                 if (this.have === 0) {
                   this.mode = 'bad';
                   throw new Error("invalid bit length repeat");
@@ -405,16 +418,16 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 copy = 3 + BITS(2);
                 DROPBITS(2);
               }
-              else if (here.val === 17) {
-                if (!NEEDBITS(here.bits + 3)) break inflateLoop;
-                DROPBITS(here.bits);
+              else if (this.lencode.getVal(here) === 17) {
+                if (!NEEDBITS(this.lencode.getBits(here) + 3)) break inflateLoop;
+                DROPBITS(this.lencode.getBits(here));
                 len = 0;
                 copy = 3 + BITS(3);
                 DROPBITS(3);
               }
               else {
-                if (!NEEDBITS(here.bits + 7)) break inflateLoop;
-                DROPBITS(here.bits);
+                if (!NEEDBITS(this.lencode.getBits(here) + 7)) break inflateLoop;
+                DROPBITS(this.lencode.getBits(here));
                 len = 0;
                 copy = 11 + BITS(7);
                 DROPBITS(7);
@@ -430,7 +443,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
 
           /* handle error breaks in while */
-          if (this.mode === 'bad') continue;
+          if (this.mode === 'bad') continue inflateLoop;
 
           /* check for end-of-block code (better have one) */
           if (this.lens[256] === 0) {
@@ -438,29 +451,15 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             throw new Error("invalid code -- missing end-of-block");
           }
 
-          /* build code tables -- note: do not change the lenbits or distbits
-             values here (9 and 6) without reading the comments in inftrees.h
-             concerning the ENOUGH constants, which depend on those values */
-          this.next = this.codes;
-          this.lencode = this.next;
-          this.lens.bits = 9;
-          ret = this.lens.inflate('lens', this.lens, this.nlen, this.next);
-          if (ret) {
-            this.mode = 'bad';
-            throw new Error("invalid literal/lengths set");
-          }
-          this.distcode = this.next;
-          var dists = this.lens + this.nlen;
-          dists.bits = 6;
-          ret = dists.inflate('dists', this.ndist, this.next);
-          if (ret) {
-            this.mode = 'bad';
-            throw new Error("invalid distances set");
-          }
+          /* build code tables */
+          this.lencode = new CodeTableView('lens', 9, this.lens.subarray(0, this.nlen));
+          this.distcode = new CodeTableView('dists', 6, this.lens.subarray(this.nlen, this.nlnen + this.ndist));
           this.mode = 'len_';
           if (flush === 'trees') break inflateLoop;
+          //continue inflateLoop;
         case 'len_':
           this.mode = 'len';
+          //continue inflateLoop;
         case 'len':
           if (next.length >= 6 && put.length >= 258) {
             RESTORE();
@@ -469,44 +468,47 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             if (this.mode === 'type') {
               this.back = -1;
             }
-            continue;
+            continue inflateLoop;
           }
           this.back = 0;
+          var here;
           for (;;) {
-            here = this.lencode[BITS(this.lens.bits)];
-            if ((here.bits >>> 0) <= bits) break;
+            here = BITS(this.lencode.bits);
+            if ((this.lencode.getBits(here) >>> 0) <= bits) break;
             if (!PULLBYTE()) break inflateLoop;
           }
-          if (here.op && !(here.op & 0xf0)) {
-            last = here;
+          if (this.lencode.getOp(here) && !(this.lencode.getOp(here) & 0xf0)) {
+            var last = here;
             for (;;) {
-              here = this.lencode[last.val + (BITS(last.bits + last.op) >> last.bits)];
-              if ((last.bits + here.bits) <= bits) break;
+              here = this.lencode.getVal(last) + (
+                BITS(this.lencode.getBits(last) + this.lencode.getOp(last)) >> this.lencode.getBits(last));
+              if ((this.lencode.getBits(last) + this.lencode.getBits(here)) <= bits) break;
               if (!PULLBYTE()) break inflateLoop;
             }
-            DROPBITS(last.bits);
-            this.back += last.bits;
+            DROPBITS(this.lencode.getBits(last));
+            this.back += this.lencode.getBits(last);
           }
-          DROPBITS(here.bits);
-          this.back += here.bits;
-          this.length = here.val;
-          if (here.op === 0) {
+          DROPBITS(this.lencode.getBits(here));
+          this.back += this.lencode.getBits(here);
+          this.length = this.lencode.getVal(here);
+          if (this.lencode.getOp(here) === 0) {
             this.mode = 'lit';
-            continue;
+            continue inflateLoop;
           }
-          if (here.op & 32) {
+          if (this.lencode.getOp(here) & 32) {
             this.back = -1;
             this.mode = 'type';
-            continue;
+            continueinflateLoop;
           }
-          if (here.op & 64) {
+          if (this.lencode.getOp(here) & 64) {
             this.mode = 'bad';
             throw new Error("invalid literal/length code");
           }
-          this.extra = here.op & 15;
+          this.extra = this.lencode.getOp(here) & 15;
           this.mode = 'lenext';
+          //continue inflateLoop;
         case 'lenext':
-          if (this.extra) {
+          if (this.extra > 0) {
             if (!NEEDBITS(this.extra)) break inflateLoop;
             this.length += BITS(this.extra);
             DROPBITS(this.extra);
@@ -514,32 +516,34 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
           this.was = this.length;
           this.mode = 'dist';
+          //continue inflateLoop;
         case 'dist':
-          var here;
           for (;;) {
-            here = this.distcode[BITS(this.distbits)];
-            if (here.bits <= bits) break;
+            if (this.distcode.getBits(BITS(this.distcode.bits)) <= bits) break;
             if (!PULLBYTE()) break inflateLoop;
           }
-          if ((here.op & 0xf0) === 0) {
-            var last = here;
+          var here;
+          if (!(this.distcode.getOp(BITS(this.distcode.bits)) & 0xf0)) {
+            var last = BITS(this.distcode.bits);
             for (;;) {
-              here = this.distcode[last.val + (BITS(last.bits + last.op) >> last.bits)];
-              if ((last.bits + here.bits) <= bits) break;
+              here = this.distcode.getVal(last) + (
+                BITS(this.distcode.getBits(last) + this.distcode.getOp(last)) >> this.distcode.getBits(last));
+              if ((this.distcode.getBits(last) + this.distcode.getBits(here)) <= bits) break;
               if (!PULLBYTE()) break inflateLoop;
             }
-            DROPBITS(last.bits);
-            this.back += last.bits;
+            DROPBITS(this.distcode.getBits(last));
+            this.back += this.distcode.getBits(last);
           }
-          DROPBITS(here.bits);
-          this.back += here.bits;
-          if (here.op & 64) {
+          DROPBITS(this.distcode.getBits(here));
+          this.back += this.distcode.getBits(here);
+          if (this.distcode.getOp(here) & 64) {
             this.mode = 'bad';
             throw new Error("invalid distance code");
           }
-          this.offset = here.val;
-          this.extra = here.op & 15;
+          this.offset = this.distcode.getVal(here);
+          this.extra = this.distcode.getOp(here) & 15;
           this.mode = 'distext';
+          //continue inflateLoop;
         case 'distext':
           if (this.extra) {
             if (!NEEDBITS(this.extra)) break inflateLoop;
@@ -554,6 +558,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
           // #endif
           this.mode = 'match';
+          //continue inflateLoop;
         case 'match':
           if (put.length === 0) break inflateLoop;
           var copy = out - put.length;
@@ -583,14 +588,14 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           put.set(from.subarray(0, copy));
           put = put.subarray(copy);
           if (this.length === 0) this.mode = 'len';
-          continue;
-        case 'lit': // LOOKSGOOD
+          continue inflateLoop;
+        case 'lit':
           if (put.length === 0) break inflateLoop;
           put[0] = this.length & 0xff;
           put = put.subarray(1);
           this.mode = 'len';
-          continue;
-        case 'check': // LOOKSGOOD
+          continue inflateLoop;
+        case 'check':
           if (this.wrap) {
             if (!NEEDBITS(32)) break inflateLoop;
             out -= put.length;
@@ -607,17 +612,18 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             hold = bits = 0;
           }
           this.mode = 'length';
+          //continue inflateLoop;
         case 'length':
           if (this.wrap && this.flags) {
             if (!NEEDBITS(32)) break inflateLoop;
-            // TODO: check if the signedness of these operands is OK:
-            if (hold !== (this.total & 0xffffffff)) {
+            if ((hold >>> 0) !== (this.total >>> 0)) {
               this.mode = 'bad';
               throw new Error("incorrect length check");
             }
             hold = bits = 0;
           }
           this.mode = 'done';
+          //continue inflateLoop;
         case 'done':
           ret = 'done';
           break inflateLoop;
