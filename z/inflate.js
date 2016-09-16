@@ -711,9 +711,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
         bits = this.bits,
         lcode = this.lencode,
         dcode = this.distcode;
-      var lmask = (1 << lcode.bits) - 1, /* mask for first level of length codes */
-        dmask = (1 << dcode.bits) - 1, /* mask for first level of distance codes */
-        begOffset = out.byteOffset + out.byteLength - start; /* inflate()'s initial this.next_out */
+      var begOffset = out.byteOffset + out.byteLength - start; /* inflate()'s initial this.next_out */
 
       /* decode literals and length/distances until end-of-block or not enough
          input data or output space */
@@ -724,7 +722,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           _in = _in.subarray(2);
         }
 
-        var here_n = hold & lmask;
+        var here_n = hold & lcode.mask;
 
         dolen: for (;;) {
           // code bits, operation, extra bits, or window position, window bytes to copy
@@ -751,7 +749,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
               hold += _in[1] << bits; bits += 8;
               _in = _in.subarray(2);
             }
-            here_n = hold & dmask;
+            here_n = hold & dcode.mask;
             dodist: for (;;) {
               op = dcode.getBits(here_n);
               hold >>= op; bits -= op;
