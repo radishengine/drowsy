@@ -4,7 +4,8 @@ define(function() {
   
   function CodeTableView(mode, bits, lens) {
     this.bits = bits;
-    this.bytes = new Uint8Array(Math.pow(2, bits) * 4);
+    this.length = Math.pow(2, bits);
+    this.bytes = new Uint8Array(this.length * 4);
     this.dataView = new DataView(
       this.bytes.buffer,
       this.bytes.byteOffset,
@@ -193,9 +194,6 @@ define(function() {
     }
   }
   CodeTableView.prototype = {
-    get length() {
-      return this.bytes.length / 4;
-    },
     setOpBitsVal: function(n, op, bits, val) {
       this.bytes.set([op, bits, val & 0xff, (val >> 8) & 0xff], n * 4);
     },
