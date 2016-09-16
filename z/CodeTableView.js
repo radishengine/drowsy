@@ -196,40 +196,17 @@ define(function() {
     get length() {
       return this.bytes.length / 4;
     },
-    getEntries: function(n, count) {
-      if (arguments.length === 0) return this.bytes;
-      if (arguments.length === 1) return this.bytes.subarray(n * 4);
-      return this.bytes.subarray(n * 4, (n + count) * 4);
-    },
-    setEntries: function(n, entries) {
-      this.bytes.set(entries, n * 4);
-    },
-    getEntry: function(n) {
-      return this.getEntries(1);
-    },
-    setEntry: function(n, entry) {
-      this.setEntries(n, entry);
-    },
     setOpBitsVal: function(n, op, bits, val) {
       this.bytes.set([op, bits, val & 0xff, (val >> 8) & 0xff], n * 4);
     },
     getOp: function(n) {
       return this.bytes[n * 4];
     },
-    setOp: function(n, v) {
-      this.bytes[n * 4] = v;
-    },
     getBits: function(n) {
       return this.bytes[n*4 + 1];
     },
-    setBits: function(n, v) {
-      this.bytes[n*4 + 1] = v;
-    },
     getVal: function(n) {
       return this.dataView.getUint16(n*4 + 2, true);
-    },
-    setVal: function(n, v) {
-      this.dataView.setUint16(n*4 + 2, v);
     },
   };
   
