@@ -63,7 +63,7 @@ define(function() {
     },
     adler32: function(adler, bytes, offset, length) {
       switch (arguments.length) {
-        case 0: return 0;
+        case 0: return 1;
         case 2:
           offset = 0;
           length = bytes.byteLength;
