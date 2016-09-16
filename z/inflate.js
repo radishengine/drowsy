@@ -489,7 +489,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           if (this.lencode.getOp(here) & 32) {
             this.back = -1;
             this.mode = 'type';
-            continueinflateLoop;
+            continue inflateLoop;
           }
           if (this.lencode.getOp(here) & 64) {
             this.mode = 'bad';
