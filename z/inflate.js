@@ -11,7 +11,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
   function InflateState(windowBits) {
     this.lens = new Uint16Array(320); /* temporary storage for code lengths */
 
-    if (arguments.length === 0) windowBits = 15;
+    if (arguments.length === 0) windowBits = 15 + 32; // +32 to enable gzip decoding
 
     /* extract wrap request from windowBits parameter */
     if (windowBits < 0) {
