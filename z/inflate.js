@@ -385,18 +385,18 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             var here;
             for (;;) {
               here = BITS(this.lencode.bitWidth);
-              if (this.lencode.getBits(here) <= bits) break;
+              if (this.lencode.bits[here] <= bits) break;
               if (!PULLBYTE()) break inflateLoop;
             }
-            if (this.lencode.getVal(here) < 16) {
-              DROPBITS(this.lencode.getBits(here));
-              this.lens[this.have++] = this.lencode.getVal(here);
+            if (this.lencode.val[here] < 16) {
+              DROPBITS(this.lencode.bits[here]);
+              this.lens[this.have++] = this.lencode.val[here];
             }
             else {
               var len, copy;
-              if (this.lencode.getVal(here) === 16) {
-                if (!NEEDBITS(this.lencode.getBits(here) + 2)) break inflateLoop;
-                DROPBITS(this.lencode.getBits(here));
+              if (this.lencode.val[here] === 16) {
+                if (!NEEDBITS(this.lencode.bits[here] + 2)) break inflateLoop;
+                DROPBITS(this.lencode.bits[here]);
                 if (this.have === 0) {
                   this.mode = 'bad';
                   throw new Error("invalid bit length repeat");
@@ -405,16 +405,16 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 copy = 3 + BITS(2);
                 DROPBITS(2);
               }
-              else if (this.lencode.getVal(here) === 17) {
-                if (!NEEDBITS(this.lencode.getBits(here) + 3)) break inflateLoop;
-                DROPBITS(this.lencode.getBits(here));
+              else if (this.lencode.val[here] === 17) {
+                if (!NEEDBITS(this.lencode.bits[here] + 3)) break inflateLoop;
+                DROPBITS(this.lencode.bits[here]);
                 len = 0;
                 copy = 3 + BITS(3);
                 DROPBITS(3);
               }
               else {
-                if (!NEEDBITS(this.lencode.getBits(here) + 7)) break inflateLoop;
-                DROPBITS(this.lencode.getBits(here));
+                if (!NEEDBITS(this.lencode.bits[here] + 7)) break inflateLoop;
+                DROPBITS(this.lencode.bits[here]);
                 len = 0;
                 copy = 11 + BITS(7);
                 DROPBITS(7);
@@ -461,37 +461,37 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           var here;
           for (;;) {
             here = BITS(this.lencode.bitWidth);
-            if (this.lencode.getBits(here) <= bits) break;
+            if (this.lencode.bits[here] <= bits) break;
             if (!PULLBYTE()) break inflateLoop;
           }
-          if (this.lencode.getOp(here) && !(this.lencode.getOp(here) & 0xf0)) {
+          if (this.lencode.op[here] && !(this.lencode.op[here] & 0xf0)) {
             var last = here;
             for (;;) {
-              here = this.lencode.getVal(last) + (
-                BITS(this.lencode.getBits(last) + this.lencode.getOp(last)) >> this.lencode.getBits(last));
-              if ((this.lencode.getBits(last) + this.lencode.getBits(here)) <= bits) break;
+              here = this.lencode.val[last] + (
+                BITS(this.lencode.bits[last] + this.lencode.op[last]) >> this.lencode.bits[last]);
+              if ((this.lencode.bits[last] + this.lencode.bits[here]) <= bits) break;
               if (!PULLBYTE()) break inflateLoop;
             }
-            DROPBITS(this.lencode.getBits(last));
-            this.back += this.lencode.getBits(last);
+            DROPBITS(this.lencode.bits[last]);
+            this.back += this.lencode.bits[last];
           }
-          DROPBITS(this.lencode.getBits(here));
-          this.back += this.lencode.getBits(here);
-          this.length = this.lencode.getVal(here);
-          if (this.lencode.getOp(here) === 0) {
+          DROPBITS(this.lencode.bits[here]);
+          this.back += this.lencode.bits[here];
+          this.length = this.lencode.val[here];
+          if (this.lencode.op[here] === 0) {
             this.mode = 'lit';
             continue inflateLoop;
           }
-          if (this.lencode.getOp(here) & 32) {
+          if (this.lencode.op[here] & 32) {
             this.back = -1;
             this.mode = 'type';
             continue inflateLoop;
           }
-          if (this.lencode.getOp(here) & 64) {
+          if (this.lencode.op[here] & 64) {
             this.mode = 'bad';
             throw new Error("invalid literal/length code");
           }
-          this.extra = this.lencode.getOp(here) & 15;
+          this.extra = this.lencode.op[here] & 15;
           this.mode = 'lenext';
           //continue inflateLoop;
         case 'lenext':
@@ -506,29 +506,29 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           //continue inflateLoop;
         case 'dist':
           for (;;) {
-            if (this.distcode.getBits(BITS(this.distcode.bitWidth)) <= bits) break;
+            if (this.distcode.bits[BITS(this.distcode.bitWidth)] <= bits) break;
             if (!PULLBYTE()) break inflateLoop;
           }
           var here;
-          if (!(this.distcode.getOp(BITS(this.distcode.bitWidth)) & 0xf0)) {
+          if (!(this.distcode.op[BITS(this.distcode.bitWidth)] & 0xf0)) {
             var last = BITS(this.distcode.bitWidth);
             for (;;) {
-              here = this.distcode.getVal(last) + (
-                BITS(this.distcode.getBits(last) + this.distcode.getOp(last)) >> this.distcode.getBits(last));
-              if ((this.distcode.getBits(last) + this.distcode.getBits(here)) <= bits) break;
+              here = this.distcode.val[last] + (
+                BITS(this.distcode.bits[last] + this.distcode.op[last]) >> this.distcode.bits[last]);
+              if ((this.distcode.bits[last] + this.distcode.bits[here]) <= bits) break;
               if (!PULLBYTE()) break inflateLoop;
             }
-            DROPBITS(this.distcode.getBits(last));
-            this.back += this.distcode.getBits(last);
+            DROPBITS(this.distcode.bits[last]);
+            this.back += this.distcode.bits[last];
           }
-          DROPBITS(this.distcode.getBits(here));
-          this.back += this.distcode.getBits(here);
-          if (this.distcode.getOp(here) & 64) {
+          DROPBITS(this.distcode.bits[here]);
+          this.back += this.distcode.bits[here];
+          if (this.distcode.op[here] & 64) {
             this.mode = 'bad';
             throw new Error("invalid distance code");
           }
-          this.offset = this.distcode.getVal(here);
-          this.extra = this.distcode.getOp(here) & 15;
+          this.offset = this.distcode.val[here];
+          this.extra = this.distcode.op[here] & 15;
           this.mode = 'distext';
           //continue inflateLoop;
         case 'distext':
@@ -726,15 +726,15 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
 
         dolen: for (;;) {
           // code bits, operation, extra bits, or window position, window bytes to copy
-          var op = lcode.getBits(here_n);
+          var op = lcode.bits[here_n];
           hold >>= op; bits -= op;
-          op = lcode.getOp(here_n);
+          op = lcode.op[here_n];
           if (op === 0) { // literal
-            out[0] = lcode.getVal(here_n) & 0xff;
+            out[0] = lcode.val[here_n] & 0xff;
             out = out.subarray(1);
           }
           else if (op & 16) { // length base
-            var len = lcode.getVal(here_n);
+            var len = lcode.val[here_n];
             op &= 15; // number of extra bits
             if (op !== 0) {
               if (bits < op) {
@@ -751,12 +751,12 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             }
             here_n = hold & dcode.mask;
             dodist: for (;;) {
-              op = dcode.getBits(here_n);
+              op = dcode.bits[here_n];
               hold >>= op; bits -= op;
-              op = dcode.getOp(here_n);
+              op = dcode.op[here_n];
               if (op & 16) {
                 // distance base
-                var dist = dcode.getVal(here_n);
+                var dist = dcode.val[here_n];
                 op &= 15; // number of extra bits
                 if (bits < op) {
                   hold += _in[0] << bits; bits += 8;
@@ -839,7 +839,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
               }
               else if (!(op & 64)) {
                 /* 2nd level distance code */
-                here_n = dcode.getVal(here_n) + (hold & ((1 << op) - 1));
+                here_n = dcode.val[here_n] + (hold & ((1 << op) - 1));
                 continue dodist;
               }
               else {
@@ -851,7 +851,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
           else if (!(op & 64)) {
             /* 2nd level length code */
-            here_n = lcode.getVal(here_n) + (hold & ((1 << op) - 1));
+            here_n = lcode.val[here_n] + (hold & ((1 << op) - 1));
             continue dolen;
           }
           else if (op & 32) {
