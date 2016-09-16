@@ -27,9 +27,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
       throw new Error('invalid number of windowBits');
     }
 
-    /* update state and reset the rest of it */
     this.wbits = windowBits;
-    if (this.wrap) this.adler = this.wrap & 1;
   }
   InflateState.prototype = {
     next_in: NO_BYTES,
@@ -37,8 +35,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
     next_out: NO_BYTES,
     total_out: 0,
     data_type: 0,
-    adler: 1,
-    
+
     mode: 'head',
     last: 0,
     wrap: 0,
@@ -150,7 +147,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             throw new Error("invalid window size");
           }
           this.dmax = 1 << len;
-          this.adler = this.check = zutil.adler32();
+          this.check = zutil.adler32();
           this.mode = hold & 0x200 ? 'dictid' : 'type';
           hold = bits = 0;
           continue inflateLoop;
@@ -270,12 +267,12 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             this.head.hcrc = (this.flags >> 9) & 1;
             this.head.done = 1;
           }
-          this.adler = this.check = zutil.crc32();
+          this.check = zutil.crc32();
           this.mode = 'type';
           continue inflateLoop;
         case 'dictid':
           if (!NEEDBITS(32)) break inflateLoop;
-          this.adler = this.check = zutil.swap32(hold);
+          this.check = zutil.swap32(hold);
           hold = bits = 0;
           this.mode = 'dict';
           //continue inflateLoop;
@@ -284,7 +281,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             RESTORE();
             return 'needDictionary';
           }
-          this.adler = this.check = zutil.adler32();
+          this.check = zutil.adler32();
           this.mode = 'type';
           //continue inflateLoop;
         case 'type':
@@ -662,7 +659,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
         (v >> 24) & 0xff]));
     },
     _update: function(bytes) {
-      this.adler = this.check = (this.flags ? zutil.crc32 : zutil.adler32)(this.check, bytes);
+      this.check = (this.flags ? zutil.crc32 : zutil.adler32)(this.check, bytes);
     },
     _updateWindow: function(end, copy) {
       /* if it hasn't been done already, allocate space for the window */
