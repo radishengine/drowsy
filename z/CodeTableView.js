@@ -2,9 +2,9 @@ define(function() {
 
   'use strict';
   
-  function CodeTableView(mode, bits, lens) {
-    this.bits = bits;
-    this.length = (1 << bits);
+  function CodeTableView(mode, bitWidth, lens) {
+    this.bitWidth = bitWidth;
+    this.length = (1 << bitWidth);
     this.mask = this.length - 1;
     this.bytes = new Uint8Array(this.length * 4);
     this.dataView = new DataView(
@@ -18,7 +18,7 @@ define(function() {
     }
     
     // bound code lengths, force root to be within code lengths
-    var root = bits;
+    var root = bitWidth;
     var max;
     for (max = 15 /* MAXBITS */; max >= 1; max--) {
       if (count[max] > 0) break;
@@ -28,7 +28,7 @@ define(function() {
       /* no symbols to code at all */
       this.setOpBitsVal(0, 64,1,0); // invalid code number
       this.setOpBitsVal(1, 64,1,0);
-      this.bits = 1;
+      this.bitWidth = 1;
       return; // no symbols, but wait for decoding to report error
     }
     var min;
