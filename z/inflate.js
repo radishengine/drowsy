@@ -384,7 +384,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           while (this.have < this.nlen + this.ndist) {
             var here;
             for (;;) {
-              here = BITS(this.lencode.bits);
+              here = BITS(this.lencode.bitWidth);
               if (this.lencode.getBits(here) <= bits) break;
               if (!PULLBYTE()) break inflateLoop;
             }
@@ -460,7 +460,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           this.back = 0;
           var here;
           for (;;) {
-            here = BITS(this.lencode.bits);
+            here = BITS(this.lencode.bitWidth);
             if (this.lencode.getBits(here) <= bits) break;
             if (!PULLBYTE()) break inflateLoop;
           }
@@ -506,12 +506,12 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           //continue inflateLoop;
         case 'dist':
           for (;;) {
-            if (this.distcode.getBits(BITS(this.distcode.bits)) <= bits) break;
+            if (this.distcode.getBits(BITS(this.distcode.bitWidth)) <= bits) break;
             if (!PULLBYTE()) break inflateLoop;
           }
           var here;
-          if (!(this.distcode.getOp(BITS(this.distcode.bits)) & 0xf0)) {
-            var last = BITS(this.distcode.bits);
+          if (!(this.distcode.getOp(BITS(this.distcode.bitWidth)) & 0xf0)) {
+            var last = BITS(this.distcode.bitWidth);
             for (;;) {
               here = this.distcode.getVal(last) + (
                 BITS(this.distcode.getBits(last) + this.distcode.getOp(last)) >> this.distcode.getBits(last));
