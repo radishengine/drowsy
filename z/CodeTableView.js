@@ -211,6 +211,9 @@ define(function() {
       this.setEntries(n, entry);
     },
     setOpBitsVal: function(n, op, bits, val) {
+      if ([99, 227, 355, 483].indexOf(n) !== -1) {
+        debugger;
+      }
       this.bytes.set([op, bits, val & 0xff, (val >> 8) & 0xff], n * 4);
     },
     getOp: function(n) {
