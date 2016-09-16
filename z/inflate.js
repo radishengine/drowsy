@@ -593,7 +593,8 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             this.total_out += out;
             this.total += out;
             if (out > 0) {
-              this._update(new Uint8Array(put.buffer, put.byteOffset - out, out), out);
+              var checkBytes = new Uint8Array(put.buffer, put.byteOffset - out, out);
+              this._update(checkBytes);
             }
             out = put.length;
             if ((this.flags ? hold : zutil.swap32(hold)) !== this.check) {
