@@ -457,40 +457,41 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             continue inflateLoop;
           }
           this.back = 0;
+          var lcode = this.lencode;
           var here;
           for (;;) {
-            here = BITS(this.lencode.bitWidth);
-            if (this.lencode.bits[here] <= bits) break;
+            here = BITS(lcode.bitWidth);
+            if (lcode.bits[here] <= bits) break;
             if (!PULLBYTE()) break inflateLoop;
           }
-          if (this.lencode.op[here] && !(this.lencode.op[here] & 0xf0)) {
-            var last = here;
+          if (lcode.op[here] && !(lcode.op[here] & 0xf0)) {
+            var last_op = lcode.op[here], last_bits = lcode.bits[here], last_val = lcode.val[here];
             for (;;) {
-              here = this.lencode.val[last] + (
-                BITS(this.lencode.bits[last] + this.lencode.op[last]) >> this.lencode.bits[last]);
-              if ((this.lencode.bits[last] + this.lencode.bits[here]) <= bits) break;
+              here = last_val + (BITS(last_bits + last_op) >> last_bits);
+              if ((last_bits + lcode.bits[here]) <= bits) break;
               if (!PULLBYTE()) break inflateLoop;
             }
-            DROPBITS(this.lencode.bits[last]);
-            this.back += this.lencode.bits[last];
+            DROPBITS(last_bits);
+            this.back += last_bits;
           }
-          DROPBITS(this.lencode.bits[here]);
-          this.back += this.lencode.bits[here];
-          this.length = this.lencode.val[here];
-          if (this.lencode.op[here] === 0) {
+          var here_bits = lcode.bits[here], here_op = lcode.op[here], here_val = lcode.val[here];
+          DROPBITS(here_bits);
+          this.back += here_bits;
+          this.length = here_val;
+          if (here_op === 0) {
             this.mode = 'lit';
             continue inflateLoop;
           }
-          if (this.lencode.op[here] & 32) {
+          if (here_op & 32) {
             this.back = -1;
             this.mode = 'type';
             continue inflateLoop;
           }
-          if (this.lencode.op[here] & 64) {
+          if (here_op & 64) {
             this.mode = 'bad';
             throw new Error("invalid literal/length code");
           }
-          this.extra = this.lencode.op[here] & 15;
+          this.extra = here_op & 15;
           this.mode = 'lenext';
           //continue inflateLoop;
         case 'lenext':
