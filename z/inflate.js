@@ -505,30 +505,32 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           this.mode = 'dist';
           //continue inflation;
         case 'dist':
+          var dcode = this.distcode;
           for (;;) {
-            if (this.distcode.bits[BITS(this.distcode.bitWidth)] <= bits) break;
+            if (dcode.bits[BITS(dcode.bitWidth)] <= bits) break;
             if (!PULLBYTE()) break inflation;
           }
           var here;
-          if (!(this.distcode.op[BITS(this.distcode.bitWidth)] & 0xf0)) {
-            var last = BITS(this.distcode.bitWidth);
+          if (!(dcode.op[BITS(dcode.bitWidth)] & 0xf0)) {
+            var last = BITS(dcode.bitWidth);
+            var last_val = dcode.val[last], last_bits = dcode.bits[last], last_op = dcode.op[last];
             for (;;) {
-              here = this.distcode.val[last] + (
-                BITS(this.distcode.bits[last] + this.distcode.op[last]) >> this.distcode.bits[last]);
-              if ((this.distcode.bits[last] + this.distcode.bits[here]) <= bits) break;
+              here = last_val + (BITS(last_bits + last_op) >> last_bits);
+              if ((last_bits + dcode.bits[here]) <= bits) break;
               if (!PULLBYTE()) break inflation;
             }
-            DROPBITS(this.distcode.bits[last]);
-            this.back += this.distcode.bits[last];
+            DROPBITS(last_bits);
+            this.back += last_bits;
           }
-          DROPBITS(this.distcode.bits[here]);
-          this.back += this.distcode.bits[here];
-          if (this.distcode.op[here] & 64) {
+          var here_bits = dcode.bits[here], here_op = dcode.op[here], here_val = dcode.val[here];
+          DROPBITS(here_bits);
+          this.back += here_bits;
+          if (here_op & 64) {
             this.mode = 'bad';
             throw new Error("invalid distance code");
           }
-          this.offset = this.distcode.val[here];
-          this.extra = this.distcode.op[here] & 15;
+          this.offset = here_val;
+          this.extra = here_op & 15;
           this.mode = 'distext';
           //continue inflation;
         case 'distext':
