@@ -724,19 +724,19 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           _in = _in.subarray(2);
         }
 
-        var here = hold & lcode.mask;
+        var len_i = hold & lcode.mask;
 
         dolen: for (;;) {
           // code bits, operation, extra bits, or window position, window bytes to copy
-          var op = lcode.bits[here];
+          var op = lcode.bits[len_i];
           hold >>= op; bits -= op;
-          op = lcode.op[here];
+          op = lcode.op[len_i];
           if (op === 0) { // literal
-            out[0] = lcode.val[here] & 0xff;
+            out[0] = lcode.val[len_i] & 0xff;
             out = out.subarray(1);
           }
           else if (op & 16) { // length base
-            var len = lcode.val[here];
+            var len = lcode.val[len_i];
             op &= 15; // number of extra bits
             if (op !== 0) {
               if (bits < op) {
@@ -751,14 +751,14 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
               hold += _in[1] << bits; bits += 8;
               _in = _in.subarray(2);
             }
-            here = hold & dcode.mask;
+            var dist_i = hold & dcode.mask;
             dodist: for (;;) {
-              op = dcode.bits[here];
+              op = dcode.bits[dist_i];
               hold >>= op; bits -= op;
-              op = dcode.op[here];
+              op = dcode.op[dist_i];
               if (op & 16) {
                 // distance base
-                var dist = dcode.val[here];
+                var dist = dcode.val[dist_i];
                 op &= 15; // number of extra bits
                 if (bits < op) {
                   hold += _in[0] << bits; bits += 8;
@@ -841,7 +841,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
               }
               else if (!(op & 64)) {
                 /* 2nd level distance code */
-                here = dcode.val[here] + (hold & ((1 << op) - 1));
+                dist_i = dcode.val[dist_i] + (hold & ((1 << op) - 1));
                 continue dodist;
               }
               else {
@@ -853,7 +853,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
           else if (!(op & 64)) {
             /* 2nd level length code */
-            here = lcode.val[here] + (hold & ((1 << op) - 1));
+            len_i = lcode.val[len_i] + (hold & ((1 << op) - 1));
             continue dolen;
           }
           else if (op & 32) {
