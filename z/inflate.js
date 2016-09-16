@@ -10,7 +10,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
 
   function InflateState(windowBits) {
     this.lens = new Uint16Array(320); /* temporary storage for code lengths */
-    this.codes = new CodeTableView(CodeTableView.ENOUGH_LENS + CodeTableView.ENOUGH_DISTS);
 
     if (arguments.length === 0) windowBits = 15;
 
@@ -31,7 +30,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
     /* update state and reset the rest of it */
     this.wbits = this.windowBits;
     if (this.wrap) this.adler = this.wrap & 1;
-    this.lencode = this.distcode = this.next = this.codes;
   }
   InflateState.prototype = {
     next_in: NO_BYTES,
@@ -66,7 +64,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
     nlen: 0,
     ndist: 0,
     have: 0,
-    next: null,
     back: -1,
     was: 0,
     inflate: function(flush) {
