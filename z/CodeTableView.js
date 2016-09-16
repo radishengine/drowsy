@@ -24,8 +24,9 @@ define(function() {
     if (root > max) root = max;
     if (max === 0) {
       /* no symbols to code at all */
-      this.setOpBitsVal(0, 64,1,0); // invalid code number
-      this.setOpBitsVal(1, 64,1,0);
+      this.op[0] = this.op[1] = 64; // invalid code number
+      this.bits[0] = this.bits[1] = 1;
+      this.val[0] = this.val[1] = 0;
       this.bitWidth = 1;
       return; // no symbols, but wait for decoding to report error
     }
@@ -133,7 +134,8 @@ define(function() {
       min = fill; // save offset to next table
       do {
         fill -= incr;
-        this.setOpBitsVal(next + (huff >> drop) + fill, here_op, here_bits, here_val);
+        var n = next + (huff >> drop) + fill;
+        this.op[n] = here_op; this.bits[n] = here_bits; this.val[n] = here_val;
       } while (fill !== 0);
 
       /* backwards increment the len-bit code huff */
@@ -179,7 +181,9 @@ define(function() {
 
         /* point entry in root table to sub-table */
         low = huff & mask;
-        this.setOpBitsVal(low, cur & 0xff, root & 0xff, next & 0xffff);
+        this.op[low] = cur & 0xff;
+        this.bits[low] = root & 0xff;
+        this.val[low] = next & 0xffff;
       }
     }
 
@@ -189,26 +193,12 @@ define(function() {
     maximum code length that was allowed to get this far is one bit)
     */
     if (huff !== 0) {
-      this.setOpBitsVal(next + huff, 64, (len - drop) & 0xff, 0); // invalid code marker
+      this.op[next + huff] = 64; // invalid code marker
+      this.bits[next + huff] = (len - drop) & 0xff;
+      this.val[next + huff] = 0;
     }
   }
-  CodeTableView.prototype = {
-    setOpBitsVal: function(n, op, bits, val) {
-      this.op[n] = op;
-      this.bits[n] = bits;
-      this.val[n] = val;
-    },
-    getOp: function(n) {
-      return this.op[n];
-    },
-    getBits: function(n) {
-      return this.bits[n];
-    },
-    getVal: function(n) {
-      return this.val[n];
-    },
-  };
-  
+
   CodeTableView.ENOUGH_LENS = 852;
   CodeTableView.ENOUGH_DISTS = 592;
 
