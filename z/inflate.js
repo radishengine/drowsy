@@ -715,10 +715,10 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
         hold = this.hold,
         bits = this.bits,
         lcode = this.lencode,
-        dcode = this.distcode,
-        lmask = (1 << this.lenbits) - 1, /* mask for first level of length codes */
-        dmask = (1 << this.distbits) - 1; /* mask for first level of distance codes */
-      var begOffset = out.byteOffset + out.byteLength - start; /* inflate()'s initial this.next_out */
+        dcode = this.distcode;
+      var lmask = (1 << lcode.bits) - 1, /* mask for first level of length codes */
+        dmask = (1 << dcode.bits) - 1, /* mask for first level of distance codes */
+        begOffset = out.byteOffset + out.byteLength - start; /* inflate()'s initial this.next_out */
 
       /* decode literals and length/distances until end-of-block or not enough
          input data or output space */
