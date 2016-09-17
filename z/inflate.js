@@ -827,11 +827,11 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
               dist_i = new_dist_i;
             } while(true);
           }
-          if ((op & 32) && !(op & 64)) {
-            this.mode = 'type';
-            break mainloop;
-          }
           if (op & 64) {
+            if (op & 32) {
+              this.mode = 'type';
+              break mainloop;
+            }
             throw new Error("invalid literal/length code");
           }
           /* 2nd level length code */
