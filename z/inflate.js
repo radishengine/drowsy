@@ -823,7 +823,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
               }
               /* 2nd level distance code */
               var new_dist_i = dcode.val[dist_i] + (hold & ((1 << op) - 1));
-              if (new_dist_i >= dcode.length) throw new RangeError('internal error: dist_i out of range');
+              if (new_dist_i >= dcode.val.length) throw new RangeError('internal error: dist_i out of range');
               dist_i = new_dist_i;
             } while(true);
           }
@@ -836,7 +836,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
           /* 2nd level length code */
           var new_len_i = lcode.val[len_i] + (hold & ((1 << op) - 1));
-          if (new_len_i >= lcode.length) throw new RangeError('internal error: len_i out of range');
+          if (new_len_i >= lcode.val.length) throw new RangeError('internal error: len_i out of range');
           len_i = new_len_i;
         } while (true);
       } while (_in.length > 5 && out.length > 257);
