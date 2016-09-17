@@ -204,7 +204,7 @@ define(function() {
     get mask() {
       return (1 << this.bitWidth) - 1;
     },
-  }
+  };
 
   CodeTableView.ENOUGH_LENS = 852;
   CodeTableView.ENOUGH_DISTS = 592;
