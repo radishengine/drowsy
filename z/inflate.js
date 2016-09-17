@@ -633,7 +633,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
       this.total_out += out;
       this.total += out;
       if (this.wrap && out > 0) {
-        this._update(new Uint8Array(this.next_out.buffer, this.next_out.bufferOffset - out, out));
+        this._update(new Uint8Array(this.next_out.buffer, this.next_out.byteOffset - out, out));
       }
       this.data_type = this.bits
         + (this.last ? 64 : 0)
