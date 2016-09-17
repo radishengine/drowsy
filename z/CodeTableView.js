@@ -3,9 +3,6 @@ define(function() {
   'use strict';
   
   function CodeTableView(mode, bitWidth, lens) {
-    this.bitWidth = bitWidth;
-    this.length = (1 << bitWidth);
-    this.mask = this.length - 1;
     this.bits = new Uint8Array(this.length);
     this.op = new Uint8Array(this.length);
     this.val = new Uint16Array(this.length);
@@ -35,6 +32,8 @@ define(function() {
       if (count[min] !== 0) break;
     }
     if (root < min) root = min;
+    
+    this.bitWidth = root;
     
     /* check for an over-subscribed or incomplete set of lengths */
     var left = 1;
@@ -197,6 +196,14 @@ define(function() {
       this.bits[next + huff] = (len - drop) & 0xff;
       this.val[next + huff] = 0;
     }
+  }
+  CodeTable.prototype = {
+    get length() {
+      return 1 << this.bitWidth;
+    },
+    get mask() {
+      return (1 << this.bitWidth) - 1;
+    },
   }
 
   CodeTableView.ENOUGH_LENS = 852;
