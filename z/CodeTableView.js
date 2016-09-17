@@ -3,9 +3,24 @@ define(function() {
   'use strict';
   
   function CodeTableView(mode, bitWidth, lens) {
-    this.bits = new Uint8Array(1 << bitWidth);
-    this.op = new Uint8Array(1 << bitWidth);
-    this.val = new Uint16Array(1 << bitWidth);
+    switch(mode) {
+      case 'lens':
+        this.bits = new Uint8Array(CodeTableView.ENOUGH_LENS);
+        this.op = new Uint8Array(CodeTableView.ENOUGH_LENS);
+        this.val = new Uint16Array(CodeTableView.ENOUGH_LENS);
+        break;
+      case 'dists':
+        this.bits = new Uint8Array(CodeTableView.ENOUGH_DISTS);
+        this.op = new Uint8Array(CodeTableView.ENOUGH_DISTS);
+        this.val = new Uint16Array(CodeTableView.ENOUGH_DISTS);
+        break;
+      case 'codes':
+        this.bits = new Uint8Array(1 << bitWidth);
+        this.op = new Uint8Array(1 << bitWidth);
+        this.val = new Uint16Array(1 << bitWidth);
+        break;
+      default: throw new Error('unknown mode');
+    }
 
     var count = new Uint16Array(16 /*MAXBITS+1*/); // number of codes of each length
     for (var sym = 0; sym < lens.length; sym++) {
