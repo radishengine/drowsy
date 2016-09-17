@@ -706,7 +706,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
         var len_i = hold & lcode.mask;
 
         do {
-          if (len_i > lcode.bits.length) throw new RangeError('internal error: len_i out of range');
           // code bits, operation, extra bits, or window position, window bytes to copy
           var op = lcode.bits[len_i];
           hold >>= op; bits -= op;
@@ -824,7 +823,9 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 throw new Error("invalid distance code");
               }
               /* 2nd level distance code */
-              dist_i = dcode.val[dist_i] + (hold & ((1 << op) - 1));
+              var new_dist_i = dcode.val[dist_i] + (hold & ((1 << op) - 1));
+              if (new_dist_i >= dcode.length) throw new RangeError('internal error: dist_i out of range');
+              dist_i = new_dist_i;
             } while(true);
           }
           if ((op & 32) && !(op & 64)) {
@@ -835,7 +836,9 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             throw new Error("invalid literal/length code");
           }
           /* 2nd level length code */
-          len_i = lcode.val[len_i] + (hold & ((1 << op) - 1));
+          var new_len_i = lcode.val[len_i] + (hold & ((1 << op) - 1);
+          if (new_len_i >= lcode.length) throw new RangeError('internal error: len_i out of range');
+          len_i = new_len_i);
         } while (true);
       } while (_in.length > 5 && out.length > 257);
 
