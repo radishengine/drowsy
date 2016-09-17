@@ -39,7 +39,7 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
                 + LocalFileHeaderFixedView.byteLength
                 + localFixed.pathByteLength
                 + localFixed.extraByteLength;
-              return byteSource.slice(offset, offset + record.compressedLength).getBytes();
+              return byteSource.slice(offset, offset + compressedLength).getBytes();
             })
             .then(function(compressed) {
               return inflate(compressed);
