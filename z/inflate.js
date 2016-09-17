@@ -692,15 +692,16 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
         bits = this.bits,
         lcode = this.lencode,
         dcode = this.distcode;
-      var begOffset = out.byteOffset + out.byteLength - start; /* inflate()'s initial this.next_out */
+      var beg_p = out.length - start; /* inflate()'s initial this.next_out */
+      
+      var in_p = 0, out_p = 0, in_last = _in.length - 5, out_last = out.length - 257;
 
       /* decode literals and length/distances until end-of-block or not enough
          input data or output space */
       mainloop: do {
         if (bits < 15) {
-          hold += _in[0] << bits; bits += 8;
-          hold += _in[1] << bits; bits += 8;
-          _in = _in.subarray(2);
+          hold += _in[in_p++] << bits; bits += 8;
+          hold += _in[in_p++] << bits; bits += 8;
         }
 
         var len_i = hold & lcode.mask;
@@ -711,8 +712,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           hold >>= op; bits -= op;
           op = lcode.op[len_i];
           if (op === 0) { // literal
-            out[0] = lcode.val[len_i] & 0xff;
-            out = out.subarray(1);
+            out[out_p++] = lcode.val[len_i] & 0xff;
             continue mainloop;
           }
           if (op & 16) { // length base
@@ -720,16 +720,14 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             op &= 15; // number of extra bits
             if (op !== 0) {
               if (bits < op) {
-                hold += _in[0] << bits; bits += 8;
-                _in = _in.subarray(1);
+                hold += _in[in_p++] << bits; bits += 8;
               }
               len += hold & ((1 << op) - 1);
               hold >>= op; bits -= op;
             }
             if (bits < 15) {
-              hold += _in[0] << bits; bits += 8;
-              hold += _in[1] << bits; bits += 8;
-              _in = _in.subarray(2);
+              hold += _in[in_p++] << bits; bits += 8;
+              hold += _in[in_p++] << bits; bits += 8;
             }
             var dist_i = hold & dcode.mask;
             do {
@@ -741,13 +739,9 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 var dist = dcode.val[dist_i];
                 op &= 15; // number of extra bits
                 if (bits < op) {
-                  hold += _in[0] << bits; bits += 8;
+                  hold += _in[in_p++] << bits; bits += 8;
                   if (bits < op) {
-                    hold += _in[1] << bits; bits += 8;
-                    _in = _in.subarray(2);
-                  }
-                  else {
-                    _in = _in.subarray(1);
+                    hold += _in[in_p++] << bits; bits += 8;
                   }
                 }
                 dist += hold & ((1 << op) - 1);
@@ -757,7 +751,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 }
                 //#endif
                 hold >>= op; bits -= op;
-                op = (out.byteOffset - begOffset) >>> 0; // max distance in output
+                op = (out_p - beg_p) >>> 0; // max distance in output
                 if (dist > op) { // see if copy from window
                   op = dist - op; // distance back in window
                   if (op > whave) {
@@ -769,10 +763,10 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                     if (op < len) {
                       // some from window
                       len -= op;
-                      out.set(from.subarray(0, op));
-                      out = out.subarray(op);
+                      out.set(from.subarray(0, op), out_p);
+                      out_p += op;
                       // rest from output
-                      from = new Uint8Array(out.buffer, out.byteOffset - dist, out.byteLength + dist);
+                      from = out.subarray(out_p - dist);
                     }
                   }
                   else if (wnext < op) {
@@ -782,17 +776,17 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                     if (op < len) {
                       // some from end of window
                       len -= op;
-                      out.set(from.subarray(0, op));
-                      out = out.subarray(op);
+                      out.set(from.subarray(0, op), out_p);
+                      out_p += op;
                       from = window;
                       if (wnext < len) { 
                         // some from start of window
                         op = wnext;
                         len -= op;
-                        out.set(from.subarray(0, op));
-                        out = out.subarray(op);
+                        out.set(from.subarray(0, op), out_p);
+                        out_p += op;
                         // rest from output
-                        from = new Uint8Array(out.buffer, out.byteOffset - dist, len);
+                        from = out.subarray(out_p - dist, out_p);
                       }
                     }
                   }
@@ -802,19 +796,19 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                     if (op < len) {
                       // some from window
                       len -= op;
-                      out.set(from.subarray(0, op));
-                      out = out.subarray(op);
+                      out.set(from.subarray(0, op), out_p);
+                      out_p += op;
                       // rest from output
-                      from = new Uint8Array(out.buffer, out.byteOffset - dist, len);
+                      from = out.subarray(out_p - dist, out_p);
                     }
                   }
-                  out.set(from.subarray(0, len));
-                  out = out.subarray(len);
+                  out.set(from.subarray(0, len), out_p);
+                  out_p += len;
                 }
                 else {
                   /* copy direct from output */
-                  out.set(new Uint8Array(out.buffer, out.byteOffset - dist, len));
-                  out = out.subarray(len);
+                  out.set(out.subarray(out_p - dist, (out_p - dist) + len), out_p);
+                  out_p += len;
                 }
                 continue mainloop;
               }
@@ -839,13 +833,12 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           if (new_len_i >= lcode.val.length) throw new RangeError('internal error: len_i out of range');
           len_i = new_len_i;
         } while (true);
-      } while (_in.length > 5 && out.length > 257);
+      } while (in_p < in_last && out_p < out_last);
 
       /* return unused bytes (on entry, bits < 8, so in won't go too far back) */
       var len = bits >> 3;
-      if (len > 0) {
-        _in = new Uint8Array(_in.buffer, _in.byteOffset - len, _in.byteLength + len);
-      }
+      _in = _in.subarray(in_p - len);
+      out = out.subarray(out_p);
       bits -= len << 3;
       hold &= (1 << bits) - 1;
 
