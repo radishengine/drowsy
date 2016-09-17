@@ -197,7 +197,7 @@ define(function() {
       this.val[next + huff] = 0;
     }
   }
-  CodeTable.prototype = {
+  CodeTableView.prototype = {
     get length() {
       return 1 << this.bitWidth;
     },
