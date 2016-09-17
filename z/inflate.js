@@ -857,8 +857,8 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
     },
   };
   
-  function inflate(compressedBytes) {
-    var inflater = new InflateState();
+  function inflate(compressedBytes, noWrap) {
+    var inflater = noWrap ? new InflateState(-15) : new InflateState();
     inflater.next_in = compressedBytes;
     var bufferList = [];
     var status;
