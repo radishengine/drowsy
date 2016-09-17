@@ -890,7 +890,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
     var status;
     var allBytes = 0;
     do {
-      var buffer = inflater.next_out = new Uint8Array(32 * 1024);
+      var buffer = inflater.next_out = new Uint8Array(1);
       status = inflater.inflate();
       if (inflater.next_out.byteLength !== 0) {
         buffer = buffer.subarray(0, inflater.next_out.byteOffset - buffer.byteOffset);
