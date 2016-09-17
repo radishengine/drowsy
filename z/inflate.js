@@ -713,7 +713,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           if (op === 0) { // literal
             out[0] = lcode.val[len_i] & 0xff;
             out = out.subarray(1);
-            break dolen;
+            continue mainloop;
           }
           else if (op & 16) { // length base
             var len = lcode.val[len_i];
@@ -816,7 +816,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                   out.set(new Uint8Array(out.buffer, out.byteOffset - dist, len));
                   out = out.subarray(len);
                 }
-                break dolen;
+                continue mainloop;
               }
               else if (!(op & 64)) {
                 /* 2nd level distance code */
