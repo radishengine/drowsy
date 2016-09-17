@@ -835,9 +835,9 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             throw new Error("invalid literal/length code");
           }
           /* 2nd level length code */
-          var new_len_i = lcode.val[len_i] + (hold & ((1 << op) - 1);
+          var new_len_i = lcode.val[len_i] + (hold & ((1 << op) - 1));
           if (new_len_i >= lcode.length) throw new RangeError('internal error: len_i out of range');
-          len_i = new_len_i);
+          len_i = new_len_i;
         } while (true);
       } while (_in.length > 5 && out.length > 257);
 
