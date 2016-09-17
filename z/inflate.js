@@ -899,7 +899,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
       bufferList.push(buffer);
     } while (status !== 'done');
     allBytes = new Uint8Array(allBytes);
-    for (var pos = 0; pos < allBytes.length; pos += bufferList.unshift().byteLength) {
+    for (var pos = 0; pos < allBytes.length; pos += bufferList.shift().byteLength) {
       allBytes.set(bufferList[0], pos);
     }
     return allBytes;
