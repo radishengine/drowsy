@@ -733,7 +733,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             }
             var dist_i = hold & dcode.mask;
             do {
-              if (dist_i > dcode.bits.length) throw new RangeError('internal error: dcode_i out of range');
               op = dcode.bits[dist_i];
               hold >>= op; bits -= op;
               op = dcode.op[dist_i];
