@@ -705,7 +705,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
 
         var len_i = hold & lcode.mask;
 
-        dolen: for (;;) {
+        do {
           // code bits, operation, extra bits, or window position, window bytes to copy
           var op = lcode.bits[len_i];
           hold >>= op; bits -= op;
@@ -732,7 +732,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
               _in = _in.subarray(2);
             }
             var dist_i = hold & dcode.mask;
-            dodist: for (;;) {
+            do {
               op = dcode.bits[dist_i];
               hold >>= op; bits -= op;
               op = dcode.op[dist_i];
@@ -818,29 +818,23 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 }
                 continue mainloop;
               }
-              else if (!(op & 64)) {
-                /* 2nd level distance code */
-                dist_i = dcode.val[dist_i] + (hold & ((1 << op) - 1));
-                continue dodist;
-              }
-              else {
+              if (op & 64) {
                 throw new Error("invalid distance code");
               }
-            }
+              /* 2nd level distance code */
+              dist_i = dcode.val[dist_i] + (hold & ((1 << op) - 1));
+            } while(true);
           }
-          else if (!(op & 64)) {
-            /* 2nd level length code */
-            len_i = lcode.val[len_i] + (hold & ((1 << op) - 1));
-            continue dolen;
-          }
-          else if (op & 32) {
+          if ((op & 32) && !(op & 64)) {
             this.mode = 'type';
             break mainloop;
           }
-          else {
+          if (op & 64) {
             throw new Error("invalid literal/length code");
           }
-        }
+          /* 2nd level length code */
+          len_i = lcode.val[len_i] + (hold & ((1 << op) - 1));
+        } while (true);
       } while (_in.length > 5 && out.length > 257);
 
       /* return unused bytes (on entry, bits < 8, so in won't go too far back) */
