@@ -132,18 +132,15 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           if (this.head) this.head.done = -1;
           if (!(this.wrap & 1) ||   /* check if zlib header allowed */
               ((BITS(8) << 8) + (hold >> 8)) % 31) {
-            this.mode = 'bad';
             throw new Error("incorrect header check");
           }
           if (BITS(4) !== 8 /* Z_DEFLATED */) {
-            this.mode = 'bad';
             throw new Error("unknown compression method");
           }
           DROPBITS(4);
           var len = BITS(4) + 8;
           if (this.wbits === 0) this.wbits = len;
           else if (len > this.wbits) {
-            this.mode = 'bad';
             throw new Error("invalid window size");
           }
           this.dmax = 1 << len;
@@ -155,11 +152,9 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           if (!NEEDBITS(16)) break inflation;
           this.flags = hold;
           if ((this.flags & 0xff) !== 8 /* Z_DEFLATED */) {
-            this.mode = 'bad';
             throw new Error("unknown compression method");
           }
           if (this.flags & 0xe000) {
-            this.mode = 'bad';
             throw new Error("unknown header flags set");
           }
           if (this.head) this.head.text = ((hold >> 8) & 1);
@@ -258,7 +253,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           if (this.flags & 0x0200) {
             if (!NEEDBITS(16)) break inflation;
             if (hold !== (this.check & 0xffff)) {
-              this.mode = 'bad';
               throw new Error("header crc mismatch");
             }
             hold = bits = 0;
@@ -313,7 +307,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
               this.mode = 'table';
               break;
             case 3:
-              this.mode = 'bad';
               throw new Error("invalid block type");
           }
           DROPBITS(2);
@@ -323,7 +316,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           hold >>= bits & 7; bits -= bits & 7;
           if (!NEEDBITS(32)) break inflation;
           if ((hold & 0xffff) !== ((hold >> 16) ^ 0xffff)) {
-            this.mode = 'bad';
             throw new Error("invalid stored block lengths");
           }
           this.length = hold & 0xffff;
@@ -359,7 +351,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           /*
           #ifndef PKZIP_BUG_WORKAROUND
           if (this.nlen > 286 || this.ndist > 30) {
-            this.mode = 'bad';
             throw new Exception("too many length or distance symbols");
           }
           #endif
@@ -400,7 +391,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 if (!NEEDBITS(here_bits + 2)) break inflation;
                 DROPBITS(here_bits);
                 if (this.have === 0) {
-                  this.mode = 'bad';
                   throw new Error("invalid bit length repeat");
                 }
                 len = this.lens[this.have - 1];
@@ -422,7 +412,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 DROPBITS(7);
               }
               if (this.have + copy > this.nlen + this.ndist) {
-                this.mode = 'bad';
                 throw new Error("invalid bit length repeat");
               }
               while (copy--) {
@@ -433,7 +422,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
 
           /* check for end-of-block code (better have one) */
           if (this.lens[256] === 0) {
-            this.mode = 'bad';
             throw new Error("invalid code -- missing end-of-block");
           }
 
@@ -488,7 +476,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             continue inflation;
           }
           if (here_op & 64) {
-            this.mode = 'bad';
             throw new Error("invalid literal/length code");
           }
           this.extra = here_op & 15;
@@ -525,7 +512,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           DROPBITS(here_bits);
           this.back += here_bits;
           if (here_op & 64) {
-            this.mode = 'bad';
             throw new Error("invalid distance code");
           }
           this.offset = here_val;
@@ -541,7 +527,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           }
           // #ifdef INFLATE_STRICT
           if (this.offset > this.dmax) {
-            this.mode = 'bad';
             throw new Error("invalid distance too far back");
           }
           // #endif
@@ -554,7 +539,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           if (this.offset > copy) { // copy from window
             copy = this.offset - copy;
             if (copy > this.whave) {
-              this.mode = 'bad';
               throw new Error("invalid distance too far back");
             }
             if (copy > this.wnext) {
@@ -595,7 +579,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             }
             out = put.length;
             if ((this.flags ? hold : zutil.swap32(hold)) !== this.check) {
-              this.mode = 'bad';
               throw new Error("incorrect data check");
             }
             hold = bits = 0;
@@ -606,7 +589,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           if (this.wrap && this.flags) {
             if (!NEEDBITS(32)) break inflation;
             if ((hold >>> 0) !== (this.total >>> 0)) {
-              this.mode = 'bad';
               throw new Error("incorrect length check");
             }
             hold = bits = 0;
@@ -616,13 +598,11 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
         case 'done':
           ret = 'done';
           break inflation;
-        case 'bad': throw new Error('previous error');
         default: throw new Error('unknown state');
       }
       // end of loop
       RESTORE();
       if (this.wsize > 0 || (out !== this.next_out.length
-        && !/^(bad|mem|sync)$/.test(this.mode)
         && (flush !== 'finish' || !/^(check|length|done)$/.test(this.mode)))
       ) {
         this._updateWindow(this.next_out, out - this.next_out.length);
@@ -772,7 +752,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 dist += hold & ((1 << op) - 1);
                 //#ifdef INFLATE_STRICT
                 if (dist > dmax) {
-                  this.mode = 'bad';
                   throw new Error("invalid distance too far back");
                 }
                 //#endif
@@ -781,7 +760,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 if (dist > op) { // see if copy from window
                   op = dist - op; // distance back in window
                   if (op > whave) {
-                    this.mode = 'bad';
                     throw new Error("invalid distance too far back");
                   }
                   var from = window;
@@ -844,7 +822,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 continue dodist;
               }
               else {
-                this.mode = 'bad';
                 throw new Error("invalid distance code");
               }
               break dodist;
@@ -860,7 +837,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             break mainloop;
           }
           else {
-            this.mode = 'bad';
             throw new Error("invalid literal/length code");
           }
           break dolen;
