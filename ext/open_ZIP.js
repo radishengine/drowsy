@@ -1,4 +1,4 @@
-define(['msdos/util', 'text', 'Item'], function(dosUtil, text, Item) {
+define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item, inflate) {
 
   'use strict';
   
@@ -24,7 +24,30 @@ define(['msdos/util', 'text', 'Item'], function(dosUtil, text, Item) {
             rawCentralDirectory.buffer,
             rawCentralDirectory.byteOffset,
             rawCentralDirectory.byteLength);
-          console.log(fileRecords);
+          Promise.all(fileRecords.map(function(record) {
+            var compressedLength = record.compressedSize32; // TODO: support Zip64
+            return byteSource.slice(
+              record.localHeaderOffset,
+              record.localHeaderOffset + LocalFileHeaderFixedView.byteLength)
+            .getBytes()
+            .then(function(rawLocalFixed) {
+              var localFixed = new LocalFileHeaderFixedView(
+                rawLocalFixed.buffer,
+                rawLocalFixed.byteOffset,
+                rawLocalFixed.byteLength);
+              var offset = record.localHeaderOffset
+                + LocalFileHeaderFixedView.byteLength
+                + localFixed.pathByteLength
+                + localFixed.extraByteLength;
+              return byteSource.slice(offset, offset + record.compressedLength).getBytes();
+            })
+            .then(function(compressed) {
+              return inflate(compressed);
+            });
+          }))
+          .then(function(allUncompressed) {
+            console.log(allUncompressed);
+          });
         });
       });
       /*
