@@ -715,7 +715,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             out = out.subarray(1);
             continue mainloop;
           }
-          else if (op & 16) { // length base
+          if (op & 16) { // length base
             var len = lcode.val[len_i];
             op &= 15; // number of extra bits
             if (op !== 0) {
