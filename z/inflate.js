@@ -897,7 +897,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
       do {
         status = inflater.inflate();
         if (status !== 'done') {
-          inflater.next_in = new Uint8Array(inflater.next_in.buffer, inflater.next_in.byteOffset + 1, 1);
+          inflater.next_in = new Uint8Array(inflater.next_in.buffer, inflater.next_in.byteOffset, 1);
         }
       } while (status !== 'done');
       buffer = buffer.subarray(0, inflater.next_out.byteOffset - buffer.byteOffset);
