@@ -24,7 +24,7 @@ define(function() {
     getTimeAndDate: function(dataView, offset) {
       var d = new Date();
       this.assignTimeFromUint16(d, dataView.getUint16(offset, true));
-      this.assignDateFromUint16(d, dataView.getUInt16(offset + 2, true));
+      this.assignDateFromUint16(d, dataView.getUint16(offset + 2, true));
       return d;
     },
     assignTimeFromUint16: function(d, u16) {
