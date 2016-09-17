@@ -3,9 +3,9 @@ define(function() {
   'use strict';
   
   function CodeTableView(mode, bitWidth, lens) {
-    this.bits = new Uint8Array(this.length);
-    this.op = new Uint8Array(this.length);
-    this.val = new Uint16Array(this.length);
+    this.bits = new Uint8Array(1 << bitWidth);
+    this.op = new Uint8Array(1 << bitWidth);
+    this.val = new Uint16Array(1 << bitWidth);
 
     var count = new Uint16Array(16 /*MAXBITS+1*/); // number of codes of each length
     for (var sym = 0; sym < lens.length; sym++) {
