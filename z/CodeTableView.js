@@ -180,7 +180,7 @@ define(function() {
 
         /* point entry in root table to sub-table */
         low = huff & mask;
-        this.op[low] = cur & 0xff;
+        this.op[low] = curr & 0xff;
         this.bits[low] = root & 0xff;
         this.val[low] = next & 0xffff;
       }
