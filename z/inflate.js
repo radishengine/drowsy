@@ -890,22 +890,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
     var status;
     var allBytes = 0;
 
-    // testing 1-byte input
-    {
-      var buffer = inflater.next_out = new Uint8Array(32 * 1024);
-      inflater.next_in = compressedBytes.subarray(0, 1);
-      do {
-        status = inflater.inflate();
-        if (status !== 'done') {
-          inflater.next_in = new Uint8Array(inflater.next_in.buffer, inflater.next_in.byteOffset, 1);
-        }
-      } while (status !== 'done');
-      buffer = buffer.subarray(0, inflater.next_out.byteOffset - buffer.byteOffset);
-      allBytes += buffer.byteLength;
-      bufferList.push(buffer);
-    }
-    
-    /*
     do {
       var buffer = inflater.next_out = new Uint8Array(32 * 1024);
       status = inflater.inflate();
@@ -915,8 +899,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
       allBytes += buffer.byteLength;
       bufferList.push(buffer);
     } while (status !== 'done');
-    */
-    
+
     allBytes = new Uint8Array(allBytes);
     for (var pos = 0; pos < allBytes.length; pos += bufferList.shift().byteLength) {
       allBytes.set(bufferList[0], pos);
