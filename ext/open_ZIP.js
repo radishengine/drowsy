@@ -42,7 +42,7 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
               return byteSource.slice(offset, offset + compressedLength).getBytes();
             })
             .then(function(compressed) {
-              return inflate(compressed);
+              return inflate(compressed, true);
             });
           }))
           .then(function(allUncompressed) {
