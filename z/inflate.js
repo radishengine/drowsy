@@ -713,6 +713,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           if (op === 0) { // literal
             out[0] = lcode.val[len_i] & 0xff;
             out = out.subarray(1);
+            break dolen;
           }
           else if (op & 16) { // length base
             var len = lcode.val[len_i];
@@ -815,6 +816,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                   out.set(new Uint8Array(out.buffer, out.byteOffset - dist, len));
                   out = out.subarray(len);
                 }
+                break dolen;
               }
               else if (!(op & 64)) {
                 /* 2nd level distance code */
@@ -824,7 +826,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
               else {
                 throw new Error("invalid distance code");
               }
-              break dodist;
             }
           }
           else if (!(op & 64)) {
@@ -839,7 +840,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           else {
             throw new Error("invalid literal/length code");
           }
-          break dolen;
         }
       } while (_in.length > 5 && out.length > 257);
 
