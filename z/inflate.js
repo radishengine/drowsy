@@ -505,15 +505,14 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           this.mode = 'dist';
           //continue inflation;
         case 'dist':
-          var dcode = this.distcode;
+          var here, dcode = this.distcode;
           for (;;) {
-            if (dcode.bits[BITS(dcode.bitWidth)] <= bits) break;
+            here = BITS(dcode.bitWidth);
+            if (dcode.bits[here] <= bits) break;
             if (!PULLBYTE()) break inflation;
           }
-          var here;
-          if (!(dcode.op[BITS(dcode.bitWidth)] & 0xf0)) {
-            var last = BITS(dcode.bitWidth);
-            var last_val = dcode.val[last], last_bits = dcode.bits[last], last_op = dcode.op[last];
+          if ((dcode.op[here] & 0xf0) === 0) {
+            var last_val = dcode.val[here], last_bits = dcode.bits[here], last_op = dcode.op[here];
             for (;;) {
               here = last_val + (BITS(last_bits + last_op) >> last_bits);
               if ((last_bits + dcode.bits[here]) <= bits) break;
