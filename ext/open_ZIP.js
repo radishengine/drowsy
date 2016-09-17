@@ -250,7 +250,7 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
       return this.dataView.getUint16(34, true);
     },
     get internalAttributes() {
-      return this.dataView.getUint16(36, false);
+      return this.dataView.getUint16(36, true);
     },
     get isApparentlyTextFile() {
       return !!(this.internalAttributes && (1 << 0));
@@ -259,10 +259,10 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
       return !!(this.internalAttributes && (1 << 2));
     },
     get externalAttributes() {
-      return this.dataView.getUint32(38, false);
+      return this.dataView.getUint32(38, true);
     },
     get localHeaderOffset() {
-      return this.dataView.getUint32(42, false);
+      return this.dataView.getUint32(42, true);
     },
     get pathPos() {
       return CentralFileRecordView.fixedByteLength;
