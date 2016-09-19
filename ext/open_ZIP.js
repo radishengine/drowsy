@@ -47,7 +47,9 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
               var buf = new Uint8Array(uncompressedLength);
               inflation.next_out = buf;
               inflation.next_in = compressed;
+              var pre = performance.now();
               var result = inflation.inflate('finish');
+              console.log(performance.now() - pre);
               if (result !== 'done') {
                 return Promise.reject('inflation failed to complete, returned ' + result);
               }
