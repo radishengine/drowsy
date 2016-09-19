@@ -436,9 +436,163 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           //continue inflation;
         case 'len':
           if (next.length >= 6 && put.length >= 258) {
-            RESTORE();
-            this._fast(out);
-            LOAD();
+            /* copy state to local variables */
+            var dmax = this.dmax, /* maximum distance from zlib header */
+              wsize = this.wsize, /* window size or zero if not using window */
+              whave = this.whave, /* valid bytes in the window */
+              wnext = this.wnext, /* window write index */
+              window = this.window, /* allocated sliding window, if wsize != 0 */
+              lcode = this.lencode,
+              dcode = this.distcode;
+            var beg_p = put.length - out; /* inflate()'s initial this.next_out */
+            
+            var in_p = 0, out_p = 0, in_last = next.length - 5, out_last = put.length - 257;
+      
+            /* decode literals and length/distances until end-of-block or not enough
+               input data or output space */
+            fastLoop: do {
+              if (bits < 15) {
+                hold += next[in_p++] << bits; bits += 8;
+                hold += next[in_p++] << bits; bits += 8;
+              }
+      
+              var len_i = hold & lcode.mask;
+      
+              do {
+                // code bits, operation, extra bits, or window position, window bytes to copy
+                var op = lcode.bits[len_i];
+                hold >>= op; bits -= op;
+                op = lcode.op[len_i];
+                if (op === 0) { // literal
+                  put[out_p++] = lcode.val[len_i] & 0xff;
+                  continue fastLoop;
+                }
+                if (op & 16) { // length base
+                  var len = lcode.val[len_i];
+                  op &= 15; // number of extra bits
+                  if (op !== 0) {
+                    if (bits < op) {
+                      hold += next[in_p++] << bits; bits += 8;
+                    }
+                    len += hold & ((1 << op) - 1);
+                    hold >>= op; bits -= op;
+                  }
+                  if (bits < 15) {
+                    hold += next[in_p++] << bits; bits += 8;
+                    hold += next[in_p++] << bits; bits += 8;
+                  }
+                  var dist_i = hold & dcode.mask;
+                  do {
+                    op = dcode.bits[dist_i];
+                    hold >>= op; bits -= op;
+                    op = dcode.op[dist_i];
+                    if (op & 16) {
+                      // distance base
+                      var dist = dcode.val[dist_i];
+                      op &= 15; // number of extra bits
+                      if (bits < op) {
+                        hold += next[in_p++] << bits; bits += 8;
+                        if (bits < op) {
+                          hold += next[in_p++] << bits; bits += 8;
+                        }
+                      }
+                      dist += hold & ((1 << op) - 1);
+                      //#ifdef INFLATE_STRICT
+                      if (dist > dmax) {
+                        throw new Error("invalid distance too far back");
+                      }
+                      //#endif
+                      hold >>= op; bits -= op;
+                      op = (out_p - beg_p) >>> 0; // max distance in output
+                      if (dist > op) { // see if copy from window
+                        op = dist - op; // distance back in window
+                        if (op > whave) {
+                          throw new Error("invalid distance too far back");
+                        }
+                        var from = window;
+                        if (wnext == 0) { // very common case
+                          from = from.subarray(wsize - op);
+                          if (op < len) {
+                            // some from window
+                            len -= op;
+                            put.set(from.subarray(0, op), out_p);
+                            out_p += op;
+                            // rest from output
+                            from = put.subarray(out_p - dist);
+                          }
+                        }
+                        else if (wnext < op) {
+                          // wrap around window
+                          from = from.subarray(wsize + wnext - op);
+                          op -= wnext;
+                          if (op < len) {
+                            // some from end of window
+                            len -= op;
+                            put.set(from.subarray(0, op), out_p);
+                            out_p += op;
+                            from = window;
+                            if (wnext < len) { 
+                              // some from start of window
+                              op = wnext;
+                              len -= op;
+                              put.set(from.subarray(0, op), out_p);
+                              out_p += op;
+                              // rest from output
+                              from = put.subarray(out_p - dist, out_p);
+                            }
+                          }
+                        }
+                        else {
+                          // contiguous in window
+                          from = from.subarray(wnext - op);
+                          if (op < len) {
+                            // some from window
+                            len -= op;
+                            put.set(from.subarray(0, op), out_p);
+                            out_p += op;
+                            // rest from output
+                            from = put.subarray(out_p - dist, out_p);
+                          }
+                        }
+                        put.set(from.subarray(0, len), out_p);
+                        out_p += len;
+                      }
+                      else {
+                        /* copy direct from output */
+                        put.set(put.subarray(out_p - dist, (out_p - dist) + len), out_p);
+                        out_p += len;
+                      }
+                      continue fastLoop;
+                    }
+                    if (op & 64) {
+                      throw new Error("invalid distance code");
+                    }
+                    /* 2nd level distance code */
+                    var new_dist_i = dcode.val[dist_i] + (hold & ((1 << op) - 1));
+                    if (new_dist_i >= dcode.val.length) throw new RangeError('internal error: dist_i out of range');
+                    dist_i = new_dist_i;
+                  } while(true);
+                }
+                if (op & 64) {
+                  if (op & 32) {
+                    this.mode = 'type';
+                    break fastLoop;
+                  }
+                  throw new Error("invalid literal/length code");
+                }
+                /* 2nd level length code */
+                var new_len_i = lcode.val[len_i] + (hold & ((1 << op) - 1));
+                if (new_len_i >= lcode.val.length) throw new RangeError('internal error: len_i out of range');
+                len_i = new_len_i;
+              } while (true);
+            } while (in_p < in_last && out_p < out_last);
+      
+            /* return unused bytes (on entry, bits < 8, so in won't go too far back) */
+            var len = bits >> 3;
+            next = next.subarray(in_p - len);
+            put = put.subarray(out_p);
+            bits -= len << 3;
+            hold &= (1 << bits) - 1;
             if (this.mode === 'type') {
               this.back = -1;
             }
@@ -676,177 +830,6 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           if (this.whave < this.wsize) this.whave += dist;
         }
       }
-    },
-    _fast: function(out) {
-      /* copy state to local variables */
-      var next = this.next_in,
-        put = this.next_out,
-        //#ifdef INFLATE_STRICT
-        dmax = this.dmax, /* maximum distance from zlib header */
-        //#endif
-        wsize = this.wsize, /* window size or zero if not using window */
-        whave = this.whave, /* valid bytes in the window */
-        wnext = this.wnext, /* window write index */
-        window = this.window, /* allocated sliding window, if wsize != 0 */
-        hold = this.hold,
-        bits = this.bits,
-        lcode = this.lencode,
-        dcode = this.distcode;
-      var beg_p = put.length - out; /* inflate()'s initial this.next_out */
-      
-      var in_p = 0, out_p = 0, in_last = next.length - 5, out_last = put.length - 257;
-
-      /* decode literals and length/distances until end-of-block or not enough
-         input data or output space */
-      mainloop: do {
-        if (bits < 15) {
-          hold += next[in_p++] << bits; bits += 8;
-          hold += next[in_p++] << bits; bits += 8;
-        }
-
-        var len_i = hold & lcode.mask;
-
-        do {
-          // code bits, operation, extra bits, or window position, window bytes to copy
-          var op = lcode.bits[len_i];
-          hold >>= op; bits -= op;
-          op = lcode.op[len_i];
-          if (op === 0) { // literal
-            put[out_p++] = lcode.val[len_i] & 0xff;
-            continue mainloop;
-          }
-          if (op & 16) { // length base
-            var len = lcode.val[len_i];
-            op &= 15; // number of extra bits
-            if (op !== 0) {
-              if (bits < op) {
-                hold += next[in_p++] << bits; bits += 8;
-              }
-              len += hold & ((1 << op) - 1);
-              hold >>= op; bits -= op;
-            }
-            if (bits < 15) {
-              hold += next[in_p++] << bits; bits += 8;
-              hold += next[in_p++] << bits; bits += 8;
-            }
-            var dist_i = hold & dcode.mask;
-            do {
-              op = dcode.bits[dist_i];
-              hold >>= op; bits -= op;
-              op = dcode.op[dist_i];
-              if (op & 16) {
-                // distance base
-                var dist = dcode.val[dist_i];
-                op &= 15; // number of extra bits
-                if (bits < op) {
-                  hold += next[in_p++] << bits; bits += 8;
-                  if (bits < op) {
-                    hold += next[in_p++] << bits; bits += 8;
-                  }
-                }
-                dist += hold & ((1 << op) - 1);
-                //#ifdef INFLATE_STRICT
-                if (dist > dmax) {
-                  throw new Error("invalid distance too far back");
-                }
-                //#endif
-                hold >>= op; bits -= op;
-                op = (out_p - beg_p) >>> 0; // max distance in output
-                if (dist > op) { // see if copy from window
-                  op = dist - op; // distance back in window
-                  if (op > whave) {
-                    throw new Error("invalid distance too far back");
-                  }
-                  var from = window;
-                  if (wnext == 0) { // very common case
-                    from = from.subarray(wsize - op);
-                    if (op < len) {
-                      // some from window
-                      len -= op;
-                      put.set(from.subarray(0, op), out_p);
-                      out_p += op;
-                      // rest from output
-                      from = put.subarray(out_p - dist);
-                    }
-                  }
-                  else if (wnext < op) {
-                    // wrap around window
-                    from = from.subarray(wsize + wnext - op);
-                    op -= wnext;
-                    if (op < len) {
-                      // some from end of window
-                      len -= op;
-                      put.set(from.subarray(0, op), out_p);
-                      out_p += op;
-                      from = window;
-                      if (wnext < len) { 
-                        // some from start of window
-                        op = wnext;
-                        len -= op;
-                        put.set(from.subarray(0, op), out_p);
-                        out_p += op;
-                        // rest from output
-                        from = put.subarray(out_p - dist, out_p);
-                      }
-                    }
-                  }
-                  else {
-                    // contiguous in window
-                    from = from.subarray(wnext - op);
-                    if (op < len) {
-                      // some from window
-                      len -= op;
-                      put.set(from.subarray(0, op), out_p);
-                      out_p += op;
-                      // rest from output
-                      from = put.subarray(out_p - dist, out_p);
-                    }
-                  }
-                  put.set(from.subarray(0, len), out_p);
-                  out_p += len;
-                }
-                else {
-                  /* copy direct from output */
-                  put.set(put.subarray(out_p - dist, (out_p - dist) + len), out_p);
-                  out_p += len;
-                }
-                continue mainloop;
-              }
-              if (op & 64) {
-                throw new Error("invalid distance code");
-              }
-              /* 2nd level distance code */
-              var new_dist_i = dcode.val[dist_i] + (hold & ((1 << op) - 1));
-              if (new_dist_i >= dcode.val.length) throw new RangeError('internal error: dist_i out of range');
-              dist_i = new_dist_i;
-            } while(true);
-          }
-          if (op & 64) {
-            if (op & 32) {
-              this.mode = 'type';
-              break mainloop;
-            }
-            throw new Error("invalid literal/length code");
-          }
-          /* 2nd level length code */
-          var new_len_i = lcode.val[len_i] + (hold & ((1 << op) - 1));
-          if (new_len_i >= lcode.val.length) throw new RangeError('internal error: len_i out of range');
-          len_i = new_len_i;
-        } while (true);
-      } while (in_p < in_last && out_p < out_last);
-
-      /* return unused bytes (on entry, bits < 8, so in won't go too far back) */
-      var len = bits >> 3;
-      next = next.subarray(in_p - len);
-      put = put.subarray(out_p);
-      bits -= len << 3;
-      hold &= (1 << bits) - 1;
-
-      /* update state and return */
-      this.next_in = next;
-      this.next_out = put;
-      this.hold = hold;
-      this.bits = bits;
     },
   };
   
