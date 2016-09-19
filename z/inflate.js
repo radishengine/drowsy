@@ -679,8 +679,8 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
     },
     _fast: function(start) {
       /* copy state to local variables */
-      var _in = this.next_in,
-        out = this.next_out,
+      var next = this.next_in,
+        put = this.next_out,
         //#ifdef INFLATE_STRICT
         dmax = this.dmax, /* maximum distance from zlib header */
         //#endif
@@ -692,16 +692,16 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
         bits = this.bits,
         lcode = this.lencode,
         dcode = this.distcode;
-      var beg_p = out.length - start; /* inflate()'s initial this.next_out */
+      var beg_p = put.length - start; /* inflate()'s initial this.next_out */
       
-      var in_p = 0, out_p = 0, in_last = _in.length - 5, out_last = out.length - 257;
+      var in_p = 0, out_p = 0, in_last = next.length - 5, out_last = put.length - 257;
 
       /* decode literals and length/distances until end-of-block or not enough
          input data or output space */
       mainloop: do {
         if (bits < 15) {
-          hold += _in[in_p++] << bits; bits += 8;
-          hold += _in[in_p++] << bits; bits += 8;
+          hold += next[in_p++] << bits; bits += 8;
+          hold += next[in_p++] << bits; bits += 8;
         }
 
         var len_i = hold & lcode.mask;
@@ -712,7 +712,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
           hold >>= op; bits -= op;
           op = lcode.op[len_i];
           if (op === 0) { // literal
-            out[out_p++] = lcode.val[len_i] & 0xff;
+            put[out_p++] = lcode.val[len_i] & 0xff;
             continue mainloop;
           }
           if (op & 16) { // length base
@@ -720,14 +720,14 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
             op &= 15; // number of extra bits
             if (op !== 0) {
               if (bits < op) {
-                hold += _in[in_p++] << bits; bits += 8;
+                hold += next[in_p++] << bits; bits += 8;
               }
               len += hold & ((1 << op) - 1);
               hold >>= op; bits -= op;
             }
             if (bits < 15) {
-              hold += _in[in_p++] << bits; bits += 8;
-              hold += _in[in_p++] << bits; bits += 8;
+              hold += next[in_p++] << bits; bits += 8;
+              hold += next[in_p++] << bits; bits += 8;
             }
             var dist_i = hold & dcode.mask;
             do {
@@ -739,9 +739,9 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 var dist = dcode.val[dist_i];
                 op &= 15; // number of extra bits
                 if (bits < op) {
-                  hold += _in[in_p++] << bits; bits += 8;
+                  hold += next[in_p++] << bits; bits += 8;
                   if (bits < op) {
-                    hold += _in[in_p++] << bits; bits += 8;
+                    hold += next[in_p++] << bits; bits += 8;
                   }
                 }
                 dist += hold & ((1 << op) - 1);
@@ -763,10 +763,10 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                     if (op < len) {
                       // some from window
                       len -= op;
-                      out.set(from.subarray(0, op), out_p);
+                      put.set(from.subarray(0, op), out_p);
                       out_p += op;
                       // rest from output
-                      from = out.subarray(out_p - dist);
+                      from = put.subarray(out_p - dist);
                     }
                   }
                   else if (wnext < op) {
@@ -776,17 +776,17 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                     if (op < len) {
                       // some from end of window
                       len -= op;
-                      out.set(from.subarray(0, op), out_p);
+                      put.set(from.subarray(0, op), out_p);
                       out_p += op;
                       from = window;
                       if (wnext < len) { 
                         // some from start of window
                         op = wnext;
                         len -= op;
-                        out.set(from.subarray(0, op), out_p);
+                        put.set(from.subarray(0, op), out_p);
                         out_p += op;
                         // rest from output
-                        from = out.subarray(out_p - dist, out_p);
+                        from = put.subarray(out_p - dist, out_p);
                       }
                     }
                   }
@@ -796,18 +796,18 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                     if (op < len) {
                       // some from window
                       len -= op;
-                      out.set(from.subarray(0, op), out_p);
+                      put.set(from.subarray(0, op), out_p);
                       out_p += op;
                       // rest from output
-                      from = out.subarray(out_p - dist, out_p);
+                      from = put.subarray(out_p - dist, out_p);
                     }
                   }
-                  out.set(from.subarray(0, len), out_p);
+                  put.set(from.subarray(0, len), out_p);
                   out_p += len;
                 }
                 else {
                   /* copy direct from output */
-                  out.set(out.subarray(out_p - dist, (out_p - dist) + len), out_p);
+                  put.set(put.subarray(out_p - dist, (out_p - dist) + len), out_p);
                   out_p += len;
                 }
                 continue mainloop;
@@ -837,14 +837,14 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
 
       /* return unused bytes (on entry, bits < 8, so in won't go too far back) */
       var len = bits >> 3;
-      _in = _in.subarray(in_p - len);
-      out = out.subarray(out_p);
+      next = next.subarray(in_p - len);
+      put = put.subarray(out_p);
       bits -= len << 3;
       hold &= (1 << bits) - 1;
 
       /* update state and return */
-      this.next_in = _in;
-      this.next_out = out;
+      this.next_in = next;
+      this.next_out = put;
       this.hold = hold;
       this.bits = bits;
     },
