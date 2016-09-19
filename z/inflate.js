@@ -444,6 +444,14 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
               window = this.window, /* allocated sliding window, if wsize != 0 */
               lcode = this.lencode,
               dcode = this.distcode;
+            var lcode_op = lcode.op,
+              lcode_mask = lcode.mask,
+              lcode_val = lcode.val,
+              dcode_op = dcode.op,
+              dcode_bits = dcode.bits,
+              dcode_mask = dcode.mask,
+              dcode_val = dcode.val,
+              lcode_bits = lcode.bits;
             var beg_p = put.length - out; /* inflate()'s initial this.next_out */
             
             var in_p = 0, out_p = 0, in_last = next.length - 5, out_last = put.length - 257;
@@ -456,19 +464,19 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                 hold += next[in_p++] << bits; bits += 8;
               }
       
-              var len_i = hold & lcode.mask;
+              var len_i = hold & lcode_mask;
       
               do {
                 // code bits, operation, extra bits, or window position, window bytes to copy
-                var op = lcode.bits[len_i];
+                var op = lcode_bits[len_i];
                 hold >>= op; bits -= op;
-                op = lcode.op[len_i];
+                op = lcode_op[len_i];
                 if (op === 0) { // literal
-                  put[out_p++] = lcode.val[len_i] & 0xff;
+                  put[out_p++] = lcode_val[len_i] & 0xff;
                   continue fastLoop;
                 }
                 if (op & 16) { // length base
-                  var len = lcode.val[len_i];
+                  var len = lcode_val[len_i];
                   op &= 15; // number of extra bits
                   if (op !== 0) {
                     if (bits < op) {
@@ -481,14 +489,14 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                     hold += next[in_p++] << bits; bits += 8;
                     hold += next[in_p++] << bits; bits += 8;
                   }
-                  var dist_i = hold & dcode.mask;
+                  var dist_i = hold & dcode_mask;
                   do {
-                    op = dcode.bits[dist_i];
+                    op = dcode_bits[dist_i];
                     hold >>= op; bits -= op;
-                    op = dcode.op[dist_i];
+                    op = dcode_op[dist_i];
                     if (op & 16) {
                       // distance base
-                      var dist = dcode.val[dist_i];
+                      var dist = dcode_val[dist_i];
                       op &= 15; // number of extra bits
                       if (bits < op) {
                         hold += next[in_p++] << bits; bits += 8;
@@ -568,8 +576,8 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                       throw new Error("invalid distance code");
                     }
                     /* 2nd level distance code */
-                    var new_dist_i = dcode.val[dist_i] + (hold & ((1 << op) - 1));
-                    if (new_dist_i >= dcode.val.length) throw new RangeError('internal error: dist_i out of range');
+                    var new_dist_i = dcode_val[dist_i] + (hold & ((1 << op) - 1));
+                    //if (new_dist_i >= dcode_val.length) throw new RangeError('internal error: dist_i out of range');
                     dist_i = new_dist_i;
                   } while(true);
                 }
@@ -581,8 +589,8 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
                   throw new Error("invalid literal/length code");
                 }
                 /* 2nd level length code */
-                var new_len_i = lcode.val[len_i] + (hold & ((1 << op) - 1));
-                if (new_len_i >= lcode.val.length) throw new RangeError('internal error: len_i out of range');
+                var new_len_i = lcode_val[len_i] + (hold & ((1 << op) - 1));
+                if (new_len_i >= lcode_val.length) throw new RangeError('internal error: len_i out of range');
                 len_i = new_len_i;
               } while (true);
             } while (in_p < in_last && out_p < out_last);
