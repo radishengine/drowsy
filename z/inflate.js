@@ -677,7 +677,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
         }
       }
     },
-    _fast: function(start) {
+    _fast: function(out) {
       /* copy state to local variables */
       var next = this.next_in,
         put = this.next_out,
@@ -692,7 +692,7 @@ define(['./util', './CodeTableView'], function(zutil, CodeTableView) {
         bits = this.bits,
         lcode = this.lencode,
         dcode = this.distcode;
-      var beg_p = put.length - start; /* inflate()'s initial this.next_out */
+      var beg_p = put.length - out; /* inflate()'s initial this.next_out */
       
       var in_p = 0, out_p = 0, in_last = next.length - 5, out_last = put.length - 257;
 
