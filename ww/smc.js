@@ -1,10 +1,7 @@
 
-var c2_0 = new Uint8Array(256), c2_1 = new Uint8Array(256);
-var c4_0 = new Uint8Array(256), c4_1 = new Uint8Array(256), c4_2 = new Uint8Array(256), c4_3 = new Uint8Array(256);
-var c8_0 = new Uint8Array(256), c8_1 = new Uint8Array(256), c8_2 = new Uint8Array(256), c8_3 = new Uint8Array(256),
-    c8_4 = new Uint8Array(256), c8_5 = new Uint8Array(256), c8_6 = new Uint8Array(256), c8_7 = new Uint8Array(256);
-
-var c2n = -1, c4n = -1, c8n = -1;
+var c2 = new Uint8Array(256 * 2), c2n = -1;
+var c4 = new Uint8Array(256 * 4), c4n = -1;
+var c8 = new Uint8Array(256 * 8), c8n = -1;
 
 function decode(palette, data_buf, data_pos) {
   var chunk_pos = data_pos;
@@ -30,16 +27,14 @@ function decode(palette, data_buf, data_pos) {
         break;
       case 0x80: case 0x90: // 2-color encoding
         var blockCount = 1 + (byte & 0x0f);
-        var color1, color2;
+        var ci;
         if (byte & 0x10) {
-          var ci = data_buf[data_pos++];
-          color1 = c2_0[ci];
-          color2 = c2_1[ci];
+          ci = data_buf[data_pos++] << 1;
         }
         else {
-          c2n = (c2n + 1) % 256;
-          color1 = c2_0[c2n] = data_buf[data_pos++];
-          color2 = c2_0[c2n] = data_buf[data_pos++];
+          ci = (c2n = (c2n + 1) % 256) << 1;
+          c2[ci] = data_buf[data_pos++];
+          c2[ci + 1] = data_buf[data_pos++];
         }
         for (var i = 0; i < blockCount; i++) {
           var bitmask1 = data_buf[data_pos++];
@@ -48,20 +43,16 @@ function decode(palette, data_buf, data_pos) {
         break;
       case 0xA0: case 0xB0: // 4-color encoding
         var blockCount = 1 + (byte & 0x0f);
-        var color1, color2, color3, color4;
+        var ci;
         if (byte & 0x10) {
-          var ci = data_buf[data_pos++];
-          color1 = c4_0[ci];
-          color2 = c4_1[ci];
-          color3 = c4_2[ci];
-          color4 = c4_3[ci];
+          ci = data_buf[data_pos++];
         }
         else {
-          c4n = (c4n + 1) % 256;
-          color1 = c4_0[c4n] = data_buf[data_pos++];
-          color2 = c4_1[c4n] = data_buf[data_pos++];
-          color3 = c4_2[c4n] = data_buf[data_pos++];
-          color4 = c4_3[c4n] = data_buf[data_pos++];
+          ci = (c4n = (c4n + 1) % 256) << 2;
+          c4[ci] = data_buf[data_pos++];
+          c4[ci + 1] = data_buf[data_pos++];
+          c4[ci + 2] = data_buf[data_pos++];
+          c4[ci + 3] = data_buf[data_pos++];
         }
         for (var i = 0; i < blockCount; i++) {
           var bitmask1 = data_buf[data_pos++];
@@ -72,28 +63,20 @@ function decode(palette, data_buf, data_pos) {
         break;
       case 0xC0: case 0xD0: // 8-color encoding
         var blockCount = 1 + (byte & 0x0f);
-        var color1, color2, color3, color4, color5, color6, color7, color8;
+        var ci;
         if (byte & 0x10) {
-          var ci = data_buf[data_pos++];
-          color1 = c8_0[ci];
-          color2 = c8_1[ci];
-          color3 = c8_2[ci];
-          color4 = c8_3[ci];
-          color5 = c8_4[ci];
-          color6 = c8_5[ci];
-          color7 = c8_6[ci];
-          color8 = c8_7[ci];
+          ci = data_buf[data_pos++];
         }
         else {
-          c8n = (c8n + 1) % 256;
-          color1 = c8_0[c8n] = data_buf[data_pos++];
-          color2 = c8_1[c8n] = data_buf[data_pos++];
-          color3 = c8_2[c8n] = data_buf[data_pos++];
-          color4 = c8_3[c8n] = data_buf[data_pos++];
-          color5 = c8_4[c8n] = data_buf[data_pos++];
-          color6 = c8_5[c8n] = data_buf[data_pos++];
-          color7 = c8_6[c8n] = data_buf[data_pos++];
-          color8 = c8_7[c8n] = data_buf[data_pos++];
+          ci = (c8n = (c8n + 1) % 256) << 3;
+          c8[ci] = data_buf[data_pos++];
+          c8[ci + 1] = data_buf[data_pos++];
+          c8[ci + 2] = data_buf[data_pos++];
+          c8[ci + 3] = data_buf[data_pos++];
+          c8[ci + 4] = data_buf[data_pos++];
+          c8[ci + 5] = data_buf[data_pos++];
+          c8[ci + 6] = data_buf[data_pos++];
+          c8[ci + 7] = data_buf[data_pos++];
         }
         for (var i = 0; i < blockCount; i++) {
           var bitmask1 = data_buf[data_pos++];
