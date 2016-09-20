@@ -57,7 +57,9 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
                     console.log(performance.now() - pre);
                     resolve(decompressed);
                   }
-                  zService.postMessage({context:id, compressedBytes:compressed, noWrap:true}, [compressed.buffer]);
+                  zService.postMessage(
+                    {context:id, compressedBytes:compressed, decompressedSize:uncompressedLength, noWrap:true},
+                    [compressed.buffer]);
                 });
               });
             })
