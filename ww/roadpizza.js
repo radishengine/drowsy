@@ -7,9 +7,9 @@ var littleEndian = (function() {
 var rgb16ToRgba;
 if (littleEndian) {
   rgb15ToRgba = function(rgb15) {
-    var r = (rgb15 >> 10) & 1f;
-    var g = (rgb15 >> 5) & 1f;
-    var b = rgb15 & 1f;
+    var r = (rgb15 >> 10) & 0x1f;
+    var g = (rgb15 >> 5) & 0x1f;
+    var b = rgb15 & 0x1f;
     r = (r << 3) | (r >> 2);
     g = (g << 3) | (g >> 2);
     b = (b << 3) | (b >> 2);
@@ -18,9 +18,9 @@ if (littleEndian) {
 }
 else {
   rgb15ToRgba = function(rgb15) {
-    var r = (rgb15 >> 10) & 1f;
-    var g = (rgb15 >> 5) & 1f;
-    var b = rgb15 & 1f;
+    var r = (rgb15 >> 10) & 0x1f;
+    var g = (rgb15 >> 5) & 0x1f;
+    var b = rgb15 & 0x1f;
     r = (r << 3) | (r >> 2);
     g = (g << 3) | (g >> 2);
     b = (b << 3) | (b >> 2);
