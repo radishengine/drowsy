@@ -4,7 +4,8 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
   
   var zService = new Worker('z/inflate_worker.js');
   zService.onmessage = function(e) {
-    console.log('z service said: ' + e.data);
+    this[e.context](e.decompressedData);
+    delete this[e.context];
   };
   
   function open() {
@@ -22,8 +23,6 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
           throw new Exception('multi-part ZIP files not supported');
         }
         var pos = trailer.centralDirectoryFirstDiskOffset, len = trailer.centralDirectoryByteLength;
-        zService.postMessage('hello');
-        /*
         return byteSource.slice(pos, pos + len).getBytes()
         .then(function(rawCentralDirectory) {
           var fileRecords = CentralFileRecordView.getList(
@@ -51,17 +50,15 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
                 return byteSource.slice(offset, offset + compressedLength).getBytes();
               })
               .then(function(compressed) {
-                var inflation = new inflate.State(-15);
-                var buf = new Uint8Array(uncompressedLength);
-                inflation.next_out = buf;
-                inflation.next_in = compressed;
                 var pre = performance.now();
-                var result = inflation.inflate('finish');
-                console.log(performance.now() - pre);
-                if (result !== 'done') {
-                  return Promise.reject('inflation failed to complete, returned ' + result);
-                }
-                return buf;
+                return new Promise(function(resolve, reject) {
+                  var id = Math.random()+'';
+                  zService[id] = function(decompressed) {
+                    console.log(performance.now() - pre);
+                    resolve(decompressed);
+                  }
+                  zService.postMessage({context:id, compressedBytes:compressed, noWrap:true}, [compressed.buffer]);
+                });
               });
             })
           )
@@ -69,7 +66,6 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
             console.log(allUncompressed);
           });
         });
-        */
       });
       /*
       function onLocalFileHeader(bytes) {
