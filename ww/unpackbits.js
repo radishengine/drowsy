@@ -18,7 +18,7 @@ onmessage = function(e) {
     var b = packed[pos++];
     if (b & 0x80) {
       if (b === 0x80) continue;
-      var count = 1 - (b << 24 >> 24);
+      var count = 257 - b;
       var rep = packed[pos++];
       checkOutputSpace(count);
       for (var i = 0; i < count; i++) {
