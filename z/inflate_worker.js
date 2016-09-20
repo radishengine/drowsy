@@ -310,6 +310,27 @@ var NO_BYTES = new Uint8Array(0);
 /* permutation of code lengths */
 var order = new Uint16Array([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
 
+function InflateState(windowBits) {
+  this.lens = new Uint16Array(320); /* temporary storage for code lengths */
+
+  if (arguments.length === 0) windowBits = 15 + 32; // +32 to enable gzip decoding
+
+  /* extract wrap request from windowBits parameter */
+  if (windowBits < 0) {
+    this.wrap = 0;
+    windowBits = -windowBits;
+  }
+  else {
+    this.wrap = (windowBits >> 4) + 1;
+    if (windowBits < 48) windowBits &= 15;
+  }
+
+  if (windowBits && (windowBits < 8 || windowBits > 15)) {
+    throw new Error('invalid number of windowBits');
+  }
+
+  this.wbits = windowBits;
+}
 InflateState.prototype = {
   next_in: NO_BYTES,
   total_in: 0,
