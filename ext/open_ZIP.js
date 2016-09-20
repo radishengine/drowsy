@@ -2,7 +2,7 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
 
   'use strict';
   
-  var zService = new Worker('z/inflate_worker.js');
+  var zService = new Worker('ww/inflate.js');
   zService.onmessage = function(e) {
     this[e.data.context](e.data.decompressedBytes);
     delete this[e.data.context];
