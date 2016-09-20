@@ -843,15 +843,19 @@ InflateState.prototype = {
                         if (op < len) {
                           // some from end of window
                           len -= op;
-                          put_buf.set(from.subarray(0, op), put_pos);
-                          put_pos += op;
+                          var from_pos = 0;
+                          while (from_pos < op) {
+                            put_buf[put_pos++] = from[from_pos++];
+                          }
                           from = window;
                           if (wnext < len) { 
                             // some from start of window
                             op = wnext;
                             len -= op;
-                            put_buf.set(from.subarray(0, op), put_pos);
-                            put_pos += op;
+                            var from_pos = 0;
+                            while (from_pos < op) {
+                              put_buf[put_pos++] = from[from_pos++];
+                            }
                             // rest from output
                             from = put_buf.subarray(put_pos - dist, put_pos);
                           }
@@ -863,19 +867,26 @@ InflateState.prototype = {
                         if (op < len) {
                           // some from window
                           len -= op;
-                          put_buf.set(from.subarray(0, op), put_pos);
-                          put_pos += op;
+                          var from_pos = 0;
+                          while (from_pos < op) {
+                            put_buf[put_pos++] = from[from_pos++];
+                          }
                           // rest from output
                           from = put_buf.subarray(put_pos - dist, put_pos);
                         }
                       }
-                      put_buf.set(from.subarray(0, len), put_pos);
-                      put_pos += len;
+                      var from_pos = 0;
+                      while (from_pos < len) {
+                        put_buf[put_pos++] = from[from_pos++];
+                      }
                     }
                     else {
                       /* copy direct from output */
-                      put_buf.set(put_buf.subarray(put_pos - dist, (put_pos - dist) + len), put_pos);
-                      put_pos += len;
+                      var from_pos = put_pos - dist;
+                      var from_max = from_pos + len;
+                      while (from_pos < from_max) {
+                        put_buf[put_pos++] = put_buf[from_pos++];
+                      }
                     }
                     continue fastLoop;
                   }
