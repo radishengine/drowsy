@@ -410,11 +410,6 @@ InflateState.prototype = {
       return hold & ((1 << n) - 1);
     }
 
-    function DROPBITS(n) {
-      hold >>= n;
-      bits -= n;
-    }
-
     var _in = next_end, out = put_end;
 
     var ret = 'more';
@@ -441,7 +436,7 @@ InflateState.prototype = {
         if (BITS(4) !== 8 /* Z_DEFLATED */) {
           throw new Error("unknown compression method");
         }
-        DROPBITS(4);
+        hold >>= 4; bits -= 4; // DROPBITS(4);
         var len = BITS(4) + 8;
         if (this.wbits === 0) this.wbits = len;
         else if (len > this.wbits) {
@@ -593,7 +588,7 @@ InflateState.prototype = {
         }
         if (!NEEDBITS(3)) break inflation;
         this.last = BITS(1);
-        DROPBITS(1);
+        hold >>= 1; bits -= 1; // DROPBITS(1);
         switch (BITS(2)) {
           case 0: // stored block
             mode = 13 /* STORED */;
@@ -603,7 +598,7 @@ InflateState.prototype = {
             this.distcode = CodeTableView.fixedDistanceTable;
             mode = 19 /* LEN_ */; // decode codes
             if (flush === 'trees') {
-              DROPBITS(2);
+              hold >>= 2; bits -= 2; // DROPBITS(2);
               break inflation;
             }
             break;
@@ -613,7 +608,7 @@ InflateState.prototype = {
           case 3:
             throw new Error("invalid block type");
         }
-        DROPBITS(2);
+        hold >>= 2; bits -= 2; // DROPBITS(2);
         continue inflation;
       case 13 /* STORED */:
         // go to byte boundary
@@ -650,11 +645,11 @@ InflateState.prototype = {
       case 16 /* TABLE */:
         if (!NEEDBITS(14)) break inflation;
         this.nlen = BITS(5) + 257;
-        DROPBITS(5);
+        hold >>= 5; bits -= 5; // DROPBITS(5);
         this.ndist = BITS(5) + 1;
-        DROPBITS(5);
+        hold >>= 5; bits -= 5; // DROPBITS(5);
         this.ncode = BITS(4) + 4;
-        DROPBITS(4);
+        hold >>= 4; bits -= 4; // DROPBITS(4);
         /*
         #ifndef PKZIP_BUG_WORKAROUND
         if (this.nlen > 286 || this.ndist > 30) {
@@ -669,7 +664,7 @@ InflateState.prototype = {
         while (this.have < this.ncode) {
           if (!NEEDBITS(3)) break inflation;
           this.lens[order[this.have++]] = BITS(3);
-          DROPBITS(3);
+          hold >>= 3; bits -= 3; // DROPBITS(3);
         }
         while (this.have < 19) {
           this.lens[order[this.have++]] = 0;
@@ -689,34 +684,34 @@ InflateState.prototype = {
           }
           var here_val = lcode.val[here], here_bits = lcode.bits[here];
           if (here_val < 16) {
-            DROPBITS(here_bits);
+            hold >>= here_bits; bits -= here_bits; // DROPBITS(here_bits);
             this.lens[this.have++] = here_val;
           }
           else {
             var len, copy;
             if (here_val === 16) {
               if (!NEEDBITS(here_bits + 2)) break inflation;
-              DROPBITS(here_bits);
+              hold >>= here_bits; bits -= here_bits; // DROPBITS(here_bits);
               if (this.have === 0) {
                 throw new Error("invalid bit length repeat");
               }
               len = this.lens[this.have - 1];
               copy = 3 + BITS(2);
-              DROPBITS(2);
+              hold >>= 2; bits -= 2; // DROPBITS(2);
             }
             else if (here_val === 17) {
               if (!NEEDBITS(here_bits + 3)) break inflation;
-              DROPBITS(here_bits);
+              hold >>= here_bits; bits -= here_bits; // DROPBITS(here_bits);
               len = 0;
               copy = 3 + BITS(3);
-              DROPBITS(3);
+              hold >>= 3; bits -= 3; // DROPBITS(3);
             }
             else {
               if (!NEEDBITS(here_bits + 7)) break inflation;
-              DROPBITS(here_bits);
+              hold >>= here_bits; bits -= here_bits; // DROPBITS(here_bits);
               len = 0;
               copy = 11 + BITS(7);
-              DROPBITS(7);
+              hold >>= 7; bits -= 7; // DROPBITS(7);
             }
             if (this.have + copy > this.nlen + this.ndist) {
               throw new Error("invalid bit length repeat");
@@ -938,11 +933,11 @@ InflateState.prototype = {
             if ((last_bits + lcode.bits[here]) <= bits) break;
             if (!PULLBYTE()) break inflation;
           }
-          DROPBITS(last_bits);
+          hold >>= last_bits; bits -= last_bits; // DROPBITS(last_bits);
           this.back += last_bits;
         }
         var here_bits = lcode.bits[here], here_op = lcode.op[here], here_val = lcode.val[here];
-        DROPBITS(here_bits);
+        hold >>= here_bits; bits -= here_bits; // DROPBITS(2);
         this.back += here_bits;
         this.length = here_val;
         if (here_op === 0) {
@@ -964,7 +959,7 @@ InflateState.prototype = {
         if (this.extra > 0) {
           if (!NEEDBITS(this.extra)) break inflation;
           this.length += BITS(this.extra);
-          DROPBITS(this.extra);
+          hold >>= this.extra; bits -= this.extra; // DROPBITS(this.extra);
           this.back += this.extra;
         }
         this.was = this.length;
@@ -984,11 +979,11 @@ InflateState.prototype = {
             if ((last_bits + dcode.bits[here]) <= bits) break;
             if (!PULLBYTE()) break inflation;
           }
-          DROPBITS(last_bits);
+          hold >>= last_bits; bits -= last_bits; // DROPBITS(last_bits);
           this.back += last_bits;
         }
         var here_bits = dcode.bits[here], here_op = dcode.op[here], here_val = dcode.val[here];
-        DROPBITS(here_bits);
+        hold >>= here_bits; bits -= here_bits; // DROPBITS(here_bits);
         this.back += here_bits;
         if (here_op & 64) {
           throw new Error("invalid distance code");
@@ -1001,7 +996,7 @@ InflateState.prototype = {
         if (this.extra) {
           if (!NEEDBITS(this.extra)) break inflation;
           this.offset += BITS(this.extra);
-          DROPBITS(this.extra);
+          hold >>= this.extra; bits -= this.extra; // DROPBITS(this.extra);
           this.back += this.extra;
         }
         // #ifdef INFLATE_STRICT
