@@ -998,7 +998,7 @@ InflateState.prototype = {
         mode = 24 /* MATCH */;
         //continue inflation;
       case 24 /* MATCH */:
-        if (put_pos === pos_end) break inflation;
+        if (put_pos === put_end) break inflation;
         var copy = out - (put_end - put_pos);
         var from;
         if (this.offset > copy) { // copy from window
