@@ -4,7 +4,7 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
   
   var zService = new Worker('z/inflate_worker.js');
   zService.onmessage = function(e) {
-    this[e.context](e.decompressedData);
+    this[e.context](e.data.decompressedBytes);
     delete this[e.context];
   };
   
