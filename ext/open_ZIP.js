@@ -23,6 +23,7 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
         }
         var pos = trailer.centralDirectoryFirstDiskOffset, len = trailer.centralDirectoryByteLength;
         zService.postMessage('hello');
+        /*
         return byteSource.slice(pos, pos + len).getBytes()
         .then(function(rawCentralDirectory) {
           var fileRecords = CentralFileRecordView.getList(
@@ -68,6 +69,7 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
             console.log(allUncompressed);
           });
         });
+        */
       });
       /*
       function onLocalFileHeader(bytes) {
