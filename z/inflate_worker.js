@@ -633,13 +633,16 @@ InflateState.prototype = {
       case 15 /* COPY */:
         var copy = this.length;
         if (copy > 0) {
-          if (copy = Math.min(copy, next_end - next_pos, put_end - put_pos) === 0) {
+          if ((copy = Math.min(copy, next_end - next_pos, put_end - put_pos)) === 0) {
             break inflation;
           }
-          put_buf.set(next_buf.subarray(next_pos, next_pos + copy));
-          next_pos += copy;
-          put_pos += copy;
           this.length -= copy;
+          //put_buf.set(next_buf.subarray(next_pos, next_pos + copy));
+          do {
+            put_buf[put_pos++] = next_buf[next_pos++];
+          } while (--copy);
+          //next_pos += copy;
+          //put_pos += copy;
           continue inflation;
         }
         mode = 11 /* TYPE */;
