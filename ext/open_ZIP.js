@@ -2,6 +2,11 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
 
   'use strict';
   
+  var zService = new Worker('z/inflate_worker.js');
+  zService.onmessage = function(e) {
+    console.log('z service said: ' + e.data);
+  };
+  
   function open() {
     var byteSource = this.byteSource;
     this.addExplorer(function(expedition) {
@@ -43,6 +48,8 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
               return byteSource.slice(offset, offset + compressedLength).getBytes();
             })
             .then(function(compressed) {
+              zService.postMessage('hello');
+              /*
               var inflation = new inflate.State(-15);
               var buf = new Uint8Array(uncompressedLength);
               inflation.next_out = buf;
@@ -58,6 +65,7 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
           }))
           .then(function(allUncompressed) {
             console.log(allUncompressed);
+            */
           });
         });
       });
