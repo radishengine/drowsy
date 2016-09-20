@@ -11,61 +11,61 @@ function CHOP(a) {
   return (a & 0xffff) + (a >>> 16 << 4) - (a >>> 16);
 }
 
-var zutil = {
-  crc32: function(crc, bytes, offset, length) {
-    switch (arguments.length) {
-      case 0: return 0;
-      case 2:
-        offset = 0;
-        length = bytes.byteLength;
-        break;
-      case 3:
-        length = bytes.byteLength - offset;
-        break;
-      case 4: break;
-      default: throw new Error('unexpected number of arguments');
-    }
-    
-    crc ^= -1;
-    for (var i = 0; i < length; i++) {
-      crc = CRC[(crc ^ bytes[offset + i]) & 0xff] ^ (crc >>> 8);
-    }
-    return (crc ^ -1) >>> 0;
-  },
-  adler32: function(adler, bytes, offset, length) {
-    switch (arguments.length) {
-      case 0: return 1;
-      case 2:
-        offset = 0;
-        length = bytes.byteLength;
-        break;
-      case 3:
-        length = bytes.byteLength - offset;
-        break;
-      case 4: break;
-      default: throw new Error('unexpected number of arguments');
-    }
-    var sum2 = (adler >>> 16);
-    adler &= 0xffff;
-    while (length-- > 0) {
-      adler += bytes[offset++];
-      sum2 += adler;
-    }
-    // 65521: largest prime smaller than 65536
-    adler = CHOP(CHOP(adler)) % 65521;
-    sum2 = CHOP(CHOP(sum2)) % 65521;
-
-    /* return recombined sums */
-    return adler | (sum2 << 16);
-  },
-  // reverse the bytes of a 32-bit integer
-  swap32: function(q) {
-    return ((q >> 24) & 0xff)
-      | ((q >> 8) & 0xff00)
-      | ((q & 0xff00) << 8)
-      | ((q & 0xff) << 24);
-  },
+function crc32(crc, bytes, offset, length) {
+  switch (arguments.length) {
+    case 0: return 0;
+    case 2:
+      offset = 0;
+      length = bytes.byteLength;
+      break;
+    case 3:
+      length = bytes.byteLength - offset;
+      break;
+    case 4: break;
+    default: throw new Error('unexpected number of arguments');
+  }
+  
+  crc ^= -1;
+  for (var i = 0; i < length; i++) {
+    crc = CRC[(crc ^ bytes[offset + i]) & 0xff] ^ (crc >>> 8);
+  }
+  return (crc ^ -1) >>> 0;
 };
+
+function adler32(adler, bytes, offset, length) {
+  switch (arguments.length) {
+    case 0: return 1;
+    case 2:
+      offset = 0;
+      length = bytes.byteLength;
+      break;
+    case 3:
+      length = bytes.byteLength - offset;
+      break;
+    case 4: break;
+    default: throw new Error('unexpected number of arguments');
+  }
+  var sum2 = (adler >>> 16);
+  adler &= 0xffff;
+  while (length-- > 0) {
+    adler += bytes[offset++];
+    sum2 += adler;
+  }
+  // 65521: largest prime smaller than 65536
+  adler = CHOP(CHOP(adler)) % 65521;
+  sum2 = CHOP(CHOP(sum2)) % 65521;
+
+  /* return recombined sums */
+  return adler | (sum2 << 16);
+}
+
+// reverse the bytes of a 32-bit integer
+function swap32(q) {
+  return ((q >> 24) & 0xff)
+    | ((q >> 8) & 0xff00)
+    | ((q & 0xff00) << 8)
+    | ((q & 0xff) << 24);
+}
 
 function CodeTableView(mode, bitWidth, lens) {
   switch(mode) {
@@ -332,9 +332,11 @@ function InflateState(windowBits) {
   this.wbits = windowBits;
 }
 InflateState.prototype = {
-  next_in: NO_BYTES,
+  next_in_buf: NO_BYTES,
+  next_in_pos: 0,
   total_in: 0,
-  next_out: NO_BYTES,
+  next_out_buf: NO_BYTES,
+  next_out_pos: 0,
   total_out: 0,
   data_type: 0,
 
@@ -371,20 +373,27 @@ InflateState.prototype = {
 
     var self = this;
 
-    var put = self.next_out, next = self.next_in, hold = self.hold, bits = self.bits;
+    var put_buf = this.next_out_buf,
+        put_pos = this.next_out_pos,
+        next_buf = this.next_in_buf,
+        next_pos = this.next_in_pos,
+        hold = this.hold,
+        bits = this.bits;
+    var put_end = put_buf.length, next_end = next_buf.length;
 
     function RESTORE() {
-      self.next_out = put;
-      self.next_in = next;
+      self.next_out_buf = put_buf.subarray(put_pos);
+      self.next_out_pos = put_pos = 0;
+      self.next_in_buf = next_buf;
+      self.next_in_pos = next_pos;
       self.hold = hold;
       self.bits = bits;
       self.mode = mode;
     }
 
     function PULLBYTE() {
-      if (next.length === 0) return false;
-      hold += next[0] << bits;
-      next = next.subarray(1);
+      if (next_pos === next_end) return false;
+      hold += next_buf[next_pos++] << bits;
       bits += 8;
       return true;
     }
@@ -406,7 +415,7 @@ InflateState.prototype = {
       bits -= n;
     }
 
-    var _in = next.length, out = put.length;
+    var _in = next_end, out = put_end;
 
     var ret = 'more';
 
@@ -439,7 +448,7 @@ InflateState.prototype = {
           throw new Error("invalid window size");
         }
         this.dmax = 1 << len;
-        this.check = zutil.adler32();
+        this.check = adler32();
         mode = hold & 0x200 ? 9 /* DICTID */ : 11 /* TYPE */;
         hold = bits = 0;
         continue inflation;
@@ -487,19 +496,19 @@ InflateState.prototype = {
         //continue inflation;
       case 5 /* EXTRA */:
         if (this.flags & 0x0400) {
-          var copy = Math.min(this.length, next.length);
+          var copy = Math.min(this.length, next_end - next_pos);
           if (copy > 0) {
             if (this.head && this.head.extra) {
               var len = this.head.extra_len - this.length;
               if (len + copy > this.head.extra_max) {
-                this.head.extra.set(next.subarray(0, this.head.extra_max - len), len);
+                this.head.extra.set(next_buf.subarray(next_pos, next_pos + this.head.extra_max - len), len);
               }
               else {
-                this.head.extra.set(next.subarray(0, copy), len);
+                this.head.extra.set(next_buf.subarray(next_pos, next_pos + copy), len);
               }
             }
-            if (this.flags & 0x0200) this._crc(next, copy);
-            next = next.subarray(copy);
+            if (this.flags & 0x0200) this._crc(next_buf, next_pos, copy);
+            next_pos += copy;
             this.length -= copy;
           }
           if (this.length > 0) break inflation;
@@ -509,18 +518,18 @@ InflateState.prototype = {
         //continue inflation;
       case 6 /* NAME */:
         if (this.flags & 0x0800) {
-          if (next.length === 0) break inflation;
+          if (next_pos === next_end) break inflation;
           var len, copy = 0;
           do {
-            len = next[copy++];
+            len = next_buf[next_pos + copy++];
             if (this.head && this.head.name && this.length < this.head.name_max) {
               this.head.name[this.length++] = len;
             }
-          } while (len > 0 && copy < next.length);
+          } while (len > 0 && (next_pos + copy) < next_end);
           if (this.flags & 0x0200) {
-            this._crc(next, copy);
+            this._crc(next_buf, next_pos, copy);
           }
-          next = next.subarray(copy);
+          next_pos += copy;
           if (len > 0) break inflation;
         }
         else if (this.head) this.head.name = null;
@@ -529,16 +538,16 @@ InflateState.prototype = {
         //continue inflation;
       case 7 /* COMMENT */:
         if (this.flags & 0x1000) {
-          if (next.length === 0) break inflation;
+          if (next_pos === next_end) break inflation;
           var copy = 0, len;
           do {
-            len = next[copy++];
+            len = next_buf[next_pos + copy++];
             if (this.head && this.head.comment && this.length < this.head.comm_max) {
               this.head.comment[this.length++] = len;
             }
-          } while (len > 0 && copy < next.length);
-          if (this.flags & 0x0200) this.check = crc32(this.check, next, copy);
-          next = next.subarray(copy);
+          } while (len > 0 && (next_pos + copy) < next_end);
+          if (this.flags & 0x0200) this.check = crc32(this.check, next_buf, next_pos, copy);
+          next_pos += copy;
           if (len) break inflation;
         }
         else if (this.head) this.head.comment = null;
@@ -556,12 +565,12 @@ InflateState.prototype = {
           this.head.hcrc = (this.flags >> 9) & 1;
           this.head.done = 1;
         }
-        this.check = zutil.crc32();
+        this.check = crc32();
         mode = 11 /* TYPE */;
         continue inflation;
       case 9 /* DICTID */:
         if (!NEEDBITS(32)) break inflation;
-        this.check = zutil.swap32(hold);
+        this.check = swap32(hold);
         hold = bits = 0;
         mode = 10 /* DICT */;
         //continue inflation;
@@ -570,7 +579,7 @@ InflateState.prototype = {
           RESTORE();
           return 'needDictionary';
         }
-        this.check = zutil.adler32();
+        this.check = adler32();
         mode = 11 /* TYPE */;
         //continue inflation;
       case 11 /* TYPE */:
@@ -624,12 +633,12 @@ InflateState.prototype = {
       case 15 /* COPY */:
         var copy = this.length;
         if (copy > 0) {
-          if (copy = Math.min(copy, next.length, put.length) === 0) {
+          if (copy = Math.min(copy, next_end - next_pos, put_end - put_pos) === 0) {
             break inflation;
           }
-          put.set(next.subarray(0, copy));
-          next = next.subarray(copy);
-          put = put.subarray(copy);
+          put_buf.set(next_buf.subarray(next_pos, next_pos + copy));
+          next_pos += copy;
+          put_pos += copy;
           this.length -= copy;
           continue inflation;
         }
@@ -730,7 +739,7 @@ InflateState.prototype = {
         mode = 20 /* LEN */;
         //continue inflation;
       case 20 /* LEN */:
-        if (next.length >= 6 && put.length >= 258) {
+        if ((next_end - next_pos) >= 6 && (put_end - put_pos) >= 258) {
           /* copy state to local variables */
           var dmax = this.dmax, /* maximum distance from zlib header */
             wsize = this.wsize, /* window size or zero if not using window */
@@ -747,16 +756,16 @@ InflateState.prototype = {
             dcode_mask = dcode.mask,
             dcode_val = dcode.val,
             lcode_bits = lcode.bits;
-          var beg_p = put.length - out; /* inflate()'s initial this.next_out */
+          var beg_pos = put_end - out; /* inflate()'s initial this.next_out */
           
-          var in_p = 0, out_p = 0, in_last = next.length - 5, out_last = put.length - 257;
+          var in_last = next_end - 5, out_last = put_end - 257;
     
           /* decode literals and length/distances until end-of-block or not enough
              input data or output space */
           fastLoop: do {
             if (bits < 15) {
-              hold += next[in_p++] << bits; bits += 8;
-              hold += next[in_p++] << bits; bits += 8;
+              hold += next_buf[next_pos++] << bits; bits += 8;
+              hold += next_buf[next_pos++] << bits; bits += 8;
             }
     
             var len_i = hold & lcode_mask;
@@ -767,7 +776,7 @@ InflateState.prototype = {
               hold >>= op; bits -= op;
               op = lcode_op[len_i];
               if (op === 0) { // literal
-                put[out_p++] = lcode_val[len_i] & 0xff;
+                put_buf[put_pos++] = lcode_val[len_i] & 0xff;
                 continue fastLoop;
               }
               if (op & 16) { // length base
@@ -775,14 +784,14 @@ InflateState.prototype = {
                 op &= 15; // number of extra bits
                 if (op !== 0) {
                   if (bits < op) {
-                    hold += next[in_p++] << bits; bits += 8;
+                    hold += next_buf[next_pos++] << bits; bits += 8;
                   }
                   len += hold & ((1 << op) - 1);
                   hold >>= op; bits -= op;
                 }
                 if (bits < 15) {
-                  hold += next[in_p++] << bits; bits += 8;
-                  hold += next[in_p++] << bits; bits += 8;
+                  hold += next_buf[next_pos++] << bits; bits += 8;
+                  hold += next_buf[next_pos++] << bits; bits += 8;
                 }
                 var dist_i = hold & dcode_mask;
                 do {
@@ -794,9 +803,9 @@ InflateState.prototype = {
                     var dist = dcode_val[dist_i];
                     op &= 15; // number of extra bits
                     if (bits < op) {
-                      hold += next[in_p++] << bits; bits += 8;
+                      hold += next_buf[next_pos++] << bits; bits += 8;
                       if (bits < op) {
-                        hold += next[in_p++] << bits; bits += 8;
+                        hold += next_buf[next_pos++] << bits; bits += 8;
                       }
                     }
                     dist += hold & ((1 << op) - 1);
@@ -806,7 +815,7 @@ InflateState.prototype = {
                     }
                     //#endif
                     hold >>= op; bits -= op;
-                    op = (out_p - beg_p) >>> 0; // max distance in output
+                    op = (put_pos - beg_pos) >>> 0; // max distance in output
                     if (dist > op) { // see if copy from window
                       op = dist - op; // distance back in window
                       if (op > whave) {
@@ -818,10 +827,10 @@ InflateState.prototype = {
                         if (op < len) {
                           // some from window
                           len -= op;
-                          put.set(from.subarray(0, op), out_p);
+                          put_buf.set(from.subarray(0, op), put_pos);
                           out_p += op;
                           // rest from output
-                          from = put.subarray(out_p - dist);
+                          from = put_buf.subarray(put_pos - dist);
                         }
                       }
                       else if (wnext < op) {
@@ -831,17 +840,17 @@ InflateState.prototype = {
                         if (op < len) {
                           // some from end of window
                           len -= op;
-                          put.set(from.subarray(0, op), out_p);
+                          put_buf.set(from.subarray(0, op), put_pos);
                           out_p += op;
                           from = window;
                           if (wnext < len) { 
                             // some from start of window
                             op = wnext;
                             len -= op;
-                            put.set(from.subarray(0, op), out_p);
+                            put_buf.set(from.subarray(0, op), put_pos);
                             out_p += op;
                             // rest from output
-                            from = put.subarray(out_p - dist, out_p);
+                            from = put_buf.subarray(put_pos - dist, put_pos);
                           }
                         }
                       }
@@ -851,18 +860,18 @@ InflateState.prototype = {
                         if (op < len) {
                           // some from window
                           len -= op;
-                          put.set(from.subarray(0, op), out_p);
-                          out_p += op;
+                          put_buf.set(from.subarray(0, op), put_pos);
+                          put_pos += op;
                           // rest from output
-                          from = put.subarray(out_p - dist, out_p);
+                          from = put_buf.subarray(put_pos - dist, put_pos);
                         }
                       }
-                      put.set(from.subarray(0, len), out_p);
+                      put_buf.set(from.subarray(0, len), put_pos);
                       out_p += len;
                     }
                     else {
                       /* copy direct from output */
-                      put.set(put.subarray(out_p - dist, (out_p - dist) + len), out_p);
+                      put_buf.set(put_buf.subarray(put_pos - dist, (put_pos - dist) + len), put_pos);
                       out_p += len;
                     }
                     continue fastLoop;
@@ -888,12 +897,11 @@ InflateState.prototype = {
               if (new_len_i >= lcode_val.length) throw new RangeError('internal error: len_i out of range');
               len_i = new_len_i;
             } while (true);
-          } while (in_p < in_last && out_p < out_last);
+          } while (next_pos < in_last && put_pos < out_last);
     
           /* return unused bytes (on entry, bits < 8, so in won't go too far back) */
           var len = bits >> 3;
-          next = next.subarray(in_p - len);
-          put = put.subarray(out_p);
+          next_pos -= len;
           bits -= len << 3;
           hold &= (1 << bits) - 1;
           if (mode === 11 /* TYPE */) {
@@ -990,8 +998,8 @@ InflateState.prototype = {
         mode = 24 /* MATCH */;
         //continue inflation;
       case 24 /* MATCH */:
-        if (put.length === 0) break inflation;
-        var copy = out - put.length;
+        if (put_pos === pos_end) break inflation;
+        var copy = out - (put_end - put_pos);
         var from;
         if (this.offset > copy) { // copy from window
           copy = this.offset - copy;
@@ -1009,33 +1017,32 @@ InflateState.prototype = {
         }
         else {
           // copy from output
-          from = new Uint8Array(put.buffer, put.byteOffset - this.offset, put.length + this.offset);
+          from = put_buf.subarray(put_pos - this.offset, put_end);
           copy = this.length;
         }
-        if (copy > put.length) copy = put.length;
+        if ((put_pos + copy) > put_end) copy = put_end - put_pos;
         this.length -= copy;
-        put.set(from.subarray(0, copy));
-        put = put.subarray(copy);
+        put_buf.set(from.subarray(0, copy), put_pos);
+        put_pos += copy;
         if (this.length === 0) mode = 20 /* LEN */;
         continue inflation;
       case 25 /* LIT */:
-        if (put.length === 0) break inflation;
-        put[0] = this.length & 0xff;
-        put = put.subarray(1);
+        if (put_pos === put_end) break inflation;
+        put_buf[put_pos++] = this.length & 0xff;
         mode = 20 /* LEN */;
         continue inflation;
       case 26 /* CHECK */:
         if (this.wrap) {
           if (!NEEDBITS(32)) break inflation;
-          out -= put.length;
+          out -= put_end - put_pos;
           this.total_out += out;
           this.total += out;
           if (out > 0) {
-            var checkBytes = new Uint8Array(put.buffer, put.byteOffset - out, out);
+            var checkBytes = put_buf.subarray(put_pos - out, put_pos);
             this._update(checkBytes);
           }
-          out = put.length;
-          if ((this.flags ? hold : zutil.swap32(hold)) !== this.check) {
+          out = put_end - put_pos;
+          if ((this.flags ? hold : swap32(hold)) !== this.check) {
             throw new Error("incorrect data check");
           }
           hold = bits = 0;
@@ -1059,18 +1066,18 @@ InflateState.prototype = {
     }
     // end of loop
     RESTORE();
-    if (this.wsize > 0 || (out !== this.next_out.length
+    if (this.wsize > 0 || (out !== this.next_out_buf.length
       && (flush !== 'finish' || !/^(check|length|done)$/.test(mode)))
     ) {
-      this._updateWindow(this.next_out, out - this.next_out.length);
+      this._updateWindow(this.next_out_buf, out - this.next_out_buf.length);
     }
-    _in -= this.next_in.length;
-    out -= this.next_out.length;
+    _in -= this.next_in_buf.length;
+    out -= this.next_out_buf.length;
     this.total_in += _in;
     this.total_out += out;
     this.total += out;
     if (this.wrap && out > 0) {
-      this._update(new Uint8Array(this.next_out.buffer, this.next_out.byteOffset - out, out));
+      this._update(new Uint8Array(this.next_out_buf.buffer, this.next_out_buf.byteOffset - out, out));
     }
     this.data_type = this.bits
       + (this.last ? 64 : 0)
@@ -1081,23 +1088,23 @@ InflateState.prototype = {
     }
     return ret;
   },
-  _crc: function(bytes, length) {
-    this.check = crc32(this.check, bytes, length);
+  _crc: function(bytes, offset, length) {
+    this.check = crc32(this.check, bytes, offset, length);
   },
   _crc2: function(v) {
-    this.check = zutil.crc32(this.check, new Uint8Array([
+    this.check = crc32(this.check, new Uint8Array([
       v & 0xff,
       (v >> 8) & 0xff]));
   },
   _crc4: function(v) {
-    this.check = zutil.crc32(this.check, new Uint8Array([
+    this.check = crc32(this.check, new Uint8Array([
       v & 0xff,
       (v >> 8) & 0xff,
       (v >> 16) & 0xff,
       (v >> 24) & 0xff]));
   },
   _update: function(bytes) {
-    this.check = (this.flags ? zutil.crc32 : zutil.adler32)(this.check, bytes);
+    this.check = (this.flags ? crc32 : adler32)(this.check, bytes);
   },
   _updateWindow: function(end, copy) {
     /* if it hasn't been done already, allocate space for the window */
@@ -1138,13 +1145,14 @@ InflateState.prototype = {
 
 function inflate(compressedBytes, noWrap) {
   var inflater = noWrap ? new InflateState(-15) : new InflateState();
-  inflater.next_in = compressedBytes;
+  inflater.next_in_buf = compressedBytes;
   var bufferList = [];
   var status;
   var allBytes = 0;
 
   do {
-    var buffer = inflater.next_out = new Uint8Array(32 * 1024);
+    var buffer = inflater.next_out_buf = new Uint8Array(32 * 1024);
+    inflate.next_out_pos = 0;
     status = inflater.inflate();
     if (inflater.next_out.byteLength !== 0) {
       buffer = buffer.subarray(0, inflater.next_out.byteOffset - buffer.byteOffset);
@@ -1165,8 +1173,8 @@ onmessage = function(e) {
   if (typeof command.decompressedSize === 'number') {
     var buffer = new Uint8Array(command.decompressedSize);
     var state = new InflateState(command.noWrap ? -15 : 15);
-    state.next_in = command.compressedBytes;
-    state.next_out = buffer;
+    state.next_in_buf = command.compressedBytes;
+    state.next_out_buf = buffer;
     if (!state.inflate('finish') === 'done') {
       throw new Error('incomplete stream');
     }
