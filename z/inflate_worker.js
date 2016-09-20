@@ -67,6 +67,9 @@ function swap32(q) {
     | ((q & 0xff) << 24);
 }
 
+// Reuse work array
+var work = new Uint16Array(288);
+
 function CodeTableView(mode, bitWidth, lens) {
   switch(mode) {
     case 'lens':
@@ -133,7 +136,6 @@ function CodeTableView(mode, bitWidth, lens) {
   }
 
   // sort symbols by length, by symbol order within each length
-  var work = new Uint16Array(288);
   for (var sym = 0; sym < lens.length; sym++) {
     if (lens[sym] > 0) {
       work[offs[lens[sym]]++] = sym & 0xffff;
