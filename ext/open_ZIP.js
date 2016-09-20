@@ -22,6 +22,7 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
           throw new Exception('multi-part ZIP files not supported');
         }
         var pos = trailer.centralDirectoryFirstDiskOffset, len = trailer.centralDirectoryByteLength;
+        zService.postMessage('hello');
         return byteSource.slice(pos, pos + len).getBytes()
         .then(function(rawCentralDirectory) {
           var fileRecords = CentralFileRecordView.getList(
@@ -29,44 +30,43 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
             rawCentralDirectory.buffer,
             rawCentralDirectory.byteOffset,
             rawCentralDirectory.byteLength);
-          Promise.all(fileRecords.slice(0,1).map(function(record) {
-            var compressedLength = record.compressedSize32; // TODO: support Zip64
-            var uncompressedLength = record.uncompressedSize32;
-            zService.postMessage('hello');
-              /*
-            return byteSource.slice(
-              record.localHeaderOffset,
-              record.localHeaderOffset + LocalFileHeaderFixedView.byteLength)
-            .getBytes()
-            .then(function(rawLocalFixed) {
-              var localFixed = new LocalFileHeaderFixedView(
-                rawLocalFixed.buffer,
-                rawLocalFixed.byteOffset,
-                rawLocalFixed.byteLength);
-              var offset = record.localHeaderOffset
-                + LocalFileHeaderFixedView.byteLength
-                + localFixed.pathByteLength
-                + localFixed.extraByteLength;
-              return byteSource.slice(offset, offset + compressedLength).getBytes();
+          Promise.all(
+            fileRecords.slice(0,1).map(function(record) {
+              var compressedLength = record.compressedSize32; // TODO: support Zip64
+              var uncompressedLength = record.uncompressedSize32;
+              return byteSource.slice(
+                record.localHeaderOffset,
+                record.localHeaderOffset + LocalFileHeaderFixedView.byteLength)
+              .getBytes()
+              .then(function(rawLocalFixed) {
+                var localFixed = new LocalFileHeaderFixedView(
+                  rawLocalFixed.buffer,
+                  rawLocalFixed.byteOffset,
+                  rawLocalFixed.byteLength);
+                var offset = record.localHeaderOffset
+                  + LocalFileHeaderFixedView.byteLength
+                  + localFixed.pathByteLength
+                  + localFixed.extraByteLength;
+                return byteSource.slice(offset, offset + compressedLength).getBytes();
+              })
+              .then(function(compressed) {
+                var inflation = new inflate.State(-15);
+                var buf = new Uint8Array(uncompressedLength);
+                inflation.next_out = buf;
+                inflation.next_in = compressed;
+                var pre = performance.now();
+                var result = inflation.inflate('finish');
+                console.log(performance.now() - pre);
+                if (result !== 'done') {
+                  return Promise.reject('inflation failed to complete, returned ' + result);
+                }
+                return buf;
+              });
             })
-            .then(function(compressed) {
-              var inflation = new inflate.State(-15);
-              var buf = new Uint8Array(uncompressedLength);
-              inflation.next_out = buf;
-              inflation.next_in = compressed;
-              var pre = performance.now();
-              var result = inflation.inflate('finish');
-              console.log(performance.now() - pre);
-              if (result !== 'done') {
-                return Promise.reject('inflation failed to complete, returned ' + result);
-              }
-              return buf;
-            });
-          }))
+          )
           .then(function(allUncompressed) {
             console.log(allUncompressed);
           });
-            */
         });
       });
       /*
