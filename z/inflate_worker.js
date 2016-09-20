@@ -1177,5 +1177,7 @@ function inflate(compressedBytes, noWrap) {
 }
 
 onmessage = function(e) {
-  postMessage('hello');
+  var command = e.data;
+  var decompressedBytes = inflate(command.compressedBytes, command.noWrap);
+  postMessage({context:command.context, decompressedBytes:decompressedBytes}, [decompressedBytes.buffer]);
 };
