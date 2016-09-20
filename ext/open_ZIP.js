@@ -32,6 +32,8 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
           Promise.all(fileRecords.slice(0,1).map(function(record) {
             var compressedLength = record.compressedSize32; // TODO: support Zip64
             var uncompressedLength = record.uncompressedSize32;
+            zService.postMessage('hello');
+              /*
             return byteSource.slice(
               record.localHeaderOffset,
               record.localHeaderOffset + LocalFileHeaderFixedView.byteLength)
@@ -48,8 +50,6 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
               return byteSource.slice(offset, offset + compressedLength).getBytes();
             })
             .then(function(compressed) {
-              zService.postMessage('hello');
-              /*
               var inflation = new inflate.State(-15);
               var buf = new Uint8Array(uncompressedLength);
               inflation.next_out = buf;
@@ -65,8 +65,8 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
           }))
           .then(function(allUncompressed) {
             console.log(allUncompressed);
-            */
           });
+            */
         });
       });
       /*
