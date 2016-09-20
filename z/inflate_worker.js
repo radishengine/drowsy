@@ -1162,6 +1162,18 @@ function inflate(compressedBytes, noWrap) {
 
 onmessage = function(e) {
   var command = e.data;
-  var decompressedBytes = inflate(command.compressedBytes, command.noWrap);
-  postMessage({context:command.context, decompressedBytes:decompressedBytes}, [decompressedBytes.buffer]);
+  if (typeof command.decompressedSize === 'number') {
+    var buffer = new Uint8Array(command.decompressedSize);
+    var state = new InflateState(command.noWrap ? -15 : 15);
+    state.next_in = command.compressedBytes;
+    state.next_out = buffer;
+    if (!state.inflate('finish') === 'done') {
+      throw new Error('incomplete stream');
+    }
+    postMessage({context:command.context, decompressedBytes:buffer}, [buffer.buffer]);
+  }
+  else {
+    var decompressedBytes = inflate(command.compressedBytes, command.noWrap);
+    postMessage({context:command.context, decompressedBytes:decompressedBytes}, [decompressedBytes.buffer]);
+  }
 };
