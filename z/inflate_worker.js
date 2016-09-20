@@ -828,7 +828,7 @@ InflateState.prototype = {
                           // some from window
                           len -= op;
                           put_buf.set(from.subarray(0, op), put_pos);
-                          out_p += op;
+                          put_pos += op;
                           // rest from output
                           from = put_buf.subarray(put_pos - dist);
                         }
@@ -841,14 +841,14 @@ InflateState.prototype = {
                           // some from end of window
                           len -= op;
                           put_buf.set(from.subarray(0, op), put_pos);
-                          out_p += op;
+                          put_pos += op;
                           from = window;
                           if (wnext < len) { 
                             // some from start of window
                             op = wnext;
                             len -= op;
                             put_buf.set(from.subarray(0, op), put_pos);
-                            out_p += op;
+                            put_pos += op;
                             // rest from output
                             from = put_buf.subarray(put_pos - dist, put_pos);
                           }
@@ -867,12 +867,12 @@ InflateState.prototype = {
                         }
                       }
                       put_buf.set(from.subarray(0, len), put_pos);
-                      out_p += len;
+                      put_pos += len;
                     }
                     else {
                       /* copy direct from output */
                       put_buf.set(put_buf.subarray(put_pos - dist, (put_pos - dist) + len), put_pos);
-                      out_p += len;
+                      put_pos += len;
                     }
                     continue fastLoop;
                   }
