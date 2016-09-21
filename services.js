@@ -96,7 +96,6 @@ define(function() {
         else if (format in this.loaded) return this.loaded[format];
         var self = this;
         return this.loaded[format] = new Promise(function(resolve, reject) {
-          var format = new Format();
           function onMessage(e) {
             var command = e.data;
             switch(command[0]) {
