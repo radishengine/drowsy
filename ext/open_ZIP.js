@@ -1,4 +1,4 @@
-define(['msdos/util', 'text', 'Item', 'z/inflate', 'services'], function(dosUtil, text, Item, inflate, services) {
+define(['msdos/util', 'text', 'Item', 'services'], function(dosUtil, text, Item, services) {
 
   'use strict';
   
