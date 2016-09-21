@@ -57,6 +57,15 @@ var T = (N_CHAR * 2 - 1); // size of table
 var R = T - 1; // position of root
 var MAX_FREQ = 0x8000;
 
+// init for heavy mode
+var NC = 510;
+var NPT = 20;
+var N1 = 510;
+var OFFSET = 253;
+var left = new Uint16Array(2 * NC - 1), right = new Uint16Array(2 * NC - 1 + 9);
+var c_len = new Uint8Array(NC), pt_len = new Uint8Array(NPT);
+var c_table = new Uint16Array(4096), pt_table = new Uint16Array(256);
+
 function TrackDecruncher() {
   this.text = new Uint8Array(32000);
   this.init_deep_tabs();
@@ -98,6 +107,7 @@ TrackDecruncher.prototype = {
     delete this.quick_text_loc;
     delete this.medium_text_loc;
     delete this.deep_text_loc;
+    delete this.heavy_text_loc;
     this.init_deep_tabs();
   },
   quick_text_loc: 251,
@@ -299,20 +309,121 @@ TrackDecruncher.prototype = {
     this.DROPBITS(j);
     return c | i;
   },
+  heavy_text_loc: 0,
+  lastlen: 0,
+  np: 0,
+  heavy: function(input, output, flags){
+    /*  Heavy 1 uses a 4Kb dictionary,  Heavy 2 uses 8Kb  */
+    if (flags & 8) {
+      this.np = 15;
+      this.bitmask = 0x1fff;
+    }
+    else {
+      this.np = 14;
+      this.bitmask = 0x0fff;
+    }
+    this.initbitbuf(input);
+    if (flags & 2) {
+      if (this.read_tree_c()) return 1;
+      if (this.read_tree_p()) return 2;
+    }
+    for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
+      var c = this.decode_c();
+      if (c < 256) {
+        output[output_pos++] = text[heavy_text_loc] = c;
+        this.heavy_text_loc = (this.heavy_text_loc + 1) & this.bitmask;
+      }
+      else {
+        var j = (c - OFFSET) & 0xffff;
+        var i = (heavy_text_loc - decode_p() - 1) & 0xffff;
+        while (j--) {
+          output[output_pos++] = text[heavy_text_loc] = text[i];
+          this.heavy_text_loc = (this.heavy_text_loc + 1) & bitmask;
+          i = (i + 1) & bitmask;
+        }
+      }
+    }
+  },
+  decode_c: function() {
+    var j = c_table[this.GETBITS(12)];
+    if (j < N1) {
+      this.DROPBITS(c_len[j]);
+    }
+    else {
+      this.DROPBITS(12);
+      var i = this.GETBITS(16);
+      var m = 0x8000;
+      do {
+        j = (i & m) ? right[j] : left[j];
+        m >>= 1;
+      } while (j >= N1);
+      this.DROPBITS(c_len[j] - 12);
+    }
+    return j;
+  },
+  decode_p: function() {
+    var j = pt_table[GETBITS(8)];
+    if (j < np) {
+      this.DROPBITS(pt_len[j]);
+    }
+    else {
+      this.DROPBITS(8);
+      var i = this.GETBITS(16);
+      var m = 0x8000;
+      do {
+        j = (i & m) ? right[j] : left[j];
+        m >>= 1;
+      } while (j >= np);
+      this.DROPBITS(pt_len[j] - 8);
+    }
+    if (j !== np-1) {
+      if (j > 0) {
+        j = (USHORT)(this.GETBITS(i=(USHORT)(j-1)) | (1U << (j-1)));
+        this.DROPBITS(i);
+      }
+      lastlen = j;
+    }
+    return lastlen;
+  },
+  read_tree_c: function() {
+    var n = this.GETBITS(9);
+    this.DROPBITS(9);
+    if (n > 0){
+      for (var i = 0; i < n; i++) {
+        c_len[i] = this.GETBITS(5);
+        this.DROPBITS(5);
+      }
+      for (var i=n; i<510; i++) c_len[i] = 0;
+      if (this.make_table(510, c_len, 12, c_table)) return 1;
+    }
+    else {
+      n = this.GETBITS(9);
+      this.DROPBITS(9);
+      for (var i = 0; i < 510; i++) c_len[i] = 0;
+      for (var i = 0; i < 4096; i++) c_table[i] = n;
+    }
+    return 0;
+  },
+  read_tree_p: function() {
+    var n = GETBITS(5);
+    this.DROPBITS(5);
+    if (n > 0){
+      for (var i = 0; i < n; i++) {
+        pt_len[i] = this.GETBITS(4);
+        this.DROPBITS(4);
+      }
+      for (var i = n; i < np; i++) pt_len[i] = 0;
+      if (this.make_table(np, pt_len, 8, pt_table)) return 1;
+    }
+    else {
+      n = this.GETBITS(5);
+      this.DROPBITS(5);
+      for (var i = 0; i < np; i++) pt_len[i] = 0;
+      for (var i = 0; i < 256; i++) pt_table[i] = n;
+    }
+    return 0;
+  },
 }
-
-var quick_text_loc, medium_text_loc, heavy_text_loc, deep_text_loc, init_deep_tabs, text;
-
-function Init_Decrunchers() {
-  quick_text_loc = 251;
-  medium_text_loc = 0x3fbe;
-  heavy_text_loc = 0;
-  deep_text_loc = 0x3fc4;
-  init_deep_tabs = 1;
-  text = new Uint8Array(0x3fc8);
-}
-
-Init_Decrunchers();
 
 var HEADLEN = 56;
 var THLEN = 20;
@@ -424,161 +535,79 @@ function Unpack_Track(UCHAR *b1, UCHAR *b2, USHORT pklen2, USHORT unpklen, UCHAR
 }
 
 
-// heavy
-
-#define NC 510
-#define NPT 20
-#define N1 510
-#define OFFSET 253
-
-USHORT left[2 * NC - 1], right[2 * NC - 1 + 9];
-static UCHAR c_len[NC], pt_len[NPT];
-static USHORT c_table[4096], pt_table[256];
-static USHORT lastlen, np;
-USHORT heavy_text_loc;
+static SHORT c;
+static USHORT n, tblsiz, len, depth, maxdepth, avail;
+static USHORT codeword, bit, *tbl, TabErr;
+static UCHAR *blen;
 
 
-static USHORT read_tree_c(void);
-static USHORT read_tree_p(void);
-INLINE USHORT decode_c(void);
-INLINE USHORT decode_p(void);
+static USHORT mktbl(void);
 
 
 
-USHORT Unpack_HEAVY(UCHAR *in, UCHAR *out, UCHAR flags, USHORT origsize){
-  USHORT j, i, c, bitmask;
-  UCHAR *outend;
-
-  /*  Heavy 1 uses a 4Kb dictionary,  Heavy 2 uses 8Kb  */
-
-  if (flags & 8) {
-    np = 15;
-    bitmask = 0x1fff;
-  } else {
-    np = 14;
-    bitmask = 0x0fff;
-  }
-
-  initbitbuf(in);
-
-  if (flags & 2) {
-    if (read_tree_c()) return 1;
-    if (read_tree_p()) return 2;
-  }
-
-  outend = out+origsize;
-
-  while (out<outend) {
-    c = decode_c();
-    if (c < 256) {
-      *out++ = text[heavy_text_loc++ & bitmask] = (UCHAR)c;
-    } else {
-      j = (USHORT) (c - OFFSET);
-      i = (USHORT) (heavy_text_loc - decode_p() - 1);
-      while(j--) *out++ = text[heavy_text_loc++ & bitmask] = text[i++ & bitmask];
-    }
-  }
-
-  return 0;
+USHORT make_table(USHORT nchar, UCHAR bitlen[],USHORT tablebits, USHORT table[]){
+	n = avail = nchar;
+	blen = bitlen;
+	tbl = table;
+	tblsiz = (USHORT) (1U << tablebits);
+	bit = (USHORT) (tblsiz / 2);
+	maxdepth = (USHORT)(tablebits + 1);
+	depth = len = 1;
+	c = -1;
+	codeword = 0;
+	TabErr = 0;
+	mktbl();	/* left subtree */
+	if (TabErr) return TabErr;
+	mktbl();	/* right subtree */
+	if (TabErr) return TabErr;
+	if (codeword != tblsiz) return 5;
+	return 0;
 }
 
 
 
-INLINE USHORT decode_c(void){
-  USHORT i, j, m;
+static USHORT mktbl(void){
+	USHORT i=0;
 
-  j = c_table[GETBITS(12)];
-  if (j < N1) {
-    DROPBITS(c_len[j]);
-  } else {
-    DROPBITS(12);
-    i = GETBITS(16);
-    m = 0x8000;
-    do {
-      if (i & m) j = right[j];
-      else              j = left [j];
-      m >>= 1;
-    } while (j >= N1);
-    DROPBITS(c_len[j] - 12);
-  }
-  return j;
-}
+	if (TabErr) return 0;
 
-
-
-INLINE USHORT decode_p(void){
-  USHORT i, j, m;
-
-  j = pt_table[GETBITS(8)];
-  if (j < np) {
-    DROPBITS(pt_len[j]);
-  } else {
-    DROPBITS(8);
-    i = GETBITS(16);
-    m = 0x8000;
-    do {
-      if (i & m) j = right[j];
-      else             j = left [j];
-      m >>= 1;
-    } while (j >= np);
-    DROPBITS(pt_len[j] - 8);
-  }
-
-  if (j != np-1) {
-    if (j > 0) {
-      j = (USHORT)(GETBITS(i=(USHORT)(j-1)) | (1U << (j-1)));
-      DROPBITS(i);
-    }
-    lastlen=j;
-  }
-
-  return lastlen;
-
-}
-
-
-
-static USHORT read_tree_c(void){
-  USHORT i,n;
-
-  n = GETBITS(9);
-  DROPBITS(9);
-  if (n>0){
-    for (i=0; i<n; i++) {
-      c_len[i] = (UCHAR)GETBITS(5);
-      DROPBITS(5);
-    }
-    for (i=n; i<510; i++) c_len[i] = 0;
-    if (make_table(510,c_len,12,c_table)) return 1;
-  } else {
-    n = GETBITS(9);
-    DROPBITS(9);
-    for (i=0; i<510; i++) c_len[i] = 0;
-    for (i=0; i<4096; i++) c_table[i] = n;
-  }
-  return 0;
-}
-
-
-
-static USHORT read_tree_p(void){
-  USHORT i,n;
-
-  n = GETBITS(5);
-  DROPBITS(5);
-  if (n>0){
-    for (i=0; i<n; i++) {
-      pt_len[i] = (UCHAR)GETBITS(4);
-      DROPBITS(4);
-    }
-    for (i=n; i<np; i++) pt_len[i] = 0;
-    if (make_table(np,pt_len,8,pt_table)) return 1;
-  } else {
-    n = GETBITS(5);
-    DROPBITS(5);
-    for (i=0; i<np; i++) pt_len[i] = 0;
-    for (i=0; i<256; i++) pt_table[i] = n;
-  }
-  return 0;
+	if (len == depth) {
+		while (++c < n)
+			if (blen[c] == len) {
+				i = codeword;
+				codeword += bit;
+				if (codeword > tblsiz) {
+					TabErr=1;
+					return 0;
+				}
+				while (i < codeword) tbl[i++] = (USHORT)c;
+				return (USHORT)c;
+			}
+		c = -1;
+		len++;
+		bit >>= 1;
+	}
+	depth++;
+	if (depth < maxdepth) {
+		mktbl();
+		mktbl();
+	} else if (depth > 32) {
+		TabErr = 2;
+		return 0;
+	} else {
+		if ((i = avail++) >= 2 * n - 1) {
+			TabErr = 3;
+			return 0;
+		}
+		left[i] = mktbl();
+		right[i] = mktbl();
+		if (codeword >= tblsiz) {
+			TabErr = 4;
+			return 0;
+		}
+		if (depth == maxdepth) tbl[codeword++] = i;
+	}
+	depth--;
+	return i;
 }
 
