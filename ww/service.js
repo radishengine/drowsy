@@ -49,6 +49,7 @@ self.onmessage = function(e) {
         self.postMessage(['failed', id]);
         return;
       }
+      if (result.done) delete contexts[id];
       postMessage([result.done ? 'done' : 'more', id, result.value]);
       break;
     case 'abandon':
