@@ -27,7 +27,7 @@ define(['msdos/util', 'text', 'Item', 'services'], function(dosUtil, text, Item,
             rawCentralDirectory.byteOffset,
             rawCentralDirectory.byteLength);
           Promise.all(
-            fileRecords.slice(0,1).map(function(record) {
+            fileRecords.map(function(record) {
               var compressedLength = record.compressedSize32; // TODO: support Zip64
               var uncompressedLength = record.uncompressedSize32;
               var promiseCompressed = byteSource.slice(
