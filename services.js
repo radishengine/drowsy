@@ -78,7 +78,7 @@ define(function() {
               break;
           }
         }
-        self.addEventListener('message', onMessage);
+        worker.addEventListener('message', onMessage);
         worker.postMessage(['init', id, this.name].concat(params), transferables);
       });
     },
