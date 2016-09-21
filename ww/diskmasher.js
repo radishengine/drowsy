@@ -1,7 +1,20 @@
 // Based on xDMS code by Andre Rodrigues de la Rocha
 
+var mask_bits = new Int32Array([
+	0x000000, 0x000001, 0x000003, 0x000007,
+	0x00000f, 0x00001f, 0x00003f, 0x00007f,
+	0x0000ff, 0x0001ff, 0x0003ff, 0x0007ff,
+	0x000fff, 0x001fff, 0x003fff, 0x007fff,
+	0x00ffff, 0x01ffff, 0x03ffff, 0x07ffff,
+	0x0fffff, 0x1fffff, 0x3fffff, 0x7fffff,
+	0xffffff,
+]);
+
 function TrackDecruncher() {
-  decrunchRLE: function(input, output) {
+  this.text = new Uint8Array(0x3fc8);
+}
+TrackDecruncher.prototype = {
+  rle: function(input, output) {
     var input_pos = 0;
     for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
       var a = input[input_pos++];
@@ -26,6 +39,56 @@ function TrackDecruncher() {
         output[output_pos++] = a;
       }
     }
+  },
+  reset: function() {
+    delete this.quick_text_loc;
+  },
+  quick_text_loc: 251,
+  bitbuf: 0,
+  bitcount: 0,
+  indata_buf: null,
+  indata_pos: 0,
+  initbitbuf: function(indata) {
+  	this.bitbuf = 0;
+  	this.bitcount = 0;
+  	this.indata_buf = indata;
+  	this.indata_pos = 0;
+  	this.DROPBITS(0);
+  },
+  GETBITS: function(n) {
+    return this.bitbuf >>> (this.bitcount - n);
+  },
+  DROPBITS: function(n) {
+    this.bitbuf &= mask_bits[this.bitcount -= n];
+    while (this.bitcount < 16) {
+      this.bitbuf = (this.bitbuf << 8) | this.indata_buf[this.indata_pos++];
+      this.bitcount += 8;
+    }
+  },
+  quick: function(input, output) {
+    this.initbitbuf(input);
+    for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
+      if (this.GETBITS(1) !== 0) {
+        this.DROPBITS(1);
+        output[output_pos] = this.text[this.quick_text_loc] = this.GETBITS(8);
+        this.DROPBITS(8);
+        this.quick_text_loc = (this.quick_text_loc + 1) % 256;
+      }
+      else {
+        this.DROPBITS(1);
+        var j = GETBITS(2) + 2;
+        this.DROPBITS(2);
+        var i = this.quick_text_loc - this.GETBITS(8) - 1;
+        this.DROPBITS(8);
+        while (j--) {
+          output[output_pos++] = this.text[this.quick_text_loc] = this.text[i];
+          i = (i + 1) % 256;
+          this.quick_text_loc = (this.quick_text_loc + 1) % 256;
+        }
+      }
+    }
+    this.quick_text_loc = (this.quick_text_loc + 5) % 256;
+    return 0;
   },
 }
 
@@ -152,32 +215,6 @@ function Unpack_Track(UCHAR *b1, UCHAR *b2, USHORT pklen2, USHORT unpklen, UCHAR
   return 'NO_PROBLEM';
 }
 
-var QBITMASK = 0xff;
-
-USHORT Unpack_QUICK(UCHAR *in, UCHAR *out, USHORT origsize){
-  USHORT i, j;
-  UCHAR *outend;
-
-  initbitbuf(in);
-
-  outend = out+origsize;
-  while (out < outend) {
-    if (GETBITS(1)!=0) {
-      DROPBITS(1);
-      *out++ = text[quick_text_loc++ & QBITMASK] = (UCHAR)GETBITS(8);  DROPBITS(8);
-    } else {
-      DROPBITS(1);
-      j = (USHORT) (GETBITS(2)+2);  DROPBITS(2);
-      i = (USHORT) (quick_text_loc - GETBITS(8) - 1);  DROPBITS(8);
-      while(j--) {
-        *out++ = text[quick_text_loc++ & QBITMASK] = text[i++ & QBITMASK];
-      }
-    }
-  }
-  quick_text_loc = (USHORT)((quick_text_loc+5) & QBITMASK);
-
-  return 0;
-}
 
 #define MBITMASK 0x3fff
 
