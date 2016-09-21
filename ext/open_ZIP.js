@@ -2,6 +2,8 @@ define(['msdos/util', 'text', 'Item', 'services'], function(dosUtil, text, Item,
 
   'use strict';
   
+  services.decompression = services.decompression || services.create();
+  
   function open() {
     var byteSource = this.byteSource;
     this.addExplorer(function(expedition) {
@@ -46,7 +48,7 @@ define(['msdos/util', 'text', 'Item', 'services'], function(dosUtil, text, Item,
               .then(function(compressed) {
                 var uncompressed = new Uint8Array(uncompressedLength);
                 var pre = performance.now();
-                return services.load('inflate')
+                return services.decompression.load('inflate')
                 .then(function(inflater) {
                   return inflater.process(
                     [compressed, uncompressed],
