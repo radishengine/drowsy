@@ -11,6 +11,8 @@ var mask_bits = new Int32Array([
   0xffffff,
 ]);
 
+// init for medium mode
+
 var d_code = new Uint8Array(256);
 var pos = 0x20, val = 0x01;
 while (pos < 0x70) {
@@ -45,8 +47,25 @@ while (d_pos < 0xC0) d_len[d_pos++] = 6;
 while (d_pos < 0xF0) d_len[d_pos++] = 7;
 while (d_pos < 0x100) d_len[d_pos++] = 8;
 
+// init for deep mode
+
+var DBITMASK = 0x3fff; // 16Kb dictionary
+var F = 60; // lookahead buffer size
+var THRESHOLD = 2;
+var N_CHAR = (256 - THRESHOLD + F); // kinds of characters (character code = 0..N_CHAR-1)
+var T = (N_CHAR * 2 - 1); // size of table
+var R = T - 1; // position of root
+var MAX_FREQ = 0x8000;
+
 function TrackDecruncher() {
   this.text = new Uint8Array(32000);
+  this.init_deep_tabs();
+  this.freq = new Uint16Array(T + 1); // frequency table
+  this.prnt = new Uint16Array(T + T_CHAR); // pointers to parent nodes, except for the
+          /* elements [T..T + N_CHAR - 1] which are used to get */
+          /* the positions of leaves corresponding to the codes. */
+  this.son = new Uint16Array(T);   /* pointers to child nodes (son[], son[] + 1) */
+  this.init_deep_tabs();
 }
 TrackDecruncher.prototype = {
   rle: function(input, output) {
@@ -78,6 +97,8 @@ TrackDecruncher.prototype = {
   reset: function() {
     delete this.quick_text_loc;
     delete this.medium_text_loc;
+    delete this.deep_text_loc;
+    this.init_deep_tabs();
   },
   quick_text_loc: 251,
   bitbuf: 0,
@@ -155,7 +176,128 @@ TrackDecruncher.prototype = {
       }
     }
     this.medium_text_loc = (this.medium_text_loc + 66) % 0x4000;
-    return 0;
+  },
+  deep_text_loc: 0x3fc4,
+  init_deep_tabs: function() {
+    var freq = this.freq, son = this.son, prnt = this.print;
+    for (var i = 0; i < N_CHAR; i++) {
+      freq[i] = 1;
+      son[i] = i + T;
+      prnt[i + T] = i;
+    }
+    var i = 0, j = N_CHAR;
+    while (j <= R) {
+      freq[j] = freq[i] + freq[i + 1];
+      son[j] = i;
+      prnt[i] = prnt[i + 1] = j;
+      i += 2; j++;
+    }
+    freq[T] = 0xffff;
+    prnt[R] = 0;
+  },
+  deep: function(input, output) {
+    this.initbitbuf(input);
+    for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
+      var c = this.decode_char();
+      if (c < 256) {
+        output[output_pos++] = this.text[deep_text_loc] = c;
+        this.deep_text_loc = (this.deep_text_loc + 1) & DBITMASK;
+      }
+      else {
+        var j = (c - 255 + THRESHOLD);
+        var i = (this.deep_text_loc - this.decode_position() - 1);
+        while (j--) {
+          output[output_pos++] = this.text[deep_text_loc] = this.text[i];
+          this.deep_text_loc = (this.deep_text_loc + 1) & DBITMASK;
+          i = (i + 1) & DBITMASK;
+        }
+      }
+    }
+    this.deep_text_loc = ((this.deep_text_loc + 60) & DBITMASK);
+  },
+  decode_char: function() {
+    var c = this.son[R];
+    /* travel from root to leaf, */
+    /* choosing the smaller child node (son[]) if the read bit is 0, */
+    /* the bigger (son[]+1} if 1 */
+    while (c < T) {
+      c = son[c + this.GETBITS(1)];
+      this.DROPBITS(1);
+    }
+    c -= T;
+    this.update(c);
+    return c;
+  },
+  update: function(c) {
+    /* increment frequency of given code by one, and update tree */
+    if (this.freq[R] == MAX_FREQ) this.reconst();
+    c = this.prnt[c + T];
+    do {
+      var k = ++this.freq[c];
+  
+      var l = (c + 1) & 0xffff;
+      /* if the order is disturbed, exchange nodes */
+      if (k > this.freq[l]) {
+        while (k > this.freq[l]) l++;
+        this.freq[c] = this.freq[l];
+        this.freq[l] = k;
+  
+        var i = this.son[c];
+        this.prnt[i] = l;
+        if (i < T) this.prnt[i + 1] = l;
+  
+        var j = this.son[l];
+        this.son[l] = i;
+  
+        this.prnt[j] = c;
+        if (j < T) this.prnt[j + 1] = c;
+        this.son[c] = j;
+  
+        c = l;
+      }
+      c = prnt[c];
+    } while (c !== 0); /* repeat up to root */
+  },
+  /* reconstruction of tree */
+  reconst: function(){
+    /* collect leaf nodes in the first half of the table */
+    /* and replace the freq by (freq + 1) / 2. */
+    var j = 0;
+    for (var i = 0; i < T; i++) {
+      if (this.son[i] >= T) {
+        this.freq[j] = ((freq[i] + 1) >> 1) & 0xffff;
+        this.son[j] = this.son[i];
+        j++;
+      }
+    }
+    /* begin constructing tree by connecting sons */
+    for (var i = 0, j = N_CHAR; j < T; i += 2, j++) {
+      var k = (i + 1) & 0xffff;
+      var f = this.freq[j] = (this.freq[i] + this.freq[k]) & 0xffff;
+      k = (j - 1) & 0xffff;
+      while (f < this.freq[k]) k--;
+      k++; // TODO: check that this is still necessary (previous line refactored)
+      var l = ((j - k) << 1) & 0xffff;
+      memmove(&freq[k + 1], &freq[k], (size_t)l);
+      this.freq[k] = f;
+      memmove(&son[k + 1], &son[k], (size_t)l);
+      this.son[k] = i;
+    }
+    /* connect prnt */
+    for (var i = 0; i < T; i++) {
+      var k = this.son[i];
+      this.prnt[k] = i;
+      if (k < T) this.prnt[k + 1] = i;
+    }
+  },
+  decode_position: function() {
+    var i = this.GETBITS(8);
+    this.DROPBITS(8);
+    var c = (d_code[i] << 8) & 0xffff;
+    var j = d_len[i];
+    i = ((i << j) | this.GETBITS(j)) & 0xff;
+    this.DROPBITS(j);
+    return c | i;
   },
 }
 
@@ -281,235 +423,6 @@ function Unpack_Track(UCHAR *b1, UCHAR *b2, USHORT pklen2, USHORT unpklen, UCHAR
   return 'NO_PROBLEM';
 }
 
-
-#define MBITMASK 
-
-
-USHORT medium_text_loc;
-
-
-
-USHORT Unpack_MEDIUM(UCHAR *in, UCHAR *out, USHORT origsize){
-  USHORT i, j, c;
-  UCHAR u, *outend;
-
-
-  initbitbuf(in);
-
-  outend = out+origsize;
-  while (out < outend) {
-    if (GETBITS(1)!=0) {
-      DROPBITS(1);
-      *out++ = text[medium_text_loc++ & MBITMASK] = (UCHAR)GETBITS(8);
-      DROPBITS(8);
-    } else {
-      DROPBITS(1);
-      c = GETBITS(8);  DROPBITS(8);
-      j = (USHORT) (d_code[c]+3);
-      u = d_len[c];
-      c = (USHORT) (((c << u) | GETBITS(u)) & 0xff);  DROPBITS(u);
-      u = d_len[c];
-      c = (USHORT) ((d_code[c] << 8) | (((c << u) | GETBITS(u)) & 0xff));  DROPBITS(u);
-      i = (USHORT) (medium_text_loc - c - 1);
-
-      while(j--) *out++ = text[medium_text_loc++ & MBITMASK] = text[i++ & MBITMASK];
-      
-    }
-  }
-  medium_text_loc = (USHORT)((medium_text_loc+66) & MBITMASK);
-
-  return 0;
-}
-
-
-// deep
-
-INLINE USHORT DecodeChar(void);
-INLINE USHORT DecodePosition(void);
-INLINE void update(USHORT c);
-static void reconst(void);
-
-
-USHORT deep_text_loc;
-int init_deep_tabs=1;
-
-
-
-#define DBITMASK 0x3fff   /*  uses 16Kb dictionary  */
-
-#define F       60  /* lookahead buffer size */
-#define THRESHOLD   2
-#define N_CHAR      (256 - THRESHOLD + F)   /* kinds of characters (character code = 0..N_CHAR-1) */
-#define T       (N_CHAR * 2 - 1)    /* size of table */
-#define R       (T - 1)         /* position of root */
-#define MAX_FREQ    0x8000      /* updates tree when the */
-
-
-USHORT freq[T + 1]; /* frequency table */
-
-USHORT prnt[T + N_CHAR]; /* pointers to parent nodes, except for the */
-        /* elements [T..T + N_CHAR - 1] which are used to get */
-        /* the positions of leaves corresponding to the codes. */
-
-USHORT son[T];   /* pointers to child nodes (son[], son[] + 1) */
-
-
-
-void Init_DEEP_Tabs(void){
-  USHORT i, j;
-
-  for (i = 0; i < N_CHAR; i++) {
-    freq[i] = 1;
-    son[i] = (USHORT)(i + T);
-    prnt[i + T] = i;
-  }
-  i = 0; j = N_CHAR;
-  while (j <= R) {
-    freq[j] = (USHORT) (freq[i] + freq[i + 1]);
-    son[j] = i;
-    prnt[i] = prnt[i + 1] = j;
-    i += 2; j++;
-  }
-  freq[T] = 0xffff;
-  prnt[R] = 0;
-
-  init_deep_tabs = 0;
-}
-
-
-
-USHORT Unpack_DEEP(UCHAR *in, UCHAR *out, USHORT origsize){
-  USHORT i, j, c;
-  UCHAR *outend;
-
-  initbitbuf(in);
-
-  if (init_deep_tabs) Init_DEEP_Tabs();
-
-  outend = out+origsize;
-  while (out < outend) {
-    c = DecodeChar();
-    if (c < 256) {
-      *out++ = text[deep_text_loc++ & DBITMASK] = (UCHAR)c;
-    } else {
-      j = (USHORT) (c - 255 + THRESHOLD);
-      i = (USHORT) (deep_text_loc - DecodePosition() - 1);
-      while (j--) *out++ = text[deep_text_loc++ & DBITMASK] = text[i++ & DBITMASK];
-    }
-  }
-
-  deep_text_loc = (USHORT)((deep_text_loc+60) & DBITMASK);
-
-  return 0;
-}
-
-
-
-INLINE USHORT DecodeChar(void){
-  USHORT c;
-
-  c = son[R];
-
-  /* travel from root to leaf, */
-  /* choosing the smaller child node (son[]) if the read bit is 0, */
-  /* the bigger (son[]+1} if 1 */
-  while (c < T) {
-    c = son[c + GETBITS(1)];
-    DROPBITS(1);
-  }
-  c -= T;
-  update(c);
-  return c;
-}
-
-
-
-INLINE USHORT DecodePosition(void){
-  USHORT i, j, c;
-
-  i = GETBITS(8);  DROPBITS(8);
-  c = (USHORT) (d_code[i] << 8);
-  j = d_len[i];
-  i = (USHORT) (((i << j) | GETBITS(j)) & 0xff);  DROPBITS(j);
-
-  return (USHORT) (c | i) ;
-}
-
-
-
-/* reconstruction of tree */
-
-static void reconst(void){
-  USHORT i, j, k, f, l;
-
-  /* collect leaf nodes in the first half of the table */
-  /* and replace the freq by (freq + 1) / 2. */
-  j = 0;
-  for (i = 0; i < T; i++) {
-    if (son[i] >= T) {
-      freq[j] = (USHORT) ((freq[i] + 1) / 2);
-      son[j] = son[i];
-      j++;
-    }
-  }
-  /* begin constructing tree by connecting sons */
-  for (i = 0, j = N_CHAR; j < T; i += 2, j++) {
-    k = (USHORT) (i + 1);
-    f = freq[j] = (USHORT) (freq[i] + freq[k]);
-    for (k = (USHORT)(j - 1); f < freq[k]; k--);
-    k++;
-    l = (USHORT)((j - k) * 2);
-    memmove(&freq[k + 1], &freq[k], (size_t)l);
-    freq[k] = f;
-    memmove(&son[k + 1], &son[k], (size_t)l);
-    son[k] = i;
-  }
-  /* connect prnt */
-  for (i = 0; i < T; i++) {
-    if ((k = son[i]) >= T) {
-      prnt[k] = i;
-    } else {
-      prnt[k] = prnt[k + 1] = i;
-    }
-  }
-}
-
-
-
-/* increment frequency of given code by one, and update tree */
-
-INLINE void update(USHORT c){
-  USHORT i, j, k, l;
-
-  if (freq[R] == MAX_FREQ) {
-    reconst();
-  }
-  c = prnt[c + T];
-  do {
-    k = ++freq[c];
-
-    /* if the order is disturbed, exchange nodes */
-    if (k > freq[l = (USHORT)(c + 1)]) {
-      while (k > freq[++l]);
-      l--;
-      freq[c] = freq[l];
-      freq[l] = k;
-
-      i = son[c];
-      prnt[i] = l;
-      if (i < T) prnt[i + 1] = l;
-
-      j = son[l];
-      son[l] = i;
-
-      prnt[j] = c;
-      if (j < T) prnt[j + 1] = c;
-      son[c] = j;
-
-      c = l;
-    }
-  } while ((c = prnt[c]) != 0); /* repeat up to root */
-}
 
 // heavy
 
