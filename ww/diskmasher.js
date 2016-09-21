@@ -20,160 +20,160 @@ var TEMP_BUFFER_LEN = 32000;
 
 var PWDCRC;
 function dms_decrypt(crypt_buf, crypt_pos, crypt_len) {
-	while (crypt_len--) {
-		var t = crypt_buf[crypt_pos];
-		crypt_buf[crypt_pos++] = (t ^ PWDCRC) & 0xff;
-		PWDCRC = ((PWDCRC >> 1) + t) & 0xffff;
-	}
+  while (crypt_len--) {
+    var t = crypt_buf[crypt_pos];
+    crypt_buf[crypt_pos++] = (t ^ PWDCRC) & 0xff;
+    PWDCRC = ((PWDCRC >> 1) + t) & 0xffff;
+  }
 }
 
 function Process_Track(fi, fo, b1, b2, cmd, opt, pwd) {
-	var l = (USHORT)fread(b1,1,THLEN,fi);
+  var l = (USHORT)fread(b1,1,THLEN,fi);
 
-	if (l !== THLEN) {
-		if (l === 0) return 'FILE_END';
-		else throw new Error('ERR_SREAD');
-	}
+  if (l !== THLEN) {
+    if (l === 0) return 'FILE_END';
+    else throw new Error('ERR_SREAD');
+  }
 
-	/*  "TR" identifies a Track Header  */
-	if (String.fromCharCode.apply(null, b1.subarray(0, 2)) !== 'TR') throw new Error('ERR_NOTTRACK');
+  /*  "TR" identifies a Track Header  */
+  if (String.fromCharCode.apply(null, b1.subarray(0, 2)) !== 'TR') throw new Error('ERR_NOTTRACK');
 
-	/*  Track Header CRC  */
-	var hcrc = (b1[THLEN-2] << 8) | b1[THLEN-1];
+  /*  Track Header CRC  */
+  var hcrc = (b1[THLEN-2] << 8) | b1[THLEN-1];
 
-	if (CreateCRC(b1, THLEN-2) != hcrc) throw new Error('ERR_THCRC');
+  if (CreateCRC(b1, THLEN-2) != hcrc) throw new Error('ERR_THCRC');
 
-	var number = (b1[2] << 8) | b1[3];	/*  Number of track  */
-	var pklen1 = (b1[6] << 8) | b1[7];	/*  Length of packed track data as in archive  */
-	var pklen2 = (b1[8] << 8) | b1[9];	/*  Length of data after first unpacking  */
-	var unpklen = (b1[10] << 8) | b1[11];	/*  Length of data after subsequent rle unpacking */
-	var flags = b1[12];		/*  control flags  */
-	var cmode = b1[13];		/*  compression mode used  */
-	var usum = (b1[14] << 8) | b1[15];	/*  Track Data CheckSum AFTER unpacking  */
-	var dcrc = (b1[16] << 8) | b1[17];	/*  Track Data CRC BEFORE unpacking  */
+  var number = (b1[2] << 8) | b1[3];  /*  Number of track  */
+  var pklen1 = (b1[6] << 8) | b1[7];  /*  Length of packed track data as in archive  */
+  var pklen2 = (b1[8] << 8) | b1[9];  /*  Length of data after first unpacking  */
+  var unpklen = (b1[10] << 8) | b1[11];  /*  Length of data after subsequent rle unpacking */
+  var flags = b1[12];    /*  control flags  */
+  var cmode = b1[13];    /*  compression mode used  */
+  var usum = (b1[14] << 8) | b1[15];  /*  Track Data CheckSum AFTER unpacking  */
+  var dcrc = (b1[16] << 8) | b1[17];  /*  Track Data CRC BEFORE unpacking  */
 
   if (pklen1 > TRACK_BUFFER_LEN || pklen2 > TRACK_BUFFER_LEN || unpklen > TRACK_BUFFER_LEN) {
     throw new Error('ERR_BIGTRACK');
   }
 
-	if (fread(b1, 1, pklen1, fi) !== pklen1) throw new Error('ERR_SREAD');
+  if (fread(b1, 1, pklen1, fi) !== pklen1) throw new Error('ERR_SREAD');
 
-	if (CreateCRC(b1, pklen1) !== dcrc) throw new Error('ERR_TDCRC');
+  if (CreateCRC(b1, pklen1) !== dcrc) throw new Error('ERR_TDCRC');
 
-	/*  track 80 is FILEID.DIZ, track 0xffff (-1) is Banner  */
-	/*  and track 0 with 1024 bytes only is a fake boot block with more advertising */
-	/*  FILE_ID.DIZ is never encrypted  */
+  /*  track 80 is FILEID.DIZ, track 0xffff (-1) is Banner  */
+  /*  and track 0 with 1024 bytes only is a fake boot block with more advertising */
+  /*  FILE_ID.DIZ is never encrypted  */
 
-	if (pwd && number !== 80) dms_decrypt(b1, pklen1);
+  if (pwd && number !== 80) dms_decrypt(b1, pklen1);
 
-	if (number < 80 && unpklen > 2048) {
-		r = Unpack_Track(b1, b2, pklen2, unpklen, cmode, flags);
-		if (r !== 'NO_PROBLEM') {
-			if (pwd) throw new Error('ERR_BADPASSWD');
-			return r;
-		}
-		if (usum !== Calc_CheckSum(b2, unpklen)) {
-		  throw new Error(pwd ? 'ERR_BADPASSWD' : 'ERR_CSUM');
-		}
-		if (fwrite(b2, 1, unpklen, fo) !== unpklen) throw new Error('ERR_CANTWRITE');
-	}
+  if (number < 80 && unpklen > 2048) {
+    r = Unpack_Track(b1, b2, pklen2, unpklen, cmode, flags);
+    if (r !== 'NO_PROBLEM') {
+      if (pwd) throw new Error('ERR_BADPASSWD');
+      return r;
+    }
+    if (usum !== Calc_CheckSum(b2, unpklen)) {
+      throw new Error(pwd ? 'ERR_BADPASSWD' : 'ERR_CSUM');
+    }
+    if (fwrite(b2, 1, unpklen, fo) !== unpklen) throw new Error('ERR_CANTWRITE');
+  }
 
-	return 'NO_PROBLEM';
+  return 'NO_PROBLEM';
 }
 
 function Unpack_Track(UCHAR *b1, UCHAR *b2, USHORT pklen2, USHORT unpklen, UCHAR cmode, UCHAR flags){
-	switch (cmode) {
-		case 0: // No Compression
-		  b2.set(b1.subarray(0, unpklen));
-			break;
-		case 1: // Simple Compression
-			if (Unpack_RLE(b1, b2, unpklen)) throw new Error('ERR_BADDECR');
-			break;
-		case 2: // Quick Compression
-			if (Unpack_QUICK(b1, b2, pklen2)) throw new Error('ERR_BADDECR');
-			if (Unpack_RLE(b2, b1, unpklen)) throw new Error('ERR_BADDECR');
-			memcpy(b2, b1, (size_t)unpklen);
-			break;
-		case 3: // Medium Compression
-			if (Unpack_MEDIUM(b1,b2,pklen2)) throw new Error('ERR_BADDECR');
-			if (Unpack_RLE(b2,b1,unpklen)) throw new Error('ERR_BADDECR');
-			memcpy(b2, b1, unpklen);
-			break;
-		case 4: // Deep Compression
-			if (Unpack_DEEP(b1, b2, pklen2)) throw new Error('ERR_BADDECR');
-			if (Unpack_RLE(b2, b1, unpklen)) throw new Error('ERR_BADDECR');
-			memcpy(b2, b1, unpklen);
-			break;
-		case 5: case 6: // Heavy Compression
-			if (cmode === 5) { // Heavy 1
-				if (Unpack_HEAVY(b1, b2, flags & 7, pklen2)) throw new Error('ERR_BADDECR');
-			}
-			else { // Heavy 2
-				if (Unpack_HEAVY(b1, b2, flags | 8, pklen2)) throw new Error('ERR_BADDECR');
-			}
-			if (flags & 4) {
-				/*  Unpack with RLE only if this flag is set  */
-				if (Unpack_RLE(b2,b1,unpklen)) throw new Error('ERR_BADDECR');
-				memcpy(b2,b1,(size_t)unpklen);
-			}
-			break;
-		default: throw new Error('ERR_UNKNMODE');
-	}
-	if (!(flags & 1)) Init_Decrunchers();
-	return 'NO_PROBLEM';
+  switch (cmode) {
+    case 0: // No Compression
+      b2.set(b1.subarray(0, unpklen));
+      break;
+    case 1: // Simple Compression
+      if (Unpack_RLE(b1, b2, unpklen)) throw new Error('ERR_BADDECR');
+      break;
+    case 2: // Quick Compression
+      if (Unpack_QUICK(b1, b2, pklen2)) throw new Error('ERR_BADDECR');
+      if (Unpack_RLE(b2, b1, unpklen)) throw new Error('ERR_BADDECR');
+      memcpy(b2, b1, (size_t)unpklen);
+      break;
+    case 3: // Medium Compression
+      if (Unpack_MEDIUM(b1,b2,pklen2)) throw new Error('ERR_BADDECR');
+      if (Unpack_RLE(b2,b1,unpklen)) throw new Error('ERR_BADDECR');
+      memcpy(b2, b1, unpklen);
+      break;
+    case 4: // Deep Compression
+      if (Unpack_DEEP(b1, b2, pklen2)) throw new Error('ERR_BADDECR');
+      if (Unpack_RLE(b2, b1, unpklen)) throw new Error('ERR_BADDECR');
+      memcpy(b2, b1, unpklen);
+      break;
+    case 5: case 6: // Heavy Compression
+      if (cmode === 5) { // Heavy 1
+        if (Unpack_HEAVY(b1, b2, flags & 7, pklen2)) throw new Error('ERR_BADDECR');
+      }
+      else { // Heavy 2
+        if (Unpack_HEAVY(b1, b2, flags | 8, pklen2)) throw new Error('ERR_BADDECR');
+      }
+      if (flags & 4) {
+        /*  Unpack with RLE only if this flag is set  */
+        if (Unpack_RLE(b2,b1,unpklen)) throw new Error('ERR_BADDECR');
+        memcpy(b2,b1,(size_t)unpklen);
+      }
+      break;
+    default: throw new Error('ERR_UNKNMODE');
+  }
+  if (!(flags & 1)) Init_Decrunchers();
+  return 'NO_PROBLEM';
 }
 
 USHORT Unpack_RLE(UCHAR *in, UCHAR *out, USHORT origsize){
-	USHORT n;
-	UCHAR a,b, *outend;
+  USHORT n;
+  UCHAR a,b, *outend;
 
-	outend = out+origsize;
-	while (out<outend){
-		if ((a = *in++) != 0x90)
-			*out++ = a;
-		else if (!(b = *in++))
-			*out++ = a;
-		else {
-			a = *in++;
-			if (b == 0xff) {
-				n = *in++;
-				n = (USHORT)((n<<8) + *in++);
-			} else
-				n = b;
-			if (out+n > outend) return 1;
-			memset(out,a,(size_t) n);
-			out += n;
-		}
-	}
-	return 0;
+  outend = out+origsize;
+  while (out<outend){
+    if ((a = *in++) != 0x90)
+      *out++ = a;
+    else if (!(b = *in++))
+      *out++ = a;
+    else {
+      a = *in++;
+      if (b == 0xff) {
+        n = *in++;
+        n = (USHORT)((n<<8) + *in++);
+      } else
+        n = b;
+      if (out+n > outend) return 1;
+      memset(out,a,(size_t) n);
+      out += n;
+    }
+  }
+  return 0;
 }
 
 var QBITMASK = 0xff;
 var quick_text_loc;
 
 USHORT Unpack_QUICK(UCHAR *in, UCHAR *out, USHORT origsize){
-	USHORT i, j;
-	UCHAR *outend;
+  USHORT i, j;
+  UCHAR *outend;
 
-	initbitbuf(in);
+  initbitbuf(in);
 
-	outend = out+origsize;
-	while (out < outend) {
-		if (GETBITS(1)!=0) {
-			DROPBITS(1);
-			*out++ = text[quick_text_loc++ & QBITMASK] = (UCHAR)GETBITS(8);  DROPBITS(8);
-		} else {
-			DROPBITS(1);
-			j = (USHORT) (GETBITS(2)+2);  DROPBITS(2);
-			i = (USHORT) (quick_text_loc - GETBITS(8) - 1);  DROPBITS(8);
-			while(j--) {
-				*out++ = text[quick_text_loc++ & QBITMASK] = text[i++ & QBITMASK];
-			}
-		}
-	}
-	quick_text_loc = (USHORT)((quick_text_loc+5) & QBITMASK);
+  outend = out+origsize;
+  while (out < outend) {
+    if (GETBITS(1)!=0) {
+      DROPBITS(1);
+      *out++ = text[quick_text_loc++ & QBITMASK] = (UCHAR)GETBITS(8);  DROPBITS(8);
+    } else {
+      DROPBITS(1);
+      j = (USHORT) (GETBITS(2)+2);  DROPBITS(2);
+      i = (USHORT) (quick_text_loc - GETBITS(8) - 1);  DROPBITS(8);
+      while(j--) {
+        *out++ = text[quick_text_loc++ & QBITMASK] = text[i++ & QBITMASK];
+      }
+    }
+  }
+  quick_text_loc = (USHORT)((quick_text_loc+5) & QBITMASK);
 
-	return 0;
+  return 0;
 }
 
 #define MBITMASK 0x3fff
@@ -184,35 +184,35 @@ USHORT medium_text_loc;
 
 
 USHORT Unpack_MEDIUM(UCHAR *in, UCHAR *out, USHORT origsize){
-	USHORT i, j, c;
-	UCHAR u, *outend;
+  USHORT i, j, c;
+  UCHAR u, *outend;
 
 
-	initbitbuf(in);
+  initbitbuf(in);
 
-	outend = out+origsize;
-	while (out < outend) {
-		if (GETBITS(1)!=0) {
-			DROPBITS(1);
-			*out++ = text[medium_text_loc++ & MBITMASK] = (UCHAR)GETBITS(8);
-			DROPBITS(8);
-		} else {
-			DROPBITS(1);
-			c = GETBITS(8);  DROPBITS(8);
-			j = (USHORT) (d_code[c]+3);
-			u = d_len[c];
-			c = (USHORT) (((c << u) | GETBITS(u)) & 0xff);  DROPBITS(u);
-			u = d_len[c];
-			c = (USHORT) ((d_code[c] << 8) | (((c << u) | GETBITS(u)) & 0xff));  DROPBITS(u);
-			i = (USHORT) (medium_text_loc - c - 1);
+  outend = out+origsize;
+  while (out < outend) {
+    if (GETBITS(1)!=0) {
+      DROPBITS(1);
+      *out++ = text[medium_text_loc++ & MBITMASK] = (UCHAR)GETBITS(8);
+      DROPBITS(8);
+    } else {
+      DROPBITS(1);
+      c = GETBITS(8);  DROPBITS(8);
+      j = (USHORT) (d_code[c]+3);
+      u = d_len[c];
+      c = (USHORT) (((c << u) | GETBITS(u)) & 0xff);  DROPBITS(u);
+      u = d_len[c];
+      c = (USHORT) ((d_code[c] << 8) | (((c << u) | GETBITS(u)) & 0xff));  DROPBITS(u);
+      i = (USHORT) (medium_text_loc - c - 1);
 
-			while(j--) *out++ = text[medium_text_loc++ & MBITMASK] = text[i++ & MBITMASK];
-			
-		}
-	}
-	medium_text_loc = (USHORT)((medium_text_loc+66) & MBITMASK);
+      while(j--) *out++ = text[medium_text_loc++ & MBITMASK] = text[i++ & MBITMASK];
+      
+    }
+  }
+  medium_text_loc = (USHORT)((medium_text_loc+66) & MBITMASK);
 
-	return 0;
+  return 0;
 }
 
 
@@ -242,91 +242,91 @@ int init_deep_tabs=1;
 USHORT freq[T + 1]; /* frequency table */
 
 USHORT prnt[T + N_CHAR]; /* pointers to parent nodes, except for the */
-				/* elements [T..T + N_CHAR - 1] which are used to get */
-				/* the positions of leaves corresponding to the codes. */
+        /* elements [T..T + N_CHAR - 1] which are used to get */
+        /* the positions of leaves corresponding to the codes. */
 
 USHORT son[T];   /* pointers to child nodes (son[], son[] + 1) */
 
 
 
 void Init_DEEP_Tabs(void){
-	USHORT i, j;
+  USHORT i, j;
 
-	for (i = 0; i < N_CHAR; i++) {
-		freq[i] = 1;
-		son[i] = (USHORT)(i + T);
-		prnt[i + T] = i;
-	}
-	i = 0; j = N_CHAR;
-	while (j <= R) {
-		freq[j] = (USHORT) (freq[i] + freq[i + 1]);
-		son[j] = i;
-		prnt[i] = prnt[i + 1] = j;
-		i += 2; j++;
-	}
-	freq[T] = 0xffff;
-	prnt[R] = 0;
+  for (i = 0; i < N_CHAR; i++) {
+    freq[i] = 1;
+    son[i] = (USHORT)(i + T);
+    prnt[i + T] = i;
+  }
+  i = 0; j = N_CHAR;
+  while (j <= R) {
+    freq[j] = (USHORT) (freq[i] + freq[i + 1]);
+    son[j] = i;
+    prnt[i] = prnt[i + 1] = j;
+    i += 2; j++;
+  }
+  freq[T] = 0xffff;
+  prnt[R] = 0;
 
-	init_deep_tabs = 0;
+  init_deep_tabs = 0;
 }
 
 
 
 USHORT Unpack_DEEP(UCHAR *in, UCHAR *out, USHORT origsize){
-	USHORT i, j, c;
-	UCHAR *outend;
+  USHORT i, j, c;
+  UCHAR *outend;
 
-	initbitbuf(in);
+  initbitbuf(in);
 
-	if (init_deep_tabs) Init_DEEP_Tabs();
+  if (init_deep_tabs) Init_DEEP_Tabs();
 
-	outend = out+origsize;
-	while (out < outend) {
-		c = DecodeChar();
-		if (c < 256) {
-			*out++ = text[deep_text_loc++ & DBITMASK] = (UCHAR)c;
-		} else {
-			j = (USHORT) (c - 255 + THRESHOLD);
-			i = (USHORT) (deep_text_loc - DecodePosition() - 1);
-			while (j--) *out++ = text[deep_text_loc++ & DBITMASK] = text[i++ & DBITMASK];
-		}
-	}
+  outend = out+origsize;
+  while (out < outend) {
+    c = DecodeChar();
+    if (c < 256) {
+      *out++ = text[deep_text_loc++ & DBITMASK] = (UCHAR)c;
+    } else {
+      j = (USHORT) (c - 255 + THRESHOLD);
+      i = (USHORT) (deep_text_loc - DecodePosition() - 1);
+      while (j--) *out++ = text[deep_text_loc++ & DBITMASK] = text[i++ & DBITMASK];
+    }
+  }
 
-	deep_text_loc = (USHORT)((deep_text_loc+60) & DBITMASK);
+  deep_text_loc = (USHORT)((deep_text_loc+60) & DBITMASK);
 
-	return 0;
+  return 0;
 }
 
 
 
 INLINE USHORT DecodeChar(void){
-	USHORT c;
+  USHORT c;
 
-	c = son[R];
+  c = son[R];
 
-	/* travel from root to leaf, */
-	/* choosing the smaller child node (son[]) if the read bit is 0, */
-	/* the bigger (son[]+1} if 1 */
-	while (c < T) {
-		c = son[c + GETBITS(1)];
-		DROPBITS(1);
-	}
-	c -= T;
-	update(c);
-	return c;
+  /* travel from root to leaf, */
+  /* choosing the smaller child node (son[]) if the read bit is 0, */
+  /* the bigger (son[]+1} if 1 */
+  while (c < T) {
+    c = son[c + GETBITS(1)];
+    DROPBITS(1);
+  }
+  c -= T;
+  update(c);
+  return c;
 }
 
 
 
 INLINE USHORT DecodePosition(void){
-	USHORT i, j, c;
+  USHORT i, j, c;
 
-	i = GETBITS(8);  DROPBITS(8);
-	c = (USHORT) (d_code[i] << 8);
-	j = d_len[i];
-	i = (USHORT) (((i << j) | GETBITS(j)) & 0xff);  DROPBITS(j);
+  i = GETBITS(8);  DROPBITS(8);
+  c = (USHORT) (d_code[i] << 8);
+  j = d_len[i];
+  i = (USHORT) (((i << j) | GETBITS(j)) & 0xff);  DROPBITS(j);
 
-	return (USHORT) (c | i) ;
+  return (USHORT) (c | i) ;
 }
 
 
@@ -334,38 +334,38 @@ INLINE USHORT DecodePosition(void){
 /* reconstruction of tree */
 
 static void reconst(void){
-	USHORT i, j, k, f, l;
+  USHORT i, j, k, f, l;
 
-	/* collect leaf nodes in the first half of the table */
-	/* and replace the freq by (freq + 1) / 2. */
-	j = 0;
-	for (i = 0; i < T; i++) {
-		if (son[i] >= T) {
-			freq[j] = (USHORT) ((freq[i] + 1) / 2);
-			son[j] = son[i];
-			j++;
-		}
-	}
-	/* begin constructing tree by connecting sons */
-	for (i = 0, j = N_CHAR; j < T; i += 2, j++) {
-		k = (USHORT) (i + 1);
-		f = freq[j] = (USHORT) (freq[i] + freq[k]);
-		for (k = (USHORT)(j - 1); f < freq[k]; k--);
-		k++;
-		l = (USHORT)((j - k) * 2);
-		memmove(&freq[k + 1], &freq[k], (size_t)l);
-		freq[k] = f;
-		memmove(&son[k + 1], &son[k], (size_t)l);
-		son[k] = i;
-	}
-	/* connect prnt */
-	for (i = 0; i < T; i++) {
-		if ((k = son[i]) >= T) {
-			prnt[k] = i;
-		} else {
-			prnt[k] = prnt[k + 1] = i;
-		}
-	}
+  /* collect leaf nodes in the first half of the table */
+  /* and replace the freq by (freq + 1) / 2. */
+  j = 0;
+  for (i = 0; i < T; i++) {
+    if (son[i] >= T) {
+      freq[j] = (USHORT) ((freq[i] + 1) / 2);
+      son[j] = son[i];
+      j++;
+    }
+  }
+  /* begin constructing tree by connecting sons */
+  for (i = 0, j = N_CHAR; j < T; i += 2, j++) {
+    k = (USHORT) (i + 1);
+    f = freq[j] = (USHORT) (freq[i] + freq[k]);
+    for (k = (USHORT)(j - 1); f < freq[k]; k--);
+    k++;
+    l = (USHORT)((j - k) * 2);
+    memmove(&freq[k + 1], &freq[k], (size_t)l);
+    freq[k] = f;
+    memmove(&son[k + 1], &son[k], (size_t)l);
+    son[k] = i;
+  }
+  /* connect prnt */
+  for (i = 0; i < T; i++) {
+    if ((k = son[i]) >= T) {
+      prnt[k] = i;
+    } else {
+      prnt[k] = prnt[k + 1] = i;
+    }
+  }
 }
 
 
@@ -373,36 +373,36 @@ static void reconst(void){
 /* increment frequency of given code by one, and update tree */
 
 INLINE void update(USHORT c){
-	USHORT i, j, k, l;
+  USHORT i, j, k, l;
 
-	if (freq[R] == MAX_FREQ) {
-		reconst();
-	}
-	c = prnt[c + T];
-	do {
-		k = ++freq[c];
+  if (freq[R] == MAX_FREQ) {
+    reconst();
+  }
+  c = prnt[c + T];
+  do {
+    k = ++freq[c];
 
-		/* if the order is disturbed, exchange nodes */
-		if (k > freq[l = (USHORT)(c + 1)]) {
-			while (k > freq[++l]);
-			l--;
-			freq[c] = freq[l];
-			freq[l] = k;
+    /* if the order is disturbed, exchange nodes */
+    if (k > freq[l = (USHORT)(c + 1)]) {
+      while (k > freq[++l]);
+      l--;
+      freq[c] = freq[l];
+      freq[l] = k;
 
-			i = son[c];
-			prnt[i] = l;
-			if (i < T) prnt[i + 1] = l;
+      i = son[c];
+      prnt[i] = l;
+      if (i < T) prnt[i + 1] = l;
 
-			j = son[l];
-			son[l] = i;
+      j = son[l];
+      son[l] = i;
 
-			prnt[j] = c;
-			if (j < T) prnt[j + 1] = c;
-			son[c] = j;
+      prnt[j] = c;
+      if (j < T) prnt[j + 1] = c;
+      son[c] = j;
 
-			c = l;
-		}
-	} while ((c = prnt[c]) != 0); /* repeat up to root */
+      c = l;
+    }
+  } while ((c = prnt[c]) != 0); /* repeat up to root */
 }
 
 // heavy
@@ -427,139 +427,139 @@ INLINE USHORT decode_p(void);
 
 
 USHORT Unpack_HEAVY(UCHAR *in, UCHAR *out, UCHAR flags, USHORT origsize){
-	USHORT j, i, c, bitmask;
-	UCHAR *outend;
+  USHORT j, i, c, bitmask;
+  UCHAR *outend;
 
-	/*  Heavy 1 uses a 4Kb dictionary,  Heavy 2 uses 8Kb  */
+  /*  Heavy 1 uses a 4Kb dictionary,  Heavy 2 uses 8Kb  */
 
-	if (flags & 8) {
-		np = 15;
-		bitmask = 0x1fff;
-	} else {
-		np = 14;
-		bitmask = 0x0fff;
-	}
+  if (flags & 8) {
+    np = 15;
+    bitmask = 0x1fff;
+  } else {
+    np = 14;
+    bitmask = 0x0fff;
+  }
 
-	initbitbuf(in);
+  initbitbuf(in);
 
-	if (flags & 2) {
-		if (read_tree_c()) return 1;
-		if (read_tree_p()) return 2;
-	}
+  if (flags & 2) {
+    if (read_tree_c()) return 1;
+    if (read_tree_p()) return 2;
+  }
 
-	outend = out+origsize;
+  outend = out+origsize;
 
-	while (out<outend) {
-		c = decode_c();
-		if (c < 256) {
-			*out++ = text[heavy_text_loc++ & bitmask] = (UCHAR)c;
-		} else {
-			j = (USHORT) (c - OFFSET);
-			i = (USHORT) (heavy_text_loc - decode_p() - 1);
-			while(j--) *out++ = text[heavy_text_loc++ & bitmask] = text[i++ & bitmask];
-		}
-	}
+  while (out<outend) {
+    c = decode_c();
+    if (c < 256) {
+      *out++ = text[heavy_text_loc++ & bitmask] = (UCHAR)c;
+    } else {
+      j = (USHORT) (c - OFFSET);
+      i = (USHORT) (heavy_text_loc - decode_p() - 1);
+      while(j--) *out++ = text[heavy_text_loc++ & bitmask] = text[i++ & bitmask];
+    }
+  }
 
-	return 0;
+  return 0;
 }
 
 
 
 INLINE USHORT decode_c(void){
-	USHORT i, j, m;
+  USHORT i, j, m;
 
-	j = c_table[GETBITS(12)];
-	if (j < N1) {
-		DROPBITS(c_len[j]);
-	} else {
-		DROPBITS(12);
-		i = GETBITS(16);
-		m = 0x8000;
-		do {
-			if (i & m) j = right[j];
-			else              j = left [j];
-			m >>= 1;
-		} while (j >= N1);
-		DROPBITS(c_len[j] - 12);
-	}
-	return j;
+  j = c_table[GETBITS(12)];
+  if (j < N1) {
+    DROPBITS(c_len[j]);
+  } else {
+    DROPBITS(12);
+    i = GETBITS(16);
+    m = 0x8000;
+    do {
+      if (i & m) j = right[j];
+      else              j = left [j];
+      m >>= 1;
+    } while (j >= N1);
+    DROPBITS(c_len[j] - 12);
+  }
+  return j;
 }
 
 
 
 INLINE USHORT decode_p(void){
-	USHORT i, j, m;
+  USHORT i, j, m;
 
-	j = pt_table[GETBITS(8)];
-	if (j < np) {
-		DROPBITS(pt_len[j]);
-	} else {
-		DROPBITS(8);
-		i = GETBITS(16);
-		m = 0x8000;
-		do {
-			if (i & m) j = right[j];
-			else             j = left [j];
-			m >>= 1;
-		} while (j >= np);
-		DROPBITS(pt_len[j] - 8);
-	}
+  j = pt_table[GETBITS(8)];
+  if (j < np) {
+    DROPBITS(pt_len[j]);
+  } else {
+    DROPBITS(8);
+    i = GETBITS(16);
+    m = 0x8000;
+    do {
+      if (i & m) j = right[j];
+      else             j = left [j];
+      m >>= 1;
+    } while (j >= np);
+    DROPBITS(pt_len[j] - 8);
+  }
 
-	if (j != np-1) {
-		if (j > 0) {
-			j = (USHORT)(GETBITS(i=(USHORT)(j-1)) | (1U << (j-1)));
-			DROPBITS(i);
-		}
-		lastlen=j;
-	}
+  if (j != np-1) {
+    if (j > 0) {
+      j = (USHORT)(GETBITS(i=(USHORT)(j-1)) | (1U << (j-1)));
+      DROPBITS(i);
+    }
+    lastlen=j;
+  }
 
-	return lastlen;
+  return lastlen;
 
 }
 
 
 
 static USHORT read_tree_c(void){
-	USHORT i,n;
+  USHORT i,n;
 
-	n = GETBITS(9);
-	DROPBITS(9);
-	if (n>0){
-		for (i=0; i<n; i++) {
-			c_len[i] = (UCHAR)GETBITS(5);
-			DROPBITS(5);
-		}
-		for (i=n; i<510; i++) c_len[i] = 0;
-		if (make_table(510,c_len,12,c_table)) return 1;
-	} else {
-		n = GETBITS(9);
-		DROPBITS(9);
-		for (i=0; i<510; i++) c_len[i] = 0;
-		for (i=0; i<4096; i++) c_table[i] = n;
-	}
-	return 0;
+  n = GETBITS(9);
+  DROPBITS(9);
+  if (n>0){
+    for (i=0; i<n; i++) {
+      c_len[i] = (UCHAR)GETBITS(5);
+      DROPBITS(5);
+    }
+    for (i=n; i<510; i++) c_len[i] = 0;
+    if (make_table(510,c_len,12,c_table)) return 1;
+  } else {
+    n = GETBITS(9);
+    DROPBITS(9);
+    for (i=0; i<510; i++) c_len[i] = 0;
+    for (i=0; i<4096; i++) c_table[i] = n;
+  }
+  return 0;
 }
 
 
 
 static USHORT read_tree_p(void){
-	USHORT i,n;
+  USHORT i,n;
 
-	n = GETBITS(5);
-	DROPBITS(5);
-	if (n>0){
-		for (i=0; i<n; i++) {
-			pt_len[i] = (UCHAR)GETBITS(4);
-			DROPBITS(4);
-		}
-		for (i=n; i<np; i++) pt_len[i] = 0;
-		if (make_table(np,pt_len,8,pt_table)) return 1;
-	} else {
-		n = GETBITS(5);
-		DROPBITS(5);
-		for (i=0; i<np; i++) pt_len[i] = 0;
-		for (i=0; i<256; i++) pt_table[i] = n;
-	}
-	return 0;
+  n = GETBITS(5);
+  DROPBITS(5);
+  if (n>0){
+    for (i=0; i<n; i++) {
+      pt_len[i] = (UCHAR)GETBITS(4);
+      DROPBITS(4);
+    }
+    for (i=n; i<np; i++) pt_len[i] = 0;
+    if (make_table(np,pt_len,8,pt_table)) return 1;
+  } else {
+    n = GETBITS(5);
+    DROPBITS(5);
+    for (i=0; i<np; i++) pt_len[i] = 0;
+    for (i=0; i<256; i++) pt_table[i] = n;
+  }
+  return 0;
 }
 
