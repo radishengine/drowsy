@@ -1152,6 +1152,16 @@ InflateState.prototype = {
       }
     }
   },
+  process: function(in_buf, out_buf) {
+    this.next_in_buf = in_buf;
+    this.next_out_buf = out_buf;
+    var result = this.inflate();
+    return {
+      done: result === 'done',
+      value: out_buf.subarray(0, this.next_out_buf.byteOffset - out_buf.byteOffset),
+      transfer: [out_buf.buffer],
+    };
+  },
 };
 
 function inflate(compressedBytes, noWrap) {
@@ -1195,4 +1205,9 @@ onmessage = function(e) {
     var decompressedBytes = inflate(command.compressedBytes, command.noWrap);
     postMessage({context:command.context, decompressedBytes:decompressedBytes}, [decompressedBytes.buffer]);
   }
+};
+
+self.init_inflate = function(info) {
+  info = info || {};
+  return new InflateState(info.nowrap ? -15 : 15);
 };
