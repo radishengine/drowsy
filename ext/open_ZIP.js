@@ -1,12 +1,6 @@
-define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item, inflate) {
+define(['msdos/util', 'text', 'Item', 'z/inflate', 'services'], function(dosUtil, text, Item, inflate, services) {
 
   'use strict';
-  
-  var zService = new Worker('ww/inflate.js');
-  zService.onmessage = function(e) {
-    this[e.data.context](e.data.decompressedBytes);
-    delete this[e.data.context];
-  };
   
   function open() {
     var byteSource = this.byteSource;
@@ -50,16 +44,16 @@ define(['msdos/util', 'text', 'Item', 'z/inflate'], function(dosUtil, text, Item
                 return byteSource.slice(offset, offset + compressedLength).getBytes();
               })
               .then(function(compressed) {
+                var uncompressed = new Uint8Array(uncompressedLength);
                 var pre = performance.now();
-                return new Promise(function(resolve, reject) {
-                  var id = Math.random()+'';
-                  zService[id] = function(decompressed) {
-                    console.log(performance.now() - pre);
-                    resolve(decompressed);
-                  }
-                  zService.postMessage(
-                    {context:id, compressedBytes:compressed, decompressedSize:uncompressedLength, noWrap:true},
-                    [compressed.buffer]);
+                return services.load('inflate')
+                .then(function(inflater) {
+                  return inflater.process(
+                    [compressed, uncompressed],
+                    [compressed.buffer, uncompressed.buffer]);
+                })
+                .then(function(values) {
+                  console.log(values);
                 });
               });
             })
