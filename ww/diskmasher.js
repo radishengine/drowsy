@@ -1,5 +1,6 @@
 // Based on xDMS code by Andre Rodrigues de la Rocha
 
+// TODO: this could be (1 << n) - 1
 var mask_bits = new Int32Array([
   0x000000, 0x000001, 0x000003, 0x000007,
   0x00000f, 0x00001f, 0x00003f, 0x00007f,
@@ -10,8 +11,42 @@ var mask_bits = new Int32Array([
   0xffffff,
 ]);
 
+var d_code = new Uint8Array(256);
+var pos = 0x20, val = 0x01;
+while (pos < 0x70) {
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  val++;
+}
+for (; pos < 0x90; val++) {
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  val++;
+}
+for (; pos < 0xC0; val++) {
+  d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val;
+  val++;
+}
+while (pos < 0xF0) {
+  d_code[pos++] = val; d_code[pos++] = val;
+  val++;
+}
+while (pox < 0x100) d_code[pos++] = val;
+
+var d_len = new Uint8Array(256);
+var d_pos = 0;
+while (d_pos < 0x20) d_len[d_pos++] = 3;
+while (d_pos < 0x50) d_len[d_pos++] = 4;
+while (d_pos < 0x90) d_len[d_pos++] = 5;
+while (d_pos < 0xC0) d_len[d_pos++] = 6;
+while (d_pos < 0xF0) d_len[d_pos++] = 7;
+while (d_pos < 0x100) d_len[d_pos++] = 8;
+
 function TrackDecruncher() {
-  this.text = new Uint8Array(0x3fc8);
+  this.text = new Uint8Array(32000);
 }
 TrackDecruncher.prototype = {
   rle: function(input, output) {
@@ -42,6 +77,7 @@ TrackDecruncher.prototype = {
   },
   reset: function() {
     delete this.quick_text_loc;
+    delete this.medium_text_loc;
   },
   quick_text_loc: 251,
   bitbuf: 0,
@@ -90,6 +126,37 @@ TrackDecruncher.prototype = {
     this.quick_text_loc = (this.quick_text_loc + 5) % 256;
     return 0;
   },
+  medium_text_loc: 0x3fbe,
+  medium: function(input, output) {
+    this.initbitbuf(input);
+    for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
+      if (this.GETBITS(1) !== 0) {
+        this.DROPBITS(1);
+        output[output_pos++] = this.text[this.medium_text_loc] = this.GETBITS(8);
+        this.medium_text_loc = (this.medium_text_loc + 1) % 0x4000;
+        this.DROPBITS(8);
+      }
+      else {
+        this.DROPBITS(1);
+        var c = this.GETBITS(8);
+        this.DROPBITS(8);
+        var j = d_code[c] + 3, u = d_len[c];
+        c = ((c << u) | this.GETBITS(u)) & 0xff;
+        this.DROPBITS(u);
+        u = d_len[c];
+        c = (d_code[c] << 8) | ((c << u) | this.GETBITS(u)) & 0xff;
+        this.DROPBITS(u);
+        var i = this.medium_text_loc - c - 1;
+        while (j--) {
+          output[output_pos++] = this.text[medium_text_loc] = this.text[i];
+          this.medium_text_loc = (this.medium_text_loc + 1) % 0x40000;
+          i = (i + 1) % 0x40000;
+        }
+      }
+    }
+    this.medium_text_loc = (this.medium_text_loc + 66) % 0x4000;
+    return 0;
+  },
 }
 
 var quick_text_loc, medium_text_loc, heavy_text_loc, deep_text_loc, init_deep_tabs, text;
@@ -108,7 +175,6 @@ Init_Decrunchers();
 var HEADLEN = 56;
 var THLEN = 20;
 var TRACK_BUFFER_LEN = 32000;
-var TEMP_BUFFER_LEN = 32000;
 
 var PWDCRC;
 function dms_decrypt(crypt_buf, crypt_pos, crypt_len) {
@@ -216,7 +282,7 @@ function Unpack_Track(UCHAR *b1, UCHAR *b2, USHORT pklen2, USHORT unpklen, UCHAR
 }
 
 
-#define MBITMASK 0x3fff
+#define MBITMASK 
 
 
 USHORT medium_text_loc;
