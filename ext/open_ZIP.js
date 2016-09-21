@@ -30,7 +30,7 @@ define(['msdos/util', 'text', 'Item', 'services'], function(dosUtil, text, Item,
             fileRecords.slice(0,1).map(function(record) {
               var compressedLength = record.compressedSize32; // TODO: support Zip64
               var uncompressedLength = record.uncompressedSize32;
-              return byteSource.slice(
+              var promiseCompressed = byteSource.slice(
                 record.localHeaderOffset,
                 record.localHeaderOffset + LocalFileHeaderFixedView.byteLength)
               .getBytes()
@@ -44,14 +44,14 @@ define(['msdos/util', 'text', 'Item', 'services'], function(dosUtil, text, Item,
                   + localFixed.pathByteLength
                   + localFixed.extraByteLength;
                 return byteSource.slice(offset, offset + compressedLength).getBytes();
-              })
-              .then(function(compressed) {
-                return services.decompression.load('inflate');
-              })
+              });
+              var promiseInflater = services.decompression.load('inflate')
               .then(function(inflate) {
                 return inflate.init({nowrap:true});
-              })
-              .then(function(inflater) {
+              });
+              return Promise.all([promiseCompressed, promiseInflater])
+              .then(function(values) {
+                var compressed = values[0], inflater = values[1];
                 var uncompressed = new Uint8Array(uncompressedLength);
                 return inflater.process(
                   [compressed, uncompressed],
