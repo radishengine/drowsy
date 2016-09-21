@@ -49,6 +49,9 @@ define(['msdos/util', 'text', 'Item', 'services'], function(dosUtil, text, Item,
                 var uncompressed = new Uint8Array(uncompressedLength);
                 var pre = performance.now();
                 return services.decompression.load('inflate')
+                .then(function(inflate) {
+                  return inflate.init({nowrap:true});
+                })
                 .then(function(inflater) {
                   return inflater.process(
                     [compressed, uncompressed],
