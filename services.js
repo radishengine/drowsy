@@ -25,7 +25,7 @@ define(function() {
               break;
             case 'more':
               if (command[1] === self.id) {
-                self.removeEventListener('message', afterProcess);
+                worker.removeEventListener('message', afterProcess);
                 delete worker[self.id];
                 resolve([false, command[2]]);
               }
@@ -65,13 +65,13 @@ define(function() {
           switch(command[0]) {
             case 'init':
               if (command[1] === id) {
-                self.removeEventListener('message', onMessage);
+                worker.removeEventListener('message', onMessage);
                 resolve(context);
               }
               break;
             case 'failed':
               if (command[1] === id) {
-                self.removeEventListener('message', onMessage);
+                worker.removeEventListener('message', onMessage);
                 delete worker[id];
                 reject('init failed');
               }
