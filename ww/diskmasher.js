@@ -423,6 +423,70 @@ TrackDecruncher.prototype = {
     }
     return 0;
   },
+  make_table: function(nchar, bitlen, tablebits, table) {
+    this.n = this.avail = nchar;
+    this.blen = bitlen;
+    this.tbl = table;
+    this.tblsiz = 1 << tablebits;
+    this.bit = (tblsiz >> 1) & 0xffff;
+    this.maxdepth = (tablebits + 1) & 0xffff;
+    this.depth = this.len = 1;
+    this.c = -1;
+    this.codeword = 0;
+    this.TabErr = 0;
+    this.mktbl();  /* left subtree */
+    if (this.TabErr) return this.TabErr;
+    this.mktbl();  /* right subtree */
+    if (this.TabErr) return this.TabErr;
+    if (this.codeword !== this.tblsiz) return 5;
+    return 0;
+  },
+  mktbl: function() {
+    if (this.TabErr) return 0;
+    var i;
+    if (this.len === this.depth) {
+      while (++this.c < this.n) {
+        if (this.blen[this.c] === this.len) {
+          i = this.codeword;
+          this.codeword += this.bit;
+          if (this.codeword > this.tblsiz) {
+            this.TabErr = 1;
+            return 0;
+          }
+          while (i < this.codeword) this.tbl[i++] = this.c & 0xffff;
+          return this.c & 0xffff;
+        }
+      }
+      this.c = -1;
+      this.len++;
+      this.bit >>= 1;
+    }
+    this.depth++;
+    if (this.depth < this.maxdepth) {
+      this.mktbl();
+      this.mktbl();
+    }
+    else if (this.depth > 32) {
+      this.TabErr = 2;
+      return 0;
+    }
+    else {
+      i = this.avail++;
+      if (i >= 2*this.n - 1) {
+        this.TabErr = 3;
+        return 0;
+      }
+      this.left[i] = this.mktbl();
+      this.right[i] = this.mktbl();
+      if (this.codeword >= this.tblsiz) {
+        this.TabErr = 4;
+        return 0;
+      }
+      if (this.depth === this.maxdepth) this.tbl[this.codeword++] = i;
+    }
+    this.depth--;
+    return i;
+  },
 }
 
 var HEADLEN = 56;
@@ -534,80 +598,4 @@ function Unpack_Track(UCHAR *b1, UCHAR *b2, USHORT pklen2, USHORT unpklen, UCHAR
   return 'NO_PROBLEM';
 }
 
-
-static SHORT c;
-static USHORT n, tblsiz, len, depth, maxdepth, avail;
-static USHORT codeword, bit, *tbl, TabErr;
-static UCHAR *blen;
-
-
-static USHORT mktbl(void);
-
-
-
-USHORT make_table(USHORT nchar, UCHAR bitlen[],USHORT tablebits, USHORT table[]){
-  n = avail = nchar;
-  blen = bitlen;
-  tbl = table;
-  tblsiz = (USHORT) (1U << tablebits);
-  bit = (USHORT) (tblsiz / 2);
-  maxdepth = (USHORT)(tablebits + 1);
-  depth = len = 1;
-  c = -1;
-  codeword = 0;
-  TabErr = 0;
-  mktbl();  /* left subtree */
-  if (TabErr) return TabErr;
-  mktbl();  /* right subtree */
-  if (TabErr) return TabErr;
-  if (codeword != tblsiz) return 5;
-  return 0;
-}
-
-
-
-static USHORT mktbl(void){
-  USHORT i=0;
-
-  if (TabErr) return 0;
-
-  if (len == depth) {
-    while (++c < n)
-      if (blen[c] == len) {
-        i = codeword;
-        codeword += bit;
-        if (codeword > tblsiz) {
-          TabErr=1;
-          return 0;
-        }
-        while (i < codeword) tbl[i++] = (USHORT)c;
-        return (USHORT)c;
-      }
-    c = -1;
-    len++;
-    bit >>= 1;
-  }
-  depth++;
-  if (depth < maxdepth) {
-    mktbl();
-    mktbl();
-  } else if (depth > 32) {
-    TabErr = 2;
-    return 0;
-  } else {
-    if ((i = avail++) >= 2 * n - 1) {
-      TabErr = 3;
-      return 0;
-    }
-    left[i] = mktbl();
-    right[i] = mktbl();
-    if (codeword >= tblsiz) {
-      TabErr = 4;
-      return 0;
-    }
-    if (depth == maxdepth) tbl[codeword++] = i;
-  }
-  depth--;
-  return i;
-}
 
