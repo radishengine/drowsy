@@ -1,5 +1,34 @@
 // Based on xDMS code by Andre Rodrigues de la Rocha
 
+function TrackDecruncher() {
+  decrunchRLE: function(input, output) {
+    var input_pos = 0;
+    for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
+      var a = input[input_pos++];
+      if (a !== 0x90) {
+        output[output_pos++] = a;
+        continue;
+      }
+      var b = input[input_pos++];
+      if (b === 0) {
+        output[output_pos++] = a;
+        continue;
+      }
+      a = input[input_pos++];
+      var n;
+      if (b === 0xff) {
+        n = (input[input_pos] << 8) | (input[input_pos + 1]);
+        input_pos += 2;
+      }
+      else n = b;
+      if (out_pos + n > output_end) return 1;
+      while (n--) {
+        output[output_pos++] = a;
+      }
+    }
+  },
+}
+
 var quick_text_loc, medium_text_loc, heavy_text_loc, deep_text_loc, init_deep_tabs, text;
 
 function Init_Decrunchers() {
@@ -123,33 +152,7 @@ function Unpack_Track(UCHAR *b1, UCHAR *b2, USHORT pklen2, USHORT unpklen, UCHAR
   return 'NO_PROBLEM';
 }
 
-USHORT Unpack_RLE(UCHAR *in, UCHAR *out, USHORT origsize){
-  USHORT n;
-  UCHAR a,b, *outend;
-
-  outend = out+origsize;
-  while (out<outend){
-    if ((a = *in++) != 0x90)
-      *out++ = a;
-    else if (!(b = *in++))
-      *out++ = a;
-    else {
-      a = *in++;
-      if (b == 0xff) {
-        n = *in++;
-        n = (USHORT)((n<<8) + *in++);
-      } else
-        n = b;
-      if (out+n > outend) return 1;
-      memset(out,a,(size_t) n);
-      out += n;
-    }
-  }
-  return 0;
-}
-
 var QBITMASK = 0xff;
-var quick_text_loc;
 
 USHORT Unpack_QUICK(UCHAR *in, UCHAR *out, USHORT origsize){
   USHORT i, j;
