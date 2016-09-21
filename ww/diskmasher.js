@@ -1,13 +1,13 @@
 // Based on xDMS code by Andre Rodrigues de la Rocha
 
 var mask_bits = new Int32Array([
-	0x000000, 0x000001, 0x000003, 0x000007,
-	0x00000f, 0x00001f, 0x00003f, 0x00007f,
-	0x0000ff, 0x0001ff, 0x0003ff, 0x0007ff,
-	0x000fff, 0x001fff, 0x003fff, 0x007fff,
-	0x00ffff, 0x01ffff, 0x03ffff, 0x07ffff,
-	0x0fffff, 0x1fffff, 0x3fffff, 0x7fffff,
-	0xffffff,
+  0x000000, 0x000001, 0x000003, 0x000007,
+  0x00000f, 0x00001f, 0x00003f, 0x00007f,
+  0x0000ff, 0x0001ff, 0x0003ff, 0x0007ff,
+  0x000fff, 0x001fff, 0x003fff, 0x007fff,
+  0x00ffff, 0x01ffff, 0x03ffff, 0x07ffff,
+  0x0fffff, 0x1fffff, 0x3fffff, 0x7fffff,
+  0xffffff,
 ]);
 
 function TrackDecruncher() {
@@ -49,11 +49,11 @@ TrackDecruncher.prototype = {
   indata_buf: null,
   indata_pos: 0,
   initbitbuf: function(indata) {
-  	this.bitbuf = 0;
-  	this.bitcount = 0;
-  	this.indata_buf = indata;
-  	this.indata_pos = 0;
-  	this.DROPBITS(0);
+    this.bitbuf = 0;
+    this.bitcount = 0;
+    this.indata_buf = indata;
+    this.indata_pos = 0;
+    this.DROPBITS(0);
   },
   GETBITS: function(n) {
     return this.bitbuf >>> (this.bitcount - n);
