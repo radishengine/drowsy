@@ -14,7 +14,7 @@ define(function() {
       var worker = self.format.worker;
       return new Promise(function(resolve, reject) {
         function afterProcess(e) {
-          var command = e.command;
+          var command = e.data;
           switch (command[0]) {
             case 'done':
               if (command[1] === self.id) {
