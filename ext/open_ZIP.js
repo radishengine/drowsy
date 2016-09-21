@@ -46,14 +46,13 @@ define(['msdos/util', 'text', 'Item', 'services'], function(dosUtil, text, Item,
                 return byteSource.slice(offset, offset + compressedLength).getBytes();
               })
               .then(function(compressed) {
-                var uncompressed = new Uint8Array(uncompressedLength);
-                var pre = performance.now();
                 return services.decompression.load('inflate');
               })
               .then(function(inflate) {
                 return inflate.init({nowrap:true});
               })
               .then(function(inflater) {
+                var uncompressed = new Uint8Array(uncompressedLength);
                 return inflater.process(
                   [compressed, uncompressed],
                   [compressed.buffer, uncompressed.buffer]);
