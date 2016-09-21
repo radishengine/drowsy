@@ -16,7 +16,7 @@ self.onmessage = function(e) {
         try {
           importScripts('ww/' + command + '.js');
         }
-        catch {
+        catch (e) {
           postMessage(['loadfailed', lib]);
           return;
         }
@@ -31,7 +31,7 @@ self.onmessage = function(e) {
       try {
         contexts[context] = self['init_' + format].apply(null, command);
       }
-      catch {
+      catch (e) {
         self.postMessage(['failed', context]);
         return;
       }
@@ -44,7 +44,7 @@ self.onmessage = function(e) {
       try {
         result = context.process.apply(context, command);
       }
-      catch {
+      catch (e) {
         delete contexts[id];
         self.postMessage(['failed', id]);
         return;
