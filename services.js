@@ -79,7 +79,7 @@ define(function() {
           }
         }
         worker.addEventListener('message', onMessage);
-        worker.postMessage(['init', id, this.name].concat(params), transferables);
+        worker.postMessage(['init', id, self.name].concat(params), transferables);
       });
     },
   };
