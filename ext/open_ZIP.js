@@ -58,8 +58,11 @@ define(['msdos/util', 'text', 'Item', 'services'], function(dosUtil, text, Item,
                   [compressed.buffer, uncompressed.buffer]);
               })
               .then(function(values) {
-                console.log(values);
-                return values[1];
+                var uncompressed = values[1];
+                if (uncompressed.length < 10 * 1024) {
+                  console.log(String.fromCharCode.apply(null, uncompressed));
+                }
+                return uncompressed;
               });
             })
           )
