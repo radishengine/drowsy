@@ -14,7 +14,7 @@ self.onmessage = function(e) {
       var lib = command[1];
       if (!(command in loaded)) {
         try {
-          importScripts('ww/' + lib + '.js');
+          importScripts(lib + '.js');
         }
         catch (e) {
           postMessage(['loadfailed', lib]);
