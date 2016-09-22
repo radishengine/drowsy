@@ -4,7 +4,7 @@
 function Demasher(mode) {
   this.mode = mode;
 }
-Demasher = {
+Demasher.prototype = {
   hold: 0,
   bits: 0,
   repeat_byte: 0,
