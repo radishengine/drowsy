@@ -324,6 +324,222 @@ DeepCruncher.prototype = {
   },
 };
 
+///// heavy mode /////
+
+function HeavyDecruncher(flags) {
+  this.flags = flags;
+  if (flags & 8) {
+    this.np = 15;
+    this.text = new Uint8Array(0x2000);
+  }
+  else {
+    this.np = 14;
+    this.text = new Uint8Array(0x1000);
+  }
+  
+  this.c_len = new Uint8Array(510);
+  this.pt_len = new Uint8Array(20);
+  this.left = new Uint16Array(2 * this.c_len.length - 1);
+  this.right = new Uint16Array(this.left.length + 9);
+  this.c_table = new Uint16Array(4096);
+  this.pt_table = new Uint16Array(256);
+}
+HeavyDecruncher.prototype = {
+  text_loc: 0,
+  lastlen: 0,
+  np: 0,
+  process: function(input, output) {
+    //  Heavy 1 uses a 4Kb dictionary, Heavy 2 uses 8Kb
+    var bitbuf = this.bitbuf,
+      bitcount = this.bitcount,
+      text = this.text,
+      text_loc = this.text_loc,
+      input_pos = 0,
+      c_table = this.c_table,
+      c_len = this.c_len,
+      pt_table = this.pt_table,
+      pt_len = this.pt_len,
+      left = this.left,
+      right = this.right,
+      lastlen = this.lastlen,
+      np = this.np;
+      
+    function GETBITS(n) {
+      return bitbuf >>> (bitcount - n);
+    }
+    function DROPBITS(n) {
+      bitcount -= n;
+      bitbuf &= (1 << bitcount) - 1;
+      while (bitcount < 16) {
+        bitbuf = (bitbuf << 8) | input[input_pos++];
+        bitcount += 8;
+      }
+    }
+    DROPBITS(0);
+    
+    function decode_c() {
+      var j = c_table[GETBITS(12)];
+      if (j < 510 /* N1 */) {
+        DROPBITS(c_len[j]);
+      }
+      else {
+        DROPBITS(12);
+        var i = GETBITS(16);
+        var m = 0x8000;
+        do {
+          j = (i & m) ? right[j] : left[j];
+          m >>= 1;
+        } while (j >= 510 /* N1 */);
+        DROPBITS(c_len[j] - 12);
+      }
+      return j;
+    }
+    
+    function decode_p() {
+      var j = pt_table[GETBITS(8)];
+      if (j < np) {
+        DROPBITS(pt_len[j]);
+      }
+      else {
+        DROPBITS(8);
+        var i = GETBITS(16);
+        var m = 0x8000;
+        do {
+          j = (i & m) ? right[j] : left[j];
+          m >>= 1;
+        } while (j >= np);
+        DROPBITS(pt_len[j] - 8);
+      }
+      if (j !== np-1) {
+        if (j > 0) {
+          i = (j-1) & 0xffff;
+          j = GETBITS(i) | ((1 << (j-1)) & 0xffff);
+          DROPBITS(i);
+        }
+        lastlen = j;
+      }
+      return lastlen;
+    }
+    
+    function read_tree_c() {
+      var n = GETBITS(9);
+      DROPBITS(9);
+      if (n > 0) {
+        for (var i = 0; i < n; i++) {
+          c_len[i] = GETBITS(5);
+          DROPBITS(5);
+        }
+        while (n < 510) c_len[n++] = 0;
+        make_table(510, c_len, 12, c_table);
+      }
+      else {
+        n = GETBITS(9);
+        DROPBITS(9);
+        var i;
+        for (i = 0; i < 510; i++) c_len[i] = 0;
+        for (i = 0; i < 4096; i++) c_table[i] = n;
+      }
+    }
+    
+    function read_tree_p() {
+      var n = GETBITS(5);
+      DROPBITS(5);
+      if (n > 0) {
+        for (var i = 0; i < n; i++) {
+          pt_len[i] = GETBITS(4);
+          DROPBITS(4);
+        }
+        while (n < np) pt_len[n++] = 0;
+        make_table(np, pt_len, 8, pt_table);
+      }
+      else {
+        n = GETBITS(5);
+        DROPBITS(5);
+        var i;
+        for (i = 0; i < np; i++) pt_len[i] = 0;
+        for (i = 0; i < 256; i++) pt_table[i] = n;
+      }
+    }
+    
+    function make_table(nchar, bitlen, tablebits, table) {
+      var n = nchar,
+        avail = nchar,
+        tblsiz = 1 << tablebits,
+        maxdepth = (tablebits + 1) & 0xffff,
+        depth = 1,
+        len = 1,
+        c = -1,
+        codeword = 0;
+      var bit = (tblsiz >> 1) & 0xffff;
+
+      function mktbl() {
+        var i;
+        if (len === depth) {
+          while (++c < n) {
+            if (bitlen[c] === len) {
+              i = codeword;
+              codeword += bit;
+              if (codeword > tblsiz) throw new Error('codeword > tblsiz');
+              while (i < codeword) table[i++] = c & 0xffff;
+              return c & 0xffff;
+            }
+          }
+          c = -1;
+          len++;
+          bit >>= 1;
+        }
+        if (++depth < maxdepth) {
+          mktbl();
+          mktbl();
+        }
+        else {
+          if (depth > 32) throw new Error('depth > 32');
+          i = avail++;
+          if (i >= 2*n - 1) {
+            throw new Error('i >= 2*n - 1');
+          }
+          left[i] = mktbl();
+          right[i] = mktbl();
+          if (codeword >= tblsiz) {
+            throw new Error('codeword >= tblsiz');
+          }
+          if (depth === self.maxdepth) table[codeword++] = i;
+        }
+        depth--;
+        return i;
+      }
+      
+      mktbl();  /* left subtree */
+      mktbl();  /* right subtree */
+      if (codeword !== tablesize) throw new Error('codeword != tblsiz');
+    }
+    
+    if (this.flags & 2) {
+      read_tree_c();
+      read_tree_p();
+    }
+    for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
+      var c = decode_c();
+      if (c < 256) {
+        output[output_pos++] = text[text_loc] = c;
+        text_loc = (text_loc + 1) % text.length;
+      }
+      else {
+        var j = (c - 253 /* OFFSET */) & 0xffff;
+        var i = (text_loc - decode_p() - 1) & 0xffff;
+        while (j--) {
+          output[output_pos++] = text[text_loc] = text[i];
+          text_loc = (text_loc + 1) % text.length;
+          i = (i + 1) % text.length;
+        }
+      }
+    }
+    this.text_loc = text_loc;
+    this.lastlen = lastlen;
+    this.np = np;
+  },
+};
+
 self.init_diskmasher_rle = function() {
   return new RLEDecruncher();
 };
@@ -338,6 +554,10 @@ self.init_diskmasher_medium = function() {
 
 self.init_diskmasher_deep = function() {
   return new DeepDecruncher();
+};
+
+self.init_diskmasher_heavy = function() {
+  return new HeavyDecruncher();
 };
 
 // TODO: this could be (1 << n) - 1
