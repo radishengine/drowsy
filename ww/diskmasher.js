@@ -297,7 +297,7 @@ DeepDecruncher.prototype = {
     function decode_position() {
       var i = GETBITS(8);
       DROPBITS(8);
-      var c = (d_code[i] << 8) & 0xffff;
+      var c = d_code[i] << 8;
       var j = d_len[i];
       i = ((i << j) | GETBITS(j)) & 0xff;
       DROPBITS(j);
