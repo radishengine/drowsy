@@ -195,6 +195,8 @@ function DeepDecruncher() {
   // pointers to parent nodes, except for the elements [T..T + N_CHAR - 1]
   // which are used to get the positions of leaves corresponding to the codes
   this.prnt = new Uint16Array(this.son.length + N_CHAR);
+  
+  this.init_tabs();
 }
 DeepDecruncher.prototype = {
   text_loc: 0x3fc4,
@@ -322,6 +324,23 @@ DeepDecruncher.prototype = {
     this.text_loc = (text_loc + 60) % text.length;
     this.bitbuf = bitbuf;
     this.bitcount = bitcount;
+  },
+  init_tabs: function() {
+    var freq = this.freq, son = this.son, prnt = this.print;
+    for (var i = 0; i < N_CHAR; i++) {
+      freq[i] = 1;
+      son[i] = i + T;
+      prnt[i + T] = i;
+    }
+    var i = 0, j = N_CHAR;
+    while (j <= R) {
+      freq[j] = freq[i] + freq[i + 1];
+      son[j] = i;
+      prnt[i] = prnt[i + 1] = j;
+      i += 2; j++;
+    }
+    freq[T] = 0xffff;
+    prnt[R] = 0;
   },
 };
 
