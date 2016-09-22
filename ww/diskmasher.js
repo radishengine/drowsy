@@ -31,8 +31,63 @@ RLEDecruncher.prototype = {
   },
 };
 
+function QuickDecruncher() {
+  this.text = new Uint8Array(256);
+}
+QuickDecruncher.prototype = {
+  text_loc: 251,
+  bitbuf: 0,
+  bitcount: 0,
+  process: function(input, output) {
+    var bitbuf = this.bitbuf,
+      bitcount = this.bitcount,
+      text = this.text,
+      text_loc = this.text_loc,
+      input_pos = 0;
+    function GETBITS(n) {
+      return bitbuf >>> (bitcount - n);
+    }
+    function DROPBITS(n) {
+      bitcount -= n;
+      bitbuf &= (1 << bitcount) - 1;
+      while (bitcount < 16) {
+        bitbuf = (bitbuf << 8) | input[input_pos++];
+        bitcount += 8;
+      }
+    }
+    DROPBITS(0);
+    for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
+      if (GETBITS(1) !== 0) {
+        DROPBITS(1);
+        output[output_pos] = text[text_loc] = GETBITS(8);
+        DROPBITS(8);
+        text_loc = (text_loc + 1) % text.length;
+      }
+      else {
+        DROPBITS(1);
+        var j = GETBITS(2) + 2;
+        DROPBITS(2);
+        var i = text_loc - GETBITS(8) - 1;
+        DROPBITS(8);
+        while (j--) {
+          output[output_pos++] = text[text_loc] = text[i];
+          i = (i + 1) % text.length;
+          text_loc = (text_loc + 1) % text.length;
+        }
+      }
+    }
+    this.text_loc = (text_loc + 5) % 256;
+    this.bitbuf = bitbuf;
+    this.bitcount = bitcount;
+  },
+};
+
 self.init_diskmasher_rle = function() {
   return new RLEDecruncher();
+};
+
+self.init_diskmasher_quick = function() {
+  return new QuickDecruncher();
 };
 
 // TODO: this could be (1 << n) - 1
