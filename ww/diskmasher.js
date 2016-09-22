@@ -1,4 +1,5 @@
-// Based on xDMS code by Andre Rodrigues de la Rocha
+// Based on xDMS <http://zakalwe.fi/~shd/foss/xdms/>
+// by Andre Rodrigues de la Rocha & Heikki Orsila
 
 function RLEDecruncher() {
 }
