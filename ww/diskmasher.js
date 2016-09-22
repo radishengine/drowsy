@@ -1,6 +1,40 @@
 // Based (extremely loosely) on xDMS <http://zakalwe.fi/~shd/foss/xdms/>
 // by Andre Rodrigues de la Rocha & Heikki Orsila
 
+var d_len = new Uint8Array(0x100);
+var d_pos = 0;
+while (d_pos < 0x20) d_len[d_pos++] = 3;
+while (d_pos < 0x50) d_len[d_pos++] = 4;
+while (d_pos < 0x90) d_len[d_pos++] = 5;
+while (d_pos < 0xC0) d_len[d_pos++] = 6;
+while (d_pos < 0xF0) d_len[d_pos++] = 7;
+while (d_pos < 0x100) d_len[d_pos++] = 8;
+
+var d_code = new Uint8Array(256);
+var pos = 0x20, val = 0x01;
+while (pos < 0x70) {
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  val++;
+}
+for (; pos < 0x90; val++) {
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  val++;
+}
+for (; pos < 0xC0; val++) {
+  d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val;
+  val++;
+}
+while (pos < 0xF0) {
+  d_code[pos++] = val; d_code[pos++] = val;
+  val++;
+}
+while (pos < 0x100) d_code[pos++] = val++;
+
 function Demasher(mode) {
   this.mode = mode;
   this.ringBuffer = new Uint8Array(8192);
@@ -128,7 +162,7 @@ Demasher.prototype = {
       //// Quick Mode ////
       case 'quick':
         ring = this.ring = this.ringBuffer.subarray(0, 256);
-        ring_pos = this.ring_pos = 251;
+        ring_pos = this.ring_pos = ring.length - 5;
         mode = defaultMode = this.defaultMode = 'quick_';
         // continue demashing;
       case 'quick_':
@@ -140,11 +174,11 @@ Demasher.prototype = {
             if (!NEEDBITS(2)) break demashing;
             copy_pos = (ring_pos - (BITS(8) + 1)) & ring_mask;
             DROPBITS(8);
-            copy_length = BITS(2) + 2;
+            copy_count = BITS(2) + 2;
             DROPBITS(3);
             break;
           }
-          ring[ring_pos] = output[output_pos++] = BITS(8);
+          output[output_pos++] = ring[ring_pos] = BITS(8);
           DROPBITS(9);
           ring_pos = (ring_pos + 1) & ring_mask;
         } while (true);
@@ -155,14 +189,61 @@ Demasher.prototype = {
         do {
           if (output_pos === output_length) {
             this.copy_pos = copy_pos;
-            this.copy_length = copy_length;
+            this.copy_count = copy_count;
             break demashing;
           }
-          ring[ring_pos] = output[output_pos++] = ring[copy_pos];
+          output[output_pos++] = ring[ring_pos] = ring[copy_pos];
           ring_pos = (ring_pos + 1) & ring_mask;
           copy_pos = (copy_pos + 1) & ring_mask;
-        } while (--copy_length);
+        } while (--copy_count);
         mode = defaultMode;
+        continue demashing;
+      //// Medium Mode ////
+      case 'medium':
+        ring = this.ring = this.ringBuffer.subarray(0, 16384);
+        ring_pos = ring.length - 66;
+        mode = defaultMode = defaultMode = 'medium_';
+        // continue demashing;
+      case 'medium_':
+        var ring_mask = ring.length - 1;
+        do {
+          if (output_pos === output_end) break demashing;
+          if (!NEEDBITS(9)) break demashing;
+          if (BITS(9) & 0x100) {
+            copy_count = BITS(8); // not the actual value, derived in medium2 below
+            DROPBITS(9);
+            break;
+          }
+          output[output_pos++] = ring[ring_pos] = BITS(8);
+          DROPBITS(9);
+          ring_pos = (ring_pos + 1) & ring_mask;
+        } while (true);
+        mode = 'medium2';
+        // continue demashing;
+      case 'medium2':
+        var c = copy_count;
+        var u = d_len[c];
+        if (!NEEDBITS(u)) {
+          this.copy_count = copy_count;
+          break demashing;
+        }
+        copy_count = d_code[c] + 3; // actual value
+        c = ((c << u) | BITS(u)) & 0xff;
+        DROPBITS(u);
+        copy_pos = c; // not the actual value, derived in medium3 below
+        mode = 'medium3';
+        // continue demashing;
+      case 'medium3':
+        var c = copy_pos;
+        var u = d_len[c];
+        if (!NEEDBITS(u)) {
+          this.copy_pos = copy_pos;
+          break demashing;
+        }
+        c = (d_code[c] << 8) | (((c << u) | BITS(u)) & 0xff);
+        DROPBITS(u);
+        copy_pos = (ring_pos - c - 1) & (ring.length - 1); // actual value
+        mode = 'ring_copy';
         continue demashing;
       default: throw new Error('unknown state');
     } while (true);
@@ -255,40 +336,6 @@ QuickDecruncher.prototype = {
 };
 
 ////// medium mode /////
-
-var d_len = new Uint8Array(256);
-var d_pos = 0;
-while (d_pos < 0x20) d_len[d_pos++] = 3;
-while (d_pos < 0x50) d_len[d_pos++] = 4;
-while (d_pos < 0x90) d_len[d_pos++] = 5;
-while (d_pos < 0xC0) d_len[d_pos++] = 6;
-while (d_pos < 0xF0) d_len[d_pos++] = 7;
-while (d_pos < 0x100) d_len[d_pos++] = 8;
-
-var d_code = new Uint8Array(256);
-var pos = 0x20, val = 0x01;
-while (pos < 0x70) {
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  val++;
-}
-for (; pos < 0x90; val++) {
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  val++;
-}
-for (; pos < 0xC0; val++) {
-  d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val;
-  val++;
-}
-while (pos < 0xF0) {
-  d_code[pos++] = val; d_code[pos++] = val;
-  val++;
-}
-while (pos < 0x100) d_code[pos++] = val;
 
 function MediumDecruncher() {
   this.text = new Uint8Array(0x4000);
