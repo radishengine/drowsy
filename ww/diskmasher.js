@@ -37,7 +37,7 @@ while (pos < 0x100) d_code[pos++] = val++;
 
 function Demasher(mode) {
   this.mode = mode;
-  this.ringBuffer = new Uint8Array(8192);
+  this.ring_buffer = new Uint8Array(8192);
 }
 Demasher.prototype = {
   hold: 0,
@@ -50,7 +50,7 @@ Demasher.prototype = {
   copy_count: 0,
   process: function(input, output) {
     var mode = this.mode,
-      defaultMode = this.defaultMode,
+      default_mode = this.default_mode,
       hold = this.hold,
       bits = this.bits,
       input_pos = 0,
@@ -84,7 +84,7 @@ Demasher.prototype = {
     decrunching: do switch(mode) {
       //// RLE Mode ////
       case 'rle':
-        mode = defaultMode = this.defaultMode = 'rle_';
+        mode = default_mode = this.default_mode = 'rle_';
         // continue decrunching;
       case 'rle_':
         var end_fast = input_end - 5 + 1;
@@ -157,13 +157,13 @@ Demasher.prototype = {
           }
           output[output_pos++] = repeat_byte;
         } while (--repeat_count);
-        mode = defaultMode;
+        mode = default_mode;
         continue decrunching;
       //// Quick Mode ////
       case 'quick':
-        ring = this.ring = this.ringBuffer.subarray(0, 256);
+        ring = this.ring = this.ring_buffer.subarray(0, 256);
         ring_pos = this.ring_pos = ring.length - 5;
-        mode = defaultMode = this.defaultMode = 'quick_';
+        mode = default_mode = this.default_mode = 'quick_';
         // continue decrunching;
       case 'quick_':
         var ring_mask = ring.length - 1;
@@ -196,13 +196,13 @@ Demasher.prototype = {
           ring_pos = (ring_pos + 1) & ring_mask;
           copy_pos = (copy_pos + 1) & ring_mask;
         } while (--copy_count);
-        mode = defaultMode;
+        mode = default_mode;
         continue decrunching;
       //// Medium Mode ////
       case 'medium':
-        ring = this.ring = this.ringBuffer.subarray(0, 16384);
+        ring = this.ring = this.ring_buffer.subarray(0, 16384);
         ring_pos = ring.length - 66;
-        mode = defaultMode = defaultMode = 'medium_';
+        mode = default_mode = default_mode = 'medium_';
         // continue decrunching;
       case 'medium_':
         var ring_mask = ring.length - 1;
