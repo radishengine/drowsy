@@ -1,39 +1,7 @@
 // Based (extremely loosely) on xDMS <http://zakalwe.fi/~shd/foss/xdms/>
 // by Andre Rodrigues de la Rocha & Heikki Orsila
 
-var d_len = new Uint8Array(0x100);
-var d_pos = 0;
-while (d_pos < 0x20) d_len[d_pos++] = 3;
-while (d_pos < 0x50) d_len[d_pos++] = 4;
-while (d_pos < 0x90) d_len[d_pos++] = 5;
-while (d_pos < 0xC0) d_len[d_pos++] = 6;
-while (d_pos < 0xF0) d_len[d_pos++] = 7;
-while (d_pos < 0x100) d_len[d_pos++] = 8;
-
-var d_code = new Uint8Array(256);
-var pos = 0x20, val = 0x01;
-while (pos < 0x70) {
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  val++;
-}
-for (; pos < 0x90; val++) {
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  val++;
-}
-for (; pos < 0xC0; val++) {
-  d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val;
-  val++;
-}
-while (pos < 0xF0) {
-  d_code[pos++] = val; d_code[pos++] = val;
-  val++;
-}
-while (pos < 0x100) d_code[pos++] = val++;
+var d_len, d_code; // byte arrays, filled later
 
 function Demasher(mode) {
   this.mode = mode;
@@ -248,6 +216,41 @@ Demasher.prototype = {
     this.bits = bits;
   },
 };
+
+d_len = new Uint8Array(0x100);
+var d_pos = 0;
+while (d_pos < 0x20) d_len[d_pos++] = 3;
+while (d_pos < 0x50) d_len[d_pos++] = 4;
+while (d_pos < 0x90) d_len[d_pos++] = 5;
+while (d_pos < 0xC0) d_len[d_pos++] = 6;
+while (d_pos < 0xF0) d_len[d_pos++] = 7;
+while (d_pos < 0x100) d_len[d_pos++] = 8;
+
+d_code = new Uint8Array(0x100);
+var pos = 0x20, val = 0x01;
+while (pos < 0x70) {
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  val++;
+}
+for (; pos < 0x90; val++) {
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  val++;
+}
+for (; pos < 0xC0; val++) {
+  d_code[pos++] = val; d_code[pos++] = val;
+  d_code[pos++] = val; d_code[pos++] = val;
+  val++;
+}
+while (pos < 0xF0) {
+  d_code[pos++] = val; d_code[pos++] = val;
+  val++;
+}
+while (pos < 0x100) d_code[pos++] = val++;
+
 
 function RLEDecruncher() {
 }
