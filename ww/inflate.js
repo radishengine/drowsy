@@ -1189,7 +1189,17 @@ function inflate(compressedBytes, noWrap) {
   return allBytes;
 }
 
-self.init_inflate = function(info) {
-  info = info || {};
-  return new InflateState(info.nowrap ? -15 : 15);
+// raw, non-wrapped mode
+self.init_inflate = function() {
+  return new InflateState(-15);
+};
+
+// zlib-wrapped mode
+self.init_inflate_zlib = function() {
+  return new InflateState(15);
+};
+
+// gzip-wrapped mode (difference to zlib detected in stream)
+self.init_inflate_gzip = function() {
+  return new InflateState(15);
 };
