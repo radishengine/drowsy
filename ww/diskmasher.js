@@ -42,7 +42,7 @@ function Demasher(mode) {
 Demasher.prototype = {
   hold: 0,
   bits: 0,
-  repeat_byte: 0,
+  context_value: 0,
   repeat_count: 0,
   ring: null,
   ring_pos: 0,
@@ -57,7 +57,7 @@ Demasher.prototype = {
       input_end = input.length,
       output_pos = 0,
       output_end = output.length,
-      repeat_byte = this.repeat_byte,
+      context_value = this.context_value,
       repeat_count = this.repeat_count,
       ring = this.ring,
       ring_pos = this.ring_pos,
@@ -99,16 +99,16 @@ Demasher.prototype = {
             output[output_pos++] = 0x90;
             continue fastRLE;
           }
-          repeat_byte = input[input_pos++];
+          context_value = input[input_pos++];
           if (repeat_count === 0xff) {
             repeat_count = input[input_pos++];
             repeat_count = (repeat_count << 8) | input[input_pos++];
           }
           do {
-            output[output_pos++] = repeat_byte;
+            output[output_pos++] = context_value;
             if (output_pos === output_end) {
               this.repeat_count = repeat_count;
-              this.repeat_byte = repeat_byte;
+              this.context_value = context_value;
               break decrunching;
             }
           } while (--repeat_count);
@@ -137,7 +137,7 @@ Demasher.prototype = {
         // continue decrunching;
       case 'rle3':
         if (!PULLBYTE()) break decrunching;
-        this.repeat_byte = repeat_byte = BITS(8);
+        this.context_value = context_value = BITS(8);
         DROPBITS(8);
         mode = 'rle4';
         // continue decrunching;
@@ -155,7 +155,7 @@ Demasher.prototype = {
             this.repeat_count = repeat_count;
             break decrunching;
           }
-          output[output_pos++] = repeat_byte;
+          output[output_pos++] = context_value;
         } while (--repeat_count);
         mode = default_mode;
         continue decrunching;
@@ -210,7 +210,7 @@ Demasher.prototype = {
           if (output_pos === output_end) break decrunching;
           if (!NEEDBITS(9)) break decrunching;
           if (BITS(9) & 0x100) {
-            copy_count = BITS(8); // not the actual value, derived in medium2 below
+            context_value = BITS(8);
             DROPBITS(9);
             break;
           }
@@ -221,23 +221,23 @@ Demasher.prototype = {
         mode = 'medium2';
         // continue decrunching;
       case 'medium2':
-        var c = copy_count;
+        var c = context_value;
         var u = d_len[c];
         if (!NEEDBITS(u)) {
-          this.copy_count = copy_count;
+          this.context_value = context_value;
           break decrunching;
         }
-        copy_count = d_code[c] + 3; // actual value
+        copy_count = d_code[c] + 3;
         c = ((c << u) | BITS(u)) & 0xff;
         DROPBITS(u);
-        copy_pos = c; // not the actual value, derived in medium3 below
+        context_value = c;
         mode = 'medium3';
         // continue decrunching;
       case 'medium3':
-        var c = copy_pos;
+        var c = context_value;
         var u = d_len[c];
         if (!NEEDBITS(u)) {
-          this.copy_pos = copy_pos;
+          this.context_value = context_value;
           break decrunching;
         }
         c = (d_code[c] << 8) | (((c << u) | BITS(u)) & 0xff);
