@@ -101,9 +101,9 @@ Demasher.prototype = {
           repeat_count = BITS(16);
           DROPBITS(16);
         }
-        mode = 'rle5';
+        mode = 'output_repeat';
         // continue demashing;
-      case 'rle5':
+      case 'output_repeat':
         do {
           if (output_pos === output_end) {
             this.repeat_count = repeat_count;
