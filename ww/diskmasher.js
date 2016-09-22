@@ -1,5 +1,40 @@
 // Based on xDMS code by Andre Rodrigues de la Rocha
 
+function RLEDecruncher() {
+}
+RLEDecruncher.prototype = {
+  process: function(input, output) {
+    var input_pos = 0;
+    for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
+      var a = input[input_pos++];
+      if (a !== 0x90) {
+        output[output_pos++] = a;
+        continue;
+      }
+      var b = input[input_pos++];
+      if (b === 0) {
+        output[output_pos++] = a;
+        continue;
+      }
+      a = input[input_pos++];
+      var n;
+      if (b === 0xff) {
+        n = (input[input_pos] << 8) | (input[input_pos + 1]);
+        input_pos += 2;
+      }
+      else n = b;
+      if (out_pos + n > output_end) return 1;
+      while (n--) {
+        output[output_pos++] = a;
+      }
+    }
+  },
+};
+
+self.init_diskmasher_rle = function() {
+  return new RLEDecruncher();
+};
+
 // TODO: this could be (1 << n) - 1
 var mask_bits = new Int32Array([
   0x000000, 0x000001, 0x000003, 0x000007,
@@ -77,32 +112,6 @@ function TrackDecruncher() {
   this.init_deep_tabs();
 }
 TrackDecruncher.prototype = {
-  rle: function(input, output) {
-    var input_pos = 0;
-    for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
-      var a = input[input_pos++];
-      if (a !== 0x90) {
-        output[output_pos++] = a;
-        continue;
-      }
-      var b = input[input_pos++];
-      if (b === 0) {
-        output[output_pos++] = a;
-        continue;
-      }
-      a = input[input_pos++];
-      var n;
-      if (b === 0xff) {
-        n = (input[input_pos] << 8) | (input[input_pos + 1]);
-        input_pos += 2;
-      }
-      else n = b;
-      if (out_pos + n > output_end) return 1;
-      while (n--) {
-        output[output_pos++] = a;
-      }
-    }
-  },
   reset: function() {
     delete this.quick_text_loc;
     delete this.medium_text_loc;
