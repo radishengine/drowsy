@@ -1,6 +1,126 @@
 // Based on xDMS <http://zakalwe.fi/~shd/foss/xdms/>
 // by Andre Rodrigues de la Rocha & Heikki Orsila
 
+function Demasher(mode) {
+  this.mode = mode;
+}
+Demasher = {
+  hold: 0,
+  bits: 0,
+  repeat_byte: 0,
+  repeat_count: 0,
+  process: function(input, output) {
+    var mode = this.mode,
+      hold = this.hold,
+      bits = this.bits,
+      input_pos = 0,
+      input_end = input.length,
+      output_pos = 0,
+      output_end = output.length,
+      repeat_byte = this.repeat_byte,
+      repeat_count = this.repeat_count;
+    function PULLBYTE() {
+      if (input_pos === input_end) return false;
+      hold |= (input[input_pos++] << 8);
+      bits += 8;
+      return true;
+    }
+    function NEEDBITS(n) {
+      while (bits < n) {
+        if (!PULLBYTE()) return false;
+      }
+      return true;
+    }
+    function BITS(n) {
+      return hold & ((1 << n) - 1);
+    }
+    function DROPBITS(n) {
+      hold >>= n; bits -= n;
+    }
+    demashing: do switch(mode) {
+      case 'rle':
+        var end_fast = input_end - 5 + 1;
+        fastRLE: while (input_pos < end_fast && output_pos !== output_end) {
+          var value = input[input_pos++];
+          if (value !== 0x90) {
+            output[output_pos++] = value;
+            continue fastRLE;
+          }
+          repeat_count = input[input_pos++];
+          if (repeat_count === 0) {
+            output[output_pos++] = 0x90;
+            continue fastRLE;
+          }
+          repeat_byte = input[input_pos++];
+          if (repeat_count === 0xff) {
+            repeat_count = input[input_pos++];
+            repeat_count = (repeat_count << 8) | input[input_pos++];
+          }
+          do {
+            output[output_pos++] = repeat_byte;
+            if (output_pos === output_end) {
+              this.repeat_count = repeat_count;
+              this.repeat_byte = repeat_byte;
+              break demashing;
+            }
+          } while (--repeat_count);
+        }
+        do {
+          if (!PULLBYTE() || output_pos === output_end) break demashing;
+          var value = BITS(8);
+          DROPBITS(8);
+          else {
+            output[output_pos++] = value;
+          }
+        } while (true);
+        mode = 'rle2';
+        // continue demashing;
+      case 'rle2':
+        if (!PULLBYTE()) break demashing;
+        repeat_count = BITS(8);
+        if (repeat_count === 0x00) {
+          if (output_pos === output_end) break demashing;
+          DROPBITS(8);
+          output[output_pos++] = 0x90;
+          mode = 'rle';
+          continue demashing;
+        }
+        DROPBITS(8);
+        mode = 'rle3';
+        this.repeat_count = repeat_count;
+        // continue demashing;
+      case 'rle3':
+        if (!PULLBYTE()) break demashing;
+        this.repeat_byte = repeat_byte = BITS(8);
+        DROPBITS(8);
+        mode = 'rle4';
+        // continue demashing;
+      case 'rle4':
+        if (repeat_count === 0xFF) {
+          if (!NEEDBITS(16)) break demashing;
+          repeat_count = BITS(16);
+          DROPBITS(16);
+        }
+        mode = 'rle5';
+        // continue demashing;
+      case 'rle5':
+        do {
+          if (output_pos === output_end) {
+            this.repeat_count = repeat_count;
+            break demashing;
+          }
+          output[output_pos++] = repeat_byte;
+        } while (--repeat_count);
+        mode = 'rle';
+        continue demashing;
+      default: throw new Error('unknown state');
+    } while (true);
+    this.mode = mode;
+    this.hold = hold;
+    this.bits = bits;
+  },
+};
+
 function RLEDecruncher() {
 }
 RLEDecruncher.prototype = {
