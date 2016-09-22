@@ -185,28 +185,25 @@ Demasher.prototype = {
         mode = 'medium2';
         // continue decrunching;
       case 'medium2':
-        var c = context_value;
-        var u = d_len[c];
+        var u = d_len[context_value];
         if (!NEEDBITS(u)) {
           this.context_value = context_value;
           break decrunching;
         }
-        copy_count = d_code[c] + 3;
-        c = ((c << u) | BITS(u)) & 0xff;
+        copy_count = d_code[context_value] + 3;
+        context_value = ((context_value << u) | BITS(u)) & 0xff;
         DROPBITS(u);
-        context_value = c;
         mode = 'medium3';
         // continue decrunching;
       case 'medium3':
-        var c = context_value;
-        var u = d_len[c];
+        var u = d_len[context_value];
         if (!NEEDBITS(u)) {
           this.context_value = context_value;
           break decrunching;
         }
-        c = (d_code[c] << 8) | (((c << u) | BITS(u)) & 0xff);
+        context_value = (d_code[context_value] << 8) | (((context_value << u) | BITS(u)) & 0xff);
         DROPBITS(u);
-        copy_pos = (ring_pos - c - 1) & (ring.length - 1); // actual value
+        copy_pos = (ring_pos - context_value - 1) & (ring.length - 1);
         mode = 'ring_copy';
         continue decrunching;
       default: throw new Error('unknown state');
