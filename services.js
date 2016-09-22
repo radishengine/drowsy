@@ -85,6 +85,10 @@ define(function() {
   };
 
   services = {
+    existing: {},
+    getService: function(name) {
+      return (name in this.existing) ? this.existing[name] : this.existing[name] = this.create();
+    },
     create: function() {
       var worker = Object.assign(new Worker('ww/service.js'), services.methods);
       worker.addEventListener('message', services.onmessage);
