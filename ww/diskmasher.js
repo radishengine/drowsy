@@ -3,7 +3,7 @@
 function RLEDecruncher() {
 }
 RLEDecruncher.prototype = {
-  process: function(input, output) {
+  process: function(input, outpfuut) {
     var input_pos = 0;
     for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
       var a = input[input_pos++];
@@ -195,7 +195,7 @@ function DeepDecruncher() {
   // which are used to get the positions of leaves corresponding to the codes
   this.prnt = new Uint16Array(this.son.length + N_CHAR);
 }
-DeepCruncher.prototype = {
+DeepDecruncher.prototype = {
   text_loc: 0x3fc4,
   process: function(input, output) {
     var bitbuf = this.bitbuf,
@@ -220,41 +220,49 @@ DeepCruncher.prototype = {
     }
     DROPBITS(0);
     
-    // reconstruction of tree
-    function reconst() {
-      // collect leaf nodes in the first half of the table
-      // and replace the freq by (freq + 1) / 2
-      var j = 0;
-      for (var i = 0; i < son.length; i++) {
-        if (son[i] >= son.length) {
-          freq[j] = (freq[i] + 1) >>> 1;
-          son[j] = son[i];
-          j++;
+    function decode_char() {
+      var c = son[R];
+      // travel from root to leaf, choosing the smaller child node (son[])
+      // if the read bit is 0, the bigger (son[]+1} if 1
+      while (c < T) {
+        c = son[c + GETBITS(1)];
+        DROPBITS(1);
+      }
+      c -= T;
+      var result = c;
+      // increment frequency of given code by one, and update tree
+      if (freq[R] === 0x8000 /* MAX_FREQ */) {
+        // reconstruction of tree.
+        // collect leaf nodes in the first half of the table
+        // and replace the freq by (freq + 1) / 2
+        var j = 0;
+        for (var i = 0; i < son.length; i++) {
+          if (son[i] >= son.length) {
+            freq[j] = (freq[i] + 1) >>> 1;
+            son[j] = son[i];
+            j++;
+          }
+        }
+        // begin constructing tree by connecting sons
+        for (var i = 0, j = N_CHAR; j < son.length; i += 2, j++) {
+          var k = (i + 1) & 0xffff;
+          var f = freq[j] = (freq[i] + freq[k]) & 0xffff;
+          k = (j - 1) & 0xffff;
+          while (f < freq[k]) k--;
+          k++; // TODO: check that this is still necessary (previous line refactored)
+          var l = ((j - k) << 1) & 0xffff;
+          memmove(&freq[k + 1], &freq[k], l);
+          freq[k] = f;
+          memmove(&son[k + 1], &son[k], l);
+          son[k] = i;
+        }
+        // connect prnt
+        for (var i = 0; i < son.length; i++) {
+          var k = son[i];
+          prnt[k] = i;
+          if (k < T) prnt[k+1] = i;
         }
       }
-      // begin constructing tree by connecting sons
-      for (var i = 0, j = N_CHAR; j < son.length; i += 2, j++) {
-        var k = (i + 1) & 0xffff;
-        var f = freq[j] = (freq[i] + freq[k]) & 0xffff;
-        k = (j - 1) & 0xffff;
-        while (f < freq[k]) k--;
-        k++; // TODO: check that this is still necessary (previous line refactored)
-        var l = ((j - k) << 1) & 0xffff;
-        memmove(&freq[k + 1], &freq[k], l);
-        freq[k] = f;
-        memmove(&son[k + 1], &son[k], l);
-        son[k] = i;
-      }
-      // connect prnt
-      for (var i = 0; i < son.length; i++) {
-        var k = son[i];
-        prnt[k] = i;
-        if (k < T) prnt[k+1] = i;
-      }
-    }
-    function update(c) {
-      // increment frequency of given code by one, and update tree
-      if (freq[R] === 0x8000 /* MAX_FREQ */) reconst();
       c = prnt[c + T];
       do {
         var k = ++freq[c];
@@ -280,19 +288,9 @@ DeepCruncher.prototype = {
         }
         c = prnt[c];
       } while (c !== 0); /* repeat up to root */
+      return result;
     }
-    function decode_char() {
-      var c = son[R];
-      // travel from root to leaf, choosing the smaller child node (son[])
-      // if the read bit is 0, the bigger (son[]+1} if 1
-      while (c < T) {
-        c = son[c + GETBITS(1)];
-        DROPBITS(1);
-      }
-      c -= T;
-      update(c);
-      return c;
-    }
+    
     function decode_position() {
       var i = GETBITS(8);
       DROPBITS(8);
@@ -302,6 +300,7 @@ DeepCruncher.prototype = {
       DROPBITS(j);
       return c | i;
     }
+    
     for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
       var c = decode_char();
       if (c < 256) {
@@ -318,6 +317,7 @@ DeepCruncher.prototype = {
         }
       }
     }
+    
     this.text_loc = (text_loc + 60) % text.length;
     this.bitbuf = bitbuf;
     this.bitcount = bitcount;
