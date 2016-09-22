@@ -32,7 +32,7 @@ RLEDecruncher.prototype = {
 };
 
 function QuickDecruncher() {
-  this.text = new Uint8Array(256);
+  this.text = new Uint8Array(0x100);
 }
 QuickDecruncher.prototype = {
   text_loc: 251,
@@ -82,26 +82,16 @@ QuickDecruncher.prototype = {
   },
 };
 
-self.init_diskmasher_rle = function() {
-  return new RLEDecruncher();
-};
+////// medium mode /////
 
-self.init_diskmasher_quick = function() {
-  return new QuickDecruncher();
-};
-
-// TODO: this could be (1 << n) - 1
-var mask_bits = new Int32Array([
-  0x000000, 0x000001, 0x000003, 0x000007,
-  0x00000f, 0x00001f, 0x00003f, 0x00007f,
-  0x0000ff, 0x0001ff, 0x0003ff, 0x0007ff,
-  0x000fff, 0x001fff, 0x003fff, 0x007fff,
-  0x00ffff, 0x01ffff, 0x03ffff, 0x07ffff,
-  0x0fffff, 0x1fffff, 0x3fffff, 0x7fffff,
-  0xffffff,
-]);
-
-// init for medium mode
+var d_len = new Uint8Array(256);
+var d_pos = 0;
+while (d_pos < 0x20) d_len[d_pos++] = 3;
+while (d_pos < 0x50) d_len[d_pos++] = 4;
+while (d_pos < 0x90) d_len[d_pos++] = 5;
+while (d_pos < 0xC0) d_len[d_pos++] = 6;
+while (d_pos < 0xF0) d_len[d_pos++] = 7;
+while (d_pos < 0x100) d_len[d_pos++] = 8;
 
 var d_code = new Uint8Array(256);
 var pos = 0x20, val = 0x01;
@@ -126,16 +116,84 @@ while (pos < 0xF0) {
   d_code[pos++] = val; d_code[pos++] = val;
   val++;
 }
-while (pox < 0x100) d_code[pos++] = val;
+while (pos < 0x100) d_code[pos++] = val;
 
-var d_len = new Uint8Array(256);
-var d_pos = 0;
-while (d_pos < 0x20) d_len[d_pos++] = 3;
-while (d_pos < 0x50) d_len[d_pos++] = 4;
-while (d_pos < 0x90) d_len[d_pos++] = 5;
-while (d_pos < 0xC0) d_len[d_pos++] = 6;
-while (d_pos < 0xF0) d_len[d_pos++] = 7;
-while (d_pos < 0x100) d_len[d_pos++] = 8;
+function MediumDecruncher() {
+  this.text = new Uint8Array(0x4000);
+}
+MediumDecruncher.prototype = {
+  text_loc: 0x3fbe,
+  process: function(input, output) {
+    var bitbuf = this.bitbuf,
+      bitcount = this.bitcount,
+      text = this.text,
+      text_loc = this.text_loc,
+      input_pos = 0;
+    function GETBITS(n) {
+      return bitbuf >>> (bitcount - n);
+    }
+    function DROPBITS(n) {
+      bitcount -= n;
+      bitbuf &= (1 << bitcount) - 1;
+      while (bitcount < 16) {
+        bitbuf = (bitbuf << 8) | input[input_pos++];
+        bitcount += 8;
+      }
+    }
+    DROPBITS(0);
+    for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
+      if (GETBITS(1) !== 0) {
+        DROPBITS(1);
+        output[output_pos++] = text[text_loc] = GETBITS(8);
+        text_loc = (text_loc + 1) % text.length;
+        DROPBITS(8);
+      }
+      else {
+        DROPBITS(1);
+        var c = GETBITS(8);
+        DROPBITS(8);
+        var j = d_code[c] + 3, u = d_len[c];
+        c = ((c << u) | GETBITS(u)) & 0xff;
+        DROPBITS(u);
+        u = d_len[c];
+        c = (d_code[c] << 8) | ((c << u) | GETBITS(u)) & 0xff;
+        DROPBITS(u);
+        var i = text_loc - c - 1;
+        while (j--) {
+          output[output_pos++] = text[text_loc] = text[i];
+          text_loc = (text_loc + 1) % text.length;
+          i = (i + 1) % text.length;
+        }
+      }
+    }
+    this.text_loc = (text_loc + 66) % text.length;
+    this.bitbuf = bitbuf;
+    this.bitcount = bitcount;
+  },
+};
+
+self.init_diskmasher_rle = function() {
+  return new RLEDecruncher();
+};
+
+self.init_diskmasher_quick = function() {
+  return new QuickDecruncher();
+};
+
+self.init_diskmasher_medium = function() {
+  return new MediumDecruncher();
+};
+
+// TODO: this could be (1 << n) - 1
+var mask_bits = new Int32Array([
+  0x000000, 0x000001, 0x000003, 0x000007,
+  0x00000f, 0x00001f, 0x00003f, 0x00007f,
+  0x0000ff, 0x0001ff, 0x0003ff, 0x0007ff,
+  0x000fff, 0x001fff, 0x003fff, 0x007fff,
+  0x00ffff, 0x01ffff, 0x03ffff, 0x07ffff,
+  0x0fffff, 0x1fffff, 0x3fffff, 0x7fffff,
+  0xffffff,
+]);
 
 // init for deep mode
 
