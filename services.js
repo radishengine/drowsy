@@ -91,7 +91,7 @@ define(function() {
     },
     init: function(format, args, transferables) {
       var service;
-      var split = format.match(/^([^:*):(.*)$/);
+      var split = format.match(/^([^:]*):(.*)$/);
       if (split) {
         service = split[1];
         format = split[2];
