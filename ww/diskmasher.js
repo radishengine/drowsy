@@ -53,7 +53,7 @@ Demasher.prototype = {
       //// RLE Mode ////
       case 'rle':
         mode = default_mode = this.default_mode = 'rle_';
-        // continue decrunching;
+//      continue decrunching;
       case 'rle_':
         var end_fast = input_end - 5 + 1;
         fastRLE: while (input_pos < end_fast && output_pos < output_end) {
@@ -88,7 +88,7 @@ Demasher.prototype = {
           output[output_pos++] = value;
         } while (true);
         mode = 'rle2';
-        // continue decrunching;
+//      continue decrunching;
       case 'rle2':
         if (input_pos === input_end || output_pos === output_end) break decrunching;
         repeat_count = input[input_pos++];
@@ -99,12 +99,12 @@ Demasher.prototype = {
         }
         mode = 'rle3';
         this.repeat_count = repeat_count;
-        // continue decrunching;
+//      continue decrunching;
       case 'rle3':
         if (input_pos === input_end) break decrunching;
         this.context_value = context_value = input[input_pos++];
         mode = 'rle4';
-        // continue decrunching;
+//      continue decrunching;
       case 'rle4':
         if (repeat_count === 0xFF) {
           if (!NEEDBITS(16)) break decrunching;
@@ -112,7 +112,7 @@ Demasher.prototype = {
           DROPBITS(16);
         }
         mode = 'output_repeat';
-        // continue decrunching;
+//      continue decrunching;
       case 'output_repeat':
         do {
           if (output_pos === output_end) {
@@ -128,7 +128,7 @@ Demasher.prototype = {
         ring = this.ring = this.ring_buffer.subarray(0, 256);
         ring_pos = this.ring_pos = ring.length - 5;
         mode = default_mode = this.default_mode = 'quick_';
-        // continue decrunching;
+//      continue decrunching;
       case 'quick_':
         var ring_mask = ring.length - 1;
         do {
@@ -147,7 +147,7 @@ Demasher.prototype = {
           ring_pos = (ring_pos + 1) & ring_mask;
         } while (true);
         mode = 'ring_copy';
-        // continue decrunching;
+//      continue decrunching;
       case 'ring_copy':
         var ring_mask = ring.length - 1;
         do {
@@ -167,7 +167,7 @@ Demasher.prototype = {
         ring = this.ring = this.ring_buffer.subarray(0, 16384);
         ring_pos = ring.length - 66;
         mode = default_mode = default_mode = 'medium_';
-        // continue decrunching;
+//      continue decrunching;
       case 'medium_':
         var ring_mask = ring.length - 1;
         do {
@@ -183,7 +183,7 @@ Demasher.prototype = {
           ring_pos = (ring_pos + 1) & ring_mask;
         } while (true);
         mode = 'medium2';
-        // continue decrunching;
+//      continue decrunching;
       case 'medium2':
         var u = d_len[context_value];
         if (!NEEDBITS(u)) {
@@ -194,7 +194,7 @@ Demasher.prototype = {
         context_value = ((context_value << u) | BITS(u)) & 0xff;
         DROPBITS(u);
         mode = 'medium3';
-        // continue decrunching;
+//      continue decrunching;
       case 'medium3':
         var u = d_len[context_value];
         if (!NEEDBITS(u)) {
@@ -206,6 +206,12 @@ Demasher.prototype = {
         copy_pos = (ring_pos - context_value - 1) & (ring.length - 1);
         mode = 'ring_copy';
         continue decrunching;
+      ///// Deep Mode /////
+      case 'deep':
+        mode = default_mode = this.default_mode = 'deep_';
+//      continue decrunching;
+      case 'deep_':
+        throw new Error('NYI');
       default: throw new Error('unknown state');
     } while (true);
     this.mode = mode;
