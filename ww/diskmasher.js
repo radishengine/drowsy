@@ -336,6 +336,10 @@ self.init_diskmasher_medium = function() {
   return new MediumDecruncher();
 };
 
+self.init_diskmasher_deep = function() {
+  return new DeepDecruncher();
+};
+
 // TODO: this could be (1 << n) - 1
 var mask_bits = new Int32Array([
   0x000000, 0x000001, 0x000003, 0x000007,
