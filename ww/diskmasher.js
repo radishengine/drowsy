@@ -1,4 +1,4 @@
-// Based on xDMS <http://zakalwe.fi/~shd/foss/xdms/>
+// Based (extremely loosely) on xDMS <http://zakalwe.fi/~shd/foss/xdms/>
 // by Andre Rodrigues de la Rocha & Heikki Orsila
 
 function Demasher(mode) {
