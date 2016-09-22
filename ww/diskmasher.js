@@ -88,7 +88,7 @@ Demasher.prototype = {
         // continue decrunching;
       case 'rle_':
         var end_fast = input_end - 5 + 1;
-        fastRLE: while (input_pos < end_fast && output_pos !== output_end) {
+        fastRLE: while (input_pos < end_fast && output_pos < output_end) {
           var value = input[input_pos++];
           if (value !== 0x90) {
             output[output_pos++] = value;
@@ -122,23 +122,19 @@ Demasher.prototype = {
         mode = 'rle2';
         // continue decrunching;
       case 'rle2':
-        if (!PULLBYTE()) break decrunching;
-        repeat_count = BITS(8);
+        if (input_pos === input_end || output_pos === output_end) break decrunching;
+        repeat_count = input[input_pos++];
         if (repeat_count === 0x00) {
-          if (output_pos === output_end) break decrunching;
-          DROPBITS(8);
           output[output_pos++] = 0x90;
-          mode = 'rle';
+          mode = default_mode;
           continue decrunching;
         }
-        DROPBITS(8);
         mode = 'rle3';
         this.repeat_count = repeat_count;
         // continue decrunching;
       case 'rle3':
-        if (!PULLBYTE()) break decrunching;
-        this.context_value = context_value = BITS(8);
-        DROPBITS(8);
+        if (input_pos === input_end) break decrunching;
+        this.context_value = context_value = input[input_pos++];
         mode = 'rle4';
         // continue decrunching;
       case 'rle4':
