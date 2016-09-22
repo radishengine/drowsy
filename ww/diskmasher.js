@@ -1,7 +1,8 @@
 // Based (extremely loosely) on xDMS <http://zakalwe.fi/~shd/foss/xdms/>
 // by Andre Rodrigues de la Rocha & Heikki Orsila
 
-var d_len, d_code; // byte arrays, filled later
+// static arrays used by Medium Mode & Deep Mode, declared and filled later
+var LENGTHS, CODES;
 
 function Demasher(mode) {
   this.mode = mode;
@@ -185,23 +186,23 @@ Demasher.prototype = {
         mode = 'medium2';
 //      continue decrunching;
       case 'medium2':
-        var u = d_len[context_value];
+        var u = LENGTHS[context_value];
         if (!NEEDBITS(u)) {
           this.context_value = context_value;
           break decrunching;
         }
-        copy_count = d_code[context_value] + 3;
+        copy_count = CODES[context_value] + 3;
         context_value = ((context_value << u) | BITS(u)) & 0xff;
         DROPBITS(u);
         mode = 'medium3';
 //      continue decrunching;
       case 'medium3':
-        var u = d_len[context_value];
+        var u = LENGTHS[context_value];
         if (!NEEDBITS(u)) {
           this.context_value = context_value;
           break decrunching;
         }
-        context_value = (d_code[context_value] << 8) | (((context_value << u) | BITS(u)) & 0xff);
+        context_value = (CODES[context_value] << 8) | (((context_value << u) | BITS(u)) & 0xff);
         DROPBITS(u);
         copy_pos = (ring_pos - context_value - 1) & (ring.length - 1);
         mode = 'ring_copy';
@@ -220,39 +221,39 @@ Demasher.prototype = {
   },
 };
 
-d_len = new Uint8Array(0x100);
+LENGTHS = new Uint8Array(0x100);
 var d_pos = 0;
-while (d_pos < 0x20) d_len[d_pos++] = 3;
-while (d_pos < 0x50) d_len[d_pos++] = 4;
-while (d_pos < 0x90) d_len[d_pos++] = 5;
-while (d_pos < 0xC0) d_len[d_pos++] = 6;
-while (d_pos < 0xF0) d_len[d_pos++] = 7;
-while (d_pos < 0x100) d_len[d_pos++] = 8;
+while (d_pos < 0x20) LENGTHS[d_pos++] = 3;
+while (d_pos < 0x50) LENGTHS[d_pos++] = 4;
+while (d_pos < 0x90) LENGTHS[d_pos++] = 5;
+while (d_pos < 0xC0) LENGTHS[d_pos++] = 6;
+while (d_pos < 0xF0) LENGTHS[d_pos++] = 7;
+while (d_pos < 0x100) LENGTHS[d_pos++] = 8;
 
-d_code = new Uint8Array(0x100);
+CODES = new Uint8Array(0x100);
 var pos = 0x20, val = 0x01;
 while (pos < 0x70) {
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  CODES[pos++] = val; CODES[pos++] = val; CODES[pos++] = val; CODES[pos++] = val;
+  CODES[pos++] = val; CODES[pos++] = val; CODES[pos++] = val; CODES[pos++] = val;
+  CODES[pos++] = val; CODES[pos++] = val; CODES[pos++] = val; CODES[pos++] = val;
+  CODES[pos++] = val; CODES[pos++] = val; CODES[pos++] = val; CODES[pos++] = val;
   val++;
 }
 for (; pos < 0x90; val++) {
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val; d_code[pos++] = val;
+  CODES[pos++] = val; CODES[pos++] = val; CODES[pos++] = val; CODES[pos++] = val;
+  CODES[pos++] = val; CODES[pos++] = val; CODES[pos++] = val; CODES[pos++] = val;
   val++;
 }
 for (; pos < 0xC0; val++) {
-  d_code[pos++] = val; d_code[pos++] = val;
-  d_code[pos++] = val; d_code[pos++] = val;
+  CODES[pos++] = val; CODES[pos++] = val;
+  CODES[pos++] = val; CODES[pos++] = val;
   val++;
 }
 while (pos < 0xF0) {
-  d_code[pos++] = val; d_code[pos++] = val;
+  CODES[pos++] = val; CODES[pos++] = val;
   val++;
 }
-while (pos < 0x100) d_code[pos++] = val++;
+while (pos < 0x100) CODES[pos++] = val++;
 
 
 function RLEDecruncher() {
@@ -373,11 +374,11 @@ MediumDecruncher.prototype = {
         DROPBITS(1);
         var c = GETBITS(8);
         DROPBITS(8);
-        var j = d_code[c] + 3, u = d_len[c];
+        var j = CODES[c] + 3, u = LENGTHS[c];
         c = ((c << u) | GETBITS(u)) & 0xff;
         DROPBITS(u);
-        u = d_len[c];
-        c = (d_code[c] << 8) | ((c << u) | GETBITS(u)) & 0xff;
+        u = LENGTHS[c];
+        c = (CODES[c] << 8) | ((c << u) | GETBITS(u)) & 0xff;
         DROPBITS(u);
         var i = text_loc - c - 1;
         while (j--) {
@@ -517,8 +518,8 @@ DeepDecruncher.prototype = {
     function decode_position() {
       var i = GETBITS(8);
       DROPBITS(8);
-      var c = d_code[i] << 8;
-      var j = d_len[i];
+      var c = CODES[i] << 8;
+      var j = LENGTHS[i];
       i = ((i << j) | GETBITS(j)) & 0xff;
       DROPBITS(j);
       return c | i;
@@ -909,11 +910,11 @@ TrackDecruncher.prototype = {
         this.DROPBITS(1);
         var c = this.GETBITS(8);
         this.DROPBITS(8);
-        var j = d_code[c] + 3, u = d_len[c];
+        var j = CODES[c] + 3, u = LENGTHS[c];
         c = ((c << u) | this.GETBITS(u)) & 0xff;
         this.DROPBITS(u);
-        u = d_len[c];
-        c = (d_code[c] << 8) | ((c << u) | this.GETBITS(u)) & 0xff;
+        u = LENGTHS[c];
+        c = (CODES[c] << 8) | ((c << u) | this.GETBITS(u)) & 0xff;
         this.DROPBITS(u);
         var i = this.medium_text_loc - c - 1;
         while (j--) {
@@ -1041,8 +1042,8 @@ TrackDecruncher.prototype = {
   decode_position: function() {
     var i = this.GETBITS(8);
     this.DROPBITS(8);
-    var c = (d_code[i] << 8) & 0xffff;
-    var j = d_len[i];
+    var c = (CODES[i] << 8) & 0xffff;
+    var j = LENGTHS[i];
     i = ((i << j) | this.GETBITS(j)) & 0xff;
     this.DROPBITS(j);
     return c | i;
