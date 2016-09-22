@@ -14,7 +14,7 @@ self.onmessage = function(e) {
       var lib = command[1];
       if (!(command in loaded)) {
         try {
-          importScripts(lib + '.js');
+          importScripts(lib.replace(/\/.*/, '') + '.js');
         }
         catch (e) {
           postMessage(['loadfailed', lib]);
@@ -29,7 +29,7 @@ self.onmessage = function(e) {
       var format = command[2];
       command.splice(0, 3);
       try {
-        contexts[context] = self['init_' + format].apply(null, command);
+        contexts[context] = self['init_' + format.replace(/\//g, '_')].apply(null, command);
       }
       catch (e) {
         self.postMessage(['failed', context]);
