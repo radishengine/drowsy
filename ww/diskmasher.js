@@ -172,6 +172,158 @@ MediumDecruncher.prototype = {
   },
 };
 
+////// deep mode //////
+
+var DBITMASK = 0x3fff; // 16Kb dictionary
+var F = 60; // lookahead buffer size
+var THRESHOLD = 2;
+var T = (N_CHAR * 2 - 1); // size of table
+var R = T - 1; // position of root
+var MAX_FREQ = 0x8000;
+
+// kinds of characters (character code = 0..N_CHAR-1)
+var N_CHAR = 256 - 2 /* threshold */ + 60 /* lookahead buffer */;
+
+function DeepDecruncher() {
+  // pointers to child nodes (son[], son[] + 1)
+  this.son = new Uint16Array(N_CHAR * 2 - 1);
+  
+  // frequency table
+  this.freq = new Uint16Array(this.son.length + 1);
+  
+  // pointers to parent nodes, except for the elements [T..T + N_CHAR - 1]
+  // which are used to get the positions of leaves corresponding to the codes
+  this.prnt = new Uint16Array(this.son.length + N_CHAR);
+}
+DeepCruncher.prototype = {
+  text_loc: 0x3fc4,
+  process: function(input, output) {
+    var bitbuf = this.bitbuf,
+      bitcount = this.bitcount,
+      text = this.text,
+      text_loc = this.text_loc,
+      self = this,
+      son = this.son,
+      freq = this.freq,
+      prnt = this.prnt,
+      input_pos = 0;
+    function GETBITS(n) {
+      return bitbuf >>> (bitcount - n);
+    }
+    function DROPBITS(n) {
+      bitcount -= n;
+      bitbuf &= (1 << bitcount) - 1;
+      while (bitcount < 16) {
+        bitbuf = (bitbuf << 8) | input[input_pos++];
+        bitcount += 8;
+      }
+    }
+    DROPBITS(0);
+    
+    // reconstruction of tree
+    function reconst() {
+      // collect leaf nodes in the first half of the table
+      // and replace the freq by (freq + 1) / 2
+      var j = 0;
+      for (var i = 0; i < son.length; i++) {
+        if (son[i] >= son.length) {
+          freq[j] = (freq[i] + 1) >>> 1;
+          son[j] = son[i];
+          j++;
+        }
+      }
+      // begin constructing tree by connecting sons
+      for (var i = 0, j = N_CHAR; j < son.length; i += 2, j++) {
+        var k = (i + 1) & 0xffff;
+        var f = freq[j] = (freq[i] + freq[k]) & 0xffff;
+        k = (j - 1) & 0xffff;
+        while (f < freq[k]) k--;
+        k++; // TODO: check that this is still necessary (previous line refactored)
+        var l = ((j - k) << 1) & 0xffff;
+        memmove(&freq[k + 1], &freq[k], l);
+        freq[k] = f;
+        memmove(&son[k + 1], &son[k], l);
+        son[k] = i;
+      }
+      // connect prnt
+      for (var i = 0; i < son.length; i++) {
+        var k = son[i];
+        prnt[k] = i;
+        if (k < T) prnt[k+1] = i;
+      }
+    }
+    function update(c) {
+      // increment frequency of given code by one, and update tree
+      if (freq[R] === 0x8000 /* MAX_FREQ */) reconst();
+      c = prnt[c + T];
+      do {
+        var k = ++freq[c];
+        var l = (c + 1) & 0xffff;
+        /* if the order is disturbed, exchange nodes */
+        if (k > freq[l]) {
+          while (k > freq[l]) l++;
+          freq[c] = freq[l];
+          freq[l] = k;
+    
+          var i = son[c];
+          prnt[i] = l;
+          if (i < T) prnt[i + 1] = l;
+    
+          var j = son[l];
+          son[l] = i;
+    
+          prnt[j] = c;
+          if (j < T) prnt[j + 1] = c;
+          son[c] = j;
+    
+          c = l;
+        }
+        c = prnt[c];
+      } while (c !== 0); /* repeat up to root */
+    }
+    function decode_char() {
+      var c = son[R];
+      // travel from root to leaf, choosing the smaller child node (son[])
+      // if the read bit is 0, the bigger (son[]+1} if 1
+      while (c < T) {
+        c = son[c + GETBITS(1)];
+        DROPBITS(1);
+      }
+      c -= T;
+      update(c);
+      return c;
+    }
+    function decode_position() {
+      var i = GETBITS(8);
+      DROPBITS(8);
+      var c = (d_code[i] << 8) & 0xffff;
+      var j = d_len[i];
+      i = ((i << j) | GETBITS(j)) & 0xff;
+      DROPBITS(j);
+      return c | i;
+    }
+    for (var output_pos = 0, output_end = output.length; output_pos < output_end; ) {
+      var c = decode_char();
+      if (c < 256) {
+        output[output_pos++] = text[text_loc] = c;
+        text_loc = (text_loc + 1) % text.length;
+      }
+      else {
+        var j = c - 255 + 2 /* THRESHOLD */;
+        var i = text_loc - decode_position() - 1;
+        while (j--) {
+          output[output_pos++] = text[text_loc] = text[i];
+          text_loc = (text_loc + 1) % text.length;
+          i = (i + 1) % text.length;
+        }
+      }
+    }
+    this.text_loc = (text_loc + 60) % text.length;
+    this.bitbuf = bitbuf;
+    this.bitcount = bitcount;
+  },
+};
+
 self.init_diskmasher_rle = function() {
   return new RLEDecruncher();
 };
