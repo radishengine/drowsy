@@ -1,8 +1,9 @@
 // Based (extremely loosely) on xDMS <http://zakalwe.fi/~shd/foss/xdms/>
 // by Andre Rodrigues de la Rocha & Heikki Orsila
 
-function Demasher(mode) {
-  this.mode = mode;
+function Demasher(defaultMode, startMode) {
+  this.defaultMode = defaultMode;
+  this.mode = startMode || defaultMode;
 }
 Demasher.prototype = {
   hold: 0,
@@ -11,6 +12,7 @@ Demasher.prototype = {
   repeat_count: 0,
   process: function(input, output) {
     var mode = this.mode,
+      defaultMode = this.defaultMode,
       hold = this.hold,
       bits = this.bits,
       input_pos = 0,
@@ -66,12 +68,10 @@ Demasher.prototype = {
           } while (--repeat_count);
         }
         do {
-          if (!PULLBYTE() || output_pos === output_end) break demashing;
-          var value = BITS(8);
-          DROPBITS(8);
-          else {
-            output[output_pos++] = value;
-          }
+          if (input_pos === input_end || output_pos === output_end) break demashing;
+          var value = input[input_pos++];
+          if (value === 0x90) break;
+          output[output_pos++] = value;
         } while (true);
         mode = 'rle2';
         // continue demashing;
@@ -111,7 +111,7 @@ Demasher.prototype = {
           }
           output[output_pos++] = repeat_byte;
         } while (--repeat_count);
-        mode = 'rle';
+        mode = defaultMode;
         continue demashing;
       default: throw new Error('unknown state');
     } while (true);
