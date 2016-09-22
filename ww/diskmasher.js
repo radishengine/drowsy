@@ -1,15 +1,19 @@
 // Based (extremely loosely) on xDMS <http://zakalwe.fi/~shd/foss/xdms/>
 // by Andre Rodrigues de la Rocha & Heikki Orsila
 
-function Demasher(defaultMode, startMode) {
-  this.defaultMode = defaultMode;
-  this.mode = startMode || defaultMode;
+function Demasher(mode) {
+  this.mode = mode;
+  this.ringBuffer = new Uint8Array(8192);
 }
 Demasher.prototype = {
   hold: 0,
   bits: 0,
   repeat_byte: 0,
   repeat_count: 0,
+  ring: null,
+  ring_pos: 0,
+  copy_pos: 0,
+  copy_count: 0,
   process: function(input, output) {
     var mode = this.mode,
       defaultMode = this.defaultMode,
@@ -20,7 +24,11 @@ Demasher.prototype = {
       output_pos = 0,
       output_end = output.length,
       repeat_byte = this.repeat_byte,
-      repeat_count = this.repeat_count;
+      repeat_count = this.repeat_count,
+      ring = this.ring,
+      ring_pos = this.ring_pos,
+      copy_pos = this.copy_pos,
+      copy_count = this.copy_count;
     function PULLBYTE() {
       if (input_pos === input_end) return false;
       hold |= (input[input_pos++] << 8);
@@ -40,7 +48,11 @@ Demasher.prototype = {
       hold >>= n; bits -= n;
     }
     demashing: do switch(mode) {
+      //// RLE Mode ////
       case 'rle':
+        mode = defaultMode = this.defaultMode = 'rle_';
+        // continue demashing;
+      case 'rle_':
         var end_fast = input_end - 5 + 1;
         fastRLE: while (input_pos < end_fast && output_pos !== output_end) {
           var value = input[input_pos++];
@@ -111,6 +123,45 @@ Demasher.prototype = {
           }
           output[output_pos++] = repeat_byte;
         } while (--repeat_count);
+        mode = defaultMode;
+        continue demashing;
+      //// Quick Mode ////
+      case 'quick':
+        ring = this.ring = this.ringBuffer.subarray(0, 256);
+        ring_pos = this.ring_pos = 251;
+        mode = defaultMode = this.defaultMode = 'quick_';
+        // continue demashing;
+      case 'quick_':
+        var ring_mask = ring.length - 1;
+        do {
+          if (output_pos === output_end) break demashing;
+          if (!NEEDBITS(9)) break demashing;
+          if (BITS(9) & 0x100) {
+            if (!NEEDBITS(2)) break demashing;
+            copy_pos = (ring_pos - (BITS(8) + 1)) & ring_mask;
+            DROPBITS(8);
+            copy_length = BITS(2) + 2;
+            DROPBITS(3);
+            break;
+          }
+          ring[ring_pos] = output[output_pos++] = BITS(8);
+          DROPBITS(9);
+          ring_pos = (ring_pos + 1) & ring_mask;
+        } while (true);
+        mode = 'ring_copy';
+        // continue demashing;
+      case 'ring_copy':
+        var ring_mask = ring.length - 1;
+        do {
+          if (output_pos === output_length) {
+            this.copy_pos = copy_pos;
+            this.copy_length = copy_length;
+            break demashing;
+          }
+          ring[ring_pos] = output[output_pos++] = ring[copy_pos];
+          ring_pos = (ring_pos + 1) & ring_mask;
+          copy_pos = (copy_pos + 1) & ring_mask;
+        } while (--copy_length);
         mode = defaultMode;
         continue demashing;
       default: throw new Error('unknown state');
