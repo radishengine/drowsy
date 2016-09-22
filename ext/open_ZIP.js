@@ -2,8 +2,6 @@ define(['msdos/util', 'text', 'Item', 'services'], function(dosUtil, text, Item,
 
   'use strict';
   
-  services.decompression = services.decompression || services.create();
-  
   function open() {
     var byteSource = this.byteSource;
     this.addExplorer(function(expedition) {
