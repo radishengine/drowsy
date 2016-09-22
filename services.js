@@ -89,6 +89,18 @@ define(function() {
     getService: function(name) {
       return (name in this.existing) ? this.existing[name] : this.existing[name] = this.create();
     },
+    init: function(format, args, transferables) {
+      var service;
+      var split = format.match(/^([^:*):(.*)$/);
+      if (split) {
+        service = split[1];
+        format = split[2];
+      }
+      else {
+        service = 'general';
+      }
+      return this.getService(service).init(format, args, transferables);
+    },
     create: function() {
       var worker = Object.assign(new Worker('ww/service.js'), services.methods);
       worker.addEventListener('message', services.onmessage);
