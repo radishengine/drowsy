@@ -121,6 +121,12 @@ define(function() {
           self.postMessage(['load', format]);
         });
       },
+      init: function(formatName, params, transferables) {
+        return this.load(formatName)
+        .then(function(format) {
+          return format.init(params, transferables);
+        });
+      },
     },
   };
 
