@@ -34,7 +34,7 @@ CinepakFrameServer.prototype = {
       frame_pos = strip_end;
     }
   },
-}
+};
 
 self.init_cinepak = function() {
   return new CinepakFrameServer();
