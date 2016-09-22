@@ -45,15 +45,11 @@ define(['msdos/util', 'text', 'Item', 'services'], function(dosUtil, text, Item,
                   + localFixed.extraByteLength;
                 return byteSource.slice(offset, offset + compressedLength).getBytes();
               });
-              var promiseInflater = services.decompression.load('inflate')
-              .then(function(inflate) {
-                return inflate.init({nowrap:true});
-              });
-              return Promise.all([promiseCompressed, promiseInflater])
+              return Promise.all([promiseCompressed, services.init('compression:inflate')])
               .then(function(values) {
-                var compressed = values[0], inflater = values[1];
+                var compressed = values[0], inflation = values[1];
                 var uncompressed = new Uint8Array(uncompressedLength);
-                return inflater.process(
+                return inflation.process(
                   [compressed, uncompressed],
                   [compressed.buffer, uncompressed.buffer]);
               })
