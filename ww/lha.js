@@ -1,5 +1,68 @@
 // Adapted from lhasa by Simon Howard <https://fragglet.github.io/lhasa/>
 
+function LHADecruncher(historyBits) {
+  this.ring = new Uint8Array(1 << historyBits);
+}
+LHADecruncher.prototype = {
+  mode: 'start_block',
+  hold: 0,
+  bits: 0,
+  block_commands_left: 0,
+  context_value: 0,
+  process: function(input, output) {
+    var input_pos = 0, input_end = input.length,
+      output_pos = 0, output_end = output.length;
+    var mode = this.mode,
+      hold = this.hold,
+      bits = this.bits,
+      block_commands_left = this.block_commands_left,
+      context_value = this.context_value;
+      
+    function PULLBYTE() {
+      if (input_pos === input_end) return false;
+      hold |= (input[input_pos++] << 8);
+      bits += 8;
+      return true;
+    }
+    function NEEDBITS(n) {
+      while (bits < n) {
+        if (!PULLBYTE()) return false;
+      }
+      return true;
+    }
+    function BITS(n) {
+      return hold & ((1 << n) - 1);
+    }
+    function DROPBITS(n) {
+      hold >>= n; bits -= n;
+    }
+    
+    decrunching: do switch (mode) {
+      case 'start_block':
+        if (!NEEDBITS(16)) break decrunching;
+        block_command_count = this.block_command_count = BITS(16);
+        DROPBITS(16);
+        mode = 'read_temp_table';
+//      continue decrunching;
+      case 'read_temp_table':
+        if (!NEEDBITS(5)) break decrunching;
+        context_value = BITS(5);
+        DROPBITS(5);
+        if (context_value === 0) {
+          mode = 'read_temp_table_zero';
+          continue decrunching;
+        }
+        mode = 'read_temp_table_nonzero';
+        continue decrunching;
+      default: throw new Error('unknown or unimplemented mode: ' + mode);
+    } while (true);
+    
+    this.mode = mode;
+    this.hold = hold;
+    this.bits = bits;
+  },
+};
+
 function BitStreamReader(callback) {
   this.callback = callback;
 }
