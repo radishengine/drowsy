@@ -74,6 +74,87 @@ var base = new Int16Array([3, 2, 4, 5, 6, 7, 8, 9, 10, 12, 16, 24, 40, 72, 136, 
 // extra bits for length codes
 var extra = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8]);
 
+function Explosion() {
+  
+}
+Explosion.prototype = {
+  mode: 'init',
+  context_value: 0,
+  hold: 0,
+  bits: 0,
+  literal_mode: 'literal',
+  process: function(input, output) {
+    var input_pos = 0, input_end = input.length,
+      output_pos = 0, output_end = output.length,
+      hold: this.hold, bits: this.bits,
+      context_value = this.context_value,
+      literal_mode = this.literal_mode,
+      mode = this.mode;
+      
+    function PULLBYTE() {
+      if (input_pos === input_end) return false;
+      hold |= (input[input_pos++] << 8);
+      bits += 8;
+      return true;
+    }
+    function NEEDBITS(n) {
+      while (bits < n) {
+        if (!PULLBYTE()) return false;
+      }
+      return true;
+    }
+    function BITS(n) {
+      return hold & ((1 << n) - 1);
+    }
+    function DROPBITS(n) {
+      hold >>= n; bits -= n;
+    }
+    
+    exploding: do switch(mode) {
+      case 'init':
+        if (input_pos === input_end) break exploding;
+        context_value = input[input_pos++];
+        if (context_value > 1) throw new Error('bad value for lit');
+        literal_mode = this.literal_mode = context_value ? 'decode_literal' : 'literal';
+        mode = 'init2';
+//      continue exploding;
+      case 'init2':
+        if (input_pos === input_end) break exploding;
+        var context_value = input[input_pos++]; // log2(dictionary size) - 6
+        if (context_value < 4 || context_value > 6) throw new Error('bad value for dict');
+        this.dict = context_value;
+        mode = 'main';
+//      continue exploding;
+      case 'main':
+        if (!NEEDBITS(1)) break exploding;
+        context_value = BITS(1);
+        DROPBITS(1);
+        if (context_value === 1) {
+          mode = 'repeat';
+          continue exploding;
+        }
+        mode = literal_mode;
+        continue exploding;
+      case 'literal':
+        if (!NEEDBITS(8) || output_pos === output_end) break exploding;
+        output[output_pos++] = BITS(8);
+        DROPBITS(8);
+        mode = 'main';
+        continue exploding;
+      case 'decode_literal':
+        context_value = this.literals_coded ? this.decode(litcode) : this.bits(8);
+        output[output_pos++] = symbol;
+        mode = 'main';
+        continue exploding;
+      case 'done': break exploding;
+    } while (true);
+    
+    this.hold = hold;
+    this.bits = bits;
+    return this.mode = mode;
+  },
+};
+
 var NO_BYTES = new Uint8Array(0);
 
 function ExplodeState(infun, outfun) {
