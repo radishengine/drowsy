@@ -2,6 +2,8 @@ define(function() {
 
   'use strict';
   
+  var PAGE_BYTES = 128;
+  
   function WriteFileHeaderView(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
   }
@@ -23,46 +25,55 @@ define(function() {
     // 0x04: must be 0x00AB
     // reserved uint16 x4
     
-    // bytes of actual text plus 128, the bytes in one sector
-    get fcMac() {
+    get textOffset() {
+      return PAGE_BYTES;
+    },
+    get textLength() {
       return this.dv.getUint32(14, true);
     },
-    get characterInfoFirstPageNumber() {
-      return (this.dv.getUint32(14, true) + 0x7f) >>> 7;
+    get characterInfoOffset() {
+      return this.textOffset + PAGE_BYTES * Math.ceil(this.textByteLength / PAGE_BYTES);
     },
-    get paragraphInfoFirstPageNumber() {
-      return this.dv.getUint16(18, true);
+    get characterInfoBlockLength() {
+      return this.paragraphInfoOffset - this.characterInfoOffset;
     },
-    get paragraphInfoLastPageNumber() {
-      return this.dv.getUint16(20, true) - 1;
+    get paragraphInfoOffset() {
+      return PAGE_BYTES * this.dv.getUint16(18, true);
     },
-    get footnoteTablePageNumber() {
-      var page = this.dv.getUint16(20, true);
-      return (page === this.dv.getInt16(22, true)) ? -1 : page;
+    get paragraphInfoBlockLength() {
+      return PAGE_BYTES * (this.dv.getUint16(20, true) - this.dv.getUint16(18, true));
     },
-    get sectionPropertyPageNumber() {
-      var page = this.dv.getUint16(22, true);
-      return (page === this.dv.getUint16(24, true)) ? -1 : page;
+    get footnoteTableOffset() {
+      return PAGE_BYTES * this.dv.getUint16(20, true);
     },
-    get sectionTablePageNumber() {
-      var page = this.dv.getUint16(24, true);
-      return (page === this.dv.getUint16(26, true)) ? -1 : page;
+    get footnoteTableBlockLength() {
+      return PAGE_BYTES * (this.dv.getUint16(22, true) - this.dv.getUint16(20, true));
     },
-    get pageTablePageNumber() {
-      var page = this.dv.getUint16(26, true);
-      return (page === this.dv.getUint16(28, true)) ? -1 : page;
+    get sectionPropertyOffset() {
+      return PAGE_BYTES * this.dv.getUint16(22, true);
     },
-    get fontNameTablePageNumber() {
-      var page = this.dv.getInt16(28, true);
-      return (page === this.dv.getUint16(96, true)) ? -1 : page;
+    get sectionTableBlockLength() {
+      return PAGE_BYTES * (this.dv.getUint16(24, true) - this.dv.getUint16(22, true));
+    },
+    get pageTableOffset() {
+      return PAGE_BYTES * this.dv.getUint16(26, true);
+    },
+    get pageTableBlockLength() {
+      return PAGE_BYTES * (this.dv.getUint16(28, true) - this.dv.getUint16(26, true));
+    },
+    get fontNameTableOffset() {
+      return PAGE_BYTES * this.dv.getInt16(28, true);
+    },
+    get fontNameTableBlockLength() {
+      return PAGE_BYTES * (this.dv.getInt16(96, true) - this.dv.getInt16(28, true));
     },
     // 66 bytes reserved (Word compatibility)
-    get pageCount() {
-      return this.dv.getInt16(96, true);
+    get totalBlockLength() {
+      return PAGE_BYTES * this.dv.getInt16(96, true);
     },
     // reserved uint16 x15
   };
-  HeaderView.byteLength = 128;
+  HeaderView.byteLength = PAGE_BYTES;
   
   return {
     FileHeaderView: WriteFileHeaderView,
