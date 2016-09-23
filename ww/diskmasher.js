@@ -12,7 +12,7 @@ var T = N_CHAR * 2 - 1; // size of table
 var R = T - 1; // position of root
 var MAX_FREQ = 0x8000;
 
-function Demasher(mode) {
+function Demasher(mode, flags) {
   this.mode = mode;
   
   // for Quick, Medium, Deep, and Heavy Mode
@@ -26,6 +26,15 @@ function Demasher(mode) {
   this.prnt = new Uint16Array(T + N_CHAR); 
   // Deep Mode: pointers to child nodes (son[], son[] + 1)
   this.son = new Uint16Array(T);
+  
+  // Heavy Mode
+  this.flags = flags;
+  this.c_len = new Uint8Array(510);
+  this.pt_len = new Uint8Array(20);
+  this.left = new Uint16Array(2 * this.c_len.length - 1);
+  this.right = new Uint16Array(this.left.length + 9);
+  this.c_table = new Uint16Array(4096);
+  this.pt_table = new Uint16Array(256);  
 }
 Demasher.prototype = {
   hold: 0,
@@ -36,6 +45,7 @@ Demasher.prototype = {
   ring_pos: 0,
   copy_pos: 0,
   copy_count: 0,
+  lastlen: 0,
   process: function(input, output) {
     var mode = this.mode,
       default_mode = this.default_mode,
@@ -358,11 +368,186 @@ Demasher.prototype = {
         copy_pos = (ring_pos - context_value - 1) & (ring.length - 1);
         mode = 'ring_copy';
         continue decrunching;
+      
+      /* Heavy Mode */
+      case 'heavy':
+        ring = this.ring = this.ring_buffer.subarray(0, (this.flags & 8) ? 0x2000 : 0x1000);
+        ring_pos = 0;
+        this.np = (this.flags & 8) ? 15 : 14;
+        default_mode = this.default_mode = 'heavy_';
+        if (this.flags & 2) {
+          mode = 'heavy_c_tree';
+          continue decrunching;
+        }
+        mode = 'heavy_';
+//      continue decrunching;
+      case 'heavy_':
+        if (!NEEDBITS(12)) break decrunching;
+        context_value = this.c_table[BITS(12)];
+        if (context_value < 510 /* N1 */) {
+          DROPBITS(this.c_len[context_value]);
+          mode = 'heavy3';
+          continue decrunching;
+        }
+        DROPBITS(12);
+        mode = 'heavy2';
+//      continue decrunching;
+      case 'heavy2':
+        if (!NEEDBITS(16)) {
+          this.context_value = context_value;
+          break decrunching;
+        }
+        var i = BITS(16);
+        var m = 0x8000;
+        do {
+          context_value = (i & m) ? this.right[context_value] : this.left[context_value];
+          m >>= 1;
+        } while (context_value >= 510 /* N1 */);
+        DROPBITS(c_len[context_value] - 12);
+        mode = 'heavy3';
+//      continue decrunching;
+      case 'heavy3':
+        if (context_value < 256) {
+          if (output_pos === output_end) {
+            this.context_value = context_value;
+            break decrunching;
+          }
+          output[output_pos++] = ring[ring_pos] = context_value;
+          ring_pos = (ring_pos + 1) % ring.length;
+          mode = default_mode;
+          continue decrunching;
+        }
+        copy_count = (context_value - 253) & 0xffff;
+        mode = 'heavy4';
+//      continue decrunching;
+      case 'heavy4':
+        if (!NEEDBITS(8)) {
+          this.copy_count = copy_count;
+          break decrunching;
+        }
+        context_value = this.pt_table[BITS(8)];
+        if (context_value < this.np) {
+          DROPBITS(this.pt_len[context_value]);
+          mode = 'heavy6';
+          continue decrunching;
+        }
+        DROPBITS(8);
+        mode = 'heavy5';
+//      continue decrunching;
+      case 'heavy5':
+        if (!NEEDBITS(16)) {
+          this.context_value = context_value;
+          break decrunching;
+        }
+        var i = BITS(16);
+        var m = 0x8000;
+        do {
+          context_value = (i & m) ? right[context_value] : left[context_value];
+          m >>= 1;
+        } while (context_value >= this.np);
+        DROPBITS(this.pt_len[context_value] - 8);
+        mode = 'heavy6';
+        continue decrunching;
+      case 'heavy6':
+        if (context_value === this.np-1) {
+          context_value = this.lastlen;
+          copy_pos = (ring_pos - context_value - 1) & (ring.length - 1);
+          mode = 'ring_copy';
+          continue decrunching;
+        }
+        if (context_value <= 0) {
+          this.lastlen = context_value;
+          copy_pos = (ring_pos - context_value - 1) & (ring.length - 1);
+          mode = 'ring_copy';
+          continue decrunching;
+        }
+        mode = 'heavy7';
+//      continue decrunching;
+      case 'heavy7':
+        var i = (context_value-1) & 0xffff;
+        if (!NEEDBITS(i)) {
+          this.context_value = context_value;
+          break decrunching;
+        }
+        this.lastloc = context_value = GETBITS(i) | ((1 << (context_value-1)) & 0xffff);
+        DROPBITS(i);
+        copy_pos = (ring_pos - context_value - 1) & (ring.length - 1);
+        mode = 'ring_copy';
+        continue decrunching;
+      case 'heavy_c_tree':
+        if (!NEEDBITS(9)) break decrunching;
+        context_value = BITS(9);
+        DROPBITS(9);
+        if (context_value === 0) {
+          mode = 'heavy_c_tree_zero';
+          continue decrunching;
+        }
+        copy_count = 0;
+        mode = 'heavy_c_tree_nonzero';
+//      continue decrunching;
+      case 'heavy_c_tree_nonzero':
+        while (copy_count < context_value) {
+          if (!NEEDBITS(5)) {
+            this.copy_count = copy_count;
+            this.context_value = context_value;
+            break decrunching;
+          }
+          this.c_len[copy_count++] = BITS(5);
+          DROPBITS(5);
+        }
+        while (copy_count < 510) this.c_len[copy_count++] = 0;
+        make_table(510, this.c_len, 12, this.c_table);
+        mode = 'heavy_p_tree';
+        continue decrunching;
+      case 'heavy_c_tree_zero':
+        if (!NEEDBITS(9)) break decrunching;
+        context_value = BITS(9);
+        DROPBITS(9);
+        var i;
+        for (i = 0; i < 510; i++) this.c_len[i] = 0;
+        for (i = 0; i < 4096; i++) this.c_table[i] = context_value;
+        mode = 'heavy_p_tree';
+//      continue decrunching;
+      case 'heavy_p_tree':
+        if (!NEEDBITS(5)) break decrunching;
+        context_value = BITS(5);
+        DROPBITS(5);
+        if (context_value === 0) {
+          mode = 'heavy_p_tree_zero';
+          continue decrunching;
+        }
+        copy_count = 0;
+        mode = 'heavy_p_tree_nonzero';
+//      continue decrunching;
+      case 'heavy_p_tree_nonzero':
+        while (copy_count < context_value) {
+          if (!NEEDBITS(4)) {
+            this.copy_count = copy_count;
+            this.context_value = context_value;
+            break decrunching;
+          }
+          this.pt_len[copy_count++] = BITS(4);
+          DROPBITS(4);
+        }
+        while (copy_count < this.np) this.pt_len[copy_count++] = 0;
+        make_table(this.np, this.pt_len, 8, this.pt_table);
+        mode = 'heavy_';
+        continue decrunching;
+      case 'heavy_p_tree_zero':
+        if (!NEEDBITS(5)) break decrunching;
+        context_value = BITS(5);
+        DROPBITS(5);
+        var i;
+        for (i = 0; i < this.np; i++) this.pt_len[i] = 0;
+        for (i = 0; i < 256; i++) this.pt_table[i] = context_value;
+        mode = 'heavy_';
+        continue decrunching;
       default: throw new Error('unknown state');
     } while (true);
     this.mode = mode;
     this.hold = hold;
     this.bits = bits;
+    this.ring_pos = ring_pos;
   },
 };
 
@@ -399,6 +584,63 @@ while (pos < 0xF0) {
   val++;
 }
 while (pos < 0x100) CODES[pos++] = val++;
+
+function make_table(nchar, bitlen, tablebits, table) {
+  var n = nchar,
+    avail = nchar,
+    tblsiz = 1 << tablebits,
+    maxdepth = (tablebits + 1) & 0xffff,
+    depth = 1,
+    len = 1,
+    c = -1,
+    codeword = 0;
+  var bit = (tblsiz >> 1) & 0xffff;
+
+  function mktbl() {
+    var i;
+    if (len === depth) {
+      while (++c < n) {
+        if (bitlen[c] === len) {
+          i = codeword;
+          codeword += bit;
+          if (codeword > tblsiz) throw new Error('codeword > tblsiz');
+          while (i < codeword) table[i++] = c & 0xffff;
+          return c & 0xffff;
+        }
+      }
+      c = -1;
+      len++;
+      bit >>= 1;
+    }
+    if (++depth < maxdepth) {
+      mktbl();
+      mktbl();
+    }
+    else {
+      if (depth > 32) throw new Error('depth > 32');
+      i = avail++;
+      if (i >= 2*n - 1) {
+        throw new Error('i >= 2*n - 1');
+      }
+      left[i] = mktbl();
+      right[i] = mktbl();
+      if (codeword >= tblsiz) {
+        throw new Error('codeword >= tblsiz');
+      }
+      if (depth === self.maxdepth) table[codeword++] = i;
+    }
+    depth--;
+    return i;
+  }
+  
+  mktbl();  /* left subtree */
+  mktbl();  /* right subtree */
+  if (codeword !== tablesize) throw new Error('codeword != tblsiz');
+}
+
+
+
+
 
 
 function RLEDecruncher() {
