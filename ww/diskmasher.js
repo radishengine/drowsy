@@ -1,12 +1,31 @@
 // Based (extremely loosely) on xDMS <http://zakalwe.fi/~shd/foss/xdms/>
 // by Andre Rodrigues de la Rocha & Heikki Orsila
 
-// static arrays used by Medium Mode & Deep Mode, declared and filled later
+// constant arrays used by Medium Mode & Deep Mode, declared and filled later
 var LENGTHS, CODES;
+
+// Deep Mode constants
+var F = 60;  // lookahead buffer size
+var THRESHOLD = 2;
+var N_CHAR = 256 - THRESHOLD + F; // kinds of characters (character code = 0..N_CHAR-1)
+var T = N_CHAR * 2 - 1; // size of table
+var R = T - 1; // position of root
+var MAX_FREQ = 0x8000;
 
 function Demasher(mode) {
   this.mode = mode;
+  
+  // for Quick, Medium, Deep, and Heavy Mode
   this.ring_buffer = new Uint8Array(8192);
+  
+  // Deep Mode: frequency table
+  this.freq = new Uint16Array(T + 1);
+  // Deep Mode: pointers to parent nodes
+  // ...except for [T..T + N_CHAR - 1] which are used to get
+  //    the positions of leaves corresponding to the codes
+  this.prnt = new Uint16Array(T + N_CHAR); 
+  // Deep Mode: pointers to child nodes (son[], son[] + 1)
+  this.son = new Uint16Array(T);
 }
 Demasher.prototype = {
   hold: 0,
@@ -31,7 +50,10 @@ Demasher.prototype = {
       ring = this.ring,
       ring_pos = this.ring_pos,
       copy_pos = this.copy_pos,
-      copy_count = this.copy_count;
+      copy_count = this.copy_count,
+      son = this.son,
+      prnt = this.prnt,
+      freq = this.freq;
     function PULLBYTE() {
       if (input_pos === input_end) return false;
       hold |= (input[input_pos++] << 8);
@@ -165,7 +187,7 @@ Demasher.prototype = {
         continue decrunching;
       //// Medium Mode ////
       case 'medium':
-        ring = this.ring = this.ring_buffer.subarray(0, 16384);
+        ring = this.ring = this.ring_buffer.subarray(0, 0x4000);
         ring_pos = ring.length - 66;
         mode = default_mode = default_mode = 'medium_';
 //      continue decrunching;
@@ -207,12 +229,135 @@ Demasher.prototype = {
         copy_pos = (ring_pos - context_value - 1) & (ring.length - 1);
         mode = 'ring_copy';
         continue decrunching;
-      ///// Deep Mode /////
+        
+      /* Deep Mode */
       case 'deep':
+        ring = this.ring = this.ring_buffer.subarray(0, 0x4000);
+        ring_pos = ring.length - 60;
+        for (var i = 0; i < N_CHAR; i++) {
+          freq[i] = 1;
+          son[i] = i + T;
+          prnt[i + T] = i;
+        }
+        var i = 0, j = N_CHAR;
+        while (j <= R) {
+          freq[j] = freq[i] + freq[i + 1];
+          son[j] = i;
+          prnt[i] = prnt[i + 1] = j;
+          i += 2; j++;
+        }
+        freq[T] = 0xffff;
+        prnt[R] = 0;
         mode = default_mode = this.default_mode = 'deep_';
 //      continue decrunching;
       case 'deep_':
-        throw new Error('NYI');
+        context_value = son[R];
+        mode = 'deep2';
+//      continue decrunching;
+      case 'deep2':
+        while (context_value < T) {
+          if (!NEEDBITS(1)) {
+            this.context_value = context_value;
+            break decrunching;
+          }
+          context_value = son[context_value + BITS(1)];
+          DROPBITS(1);
+        }
+        context_value -= T;
+        if (freq[R] === MAX_FREQ) {
+          /* collect leaf nodes in the first half of the table */
+          /* and replace the freq by (freq + 1) / 2. */
+          var i = 0, j = 0;
+          for (; i < T; i++) {
+            if (son[i] >= T) {
+              freq[j] = (freq[i] + 1) >> 1;
+              son[j] = son[i];
+              j++;
+            }
+          }
+          /* begin constructing tree by connecting sons */
+          var i = 0;
+          for (var j = N_CHAR; j < T; j++) {
+            var k = (i + 1) & 0xffff;
+            var f = freq[j] = (freq[i] + freq[k]) & 0xffff;
+            k = (j - 1) & 0xffff;
+            while (f < freq[k]) k--;
+            k++;
+            var l = ((j - k) * 2) & 0xffff;
+            // TODO: something probably more sensible than this literal memmove substitute
+            var dst = new Uint8Array(freq.buffer, freq.byteOffset + (k + 1) * 2, l);
+            var src = new Uint8Array(new Uint8Array(freq.buffer, freq.byteOffset + k * 2, l));
+            dst.set(src);
+            freq[k] = f;
+            dst = new Uint8Array(son.buffer, son.byteOffset + (k + 1) * 2, l);
+            src = new Uint8Array(new Uint8Array(son.buffer, son.byteOffset + k * 2, l));
+            dst.set(src);
+            son[k] = i;
+            i += 2;
+        	}
+          /* connect prnt */
+          for (var i = 0; i < T; i++) {
+            var k = son[i];
+            prnt[k] = i;
+            if (k < T) prnt[k + 1] = i;
+          }
+        }
+        var c = prnt[context_value + T];
+        do {
+          var k = ++freq[c];
+          var l = (c + 1) & 0xffff;
+          /* if the order is disturbed, exchange nodes */
+          if (k > freq[l]) {
+            while (k > freq[l]) l++;
+            freq[c] = freq[l];
+            freq[l] = k;
+      
+            var i = son[c];
+            prnt[i] = l;
+            if (i < T) prnt[i + 1] = l;
+      
+            var j = son[l];
+            son[l] = i;
+      
+            prnt[j] = c;
+            if (j < T) prnt[j + 1] = c;
+            son[c] = j;
+      
+            c = l;
+          }
+          c = prnt[c];
+        } while (c !== 0); /* repeat up to root */
+        mode = 'deep3';
+//      continue decrunching;
+      case 'deep3':
+        if (context_value < 256) {
+          if (output_pos === output_end) break decrunching;
+          output_pos[output_pos++] = ring[ring_pos] = context_value;
+          ring_pos = (ring_pos + 1) % ring.length;
+          mode = default_mode;
+          continue decrunching;
+        }
+        copy_count = context_value - 253;
+        mode = 'deep4';
+//      continue decrunching;
+      case 'deep4':
+        if (!NEEDBITS(8)) break decrunching;
+        context_value = BITS(8);
+        DROPBITS(8);
+        mode = 'deep5';
+//      continue decrunching;
+      case 'deep5':
+        var i = context_value;
+        var j = LENGTHS[i];
+        if (!NEEDBITS(j)) {
+          this.context_value = context_value;
+          break decrunching;
+        }
+        context_value = (CODES[i] << 8) | (((i << j) | BITS(j)) & 0xff);
+        DROPBITS(j);
+        copy_pos = (ring_pos - context_value - 1) & (ring.length - 1);
+        mode = 'ring_copy';
+        continue decrunching;
       default: throw new Error('unknown state');
     } while (true);
     this.mode = mode;
