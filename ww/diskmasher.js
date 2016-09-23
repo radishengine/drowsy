@@ -82,6 +82,15 @@ Demasher.prototype = {
     function DROPBITS(n) {
       hold >>= n; bits -= n;
     }
+    function FASTBITS(n) {
+      while (bits < n) {
+        hold |= input[input_pos++] << bits;
+        bits += 8;
+      }
+      var value = hold & ((1 << n) - 1);
+      hold >>= n; bits -= n;
+      return value;
+    }
     decrunching: do switch(mode) {
       //// RLE Mode ////
       case 'rle':
@@ -164,6 +173,23 @@ Demasher.prototype = {
 //      continue decrunching;
       case 'quick_':
         var ring_mask = ring.length - 1;
+        
+        var input_max = input_end - 2; // maximum input per step: 1 + 2 + 8 bits
+        var output_max = output_end - 5; // maximum output per step: 3 + 2 bytes
+        // fast version
+        while (input_pos <= input_max && output_pos <= output_max) {
+          if (FASTBITS(1)) {
+            copy_count = FASTBITS(2) + 2;
+            copy_pos = (ring_pos - (FASTBITS(8) + 1)) & ring_mask;
+            do {
+              output[output_pos++] = ring[ring_pos] = ring[copy_pos];
+              ring_pos = (ring_pos + 1) & ring_mask;
+              copy_pos = (copy_pos + 1) & ring_mask;
+            } while (--copy_count);
+          }
+          else output[output_pos++] = FASTBITS(8);
+        }
+        
         do {
           if (output_pos === output_end) break decrunching;
           if (!NEEDBITS(9)) break decrunching;
@@ -203,6 +229,29 @@ Demasher.prototype = {
 //      continue decrunching;
       case 'medium_':
         var ring_mask = ring.length - 1;
+        
+        var input_max = input_end - 3; // maximum input per step: 1 + 8 + 8 bits
+        var output_max = output_end - 66; // maximum output per step: 3 + 63 bytes
+        medium_fast: while (input_pos <= input_max && output_pos <= output_max) {
+          if (FASTBITS(1)) {
+            var i = FASTBITS(8);
+            var u = LENGTHS[i];
+            copy_count = CODES[i] + 3;
+            i = ((i << u) | FASTBITS(u)) & 0xff;
+            u = LENGTHS[i];
+            i = (CODES[context_value] << 8) | (((context_value << u) | FASTBITS(u)) & 0xff);
+            copy_pos = (ring_pos - i - 1) & ring_mask;
+            do {
+              output[output_pos++] = ring[ring_pos] = ring[copy_pos];
+              ring_pos = (ring_pos + 1) & ring_mask;
+              copy_pos = (copy_pos + 1) & ring_mask;
+            } while (--copy_count);
+          }
+          else {
+            output[output_pos++] = FASTBITS(8);
+          }
+        }
+        
         do {
           if (output_pos === output_end) break decrunching;
           if (!NEEDBITS(9)) break decrunching;
