@@ -437,8 +437,68 @@ define(function() {
     get loaderFlags() {
       return this.dv.getUint32(88, true);
     },
-    get numberOfRvaAndSizes() {
-      return this.dv.getUint32(92, true);
+    get rvaRecords() {
+      var records = new Array(this.dv.getUint32(92, true));
+      for (var i = 0; i < records.length; i++) {
+        records[i] = {
+          relativeVirtualAddress: this.dv.getUint32(96 + i * 8, true),
+          byteLength: this.dv.getUint32(96 + i * 8 + 4, true),
+        };
+      }
+      Object.defineProperty(this, 'rvaRecords', {value:records});
+      return records;
+    },
+    getRecord: function(n) {
+      if (n >= this.records.length || this.records[n].byteLength === 0) return null;
+      return this.records[n];
+    },
+    get exportRecord() {
+      return this.getRecord(0);
+    },
+    get importRecord() {
+      return this.getRecord(1);
+    },
+    get resourceRecord() {
+      return this.getRecord(2);
+    },
+    get exceptionRecord() {
+      return this.getRecord(2);
+    },
+    get securityRecord() {
+      return this.getRecord(2);
+    },
+    get baseRelocationRecord() {
+      return this.getRecord(2);
+    },
+    get debugRecord() {
+      return this.getRecord(2);
+    },
+    get copyrightRecord() {
+      return this.getRecord(2);
+    },
+    get architectureRecord() {
+      return this.getRecord(2);
+    },
+    get globalPointer() {
+      return this.records.length < 9 ? NaN : this.records[8].rva;
+    },
+    get tlsRecord() {
+      return this.getRecord(9);
+    },
+    get loadConfigurationRecord() {
+      return this.getRecord(10);
+    },
+    get boundImportRecord() {
+      return this.getRecord(11);
+    },
+    get importAddressTableRecord() {
+      return this.getRecord(12);
+    },
+    get delayLoadImportDescriptorsRecord() {
+      return this.getRecord(13);
+    },
+    get clrRuntimeHeaderRecord() {
+      return this.getRecord(14);
     },
   };
   Win32OptionalHeaderView.byteLength = 96;
