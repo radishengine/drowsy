@@ -3,7 +3,7 @@ function(        utf_8,                   latin_us) {
 
   'use strict';
   
-  function split() {
+  function split(entries) {
     var context;
     return (context = this)
     .getBytes(-TrailerView.byteLength).then(function(rawTrailer) {
@@ -66,9 +66,9 @@ function(        utf_8,                   latin_us) {
           }
           return context.getBytes(bufferPos, commentBufferSize).then(onTrackback);
         }
-        context.addEntry(context.getSegment(pos + TrailerView.byteLength), {
+        entries.add(context.getSegment(pos + TrailerView.byteLength).setMetadata({
           isComment: true,
-        });
+        }));
         rawTrailer = new Uint8Array(rawTrailer.subarray(pos, pos + TrailerView.byteLength));
         return new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset + pos, TrailerView.byteLength);
       }
@@ -105,18 +105,18 @@ function(        utf_8,                   latin_us) {
             rawLocalRecord.byteOffset,
             rawLocalRecord.byteLength);
           
-          context.addEntry(
+          entries.add(
             context.getSegment(
               record.localRecordOffset
                 + LocalRecordView.byteLength
                 + localRecord.pathByteLength
                 + localRecord.extraByteLength,
-              compressedByteLength),
-            {
+              compressedByteLength)
+            .setMetadata({
               path: centralRecord.path,
               date: centralRecord.modifiedAt,
               creationSystem: centralRecord.creationSystem,
-            });
+            }));
         });
       });
     });
