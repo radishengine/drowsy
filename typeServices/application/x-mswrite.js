@@ -2,7 +2,7 @@ define(function() {
 
   'use strict';
   
-  function split() {
+  function split(entries) {
     var context = this;
     return context.getBytes(0, FileHeaderView.byteLength).then(function(rawHeader) {
       var header = new FileHeaderView(rawHeader.buffer, rawHeader.byteOffset, rawHeader.byteLength);
@@ -11,39 +11,39 @@ define(function() {
       var promises = [];
       if (header.textLength > 0) {
         /* windows-1252 text with binary/OLE stuff mixed in */
-        context.addEntry(context.getSegment(header.textOffset, header.textLength), {
+        entries.add(context.getSegment(header.textOffset, header.textLength).setMetadata({
           type: 'application/x-mswrite-text-data',
-        });
+        }));
       }
       if (header.characterInfoLength > 0) {
-        context.addEntry(context.getSegment(header.characterInfoOffset, header.characterInfoLength), {
+        entries.add(context.getSegment(header.characterInfoOffset, header.characterInfoLength).setMetadata({
           type: 'application/x-mswrite-character-info',
-        });
+        }));
       }
       if (header.paragraphInfoLength > 0) {
-        context.addEntry(context.getSegment(header.paragraphInfoOffset, header.paragraphInfoLength), {
+        entries.add(context.getSegment(header.paragraphInfoOffset, header.paragraphInfoLength).setMetadata({
           type: 'application/x-mswrite-paragraph-info',
-        });
+        }));
       }
       if (header.footnoteTableLength > 0) {
-        context.addEntry(context.getSegment(header.footnoteTableOffset, header.footnoteTableLength), {
+        entries.add(context.getSegment(header.footnoteTableOffset, header.footnoteTableLength).setMetadata({
           type: 'application/x-mswrite-footnote-table',
-        });
+        }));
       }
       if (header.sectionTableLength > 0) {
-        context.addEntry(context.getSegment(header.sectionTableOffset, header.sectionTableLength), {
+        entries.add(context.getSegment(header.sectionTableOffset, header.sectionTableLength).setMetadata({
           type: 'application/x-mswrite-section-table',
-        });
+        }));
       }
       if (header.pageTableLength > 0) {
-        context.addEntry(context.getSegment(header.pageTableOffset, header.pageTableLength), {
+        entries.add(context.getSegment(header.pageTableOffset, header.pageTableLength).setMetadata({
           type: 'application/x-mswrite-page-table',
-        });
+        }));
       }
       if (header.fontNameTableLength > 0) {
-        context.addEntry(context.getSegment(header.fontNameTableOffset, header.fontNameTableLength), {
+        entries.add(context.getSegment(header.fontNameTableOffset, header.fontNameTableLength).setMetadata({
           type: 'application/x-mswrite-font-name-table',
-        });
+        }));
       }
     });
   }
