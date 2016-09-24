@@ -291,6 +291,51 @@ define(function() {
     get characteristics() {
       return this.dv.getUint16(22, true);
     },
+    get isStrippedOfRelocationInfo() {
+      return !!(this.characteristics & 0x0001); // must be loaded at preferred base address
+    },
+    get hasUnresolvedExternalReferences() {
+      return !(this.characteristics & 0x0002);
+    },
+    get isStrippedOfLineNumbers() {
+      return !!(this.characteristics & 0x0004);
+    },
+    get isStrippedOfSymbols() {
+      return !!(this.characteristics & 0x0008);
+    },
+    get aggressivelyTrimWorkingSet() {
+      return !!(this.characteristics & 0x0010); // obsolete
+    },
+    get canHandleAddressesOver2GB() {
+      return !!(this.characteristics & 0x0020);
+    },
+    get bytesReversedLo() {
+      return !!(this.characteristics & 0x0080); // obsolete
+    },
+    get supports32BitWords() {
+      return !!(this.characteristics & 0x0100);
+    },
+    get strippedOfDebugInfo() {
+      return !!(this.characteristics & 0x0200);
+    },
+    get runFromSwapFileIfOnRemovableMedia() {
+      return !!(this.characteristics & 0x0400);
+    },
+    get runFromSwapFileIfOnNetwork() {
+      return !!(this.characteristics & 0x0800);
+    },
+    get isSystemFile() {
+      return !!(this.characteristics & 0x1000);
+    },
+    get isDLL() {
+      return !!(this.characteristics & 0x2000);
+    },
+    get requiresUniprocessor() {
+      return !!(this.characteristics & 0x4000);
+    },
+    get bytesReversedHi() {
+      return !!(this.characteristics & 0x8000); // obsolete
+    },
   };
   Windows32HeaderView.signature = 'PE\0\0';
   Windows32HeaderView.byteLength = 24;
