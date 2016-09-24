@@ -340,6 +340,109 @@ define(function() {
   Windows32HeaderView.signature = 'PE\0\0';
   Windows32HeaderView.byteLength = 24;
   
+  function Win32OptionalHeaderView(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  Win32OptionalHeaderView.prototype = {
+    get signature() {
+      return this.dv.getUint16(0, true);
+    },
+    get hasValidSignature() {
+      return this.signature === 0x010B || this.signature === 0x020B;
+    },
+    get is64Bit() {
+      return this.signature === 0x020B;
+    },
+    get linkerVersionMajor() {
+      return this.dv.getUint8(2);
+    },
+    get linkerVersionMinor() {
+      return this.dv.getUint8(3);
+    },
+    get codeByteLength() {
+      return this.dv.getUint32(4, true);
+    },
+    get initializedByteLength() {
+      return this.dv.getUint32(8, true);
+    },
+    get uninitializedByteLength() {
+      return this.dv.getUint32(12, true);
+    },
+    get entryPoint() {
+      return this.dv.getUint32(16, true);
+    },
+    get codeBase() {
+      return this.dv.getUint32(20, true);
+    },
+    get dataBase() {
+      return this.dv.getUint32(24, true);
+    },
+    get imageBase() {
+      return this.dv.getUint32(28, true);
+    },
+    get sectionAlignment() {
+      return this.dv.getUint32(32, true);
+    },
+    get fileAlignment() {
+      return this.dv.getUint32(36, true);
+    },
+    get osVersionMajor() {
+      return this.dv.getUint16(40, true);
+    },
+    get osVersionMinor() {
+      return this.dv.getUint16(42, true);
+    },
+    get imageVersionMajor() {
+      return this.dv.getUint16(44, true);
+    },
+    get imageVersionMinor() {
+      return this.dv.getUint16(46, true);
+    },
+    get subsystemVersionMajor() {
+      return this.dv.getUint16(48, true);
+    },
+    get subsytemVersionMinor() {
+      return this.dv.getUint16(50, true);
+    },
+    get win32VersionValue() {
+      return this.dv.getUint32(52, true);
+    },
+    get imageSize() {
+      return this.dv.getUint32(56, true);
+    },
+    get headersSize() {
+      return this.dv.getUint32(60, true);
+    },
+    get checksum() {
+      return this.dv.getUint32(64, true);
+    },
+    get subsystem() {
+      return this.dv.getUint16(68, true);
+    },
+    get dllCharacteristics() {
+      return this.dv.getUint16(70, true);
+    },
+    get stackReserveSize() {
+      return this.dv.getUint32(72, true);
+    },
+    get stackCommitSize() {
+      return this.dv.getUint32(76, true);
+    },
+    get heapReserveSize() {
+      return this.dv.getUint32(80, true);
+    },
+    get heapCommitSize() {
+      return this.dv.getUint32(84, true);
+    },
+    get loaderFlags() {
+      return this.dv.getUint32(88, true);
+    },
+    get numberOfRvaAndSizes() {
+      return this.dv.getUint32(92, true);
+    },
+  };
+  Win32OptionalHeaderView.byteLength = 96;
+  
   return {
     split: split,
   };
