@@ -258,6 +258,43 @@ define(function() {
   Win16HeaderView.signature = 'NE';
   Win16HeaderView.byteLength = 0x40;
   
+  function Windows32HeaderView(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  Windows32HeaderView.prototype = {
+    get hasValidSignature() {
+      return this.dv.getUint32(0, true) === 0x00004550; // PE\0\0
+    },
+    get targetArchitecture() {
+      switch(this.dv.getUint16(4, true)) {
+        case 0x014c: return 'x86';
+        case 0x0200: return 'intel_itanium';
+        case 0x8664: return 'x64';
+        default: return 'unknown';
+      }
+    },
+    get sectionCount() {
+      return this.dv.getUint16(6, true);
+    },
+    get timeStamp() {
+      return new Date(this.dv.getUint32(8, true) * 1000);
+    },
+    get pointerToSymbolTable() {
+      return this.dv.getUint32(12, true);
+    },
+    get symbolCount() {
+      return this.dv.getUint32(16, true);
+    },
+    get optionalHeaderByteLength() {
+      return this.dv.getUint16(20, true);
+    },
+    get characteristics() {
+      return this.dv.getUint16(22, true);
+    },
+  };
+  Windows32HeaderView.signature = 'PE\0\0';
+  Windows32HeaderView.byteLength = 24;
+  
   return {
     split: split,
   };
