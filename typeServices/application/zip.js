@@ -4,9 +4,8 @@ function(        utf_8,                   latin_us) {
   'use strict';
   
   function split(entries) {
-    var context;
-    return (context = this)
-    .getBytes(-TrailerView.byteLength).then(function(rawTrailer) {
+    var context = this;
+    return context.getBytes(-TrailerView.byteLength).then(function(rawTrailer) {
       var trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset, rawTrailer.byteLength);
       if (trailer.hasValidSignature && trailer.commentByteLength === 0) return trailer;
       var bufferPos = -TrailerView.byteLength;
