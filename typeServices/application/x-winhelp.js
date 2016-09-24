@@ -2,6 +2,15 @@ define(function() {
 
   'use strict';
   
+  function split(entries) {
+    var context = this;
+    return context.getBytes(0, WinHelpHeaderView.byteLength)
+    .then(function(rawHeader) {
+      var header = new WinHelpHeaderView(rawHeader.buffer, rawHeader.byteOffset, rawHeader.byteLength);
+      if (!header.hasValidSignature) return Promise.reject('winhelp file signature not found');
+    });
+  }
+  
   function WinHelpHeaderView(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
   }
@@ -78,9 +87,7 @@ define(function() {
   BTreeHeaderView.byteLength = 38;
   
   return {
-    HeaderView: WinHelpHeaderView,
-    FileHeaderView: FileHeaderView,
-    BTreeHeaderView: BTreeHeaderView,
+    split: split,
   };
 
 });
