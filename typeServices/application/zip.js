@@ -19,7 +19,7 @@ function(        utf_8,                   latin_us) {
         rawTrailer = expanded;
         trailer = null;
         findTrailer: for (var pos = moreBytes.length-1; pos >= 3; pos -= 4) {
-          switch(rawTrailer[pos]) {
+          switch(rawTrailer[pos]) {l
             case 0x50: // 'P'
               if (rawTrailer[pos+1] === 0x4B && rawTrailer[pos+2] === 0x05 && rawTrailer[pos+3] === 0x06) {
                 trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset + pos, TrailerView.byteLength);
@@ -98,7 +98,7 @@ function(        utf_8,                   latin_us) {
         }
         var compressedByteLength = centralRecord.compressedByteLength32;
         var uncompressedByteLength = centralRecord.uncompressedByteLength32;
-        return context.getBytes(centralRecord.localHeaderOffset, LocalFileHeaderFixedView.byteLength)
+        return context.getBytes(centralRecord.localRecordOffset, LocalRecordView.byteLength)
         .then(function(rawLocalRecord) {
           var localRecord = new LocalRecordView(
             rawLocalRecord.buffer,
@@ -107,10 +107,10 @@ function(        utf_8,                   latin_us) {
           
           context.addEntry(
             context.getBytes(
-              record.localHeaderOffset
-                + LocalFileHeaderFixedView.byteLength
-                + localFixed.pathByteLength
-                + localFixed.extraByteLength,
+              record.localRecordOffset
+                + LocalRecordView.byteLength
+                + localRecord.pathByteLength
+                + localRecord.extraByteLength,
               compressedByteLength),
             {
               path: centralRecord.path,
@@ -119,7 +119,6 @@ function(        utf_8,                   latin_us) {
             });
         });
       });
-      context.getBytes
     });
   }
   
@@ -286,7 +285,7 @@ function(        utf_8,                   latin_us) {
     get externalAttributes() {
       return this.dv.getUint32(38, true);
     },
-    get localHeaderOffset() {
+    get localRecordOffset() {
       return this.dv.getUint32(42, true);
     },
     get pathPos() {
@@ -323,6 +322,93 @@ function(        utf_8,                   latin_us) {
     }
     return list;
   };
+  
+  function LocalRecordView(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+  }
+  LocalRecordView.prototype = {
+    get hasValidSignature() {
+      return String.fromCharCode.apply(null, this.bytes.subarray(0, 4)) === LocalRecordView.signature;
+    },
+    get version() {
+      return this.dv.getUint16(4, true) / 10;
+    },
+    get flags() {
+      return this.dv.getUint16(6, true) / 10;
+    },
+    get isEncrypted() {
+      return !!(this.flags & (1 << 0));
+    },
+    get usesCompressionOption1() {
+      return !!(this.flags & (1 << 1));
+    },
+    get usesCompressionOption2() {
+      return !!(this.flags & (1 << 2));
+    },
+    get hasDataDescriptor() {
+      return !!(this.flags & (1 << 3));
+    },
+    get hasEnhancedDeflation() {
+      return !!(this.flags & (1 << 4));
+    },
+    get hasCompressedPatchedData() {
+      return !!(this.flags & (1 << 5));
+    },
+    get hasStrongEncryption() {
+      return !!(this.flags & (1 << 6));
+    },
+    get hasUTF8Encoding() {
+      return !!(this.flags & (1 << 11));
+    },
+    get hasMaskHeaderValues() {
+      return !!(this.flags & (1 << 13));
+    },
+    get compressionMethod() {
+      var methodCode = this.dv.getUint16(8, true);
+      switch(methodCode) {
+        case 0: return 'none';
+        case 1: return 'shrunk';
+        case 2: return 'factor1';
+        case 3: return 'factor2';
+        case 4: return 'factor3';
+        case 5: return 'factor4';
+        case 6: return 'imploded';
+        case 8: return 'deflated';
+        case 9: return 'enhancedDeflated';
+        case 10: return 'dclImploded';
+        case 12: return 'bzip2';
+        case 14: return 'lzma';
+        case 18: return 'terse';
+        case 19: return 'lz77';
+        case 98: return 'ppmd';
+        default: return methodCode;
+      }
+    },
+    get modifiedAt() {
+      return getTimeAndDate(this.dv, 0xA);
+    },
+    get crc32() {
+      return ('0000000' + this.dv.getUint32(0xE, true).toString(16).toUpperCase()).slice(-8);
+    },
+    get compressedSize32() {
+      return this.dv.getUint32(0x12, true);
+    },
+    get uncompressedSize32() {
+      return this.dv.getUint32(0x16, true);
+    },
+    get isZip64() {
+      return this.compressedSize32 === 0xffffffff && this.uncompressedSize32 === 0xffffffff;
+    },
+    get pathByteLength() {
+      return this.dv.getInt16(0x1a, true);
+    },
+    get extraByteLength() {
+      return this.dv.getInt16(0x1c, true);
+    },
+  };
+  LocalRecordView.byteLength = 0x1e;
+  LocalRecordView.signature = 'PK\x03\x04';
   
   function getTimeAndDate(dataView, offset) {
     var time = dataView.getUint16(offset, true);
