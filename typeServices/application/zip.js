@@ -66,7 +66,7 @@ function(        utf_8,                   latin_us) {
           }
           return context.getBytes(bufferPos, commentBufferSize).then(onTrackback);
         }
-        context.addEntry(context.slice(pos + TrailerView.byteLength), {
+        context.addEntry(context.getSegment(pos + TrailerView.byteLength), {
           isComment: true,
         });
         rawTrailer = new Uint8Array(rawTrailer.subarray(pos, pos + TrailerView.byteLength));
@@ -106,7 +106,7 @@ function(        utf_8,                   latin_us) {
             rawLocalRecord.byteLength);
           
           context.addEntry(
-            context.getBytes(
+            context.getSegment(
               record.localRecordOffset
                 + LocalRecordView.byteLength
                 + localRecord.pathByteLength
