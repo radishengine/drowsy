@@ -5,7 +5,7 @@ define(function() {
   function split(entries) {
     var segment = this;
     var trailerSegment = segment.getSegment(-TrailerView.byteLength);
-    return trailerSegment.then(function(rawTrailer) {
+    return trailerSegment.getBytes().then(function(rawTrailer) {
       var trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset, rawTrailer.byteLength);
       if (trailer.hasValidSignature && trailer.commentByteLength === 0) {
         if (entries.accepts('application/x-zip-trailer')) {
@@ -14,6 +14,7 @@ define(function() {
         return trailer;
       }
       // do the dance
+      trailerSegment = null;
       var bufferPos = -TrailerView.byteLength;
       var commentBufferSize = 0x20;
       var earliestPos = bufferPos - 0x10000;
@@ -67,7 +68,7 @@ define(function() {
               continue findTrailer;
           }
         }
-        if (!trailer) {
+        if (!trailerSegment) {
           bufferPos -= commentBufferSize;
           if (bufferPos < earliestPos) {
             return Promise.reject('application/zip: trailer not found');
