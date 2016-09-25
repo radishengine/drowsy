@@ -5,7 +5,39 @@
   
   importScripts('../require.js');
   
-  function Context(id) {
+  function onMessage(e) {
+    var command = e.data;
+    var commandName = command[0];
+    var contextID = command[1];
+    switch (commandName) {
+      case 'split':
+        var type = command[2];
+        if (!type) {
+          this.postMessage(['failed', contextID, 'split: data type must be specified']);
+          break;
+        }
+        var entryFilter = command[3];
+        var context = Context.get(contextID, type);
+        context.split(entryFilter).then(
+          function() {
+            context.send('complete');
+          },
+          function(reason) {
+            context.send('failed', reason);
+          });
+        break;
+      case 'close':
+        if (context) context.close();
+        else worker.postMessage(['failed', null, 'attempt to close unrecognized context: ' + contextID]);
+        break;
+      default:
+        this.postMessage(['failed', contextID, 'unknown command: ' + commandName]);
+        break;
+    }
+  }
+  
+  function Context(type, id) {
+    this.type = type;
     this.id = id;
     this.transferables = [];
   }
@@ -25,50 +57,44 @@
       worker.postMessage([commandName, this.id].concat(args || []), this.popTransferables());
       return this;
     },
-  };
-  Context.get = function(contextID) {
-    if (!contextID) return null;
-    if (this.hasOwnProperty(contextID)) return this[contextID];
-    return this[contextID] = new Context(contextID);
-  };
-
-  function onMessage(e) {
-    var command = e.data;
-    var commandName = command[0];
-    var contextID = command[1];
-    var context = Context.get(contextID);
-    switch (commandName) {
-      case 'split':
-        var type = command[2];
-        if (!type) {
-          this.postMessage(['error', contextID, 'split: data type must be specified']);
-          break;
-        }
-        var worker = this;
-        require(type,
+    split: function(entryFilter) {
+      var self = this;
+      return new Promise(function(resolve, reject) {
+        require(this.type,
           function(typeHandler) {
-            if (typeof typeHandler.split !== 'function') {
-              worker.postMessage(['error', contextID, 'split not defined for ' + type]);
+            if (typeof typeHandler.split === 'function') {
+              var entries = new SplitEntryCollection(self, entryFilter);
+              resolve(typeHandler.split.call(self, entries));
             }
             else {
-              command.splice(0, 3, context);
-              var result = typeHandler.split.apply(typeHandler, command);
+              reject('split not defined for ' + type);
             }
           },
           function() {
-            worker.postMessage(['error', command[1], 'failed to load handler for type ' + type]);
+            reject('failed to load type handler for ' + type);
           });
-        break;
-      case 'close':
-        if (context) context.close();
-        else worker.postMessage(['error', null, 'attempt to close unrecognized context: ' + contextID]);
-        break;
-      default:
-        this.postMessage(['error', contextID, 'unknown command: ' + commandName]);
-        break;
-    }
-  }
+      });
+    },
+  };
+  Context.get = function(contextID, type) {
+    if (!contextID) return null;
+    if (this.hasOwnProperty(contextID)) return this[contextID];
+    return this[contextID] = new Context(contextID, type);
+  };
   
+  // TODO: support filter parameter
+  function SplitEntryCollection(context, filter) {
+    this.context = context;
+  }
+  SplitEntryCollection.prototype = {
+    add: function(entry) {
+      this.context.send('entry', entry);
+    },
+    accepts: function() {
+      return true;
+    },
+  };
+
   this.addEventListener('message', onMessage);
 
 }).apply(self);
