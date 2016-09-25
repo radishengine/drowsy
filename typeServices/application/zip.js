@@ -1,16 +1,21 @@
-define(['charset/utf-8', 'charset/x-msdos-latin-us'],
-function(        utf_8,                   latin_us) {
+define(function() {
 
   'use strict';
   
   function split(entries) {
-    var context = this;
-    return context.getBytes(-TrailerView.byteLength).then(function(rawTrailer) {
+    var segment = this;
+    var trailerSegment = segment.getSegment(-TrailerView.byteLength);
+    return trailerSegment.then(function(rawTrailer) {
       var trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset, rawTrailer.byteLength);
-      if (trailer.hasValidSignature && trailer.commentByteLength === 0) return trailer;
+      if (trailer.hasValidSignature && trailer.commentByteLength === 0) {
+        if (entries.accepts('application/x-zip-trailer')) {
+          entries.add('application/x-zip-trailer', trailerSegment);
+        }
+        return trailer;
+      }
       var bufferPos = -TrailerView.byteLength;
-      var commentBufferSize = 0x100;
-      var maxCommentBufferSize = 0x10000;
+      var commentBufferSize = 0x20;
+      var earliestPos = bufferPos - 0x10000;
       function onTrackback(moreBytes) {
         var expanded = new Uint8Array(moreBytes.length + rawTrailer.length);
         expanded.set(moreBytes);
@@ -18,11 +23,12 @@ function(        utf_8,                   latin_us) {
         rawTrailer = expanded;
         trailer = null;
         findTrailer: for (var pos = moreBytes.length-1; pos >= 3; pos -= 4) {
-          switch(rawTrailer[pos]) {l
+          switch(rawTrailer[pos]) {
             case 0x50: // 'P'
               if (rawTrailer[pos+1] === 0x4B && rawTrailer[pos+2] === 0x05 && rawTrailer[pos+3] === 0x06) {
                 trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset + pos, TrailerView.byteLength);
                 if (trailer.commentByteLength === (rawTrailer.length - pos - TrailerView.byteLength)) {
+                  trailerSegment = segment.getSegment(bufferPos + pos);
                   break findTrailer;
                 }
                 trailer = null;
@@ -32,6 +38,7 @@ function(        utf_8,                   latin_us) {
               if (rawTrailer[pos-1] === 0x50 && rawTrailer[pos+1] === 0x05 && rawTrailer[pos+2] === 0x06) {
                 trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset + pos - 1, TrailerView.byteLength);
                 if (trailer.commentByteLength === (rawTrailer.length - pos - 1 - TrailerView.byteLength)) {
+                  trailerSegment = segment.getSegment(bufferPos + pos - 1);
                   break findTrailer;
                 }
                 trailer = null;
@@ -41,6 +48,7 @@ function(        utf_8,                   latin_us) {
               if (rawTrailer[pos-2] === 0x50 && rawTrailer[pos-1] === 0x4B && rawTrailer[pos+1] === 0x06) {
                 trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset + pos - 2, TrailerView.byteLength);
                 if (trailer.commentByteLength === (rawTrailer.length - pos - 2- TrailerView.byteLength)) {
+                  trailerSegment = segment.getSegment(bufferPos + pos - 2);
                   break findTrailer;
                 }
                 trailer = null;
@@ -50,6 +58,7 @@ function(        utf_8,                   latin_us) {
               if (rawTrailer[pos-3] === 0x50 && rawTrailer[pos-2] === 0x4B && rawTrailer[pos-1] === 0x05) {
                 trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset + pos - 3, TrailerView.byteLength);
                 if (trailer.commentByteLength === (rawTrailer.length - pos - 3 - TrailerView.byteLength)) {
+                  trailerSegment = segment.getSegment(bufferPos + pos - 3);
                   break findTrailer;
                 }
                 trailer = null;
@@ -58,33 +67,53 @@ function(        utf_8,                   latin_us) {
           }
         }
         if (!trailer) {
-          commentBufferSize *= 2;
           bufferPos -= commentBufferSize;
-          if (commentBufferSize >= maxCommentBufferSize) {
+          if (bufferPos < earliestPos) {
             return Promise.reject('application/zip: trailer not found');
           }
-          return context.getBytes(bufferPos, commentBufferSize).then(onTrackback);
+          commentBufferSize *= 2;
+          return segment.getBytes(bufferPos, commentBufferSize).then(onTrackback);
         }
-        entries.add(context.getSegment(pos + TrailerView.byteLength).setMetadata({
-          isComment: true,
-        }));
+        if (entries.accepts('application/x-zip-trailer')) {
+          entries.add('application/x-zip-trailer', trailerSegment);
+        }
         rawTrailer = new Uint8Array(rawTrailer.subarray(pos, pos + TrailerView.byteLength));
         return new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset + pos, TrailerView.byteLength);
       }
       bufferPos -= commentBufferSize;
-      return context.getBytes(bufferPos, commentBufferSize).then(onTrackback);
+      return segment.getBytes(bufferPos, commentBufferSize).then(onTrackback);
     })
     .then(function(trailer) {
-      if (trailer.centralDirFirstPart !== trailer.partNumber
-       || trailer.partEntryCount !== trailer.totalEntryCount) {
-        return Promise.reject('multi-part zip files not yet supported'); // TODO
+      if (!entries.accepts('application/x-zip-central-record')
+       && !entries.accepts('application/x-zip-local-record')) {
+        return;
       }
-      return context
-      .getBytes(trailer.centralDirFirstOffset, trailer.centralDirByteLength)
+      var centralDirSegment = segment.getSegment(trailer.centralDirFirstOffset, trailer.centralDirByteLength);
+      return centralDirSegment.getBytes()
       .then(function(rawCDir) {
-        return CentralRecordView.getList(
-          trailer.partEntryCount,
-          rawCDir.buffer, rawCDir.byteOffset, rawCDir.byteLength);
+        var pos = 0;
+        for (; count > 0; count--) {
+          var record = new CentralRecordView(rawCDir.buffer, rawCDir.byteOffset + pos, rawCDir.byteLength - pos);
+          if (entries.accepts('application/x-zip-central-record')){
+            if (record.isZip64) {
+              return Promise.reject('zip64 not yet supported');
+            }
+            entries.add('application/x-zip-central-record', centralDirSegment.getSegment(pos, record.byteLength));
+          }
+          if (trailer.partNumber === record.firstPartNumber && entries.accepts('application/x-zip-local-record')) {
+            segment.getBytes(record.localRecordOffset, LocalRecordView.byteLength)
+            .then(function(rawLocalHeader) {
+              var localHeader = new LocalRecordView(rawLocalHeader.buffer, rawLocalHeader.byteOffset, rawLocalHeader.byteLength);
+              if (localHeader.isZip64) {
+                return Promise.reject('zip64 not yet supported');
+              }
+              var compressedLength = localHeader.compressedByteLength32;
+            });
+            entries.add('application/x-zip-local-record', 
+          }
+          pos += record.byteLength;
+        }
+        return list;
       });
     })
     .then(function(centralDirRecords) {
