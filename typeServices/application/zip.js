@@ -13,6 +13,7 @@ define(function() {
         }
         return trailer;
       }
+      // do the dance
       var bufferPos = -TrailerView.byteLength;
       var commentBufferSize = 0x20;
       var earliestPos = bufferPos - 0x10000;
@@ -84,69 +85,35 @@ define(function() {
       return segment.getBytes(bufferPos, commentBufferSize).then(onTrackback);
     })
     .then(function(trailer) {
-      if (!entries.accepts('application/x-zip-central-record')
-       && !entries.accepts('application/x-zip-local-record')) {
+      if (trailer.partEntryCount === 0 || (
+          !entries.accepts('application/x-zip-central-record')
+          && !entries.accepts('application/x-zip-local-record'))) {
         return;
       }
-      var centralDirSegment = segment.getSegment(trailer.centralDirFirstOffset, trailer.centralDirByteLength);
-      return centralDirSegment.getBytes()
-      .then(function(rawCDir) {
-        var pos = 0;
-        for (; count > 0; count--) {
-          var record = new CentralRecordView(rawCDir.buffer, rawCDir.byteOffset + pos, rawCDir.byteLength - pos);
-          if (entries.accepts('application/x-zip-central-record')){
-            if (record.isZip64) {
-              return Promise.reject('zip64 not yet supported');
-            }
-            entries.add('application/x-zip-central-record', centralDirSegment.getSegment(pos, record.byteLength));
-          }
-          if (trailer.partNumber === record.firstPartNumber && entries.accepts('application/x-zip-local-record')) {
-            segment.getBytes(record.localRecordOffset, LocalRecordView.byteLength)
-            .then(function(rawLocalHeader) {
-              var localHeader = new LocalRecordView(rawLocalHeader.buffer, rawLocalHeader.byteOffset, rawLocalHeader.byteLength);
-              if (localHeader.isZip64) {
-                return Promise.reject('zip64 not yet supported');
-              }
-              var compressedLength = localHeader.compressedByteLength32;
-            });
-            entries.add('application/x-zip-local-record', 
-          }
-          pos += record.byteLength;
+      var pos = trailer.partNumber === trailer.centralDirFirstPart ? trailer.centralDirFirstOffset : 0;
+      var count = trailer.partEntryCount;
+      var pending = [];
+      function onPart(rawCentral) {
+        var central = new CentralRecordView(rawRecord.buffer, rawRecord.byteOffset, rawRecord.byteLength);
+        if (entries.accepts('application/x-zip-central-record')) {
+          entries.add('application/x-zip-central-record', segment.getSegment(pos, central.byteLength));
         }
-        return list;
-      });
-    })
-    .then(function(centralDirRecords) {
-      return Promise.all(centralDirRecords.map(function(centralRecord) {
-        if (centralRecord.isZip64) {
-          return Promise.reject('zip64 not yet supported'); // TODO
+        if (entries.accepts('application/x-zip-local-record')) {
+          pending.push(segment.getBytes(central.localRecordOffset, LocalRecordView.byteLength)
+          .then(function(rawLocal) {
+            var local = new LocalRecordView(rawLocal.buffer, rawLocal.byteOffset, rawLocal.byteLength);
+            entries.add('application/x-zip-local-record', segment.getSegment(record.localRecordOffset, local.byteLength));
+          }));
         }
-        if (centralRecord.isEncrypted) {
-          return Promise.reject('encryption not yet supported'); // TODO
+        if (--count > 0) {
+          pos += central.byteLength;
+          return segment.getBytes(pos, CentralRecordView.byteLength).then(onPart);
         }
-        var compressedByteLength = centralRecord.compressedByteLength32;
-        var uncompressedByteLength = centralRecord.uncompressedByteLength32;
-        return context.getBytes(centralRecord.localRecordOffset, LocalRecordView.byteLength)
-        .then(function(rawLocalRecord) {
-          var localRecord = new LocalRecordView(
-            rawLocalRecord.buffer,
-            rawLocalRecord.byteOffset,
-            rawLocalRecord.byteLength);
-          
-          entries.add(
-            context.getSegment(
-              record.localRecordOffset
-                + LocalRecordView.byteLength
-                + localRecord.pathByteLength
-                + localRecord.extraByteLength,
-              compressedByteLength)
-            .setMetadata({
-              path: centralRecord.path,
-              date: centralRecord.modifiedAt,
-              creationSystem: centralRecord.creationSystem,
-            }));
-        });
-      });
+        else {
+          return Promise.all(pending);
+        }
+      }
+      return segment.getBytes(pos, CentralRecordView.byteLength).then(onPart);
     });
   }
   
@@ -340,16 +307,6 @@ define(function() {
   };
   CentralRecordView.signature = 'PK\x01\x02';
   CentralRecordView.fixedByteLength = 46;
-  CentralRecordView.getList = function(count, buffer, byteOffset, byteLength) {
-    var list = [];
-    var pos = 0;
-    for (; count > 0; count--) {
-      var record = new CentralRecordView(buffer, byteOffset + pos, byteLength - pos);
-      pos += record.byteLength;
-      list.push(record);
-    }
-    return list;
-  };
   
   function LocalRecordView(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
@@ -433,6 +390,9 @@ define(function() {
     },
     get extraByteLength() {
       return this.dv.getInt16(0x1c, true);
+    },
+    get byteLength() {
+      return LocalRecordView.byteLength + this.pathByteLength + this.extraByteLength + this.compressedByteLength32;
     },
   };
   LocalRecordView.byteLength = 0x1e;
