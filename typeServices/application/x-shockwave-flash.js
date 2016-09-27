@@ -67,7 +67,7 @@ define(function() {
   
   typeNames = {
     '0':'control/end',
-    '9':'control/set-background-color',
+    '9':'control/background-rgb',
     '43':'control/frame-label',
     '24':'control/protect',
     '56':'control/export',
@@ -187,6 +187,243 @@ define(function() {
     get frameCount() {
       return this.dv.getUint16(this.offsetof_frameRect + this.sizeof_frameRect + 2, true);
     },
+  };
+  
+  function RGBView(buffer, byteOffset, byteLength) {
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+  }
+  RGBView.prototype = {
+    get red()   { return this.bytes[0]; },
+    get green() { return this.bytes[1]; },
+    get blue()  { return this.bytes[2]; },
+  };
+  
+  function StringView(buffer, byteOffset, byteLength) {
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+  }
+  StringView.prototype = {
+    // null terminated
+    // SWF1-5: encoding is ANSI or Shift-JIS, depending on the locale of the player client (!)
+    // SWF6+: UTF-8
+  };
+  
+  function EmptyView() {
+  }
+  
+  function readNullTerminatedSubarray(bytes, pos) {
+    var end = pos;
+    while (bytes[end]) end++;
+    return bytes.subarray(pos, end);
+  }
+  
+  function ExportView(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+  }
+  ExportView.prototype = {
+    get values() {
+      var values = new Array(this.getUint16(0, false));
+      var pos = 2;
+      for (var i = 0; i < values.length; i++) {
+        values[i] = {
+          id: this.dv.getUint16(pos, false),
+          identifier: readNullTerminatedSubarray(this.bytes, pos);
+        };
+        pos += 2 + values[i].length + 1;
+      }
+      Object.defineProperty(this, 'values', {value:values});
+      return values;
+    },
+  };
+  
+  function readTagNameArray(bytes, dv, pos) {
+    var imports = new Array(dv.getUint16(pos, true));
+    pos += 2;
+    for (var i = 0; i < imports.length; i++) {
+      var rawName = readNullTerminatedSubarray(bytes, pos + 2); // TODO: encode
+      imports[i] = {
+        tag: dv.getUint16(pos, true),
+        name: rawName, // TODO: encode
+      };
+      pos += 2 + imports[i].name.length + 1;
+    }
+    return imports;
+  }
+  
+  function SWF7ImportView(buffer, byteOffset, byteLength) {
+    var bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    var dv = new DataView(buffer, byteOffset + rawURL.length + 1, byteLength - rawURL.length - 1);
+    var rawURL = readNullTerminatedSubarray(bytes, 0);
+    this.url = rawURL; // TODO: encode
+    this.imports = readTagNameArray(bytes, dv, this.url.length + 1);
+  }
+  
+  function SWF8ImportView(buffer, byteOffset, byteLength) {
+    var bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    var dv = new DataView(buffer, byteOffset + rawURL.length + 1, byteLength - rawURL.length - 1);
+    var rawURL = readNullTerminatedSubarray(bytes, 0);
+    this.url = rawURL; // TODO: encode
+    // two reserved bytes (must be 1, 0)
+    this.imports = readTagNameArray(bytes, dv, this.url.length + 1 + 2);
+  }
+  
+  function OptionalMD5View(buffer, byteOffset, byteLength) {
+    if (byteLength === 0) {
+      this.md5 = 0;
+      return;
+    }
+    var bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    this.md5 = parseInt(String.fromCharCode(null, readNullTerminatedSubarray(bytes, 0)), 16) >> 0;
+  }
+  
+  function SWF6EnableDebugger(buffer, byteOffset, byteLength) {
+    if (byteLength === 2) {
+      this.md5 = 0;
+      return;
+    }
+    var bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    this.md5 = parseInt(String.fromCharCode(null, readNullTerminatedSubarray(bytes, 2)), 16) >> 0;
+  }
+  
+  function ScriptLimitsView(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  ScriptLimitsView.prototype = {
+    get maxRecursionDepth()    { return this.dv.getUint16(0, true); },
+    get scriptTimeoutSeconds() { return this.dv.getUint16(2, true); },
+  };
+  
+  function SetTabIndexView(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  SetTabIndexView.prototype = {
+    get depth()    { return this.dv.getUint16(0, true); },
+    get tabIndex() { return this.dv.getUint16(2, true); },
+  };
+  
+  function readRect(bytes, pos) {
+    var bitCount = bytes[pos] >>> 3;
+    if (bitCount === 0) return {top:0, left:0, bottom:0, right:0};
+    var bits = 3;
+    var hold = bytes[pos] & ((1 << bits) - 1);
+    function BITS(n) {
+      while (bits < n) {
+        hold = (hold << 8) | bytes[pos++];
+      }
+      var value = hold & ((1 << n) - 1);
+      bits -= n; hold >>>= n;
+      return value;
+    }
+    var rect = {};
+    rect.top = BITS(bitCount);
+    rect.left = BITS(bitCount);
+    rect.bottom = BITS(bitCount);
+    rect.right = BITS(bitCount);
+    return {rect:rect, next:pos};
+  }
+  
+  function FileAttributesView(buffer, byteOffset, byteLength) {
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+  }
+  FileAttributesView.prototype = {
+    // 1 reserved byte
+    get useDirectBlit() {
+      return !!this.bytes[1]; // SWF10
+    },
+    get useGPU() {
+      return !!this.bytes[2]; // SWF10
+    },
+    get hasMetadata() {
+      return !!this.bytes[3];
+    },
+    get usesActionScript3() {
+      return !!this.bytes[4]; // SWF9
+    },
+    // 2 reserved bytes
+    get isGivenNetworkFileAccessWhenLoadedLocally() {
+      return !!this.bytes[7]; // otherwise, local file access
+    },
+    // 24 reserved bytes
+  };
+  
+  function SymbolClassView(buffer, byteOffset, byteLength) {
+    var bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    var dv = new DataView(buffer, byteOffset, byteLength);
+    this.symbols = readTagNameArray(bytes, dv, 0);
+  }
+  
+  function ScalingGridView(buffer, byteOffset, byteLength) {
+    var dv = new DataView(buffer, byteOffset, byteLength);
+    var bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    this.forID = dv.getUint16(0, true);
+    this.center9Slice = readRect(bytes, 2).rect;
+  }
+  
+  function readUnsigned(bytes, pos) {
+    var result = bytes[pos++];
+    if (!(result & 0x80)) return {value:result, next:pos};
+    result = (result & 0x7F) | (bytes[pos++] << 7);
+    if (!(result & 0x4000)) return {value:result, next:pos};
+    result = (result & 0x3FFF) | (bytes[pos++] << 14);
+    if (!(result & 0x200000)) return {value:result, next:pos};
+    result = (result & 0x1fffff) | (bytes[pos++] << 21);
+    if (!(result & 0x10000000)) return {value:result, next:pos};
+    result = (result & 0xfffffff) | (bytes[pos++] << 28);
+    return {value:result, next:pos};
+  }
+  
+  function SceneFrameLabelView(buffer, byteOffset, byteLength) {
+    var bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    var pos = 0;
+    var _tmp = readUnsigned(bytes, pos);
+    var scenes = new Array(_tmp.value);
+    pos = _tmp.next;
+    for (var i = 0; i < scenes.length; i++) {
+      _tmp = readUnsigned(bytes, pos);
+      var firstFrameNumber = _tmp.value;
+      pos = _tmp.next;
+      var rawSceneName = readNullTerminatedSubarray(bytes, pos);
+      pos += rawSceneName.length + 1;
+      scenes[i] = {
+        firstFrameNumber: firstFrameNumber,
+        name: rawSceneName, // TODO: encode
+      };
+    }
+    var _tmp = readUnsigned(bytes, pos);
+    var frameLabels = new Array(_tmp.value);
+    pos = _tmp.next;
+    for (var i = 0; i < frameLabels.length; i++) {
+      _tmp = readUnsigned(bytes, pos);
+      var frameNumber = _tmp.value;
+      pos = _tmp.next;
+      var rawLabel = readNullTerminatedSubarray(bytes, pos);
+      pos += rawLabel.length + 1;
+      frameLabels[i] = {
+        frameNumber: frameNumber,
+        label: rawLabel, // TODO: encode
+      };
+    }
+    this.scenes = scenes;
+    this.frameLabels = frameLabels;
+  }
+  
+  var chunkViews = {
+    'control/end': EmptyView,
+    'control/background-rgb': RGBView,
+    'control/frame-label': StringView,
+    'control/protect': OptionalMD5View,
+    'control/export': ExportView,
+    'control/import-swf7': SWF7ImportView,
+    'control/import-swf8': SWF8ImportView,
+    'control/enable-debugger-swf5': OptionalMD5View,
+    'control/enable-debugger-swf6': SWF6EnableDebugger,
+    'control/script-limits': ScriptLimitsView,
+    'control/set-tab-index': SetTabIndexView,
+    'control/file-attributes': FileAttributesView,
+    'control/symbol-class': SymbolClassView,
+    // 'control/metadata': RDFXMLView,
+    'control/scaling-grid': ScalingGridView,
+    'control/scene-and-frame-label-data': SceneFrameLabelView,
   };
   
   return {
