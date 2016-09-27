@@ -2,6 +2,8 @@ define(function() {
 
   'use strict';
   
+  var PAGE_BYTES = 128;
+  
   function split(entries) {
     var context = this;
     return context.getBytes(0, FileHeaderView.byteLength).then(function(rawHeader) {
@@ -9,46 +11,48 @@ define(function() {
       if (!header.hasValidSignature) return Promise.reject('not a valid Write file');
       if (header.isWordFile) return Promise.reject('Word documents not yet supported'); // TODO
       var promises = [];
-      if (header.textLength > 0) {
+      if (entries.accepts('application/x-mswrite-text') && header.textLength > 0) {
         /* windows-1252 text with binary/OLE stuff mixed in */
-        entries.add(context.getSegment(header.textOffset, header.textLength).setMetadata({
-          type: 'application/x-mswrite-text-data',
-        }));
+        entries.add(context.getSegment('application/x-mswrite-text', header.textOffset, header.textLength));
       }
-      if (header.characterInfoLength > 0) {
-        entries.add(context.getSegment(header.characterInfoOffset, header.characterInfoLength).setMetadata({
-          type: 'application/x-mswrite-character-info',
-        }));
+      var pos, end;
+      if (entries.accepts('application/x-mswrite-page; type=chars')) {
+        for (pos = header.characterInfoOffset, end = header.paragraphInfoOffset; pos < end; pos += PAGE_BYTES) {
+          entries.add(context.getSegment('application/x-mswrite-page; type=charinfo', pos, PAGE_BYTES));
+        }
       }
-      if (header.paragraphInfoLength > 0) {
-        entries.add(context.getSegment(header.paragraphInfoOffset, header.paragraphInfoLength).setMetadata({
-          type: 'application/x-mswrite-paragraph-info',
-        }));
+      if (entries.accepts('application/x-mswrite-page; type=paragraphs')) {
+        for (pos = header.paragraphInfoOffset, end = header.footnoteTableOffset; pos < end; pos += PAGE_BYTES) {
+          entries.add(context.getSegment('application/x-mswrite-page; type=paragraphs', pos, PAGE_BYTES));
+        }
       }
-      if (header.footnoteTableLength > 0) {
-        entries.add(context.getSegment(header.footnoteTableOffset, header.footnoteTableLength).setMetadata({
-          type: 'application/x-mswrite-footnote-table',
-        }));
+      if (entries.accepts('application/x-mswrite-page; type=footnotes')) {
+        for (pos = header.footnoteTableOffset, end = header.sectionTableOffset; pos < end; pos += PAGE_BYTES) {
+          entries.add(context.getSegment('application/x-mswrite-page; type=footnotes', pos, PAGE_BYTES));
+        }
       }
-      if (header.sectionTableLength > 0) {
-        entries.add(context.getSegment(header.sectionTableOffset, header.sectionTableLength).setMetadata({
-          type: 'application/x-mswrite-section-table',
-        }));
+      if (entries.accepts('application/x-mswrite-page; type=sections')) {
+        for (pos = header.sectionTableOffset, end = header.pageTableOffset; pos < end; pos += PAGE_BYTES) {
+          entries.add(context.getSegment('application/x-mswrite-page; type=sections', pos, PAGE_BYTES));
+        }
       }
-      if (header.pageTableLength > 0) {
-        entries.add(context.getSegment(header.pageTableOffset, header.pageTableLength).setMetadata({
-          type: 'application/x-mswrite-page-table',
-        }));
+      if (entries.accepts('application/x-mswrite-page; type=sections')) {
+        for (pos = header.sectionTableOffset, end = header.pageTableOffset; pos < end; pos += PAGE_BYTES) {
+          entries.add(context.getSegment('application/x-mswrite-page; type=sections', pos, PAGE_BYTES));
+        }
       }
-      if (header.fontNameTableLength > 0) {
-        entries.add(context.getSegment(header.fontNameTableOffset, header.fontNameTableLength).setMetadata({
-          type: 'application/x-mswrite-font-name-table',
-        }));
+      if (entries.accepts('application/x-mswrite-page; type=pages')) {
+        for (pos = header.pageTableOffset, end = header.fontNameTableOffset; pos < end; pos += PAGE_BYTES) {
+          entries.add(context.getSegment('application/x-mswrite-page; type=pages', pos, PAGE_BYTES));
+        }
+      }
+      if (entries.accepts('application/x-mswrite-page; type=fonts')) {
+        for (pos = header.fontNameTableOffset, end = header.totalLength; pos < end; pos += PAGE_BYTES) {
+          entries.add(context.getSegment('application/x-mswrite-page; type=fonts', pos, PAGE_BYTES));
+        }
       }
     });
   }
-  
-  var PAGE_BYTES = 128;
   
   function FileHeaderView(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
