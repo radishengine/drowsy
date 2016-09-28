@@ -428,7 +428,7 @@ define(function() {
   
   return {
     split: split,
-    bytePattern: /^[FCZ]WS.{13}/,
+    bytePattern: /^[FCZ]WS.{10}/,
   };
 
 });
