@@ -68,6 +68,7 @@ define(function() {
   DOSHeaderView.byteLength = 64;  
   
   return {
+    bytePattern: /^MZ/,
   };
 
 });
