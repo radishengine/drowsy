@@ -9,7 +9,9 @@ define(function() {
       var header = new HeaderView(rawHeader.buffer, rawHeader.byteOffset, rawHeader.byteLength);
       if (!header.hasValidSignature) return Promise.reject('not a valid MIDI header');
       if (!header.hasValidDataLength) return Promise.reject('MIDI header is unexpected length');
-      entries.add(headerSegment);
+      if (entries.accepted('audio/x-midi-header')) {
+        entries.add(headerSegment);
+      }
       var pos = HeaderView.byteLength;
       function onTrack(rawHeader) {
         if (String.fromCharCode(rawHeader[0], rawHeader[1], rawHeader[2], rawHeader[3]) !== 'MTrk') {
@@ -17,7 +19,9 @@ define(function() {
         }
         var trackLength = (rawHeader[4] << 24) | (rawHeader[5] << 16) | (rawHeader[6] << 8) | rawHeader[7];
         pos += 8;
-        entries.add(rootSegment.getSegment(pos, trackLength));
+        if (entries.accepted('audio/x-midi-track')) {
+          entries.add(rootSegment.getSegment('audio/x-midi-track', pos, trackLength));
+        }
         pos += trackLength;
         return rootSegment.getBytes(pos, 8).then(onTrack);
       }
