@@ -31,7 +31,7 @@ define(function() {
   
   return {
     split: split,
-    regex: /^\x89PNG\r\n\x1A\n\x00\x00\x00\x0DIHDR.{13}.*.{4}IDAT.*.{4}.*\x00\x00\x00\x00IEND....$/;
+    bytePattern: /^\x89PNG\r\n\x1A\n\x00\x00\x00\x0DIHDR.{13}.*.{4}IDAT.*.{4}.*\x00\x00\x00\x00IEND....$/,
   };
 
 });
