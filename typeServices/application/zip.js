@@ -415,6 +415,7 @@ define(function() {
   
   return {
     split: split,
+    bytePattern: /PK\x05\x06.{18}.{0,65535}$/,
   };
 
 });
