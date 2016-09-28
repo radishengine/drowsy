@@ -169,6 +169,7 @@ define(function() {
   
   return {
     split: split,
+    bytePattern: /^GIF8[79]a.{7}.*\x3F$/,
   };
 
 });
