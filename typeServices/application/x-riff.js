@@ -45,6 +45,7 @@ define(function() {
   
   return {
     split: split,
+    bytePattern: /^(RIFF|RIFX|XFIR|FFIR).{4}(.{8}(..)+)+$/,
   };
 
 });
