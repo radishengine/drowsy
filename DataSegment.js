@@ -399,7 +399,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       this.type = type;
     }
     else {
-      var extension = url.replace(/[?#].*/, '').match(/\.([^\.]+)$);
+      var extension = url.replace(/[?#].*/, '').match(/\.([^\.]+)$/);
       if (extension) {
         extension = extension[1].toLowerCase();
         if (typeDispatch.byExtension.hasOwnProperty(extension)) {
