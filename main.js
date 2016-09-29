@@ -1,5 +1,5 @@
-require(['ByteSource', 'Item', 'AppleVolume'],
-function(ByteSource, Item, AppleVolume)
+require(['ByteSource', 'Item', 'AppleVolume', 'typeServices/dispatch'],
+function(ByteSource, Item, AppleVolume, typeDispatch)
 {
   
   'use strict';
@@ -36,14 +36,19 @@ function(ByteSource, Item, AppleVolume)
   
   makeFileDrop('drop-zone', function(droppedFile) {
     
-    if (/\.(iso|toast|dsk|img)$/i.test(droppedFile.name)) {
+    var ext = /[^\.]*$/.match(droppedFile.name)[0].toLowerCase();
+    
+    if (/^(iso|toast|dsk|img)$/i.test(ext)) {
       
       var byteSource = ByteSource.from(droppedFile);
       var appleVolume = new AppleVolume(byteSource);
       appleVolume.read({});
     
     }
-    else {
+    else if (typeDispatch.byExtension.hasOwnProperty(ext)) {
+      var typeName = typeDispatch.byExtension[ext];
+      console.log(typeName);
+      /*
       var item = new Item(ByteSource.from(droppedFile));
       var extension = droppedFile.name.match(/\.([^\.]+)$/);
       if (extension) {
@@ -61,6 +66,7 @@ function(ByteSource, Item, AppleVolume)
           console.log('Unsupported extension: ' + extension);
         });
       }
+      */
     }
 
   });
