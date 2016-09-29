@@ -38,7 +38,7 @@ define(function() {
       AIFF: 'audio/x-aiff',
       MOOV: 'video/quicktime',
       MV93: 'application/x-director',
-      'M!93: 'application/x-director',
+      'M!93': 'application/x-director',
     },
   };
 
