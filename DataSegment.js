@@ -106,7 +106,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         if (typeof handler.split !== 'function') {
           return Promise.reject('split operation not defined for ' + self.typeName);
         }
-        var entries = new SplitEntries();
+        var entries = new SplitEntries(eachCallback);
         var result = handler.split(self, entries);
         return endCallback ? result.then(endCallback) : result;
       });
