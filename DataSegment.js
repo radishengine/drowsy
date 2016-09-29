@@ -83,11 +83,32 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         });
       });
     },
+    getStructView: function() {
+      var self = this;
+      return this.p_tView = this.p_tView
+      || this.getTypeHandler().then(function(handler) {
+        var TView;
+        if (typeof handler.getStructView !== 'function'
+        || !(TView = handler.getStructView(self))) {
+          return Promise.reject('no struct view defined for ' + self.type);
+        }
+        return TView;
+      });
+    },
+    getStruct: function() {
+      var self = this;
+      return Promise.all([this.getStructView(), this.getBytes()])
+      .then(function(values) {
+        var TView = values[0], bytes = values[2];
+        return new TView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      });
+    },
     getCapabilities: function() {
       return this.getTypeHandler()
       .then(function(handler) {
         return {
           split: typeof handler.split === 'function',
+          struct: typeof handler.getStructView === 'function' && handler.getStructView(this) !== null,
         };
       });
     },
