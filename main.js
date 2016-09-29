@@ -52,7 +52,7 @@ function(ByteSource, Item, AppleVolume, DataSegment)
           if (capabilities.split) {
             console.log('splitting...');
             segment.split(function(entry) {
-              console.log('entry', entry);
+              console.log('entry', entry.toString());
               handleSegment(entry);
             })
             .then(function() {
@@ -62,7 +62,7 @@ function(ByteSource, Item, AppleVolume, DataSegment)
           if (capabilities.struct) {
             segment.getStruct()
             .then(function(struct) {
-              console.log('struct', struct);
+              console.log('struct', struct.toString());
             });
           }
         });
