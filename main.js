@@ -64,13 +64,11 @@ function(ByteSource, Item, AppleVolume, DataSegment)
             });
           }
           if (capabilities.struct) {
-            fastLog('<S>');
-            /*
             segment.getStruct()
             .then(function(struct) {
-              console.log('struct', struct.toString());
+              //console.log('struct', struct.toString());
+              fastLog('<S>');
             });
-            */
           }
         });
       }
