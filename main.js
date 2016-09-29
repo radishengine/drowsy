@@ -49,7 +49,11 @@ function(ByteSource, Item, AppleVolume, DataSegment)
       var segment = DataSegment.from(droppedFile);
       segment.getCapabilities()
       .then(function(capabilities) {
-        console.log(segment, capabilities);
+        if (capabilities.split) {
+          segment.split(function(entry) {
+            console.log(entry);
+          });
+        }
       });
       /*
       var item = new Item(ByteSource.from(droppedFile));
