@@ -2,13 +2,17 @@ define(function() {
 
   'use strict';
   
+  var TRAILER_TYPE = 'chunk/zip; type=trailer';
+  var CENTRAL_RECORD_TYPE = 'chunk/zip; type=central-record';
+  var LOCAL_RECORD_TYPE = 'chunk/zip; type=local-record';
+  
   function split(segment, entries) {
-    var trailerSegment = segment.getSegment(-TrailerView.byteLength);
+    var trailerSegment = segment.getSegment(TRAILER_TYPE, -TrailerView.byteLength);
     return trailerSegment.getBytes().then(function(rawTrailer) {
       var trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset, rawTrailer.byteLength);
       if (trailer.hasValidSignature && trailer.commentByteLength === 0) {
-        if (entries.accepts('application/x-zip-trailer')) {
-          entries.add('application/x-zip-trailer', trailerSegment);
+        if (entries.accepted(TRAILER_TYPE)) {
+          entries.add(trailerSegment);
         }
         return trailer;
       }
@@ -29,7 +33,7 @@ define(function() {
               if (rawTrailer[pos+1] === 0x4B && rawTrailer[pos+2] === 0x05 && rawTrailer[pos+3] === 0x06) {
                 trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset + pos, TrailerView.byteLength);
                 if (trailer.commentByteLength === (rawTrailer.length - pos - TrailerView.byteLength)) {
-                  trailerSegment = segment.getSegment(bufferPos + pos);
+                  trailerSegment = segment.getSegment(TRAILER_TYPE, bufferPos + pos);
                   break findTrailer;
                 }
                 trailer = null;
@@ -39,7 +43,7 @@ define(function() {
               if (rawTrailer[pos-1] === 0x50 && rawTrailer[pos+1] === 0x05 && rawTrailer[pos+2] === 0x06) {
                 trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset + pos - 1, TrailerView.byteLength);
                 if (trailer.commentByteLength === (rawTrailer.length - pos - 1 - TrailerView.byteLength)) {
-                  trailerSegment = segment.getSegment(bufferPos + pos - 1);
+                  trailerSegment = segment.getSegment(TRAILER_TYPE, bufferPos + pos - 1);
                   break findTrailer;
                 }
                 trailer = null;
@@ -49,7 +53,7 @@ define(function() {
               if (rawTrailer[pos-2] === 0x50 && rawTrailer[pos-1] === 0x4B && rawTrailer[pos+1] === 0x06) {
                 trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset + pos - 2, TrailerView.byteLength);
                 if (trailer.commentByteLength === (rawTrailer.length - pos - 2- TrailerView.byteLength)) {
-                  trailerSegment = segment.getSegment(bufferPos + pos - 2);
+                  trailerSegment = segment.getSegment(TRAILER_TYPE, bufferPos + pos - 2);
                   break findTrailer;
                 }
                 trailer = null;
@@ -70,13 +74,13 @@ define(function() {
         if (!trailerSegment) {
           bufferPos -= commentBufferSize;
           if (bufferPos < earliestPos) {
-            return Promise.reject('application/zip: trailer not found');
+            return Promise.reject('application/zip: trailer chunk not found');
           }
           commentBufferSize *= 2;
           return segment.getBytes(bufferPos, commentBufferSize).then(onTrackback);
         }
-        if (entries.accepts('application/x-zip-trailer')) {
-          entries.add('application/x-zip-trailer', trailerSegment);
+        if (entries.accepted(TRAILER_TYPE)) {
+          entries.add(trailerSegment);
         }
         rawTrailer = new Uint8Array(rawTrailer.subarray(pos, pos + TrailerView.byteLength));
         return new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset + pos, TrailerView.byteLength);
@@ -86,8 +90,8 @@ define(function() {
     })
     .then(function(trailer) {
       if (trailer.partEntryCount === 0 || (
-          !entries.accepts('application/x-zip-central-record')
-          && !entries.accepts('application/x-zip-local-record'))) {
+          !entries.accepted(CENTRAL_RECORD_TYPE)
+          && !entries.accepted(LOCAL_RECORD_TYPE))) {
         return;
       }
       var pos = trailer.partNumber === trailer.centralDirFirstPart ? trailer.centralDirFirstOffset : 0;
@@ -95,14 +99,14 @@ define(function() {
       var pending = [];
       function onPart(rawCentral) {
         var central = new CentralRecordView(rawRecord.buffer, rawRecord.byteOffset, rawRecord.byteLength);
-        if (entries.accepts('application/x-zip-central-record')) {
-          entries.add('application/x-zip-central-record', segment.getSegment(pos, central.byteLength));
+        if (entries.accepted(CENTRAL_RECORD_TYPE)) {
+          entries.add(segment.getSegment(CENTRAL_RECORD_TYPE, pos, central.byteLength));
         }
-        if (entries.accepts('application/x-zip-local-record')) {
+        if (entries.accepted(LOCAL_RECORD_TYPE)) {
           pending.push(segment.getBytes(central.localRecordOffset, LocalRecordView.byteLength)
           .then(function(rawLocal) {
             var local = new LocalRecordView(rawLocal.buffer, rawLocal.byteOffset, rawLocal.byteLength);
-            entries.add('application/x-zip-local-record', segment.getSegment(record.localRecordOffset, local.byteLength));
+            entries.add(segment.getSegment(LOCAL_RECORD_TYPE, record.localRecordOffset, local.byteLength));
           }));
         }
         if (--count > 0) {
