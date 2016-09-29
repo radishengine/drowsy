@@ -74,6 +74,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   }
   EmptySegment.prototype = Object.assign(new DataSegment, {
     knownLength: 0,
+    asBlobParameter: emptyBuffer,
     getSegment: function(type, offset, length) {
       if (isNaN(offset)) offset = 0;
       if (isNaN(length)) length = 0;
@@ -98,7 +99,6 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       }
       return emptyBytes;
     },
-    asBlobParameter: emptyBuffer,
     saveForTransfer: function(transferables) {
       return ['Empty', this.type];
     },
@@ -108,15 +108,6 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     this.blob = blob;
   }
   DataSegmentFromBlob.prototype = Object.assign(new DataSegment, {
-    get type() {
-      return this.blob.type || 'application/octet-stream';
-    },
-    get knownLength() {
-      return this.blob.length;
-    },
-    get hasKnownLength() {
-      return true;
-    },
     getSegment: function(type, offset, length) {
       return new DataSegmentFromBlob(this.blob.slice(offset, offset+length, type));
     },
@@ -142,14 +133,23 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         frdr.readAsArrayBuffer(blob);
       });
     },
-    get asBlobParameter() {
-      return this.blob;
-    },
     getBlob: function() {
       return Promise.resolve(this.blob);
     },
     saveForTransfer: function(transferables) {
       return ['FromBlob', this.blob];
+    },
+    hasKnownLength: true,
+  });
+  Object.defineProperties(DataSegmentFromBlob.prototype, {
+    type: {
+      get: function() { return this.blob.type || 'application/octet-stream'; },
+    },
+    knownLength: {
+      get: function() { return this.blob.length; },
+    },
+    asBlobParameter: {
+      get: function() { return this.blob; },
     },
   });
   
@@ -171,15 +171,19 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       if (isNaN(length)) length = this.knownLength - length;
       return this.wrappedSegment.getArrayBuffer(offset, length);
     },
-    get asBlobParameter() {
-      var inner = this.wrappedSegment.asBlobParameter;
-      if (inner instanceof Blob) return inner.slice(this.offset, this.offset + this.length);
-      if (inner instanceof ArrayBuffer) return new Uint8Array(inner, this.offset, this.length);
-      if (ArrayBuffer.isView(inner)) return new Uint8Array(inner.buffer, inner.byteOffset + this.offset, this.length);
-      return null;
-    },
     saveForTransfer: function(transferables) {
       return ['Wrapper', this.wrappedSegment.saveForTransfer(transferables), this.offset, this.length];
+    },
+  });
+  Object.defineProperties(DataSegmentWrapper.prototype, {
+    asBlobParameter: {
+      get: function() {
+        var inner = this.wrappedSegment.asBlobParameter;
+        if (inner instanceof Blob) return inner.slice(this.offset, this.offset + this.length);
+        if (inner instanceof ArrayBuffer) return new Uint8Array(inner, this.offset, this.length);
+        if (ArrayBuffer.isView(inner)) return new Uint8Array(inner.buffer, inner.byteOffset + this.offset, this.length);
+        return null;
+      },
     },
   });
   
@@ -196,9 +200,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     this.knownLength = byteLength;
   }
   DataSegmentFromArrayBuffer.prototype = Object.assign(new DataSegment, {
-    get hasKnownLength() {
-      return true;
-    },
+    hasKnownLength: true,
     getSegment: function(type, offset, length) {
       offset = this.offset + (isNaN(offset) ? 0 : offset);
       if (isNaN(length)) length = this.knownLength - offset;
@@ -222,16 +224,20 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       new Uint8Array(copyBuffer).set(new Uint8Array(this.buffer, offset, length));
       return Promise.resolve(copyBuffer);
     },
-    get asBlobParameter() {
-      if (this.offset === 0 && this.knownLength === this.buffer.byteLength) {
-        return this.buffer;
-      }
-      return new Uint8Array(this.buffer, this.offset, this.byteLength);
-    },
     saveForTransfer: function(transferables) {
       transferables.push(this.buffer);
       return ['FromArrayBuffer', this.buffer, this.offset, this.knownLength];
     },    
+  });
+  Object.defineProperties(DataSegmentFromArrayBuffer.prototype, {
+    asBlobParameter: {
+      get: function() {
+        if (this.offset === 0 && this.knownLength === this.buffer.byteLength) {
+          return this.buffer;
+        }
+        return new Uint8Array(this.buffer, this.offset, this.byteLength);
+      },
+    },
   });
   
   function DataSegmentSequence(type, segments) {
@@ -366,13 +372,6 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       }
       return onSegment(0);
     },
-    get asBlobParameter() {
-      var blobParams = [];
-      for (var i = 0; i < this.segments.length; i++) {
-        if (!(blobParams[i] = this.segments[i].asBlobParameter)) return null;
-      }
-      return new Blob(blobParams, this.type);
-    },
     getBlob: function() {
       var promised = [];
       for (var i = 0; i < this.segments.length; i++) {
@@ -390,6 +389,17 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         list.push(this.segments[i].saveForTransfer(transferables));
       }
       return list;
+    },
+  });
+  Object.defineProperties(DataSegmentSequence, {
+    asBlobParameter: {
+      get: function() {
+        var blobParams = [];
+        for (var i = 0; i < this.segments.length; i++) {
+          if (!(blobParams[i] = this.segments[i].asBlobParameter)) return null;
+        }
+        return new Blob(blobParams, this.type);
+      },
     },
   });
   
