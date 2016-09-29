@@ -24,7 +24,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       var params = this.type.split(';');
       var obj = {};
       for (var i = 1; i < params.length; i++) {
-        var param = params[i].match(/^\s*([^\s=]+)\s*=\s*(.*?)\s*/);
+        var param = params[i].match(/^\s*([^\s=]+)\s*=\s*(.*?)\s*$/);
         if (!param) throw new Error('malformed parameters: ' + this.type);
         var key = param[1];
         var value = param[2];
