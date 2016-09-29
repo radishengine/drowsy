@@ -10,6 +10,8 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   var p_emptyBuffer = Promise.resolve(emptyBuffer);
   var p_emptyBytes = Promise.resolve(emptyBytes);
   
+  var handlerCache = {};
+  
   function DataSegment() {
   }
   DataSegment.prototype = {
@@ -88,21 +90,28 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       return Promise.resolve(this);
     },
     getTypeHandler: function(thenDo, elseDo) {
+      var t = self.typeName;
+      if (t in handlerCache) return handlerCache[t];
       var self = this;
       return new Promise(function(resolve, reject) {
         var handlerModule = 'typeServices/' + self.typeName;
-        require([handlerModule], resolve, function() {
+        require([handlerModule],
+        function(handler) {
+          handlerCache[t] = Promise.resolve(handler);
+          resolve(handler);
+        },
+        function() {
           requirejs.undef(handlerModule);
           var handler = {};
           define(handlerModule, handler);
+          handlerCache[t] = Promise.resolve(handler);
           resolve(handler);
         });
       });
     },
     getStructView: function() {
       var self = this;
-      return this.p_tView = this.p_tView
-      || this.getTypeHandler().then(function(handler) {
+      return this.getTypeHandler().then(function(handler) {
         var TView;
         if (typeof handler.getStructView !== 'function'
         || !(TView = handler.getStructView(self))) {
