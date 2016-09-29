@@ -219,7 +219,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         return Promise.resolve(this.buffer);
       }
       var copyBuffer = new ArrayBuffer(length);
-      new Uint8Array(copyBuffer).set(new Uint8Array(this.buffer, offset, length);
+      new Uint8Array(copyBuffer).set(new Uint8Array(this.buffer, offset, length));
       return Promise.resolve(copyBuffer);
     },
     get asBlobParameter() {
