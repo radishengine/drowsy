@@ -1,4 +1,8 @@
-define(['typeServices/dispatch'], function(typeDispatch) {
+if (typeof self === Worker) {
+  importScripts('require.js');
+}
+
+define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   
   var emptyBuffer = new ArrayBuffer(0);
   var emptyBytes = new Uint8Array(buffer);
@@ -57,12 +61,18 @@ define(['typeServices/dispatch'], function(typeDispatch) {
     saveForTransfer: function(transferables) {
       throw new Error('saveForTransfer not implemented');
     },
+    toRemote: function(worker) {
+      return new RemoteDataSegment(worker).transfer(this);
+    },
+    toLocal: function() {
+      return Promise.resolve(this);
+    },
   };
   
   function EmptySegment(type) {
     this.type = type;
   }
-  EmptySegment.prototype = {
+  EmptySegment.prototype = Object.assign(new DataSegment, {
     knownLength: 0,
     getSegment: function(type, offset, length) {
       if (isNaN(offset)) offset = 0;
@@ -92,7 +102,7 @@ define(['typeServices/dispatch'], function(typeDispatch) {
     saveForTransfer: function(transferables) {
       return ['Empty', this.type];
     },
-  };
+  });
   
   function DataSegmentFromBlob(blob) {
     this.blob = blob;
@@ -185,7 +195,7 @@ define(['typeServices/dispatch'], function(typeDispatch) {
     this.offset = byteOffset;
     this.knownLength = byteLength;
   }
-  DataSegmentFromArrayBuffer.prototype = {
+  DataSegmentFromArrayBuffer.prototype = Object.assign(new DataSegment, {
     get hasKnownLength() {
       return true;
     },
@@ -222,7 +232,7 @@ define(['typeServices/dispatch'], function(typeDispatch) {
       transferables.push(this.buffer);
       return ['FromArrayBuffer', this.buffer, this.offset, this.knownLength];
     },    
-  };
+  });
   
   function DataSegmentSequence(type, segments) {
     this.type = type;
@@ -234,7 +244,7 @@ define(['typeServices/dispatch'], function(typeDispatch) {
     }
     this.knownLength = length;
   }
-  DataSegmentSequence.prototype = {
+  DataSegmentSequence.prototype = Object.assign(new DataSegment, {
     getLength: function() {
       if (this.hasKnownLength) return Promise.resolve(this.knownLength);
       var self = this;
@@ -381,7 +391,7 @@ define(['typeServices/dispatch'], function(typeDispatch) {
       }
       return list;
     },
-  };
+  });
   
   function DataSegmentFromURL(url, offset, length, type) {
     this.url = url;
@@ -444,6 +454,47 @@ define(['typeServices/dispatch'], function(typeDispatch) {
     },    
   });
   
+  function RemoteDataSegment(worker) {
+    this.worker = worker;
+    var id;
+    do {
+      id = '_' + ((Math.random() * 0xffffffff) >>> 0).toString(16).toUpperCase();
+    } while (id in worker);
+    this.id = id;
+    worker[id] = this;
+    this.onMessage = this.onMessage.bind(this);
+    worker.addEventListener('message', this.onMessage);
+  }
+  RemoteDataSegment.prototype = Object.assign(new DataSegment, {
+    onMessage: function(msg) {
+      if (msg[0] !== this.id) return;
+    },
+    transfer: function(segment) {
+      var transferables = [];
+      var saved = segment.saveForTransfer(transferables);
+      this.worker.postMessage([this.id, 'transfer', saved], transferables);
+      return Promise.resolve(this);
+    },
+    toRemote: function() {
+      return Promise.reject('segment is already remote');
+    },
+    toLocal: function() {
+      var self = this, worker = this.worker, id = this.id;
+      return new Promise(function(resolve, reject) {
+        worker.removeEventListener('message', self.onMessage);
+        delete self.worker;
+        delete worker[id];
+        function onMessage(msg) {
+          if (msg[0] !== id || msg[1] !== 'transfer') return;
+          worker.removeEventListener('message', onMessage);
+          resolve(DataSegment.loadAfterTransfer(msg[2]));
+        }
+        worker.addEventListener('message', onMessage);
+        worker.postMessage([id, 'request-transfer']);
+      });
+    },
+  });
+  
   function toBlobParameter(v) {
     if (v instanceof ArrayBuffer || ArrayBuffer.isView(v)) return v;
     if (v instanceof DataSegment) return v.asBlobParameter;
@@ -457,6 +508,7 @@ define(['typeServices/dispatch'], function(typeDispatch) {
     FromArrayBuffer: DataSegmentFromArrayBuffer,
     Sequence: DataSegmentSequence,
     FromURL: DataSegmentFromURL,
+    Remote: RemoteDataSegment,
     from: function(value, overrideType) {
       if (value instanceof DataSegment) {
         return overrideType ? value.getSegment(overrideType) : value;
@@ -537,3 +589,8 @@ define(['typeServices/dispatch'], function(typeDispatch) {
   });
   
 });
+
+if (typeof self === Worker) {
+  self.addEventListener('message', function(e) {
+  });
+}
