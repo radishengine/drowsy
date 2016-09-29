@@ -115,7 +115,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       var self = this;
       return Promise.all([this.getStructView(), this.getBytes()])
       .then(function(values) {
-        var TView = values[0], bytes = values[2];
+        var TView = values[0], bytes = values[1];
         return new TView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       });
     },
