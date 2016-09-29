@@ -56,7 +56,7 @@ function(ByteSource, Item, AppleVolume, DataSegment)
             fastLog('splitting');
             //console.log('splitting...');
             segment.split(function(entry) {
-              fastLog('.');
+              fastLog('.\u200B');
               handleSegment(entry);
             })
             .then(function() {
@@ -64,6 +64,7 @@ function(ByteSource, Item, AppleVolume, DataSegment)
             });
           }
           if (capabilities.struct) {
+            fastLog('<S>');
             /*
             segment.getStruct()
             .then(function(struct) {
