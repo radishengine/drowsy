@@ -90,7 +90,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       return Promise.resolve(this);
     },
     getTypeHandler: function(thenDo, elseDo) {
-      var t = self.typeName;
+      var t = this.typeName;
       if (t in handlerCache) return handlerCache[t];
       var self = this;
       return new Promise(function(resolve, reject) {
