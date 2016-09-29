@@ -68,6 +68,7 @@ function(ByteSource, Item, AppleVolume, DataSegment)
         });
       }
       var segment = DataSegment.from(droppedFile);
+      handleSegment(segment);
       /*
       var item = new Item(ByteSource.from(droppedFile));
       var extension = droppedFile.name.match(/\.([^\.]+)$/);
