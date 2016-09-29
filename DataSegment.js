@@ -70,18 +70,21 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     toLocal: function() {
       return Promise.resolve(this);
     },
-    getCapabilities: function() {
+    getTypeHandler: function(thenDo, elseDo) {
       var self = this;
       return new Promise(function(resolve, reject) {
-        require('typeServices/' + self.typeName,
-          function(handler) {
-            resolve({
-              split: typeof handler.split === 'function',
-            });
-          },
-          function() {
-            resolve({});
-          });
+        require(['typeServices/' + self.typeName], resolve, reject);
+      });
+    },
+    getCapabilities: function() {
+      return this.getTypeHandler()
+      .then(function(handler) {
+        return {
+          split: typeof handler.split === 'function',
+        };
+      },
+      function() {
+        return {};
       });
     },
   };
