@@ -46,24 +46,30 @@ function(ByteSource, Item, AppleVolume, DataSegment)
     
     }
     else {
+      function fastLog(v) {
+        document.body.appendChild(document.createTextNode(v.toString()));
+      }
       function handleSegment(segment) {
         segment.getCapabilities()
         .then(function(capabilities) {
           if (capabilities.split) {
-            console.log('splitting...');
+            fastLog('splitting');
+            //console.log('splitting...');
             segment.split(function(entry) {
-              console.log('entry', entry.toString());
+              fastLog('.');
               handleSegment(entry);
             })
             .then(function() {
-              console.log('...split complete');
+              fastLog('done');
             });
           }
           if (capabilities.struct) {
+            /*
             segment.getStruct()
             .then(function(struct) {
               console.log('struct', struct.toString());
             });
+            */
           }
         });
       }
