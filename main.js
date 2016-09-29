@@ -46,15 +46,28 @@ function(ByteSource, Item, AppleVolume, DataSegment)
     
     }
     else {
+      function handleSegment(segment) {
+        segment.getCapabilities()
+        .then(function(capabilities) {
+          if (capabilities.split) {
+            console.log('splitting...');
+            segment.split(function(entry) {
+              console.log('entry', entry);
+              handleSegment(entry);
+            })
+            .then(function() {
+              console.log('...split complete');
+            });
+          }
+          if (capabilities.struct) {
+            segment.getStruct()
+            .then(function(struct) {
+              console.log('struct', struct);
+            });
+          }
+        });
+      }
       var segment = DataSegment.from(droppedFile);
-      segment.getCapabilities()
-      .then(function(capabilities) {
-        if (capabilities.split) {
-          segment.split(function(entry) {
-            console.log(entry);
-          });
-        }
-      });
       /*
       var item = new Item(ByteSource.from(droppedFile));
       var extension = droppedFile.name.match(/\.([^\.]+)$/);
