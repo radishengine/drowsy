@@ -64,8 +64,8 @@ function(ByteSource, Item, AppleVolume, DataSegment)
             });
           }
           if (capabilities.struct) {
-            segment.getStruct()
-            .then(function(struct) {
+            segment.getTypeHandler()
+            .then(function(handler) {
               //console.log('struct', struct.toString());
               fastLog('<S>');
             });
