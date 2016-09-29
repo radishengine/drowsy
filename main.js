@@ -36,7 +36,7 @@ function(ByteSource, Item, AppleVolume, typeDispatch)
   
   makeFileDrop('drop-zone', function(droppedFile) {
     
-    var ext = /[^\.]*$/.match(droppedFile.name)[0].toLowerCase();
+    var ext = droppedFile.name.match(/[^\.]*$/)[0].toLowerCase();
     
     if (/^(iso|toast|dsk|img)$/i.test(ext)) {
       
