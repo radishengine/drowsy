@@ -2,8 +2,7 @@ define(function() {
 
   'use strict';
   
-  function split(entries) {
-    var segment = this;
+  function split(segment, entries) {
     var trailerSegment = segment.getSegment(-TrailerView.byteLength);
     return trailerSegment.getBytes().then(function(rawTrailer) {
       var trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset, rawTrailer.byteLength);
