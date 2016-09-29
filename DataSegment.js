@@ -1,0 +1,501 @@
+define(['typeServices/dispatch'], function(typeDispatch) {
+  
+  var emptyBuffer = new ArrayBuffer(0);
+  var emptyBytes = new Uint8Array(buffer);
+  var emptyBlob = new Blob([emptyBytes]);
+  var p_emptyBuffer = Promise.resolve(emptyBuffer);
+  var p_emptyBytes = Promise.resolve(emptyBytes);
+  
+  function DataSegment() {
+  }
+  DataSegment.prototype = {
+    type: 'application/octet-stream',
+    get typeCategory() {
+      return this.type.match(/^[^\/]*/)[0];
+    },
+    get subtype() {
+      return this.type.replace(/^.*?\//, '').replace(/;.*/, '');
+    },
+    knownLength: Infinity,
+    get hasKnownLength() {
+      return isFinite(this.knownLength);
+    },
+    getLength() {
+      if (isFinite(this.knownLength)) return Promise.resolve(this.knownLength);
+      if (typeof this.calculateLength === 'function') return this.calculateLength();
+      throw new Error('no method defined to calculate length');
+    },
+    getSegment: function(type, offset, length) {
+      if (isNaN(offset)) offset = 0;
+      if (isNaN(length)) length = this.knownLength - offset;
+      if (length === 0) return new EmptySegment(type, offset, length);
+      return new DataSegmentWrapper(this, type, offset, length);
+    },
+    getArrayBuffer: function(offset, length) {
+      if (isNaN(offset)) offset = 0;
+      if (isNaN(length)) length = this.knownLength - offset;
+      if (length === 0) return emptyBuffer;
+      throw new Error('no method defined to get bytes');
+    },
+    getBytes: function(offset, length) {
+      if (isNaN(offset)) offset = 0;
+      if (isNaN(length)) length = this.knownLength - offset;
+      if (length === 0) return emptyBytes;
+      return this.getArrayBuffer(offset, length).then(function(arrayBuffer) {
+        return new Uint8Array(arrayBuffer);
+      });
+    },
+    asBlobParameter: null,
+    getBlob: function() {
+      var blobParam = this.asBlobParameter;
+      if (blobParam) return Promise.resolve(new Blob([blobParam], this.type));
+      var self = this;
+      return this.getArrayBuffer().then(function(bytes) {
+        return new Blob([bytes], self.type);
+      });
+    },
+  };
+  
+  function EmptySegment(type) {
+    this.type = type;
+  }
+  EmptySegment.prototype = {
+    knownLength: 0,
+    getSegment: function(type, offset, length) {
+      if (isNaN(offset)) offset = 0;
+      if (isNaN(length)) length = 0;
+      if (offset !== 0 || length !== 0) {
+        throw new RangeError('cannot get ' + offset + '-' + (offset+length) + ' range from an empty segment');
+      }
+      return (type === this.type) ? this : new EmptySegment(type);
+    },
+    getArrayBuffer: function(offset, length) {
+      if (isNaN(offset)) offset = 0;
+      if (isNaN(length)) length = 0;
+      if (offset !== 0 || length !== 0) {
+        throw new RangeError('cannot get ' + offset + '-' + (offset+length) + ' range from an empty segment');
+      }
+      return emptyBuffer;
+    },
+    getBytes: function(offset, length) {
+      if (isNaN(offset)) offset = 0;
+      if (isNaN(length)) length = 0;
+      if (offset !== 0 || length !== 0) {
+        throw new RangeError('cannot get ' + offset + '-' + (offset+length) + ' range from an empty segment');
+      }
+      return emptyBytes;
+    },
+    asBlobParameter: emptyBuffer,
+  };
+  
+  function DataSegmentFromBlob(blob) {
+    this.blob = blob;
+  }
+  DataSegmentFromBlob.prototype = Object.assign(new DataSegment, {
+    get type() {
+      return this.blob.type || 'application/octet-stream';
+    },
+    get knownLength() {
+      return this.blob.length;
+    },
+    get hasKnownLength() {
+      return true;
+    },
+    getSegment: function(type, offset, length) {
+      return new DataSegmentFromBlob(this.blob.slice(offset, offset+length, type));
+    },
+    getArrayBuffer: function(offset, length) {
+      var blob = this.blob;
+      if (isNaN(offset)) offset = 0;
+      if (offset < 0) offset = blob.length + offset;
+      if (isNaN(length)) length = blob.length - offset;
+      if (offset !== 0 || length !== blob.length) {
+        blob = blob.slice(offset, offset + length);
+      }
+      var frdr = new FileReader();
+      return new Promise(function(resolve, reject) {
+        frdr.addEventListener('load', function(e) {
+          resolve(frdr.result);
+        });
+        frdr.addEventListener('abort', function(e) {
+          reject('aborted');
+        });
+        frdr.addEventListener('error', function(e) {
+          reject(e.message);
+        });
+        frdr.readAsArrayBuffer(blob);
+      });
+    },
+    get asBlobParameter() {
+      return this.blob;
+    },
+    getBlob: function() {
+      return Promise.resolve(this.blob);
+    },
+  });
+  
+  function DataSegmentWrapper(wrappedSegment, type, offset, length) {
+    this.wrappedSegment = wrappedSegment;
+    this.type = type;
+    if (isNaN(offset)) offset = 0;
+    if (isNaN(length)) length = Infinity;
+    if (!isFinite(length)) length = wrappedSegment.knownLength - offset;
+    this.offset = offset;
+    this.knownLength = length;
+  }
+  DataSegmentFromWrapper.prototype = Object.assign(new DataSegment, {
+    getSegment: function(type, offset, length) {
+      return new DataSegmentFromWrapper(this.wrappedSegment, type, this.offset + offset, length);
+    },
+    getArrayBuffer: function(offset, length) {
+      offset = this.offset + (isNaN(offset) ? 0 : offset);
+      if (isNaN(length)) length = this.knownLength - length;
+      return this.wrappedSegment.getArrayBuffer(offset, length);
+    },
+    get asBlobParameter() {
+      var inner = this.wrappedSegment.asBlobParameter;
+      if (inner instanceof Blob) return inner.slice(this.offset, this.offset + this.length);
+      if (inner instanceof ArrayBuffer) return new Uint8Array(inner, this.offset, this.length);
+      if (ArrayBuffer.isView(inner)) return new Uint8Array(inner.buffer, inner.byteOffset + this.offset, this.length);
+      return null;
+    },
+  });
+  
+  function DataSegmentFromArrayBuffer(type, buffer, byteOffset, byteLength) {
+    this.type = type;
+    if (isNaN(byteOffset)) byteOffset = 0;
+    if (isNaN(byteLength)) byteLength = buffer.byteLength - byteOffset;
+    if (ArrayBuffer.isView(buffer)) {
+      byteOffset += buffer.byteOffset;
+      buffer = buffer.buffer;
+    }
+    this.buffer = buffer;
+    this.offset = byteOffset;
+    this.knownLength = byteLength;
+  }
+  DataSegmentFromArrayBuffer.prototype = {
+    get hasKnownLength() {
+      return true;
+    },
+    getSegment: function(type, offset, length) {
+      offset = this.offset + (isNaN(offset) ? 0 : offset);
+      if (isNaN(length)) length = this.knownLength - offset;
+      if (length === 0) return new EmptySegment(type);
+      return new DataSegmentFromArrayBuffer(type, this.buffer, offset, length);
+    },
+    getBytes: function(offset, length) {
+      offset = this.offset + (isNaN(offset) ? 0 : offset);
+      if (isNaN(length)) length = this.knownLength - offset;
+      if (length === 0) return p_emptyBytes;
+      return Promise.resolve(new Uint8Array(this.buffer, offset, length));
+    },
+    getArrayBuffer: function(offset, length) {
+      offset = this.offset + (isNaN(offset) ? 0 : offset);
+      if (isNaN(length)) length = this.knownLength - offset;
+      if (length === 0) return p_emptyBuffer;
+      if (offset === 0 && length === this.buffer.byteLength) {
+        return Promise.resolve(this.buffer);
+      }
+      var copyBuffer = new ArrayBuffer(length);
+      new Uint8Array(copyBuffer).set(new Uint8Array(this.buffer, offset, length);
+      return Promise.resolve(copyBuffer);
+    },
+    get asBlobParameter() {
+      if (this.offset === 0 && this.knownLength === this.buffer.byteLength) {
+        return this.buffer;
+      }
+      return new Uint8Array(this.buffer, this.offset, this.byteLength);
+    },
+  };
+  
+  function DataSegmentFromSequence(type, segments) {
+    this.type = type;
+    this.segments = segments;
+    var length = 0;
+    for (var i = 0; i < segments.length; i++) {
+      length += segments[i].knownLength;
+      if (!isFinite(length)) break;
+    }
+    this.knownLength = length;
+  }
+  DataSegmentFromSequence.prototype = {
+    getLength: function() {
+      if (this.hasKnownLength) return Promise.resolve(this.knownLength);
+      var self = this;
+      return this.p_knownLength = this.p_knownLength
+      || Promise.all(this.segments.map(function(seg){ return seg.getLength(); }))
+        .then(function(allSizes) {
+          delete self.p_knownLength;
+          return self.knownLength = allSizes.reduce(function(total, size){ return total + size; }, 0);
+        });
+    },
+    getSegment: function(type, offset, length) {
+      if (isNaN(offset)) offset = 0;
+      if (isNaN(length)) length = this.knownLength - offset;
+      if (length === 0) return new EmptySequence(type);
+      if (offset === 0 && length === this.knownLength) {
+        return new DataSegmentFromSequence(type, this.segments);
+      }
+      var segments = this.segments;
+      function onAddSegment(list, i) {
+        if (i >= segments.length) {
+          return Promise.reject('segment subset out of range');
+        }
+        return segments[i].getLength().then(function(segmentLength) {
+          list.push(segments[i].getSegment(0, Math.min(segmentLength, length)));
+          length -= segmentLength;
+          return (length > 0) ? onAddSegment(list, ++i) : return DataSegment.from(list, type);
+        });
+      }
+      function onSegment(i) {
+        if (i >= segments.length) {
+          return Promise.reject('segment subset out of range');
+        }
+        var segment = segments[i];
+        return segments[i].getLength().then(function(segmentLength) {
+          if (offset >= segmentLength) {
+            offset -= segmentLength;
+            return onSegment(++i);
+          }
+          var availableLength = segmentLength - offset;
+          if (availableLength >= length) {
+            return segment.getSegment(type, offset, length);
+          }
+          segment = segment.getSegment('application/octet-stream', offset, availableLength);
+          offset = 0;
+          length -= availableLength;
+          return onAddSegment([segment], ++i);
+        });
+      }
+      return onSegment(0);
+    },
+    getArrayBuffer: function(type, offset, length) {
+      return this.getBytes(type, offset, length, true);
+    },
+    getBytes: function(type, offset, length, bufferMode) {
+      if (isNaN(offset)) offset = 0;
+      if (isNaN(length)) length = this.knownLength - offset;
+      if (length === 0) return bufferMode ? p_emptyBuffer : p_emptyBytes;
+      var segments = this.segments;
+      function onAddBytes(list, i) {
+        if (i >= segments.length) {
+          return Promise.reject('segment subset out of range');
+        }
+        return segments[i].getLength().then(function(segmentLength) {
+          list.push(segments[i].getBytes(0, Math.min(segmentLength, length)));
+          length -= segmentLength;
+          if (length > 0) {
+            return onAddBytes(list, ++i);
+          }
+          return Promise.all(list).then(function(bytesList) {
+            var bytes = new Uint8Array(bytesList.reduce(function(total, b){ return total + b.length; }, 0));
+            for (var i = 0, pos = 0; i < bytesList.length; i++) {
+              bytes.set(bytesList[i], pos);
+              pos += bytesList[i].length;
+            }
+            return bufferMode ? bytes.buffer : bytes;
+          });
+        });
+      }
+      function onSetBytes(promises, bytes, pos, i) {
+        if (i >= segments.length) {
+          return Promise.reject('segment subset out of range');
+        }
+        return segments[i].getLength().then(function(segmentLength) {
+          var chunkLength = Math.min(segmentLength, length);
+          promises.push(segments[i].getBytes(0, chunkLength).then(function(part) {
+            bytes.set(part, pos);
+          }));
+          length -= chunkLength;
+          return (length > 0)
+            ? onSetBytes(promises, bytes, pos + chunkLength, ++i)
+            : Promise.all(promises).then(Promise.resolve(bufferMode ? bytes.buffer : bytes));
+        });
+      }
+      function onSegment(i) {
+        if (i >= segments.length) {
+          return Promise.reject('segment subset out of range');
+        }
+        var segment = segments[i];
+        return segments[i].getLength().then(function(segmentLength) {
+          if (offset >= segmentLength) {
+            offset -= segmentLength;
+            return onSegment(++i);
+          }
+          var availableLength = segmentLength - offset;
+          if (availableLength >= length) {
+            return bufferMode ? segment.getArrayBuffer(offset, length) : segment.getBytes(offset, length);
+          }
+          if (isFinite(length)) {
+            var bytes = new Uint8Array(length);
+            var promises = [segment.getBytes().then(function(part) {
+              bytes.set(part);
+            })];
+            return onSetBytes(promises, bytes, 0, ++i);
+          }
+          offset = 0;
+          length -= availableLength;
+          return onAddBytes([segment.getBytes()], ++i);
+        });
+      }
+      return onSegment(0);
+    },
+    get asBlobParameter() {
+      var blobParams = [];
+      for (var i = 0; i < this.segments.length; i++) {
+        if (!(blobParams[i] = this.segments[i].asBlobParameter)) return null;
+      }
+      return new Blob(blobParams, this.type);
+    },
+    getBlob: function() {
+      var promised = [];
+      for (var i = 0; i < this.segments.length; i++) {
+        var blobParam = this.segments[i].asBlobParameter;
+        promised[i] = blobParam ? Promise.resolve(blobParam) : this.segments[i].getBlob();
+      }
+      var self = this;
+      return Promise.all(promised).then(function(blobParts) {
+        return new Blob(blobParts, self.type);
+      });
+    },
+  };
+  
+  function DataSegmentFromURL(url, offset, length, type) {
+    this.url = url;
+    if (type) {
+      this.type = type;
+    }
+    else {
+      var extension = url.replace(/[?#].*/, '').match(/\.([^\.]+)$);
+      if (extension) {
+        extension = extension[1].toLowerCase();
+        if (typeDispatch.byExtension.hasOwnProperty(extension)) {
+          this.type = typeDispatch.byExtension[extension];
+        }
+      }
+    }
+    if (isNaN(offset)) offset = 0;
+    if (isNaN(length)) length = Infinity;
+    this.offset = offset;
+    this.knownLength = length;
+  }
+  DataSegmentFromURL.prototype = Object.assign(new DataSegment, {
+    getSegment: function(type, offset, length) {
+      offset = this.offset + (isNaN(offset) ? 0 : offset);
+      if (isNaN(length)) length = this.knownLeft - offset;
+      if (length === 0) return new EmptySegment(type);
+      return new DataSegmentFromURL(this.url, offset, length, type);
+    },
+    runXHR: function(req) {
+      var range = 'bytes=' + this.offset;
+      if (this.hasKnownLength) range += '-' + this.knownLength;
+      req.open('GET', this.url);
+      if (this.range !== 'bytes=0-') {
+        req.setRequestHeader('Range', this.range);
+      }
+      return new Promise(function(resolve, reject) {
+        req.addEventListener('load', function(e) {
+          resolve(req.response);
+        });
+        req.addEventListener('abort', function(e) {
+          reject('request aborted');
+        });
+        req.addEventListener('error', function(e) {
+          reject(e.message);
+        });
+        req.send();
+      });
+    },
+    getArrayBuffer: function() {
+      var req = new XMLHttpRequest();
+      req.responseType = 'arraybuffer';
+      return this.runXHR();
+    },
+    getBlob: function() {
+      var req = new XMLHttpRequest();
+      req.responseType = 'blob';
+      return this.runXHR();
+    },
+  });
+  
+  function toBlobParameter(v) {
+    if (v instanceof ArrayBuffer || ArrayBuffer.isView(v)) return v;
+    if (v instanceof DataSegment) return v.asBlobParameter;
+    return null;
+  }
+  
+  return Object.assign(DataSegment, {
+    Empty: EmptySegment,
+    FromBlob: DataSegmentFromBlob,
+    Wrapper: DataSegmentWrapper,
+    FromArrayBuffer: DataSegmentFromArrayBuffer,
+    FromSequence: DataSegmentFromSequence,
+    from: function(value, overrideType) {
+      if (value instanceof DataSegment) {
+        return overrideType ? value.getSegment(overrideType) : value;
+      }
+      if (value instanceof Blob) {
+        if (!overrideType) {
+          var ext = (value.name || '').match(/\.([^\.]+)$/);
+          if (ext) {
+            ext = ext[1].toLowerCase();
+            if (typeDispatch.byExtension.hasOwnProperty(ext)) {
+              overrideType = typeDispatch.byExtension[ext];
+            }
+          }
+        }
+        if (overrideType) {
+          value = value.slice(0, value.length, overrideType);
+        }
+        if (length === 0) return new EmptySegment(value.type || 'application/octet-stream');
+        return new DataSegmentFromBlob(value);
+      }
+      if (value instanceof ArrayBuffer || ArrayBuffer.isView(value)) {
+        overrideType = overrideType || 'application/octet-stream';
+        if (length === 0) return new EmptySegment(overrideType);
+        return new DataSegmentFromArrayBuffer(overrideType, value);
+      }
+      if (Array.isArray(value)) {
+        if (value.length === 0) return new EmptySegment(overrideType || 'application/octet-stream');
+        var blobParams = new Array(value.length);
+        for (var i = 0; i < value.length; i++) {
+          var blobParam = toBlobParameter(value[i]);
+          if (blobParam === null) {
+            blobParams = null;
+            break;
+          }
+          blobParams[i] = blobParam;
+        }
+        if (blobParams !== null) {
+          return new DataSegmentFromBlob(new Blob(blobParams, overrideType || 'application/octet-stream'));
+        }
+        value = value.map(DataSegment.from);
+        return new DataSegmentFromSequence(overrideType || value[0].type, value);
+      }
+      if (typeof value === 'string') {
+        throw new TypeError('please use DataSegment.fromURL() if this was intended');
+      }
+    },
+    fromURL: function(url, overrideType) {
+      var asDataURL = value.match(/^data:([^,;]+)?(;base64)?,(.*)$/);
+      if (asDataURL) {
+        overrideType = overrideType || asDataURL[1] || (asDataURL[2] ? 'application/octet-stream' : 'text/plain');
+        var data = asDataURL[3];
+        if (asDataURL[2]) {
+          data = atob(data);
+          var bytes = new Uint8Array(data);
+          for (var i = 0; i < data.length; i++) {
+            bytes[i] = data.charCodeAt(i);
+          }
+          data = bytes;
+        }
+        else {
+          data = new TextDecode('utf-8').decode(decodeURIComponent(data));
+        }
+        return new DataSegmentFromArrayBuffer(overrideType, data);
+      }
+      return new DataSegmentFromURL(url, 0, Infinity, overrideType);
+    },
+  });
+  
+});
