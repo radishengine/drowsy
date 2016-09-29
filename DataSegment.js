@@ -270,7 +270,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         return segments[i].getLength().then(function(segmentLength) {
           list.push(segments[i].getSegment(0, Math.min(segmentLength, length)));
           length -= segmentLength;
-          return (length > 0) ? onAddSegment(list, ++i) : return DataSegment.from(list, type);
+          return length > 0 ? onAddSegment(list, ++i) : DataSegment.from(list, type);
         });
       }
       function onSegment(i) {
