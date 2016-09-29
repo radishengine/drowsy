@@ -45,7 +45,7 @@ function(ByteSource, Item, AppleVolume, DataSegment)
       appleVolume.read({});
     
     }
-    else if (typeDispatch.byExtension.hasOwnProperty(ext)) {
+    else {
       var segment = new DataSegment(droppedFile);
       console.log(segment);
       /*
