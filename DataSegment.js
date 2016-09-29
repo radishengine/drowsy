@@ -41,13 +41,14 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     getArrayBuffer: function(offset, length) {
       if (isNaN(offset)) offset = 0;
       if (isNaN(length)) length = this.knownLength - offset;
-      if (length === 0) return emptyBuffer;
+      if (length === 0) return p_emptyBuffer;
       throw new Error('no method defined to get bytes');
     },
     getBytes: function(offset, length) {
       if (isNaN(offset)) offset = 0;
+      if (offset < 0) offset = this.knownLength + offset;
       if (isNaN(length)) length = this.knownLength - offset;
-      if (length === 0) return emptyBytes;
+      if (length === 0) return p_emptyBytes;
       return this.getArrayBuffer(offset, length).then(function(arrayBuffer) {
         return new Uint8Array(arrayBuffer);
       });
@@ -132,7 +133,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       if (offset !== 0 || length !== 0) {
         throw new RangeError('cannot get ' + offset + '-' + (offset+length) + ' range from an empty segment');
       }
-      return emptyBuffer;
+      return p_emptyBuffer;
     },
     getBytes: function(offset, length) {
       if (isNaN(offset)) offset = 0;
@@ -140,7 +141,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       if (offset !== 0 || length !== 0) {
         throw new RangeError('cannot get ' + offset + '-' + (offset+length) + ' range from an empty segment');
       }
-      return emptyBytes;
+      return p_emptyBytes;
     },
     saveForTransfer: function(transferables) {
       return ['Empty', this.type];
