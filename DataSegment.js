@@ -54,7 +54,7 @@ define(['typeServices/dispatch'], function(typeDispatch) {
         return new Blob([bytes], self.type);
       });
     },
-    saveForTransfer(transferables) {
+    saveForTransfer: function(transferables) {
       throw new Error('saveForTransfer not implemented');
     },
   };
