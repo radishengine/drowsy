@@ -1,5 +1,5 @@
-require(['ByteSource', 'Item', 'AppleVolume', 'typeServices/dispatch'],
-function(ByteSource, Item, AppleVolume, typeDispatch)
+require(['ByteSource', 'Item', 'AppleVolume', 'DataSegment'],
+function(ByteSource, Item, AppleVolume, DataSegment)
 {
   
   'use strict';
@@ -46,8 +46,8 @@ function(ByteSource, Item, AppleVolume, typeDispatch)
     
     }
     else if (typeDispatch.byExtension.hasOwnProperty(ext)) {
-      var typeName = typeDispatch.byExtension[ext];
-      console.log(typeName);
+      var segment = new DataSegment(droppedFile);
+      console.log(segment);
       /*
       var item = new Item(ByteSource.from(droppedFile));
       var extension = droppedFile.name.match(/\.([^\.]+)$/);
