@@ -5,7 +5,7 @@ if (typeof self === Worker) {
 define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   
   var emptyBuffer = new ArrayBuffer(0);
-  var emptyBytes = new Uint8Array(buffer);
+  var emptyBytes = new Uint8Array(emptyBuffer);
   var emptyBlob = new Blob([emptyBytes]);
   var p_emptyBuffer = Promise.resolve(emptyBuffer);
   var p_emptyBytes = Promise.resolve(emptyBytes);
