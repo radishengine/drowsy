@@ -98,7 +98,7 @@ define(function() {
       var count = trailer.partEntryCount;
       var pending = [];
       function onPart(rawCentral) {
-        var central = new CentralRecordView(rawRecord.buffer, rawRecord.byteOffset, rawRecord.byteLength);
+        var central = new CentralRecordView(rawCentral.buffer, rawCentral.byteOffset, rawCentral.byteLength);
         if (entries.accepted(CENTRAL_RECORD_TYPE)) {
           entries.add(segment.getSegment(CENTRAL_RECORD_TYPE, pos, central.byteLength));
         }
@@ -106,7 +106,7 @@ define(function() {
           pending.push(segment.getBytes(central.localRecordOffset, LocalRecordView.byteLength)
           .then(function(rawLocal) {
             var local = new LocalRecordView(rawLocal.buffer, rawLocal.byteOffset, rawLocal.byteLength);
-            entries.add(segment.getSegment(LOCAL_RECORD_TYPE, record.localRecordOffset, local.byteLength));
+            entries.add(segment.getSegment(LOCAL_RECORD_TYPE, central.localRecordOffset, local.byteLength));
           }));
         }
         if (--count > 0) {
