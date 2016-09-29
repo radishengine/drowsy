@@ -47,7 +47,10 @@ function(ByteSource, Item, AppleVolume, DataSegment)
     }
     else {
       var segment = DataSegment.from(droppedFile);
-      console.log(segment);
+      segment.getCapabilities()
+      .then(function(capabilities) {
+        console.log(segment, capabilities);
+      });
       /*
       var item = new Item(ByteSource.from(droppedFile));
       var extension = droppedFile.name.match(/\.([^\.]+)$/);
