@@ -114,9 +114,9 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     getArrayBuffer: function(offset, length) {
       var blob = this.blob;
       if (isNaN(offset)) offset = 0;
-      if (offset < 0) offset = blob.length + offset;
-      if (isNaN(length)) length = blob.length - offset;
-      if (offset !== 0 || length !== blob.length) {
+      if (offset < 0) offset = blob.size + offset;
+      if (isNaN(length)) length = blob.size - offset;
+      if (offset !== 0 || length !== blob.size) {
         blob = blob.slice(offset, offset + length);
       }
       var frdr = new FileReader();
@@ -146,7 +146,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       get: function() { return this.blob.type || 'application/octet-stream'; },
     },
     knownLength: {
-      get: function() { return this.blob.length; },
+      get: function() { return this.blob.size; },
     },
     asBlobParameter: {
       get: function() { return this.blob; },
@@ -534,9 +534,9 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
           }
         }
         if (overrideType) {
-          value = value.slice(0, value.length, overrideType);
+          value = value.slice(0, value.size, overrideType);
         }
-        if (value.length === 0) return new EmptySegment(value.type || 'application/octet-stream');
+        if (value.size === 0) return new EmptySegment(value.type || 'application/octet-stream');
         return new DataSegmentFromBlob(value);
       }
       if (value instanceof ArrayBuffer || ArrayBuffer.isView(value)) {
