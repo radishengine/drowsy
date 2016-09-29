@@ -20,6 +20,22 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     get typeCategory() {
       return this.type.match(/^[^\/]*/)[0];
     },
+    get typeParameters() {
+      var params = this.type.split(';');
+      var obj = {};
+      for (var i = 1; i < params.length; i++) {
+        var param = params[i].match(/^\s*([^\s=]+)\s*=\s*(.*?)\s*/);
+        if (!param) throw new Error('malformed parameters: ' + this.type);
+        var key = param[1];
+        var value = param[2];
+        obj[key] = value;
+      }
+      Object.defineProperty(this, 'typeParameters', obj);
+      return obj;
+    },
+    getTypeParameter: function(name) {
+      return this.typeParameters[name] || null;
+    },
     get subtype() {
       return this.type.replace(/^.*?\//, '').replace(/;.*/, '');
     },
