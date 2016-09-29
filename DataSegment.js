@@ -120,11 +120,12 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       });
     },
     getCapabilities: function() {
+      var self = this;
       return this.getTypeHandler()
       .then(function(handler) {
         return {
           split: typeof handler.split === 'function',
-          struct: typeof handler.getStructView === 'function' && handler.getStructView(this) !== null,
+          struct: typeof handler.getStructView === 'function' && handler.getStructView(self) !== null,
         };
       });
     },
