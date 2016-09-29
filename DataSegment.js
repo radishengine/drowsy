@@ -536,7 +536,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         if (overrideType) {
           value = value.slice(0, value.length, overrideType);
         }
-        if (length === 0) return new EmptySegment(value.type || 'application/octet-stream');
+        if (value.length === 0) return new EmptySegment(value.type || 'application/octet-stream');
         return new DataSegmentFromBlob(value);
       }
       if (value instanceof ArrayBuffer || ArrayBuffer.isView(value)) {
