@@ -125,7 +125,12 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       return Promise.all([this.getStructView(), this.getBytes()])
       .then(function(values) {
         var TView = values[0], bytes = values[1];
-        return new TView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        if (typeof TView.byteLength === 'number') {
+          return new TView(bytes.buffer, bytes.byteOffset, TView.byteLength);
+        }
+        else {
+          return new TView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        }
       });
     },
     getCapabilities: function() {
