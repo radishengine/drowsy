@@ -30,7 +30,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         var value = param[2];
         obj[key] = value;
       }
-      Object.defineProperty(this, 'typeParameters', obj);
+      Object.defineProperty(this, 'typeParameters', {value:obj});
       return obj;
     },
     getTypeParameter: function(name) {
