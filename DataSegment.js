@@ -153,6 +153,11 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   }
   DataSegmentFromBlob.prototype = Object.assign(new DataSegment, {
     getSegment: function(type, offset, length) {
+      if (isNaN(offset)) offset = 0;
+      if (offset < 0) offset = this.blob.size + offset;
+      if (offset < 0) throw new RangeError('negative offset too large for segment');
+      if (isNaN(length)) length = this.blob.size - offset;
+      if (length === 0) return new EmptySegment(type);
       return new DataSegmentFromBlob(this.blob.slice(offset, offset+length, type));
     },
     getArrayBuffer: function(offset, length) {
