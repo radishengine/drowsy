@@ -46,7 +46,7 @@ function(ByteSource, Item, AppleVolume, DataSegment)
     
     }
     else {
-      var segment = new DataSegment(droppedFile);
+      var segment = DataSegment.from(droppedFile);
       console.log(segment);
       /*
       var item = new Item(ByteSource.from(droppedFile));
