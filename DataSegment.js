@@ -14,6 +14,9 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   }
   DataSegment.prototype = {
     type: 'application/octet-stream',
+    get typeName() {
+      return this.type.match(/^[^;\s]*/)[0];
+    },
     get typeCategory() {
       return this.type.match(/^[^\/]*/)[0];
     },
@@ -66,6 +69,20 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
     toLocal: function() {
       return Promise.resolve(this);
+    },
+    getCapabilities: function() {
+      var self = this;
+      return Promise(function(resolve, reject) {
+        require('typeServices/' + self.typeName,
+          function(handler) {
+            resolve({
+              split: typeof handler.split === 'function',
+            });
+          },
+          function() {
+            resolve({});
+          });
+      });
     },
   };
   
