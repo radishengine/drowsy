@@ -139,9 +139,9 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     saveForTransfer: function(transferables) {
       return ['FromBlob', this.blob];
     },
-    hasKnownLength: true,
   });
   Object.defineProperties(DataSegmentFromBlob.prototype, {
+    hasKnownLength: {value:true},
     type: {
       get: function() { return this.blob.type || 'application/octet-stream'; },
     },
@@ -200,7 +200,6 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     this.knownLength = byteLength;
   }
   DataSegmentFromArrayBuffer.prototype = Object.assign(new DataSegment, {
-    hasKnownLength: true,
     getSegment: function(type, offset, length) {
       offset = this.offset + (isNaN(offset) ? 0 : offset);
       if (isNaN(length)) length = this.knownLength - offset;
@@ -238,6 +237,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         return new Uint8Array(this.buffer, this.offset, this.byteLength);
       },
     },
+    hasKnownLength: {value:true},
   });
   
   function DataSegmentSequence(type, segments) {
