@@ -73,7 +73,13 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     getTypeHandler: function(thenDo, elseDo) {
       var self = this;
       return new Promise(function(resolve, reject) {
-        require(['typeServices/' + self.typeName], resolve, reject);
+        var handlerModule = 'typeServices/' + self.typeName;
+        require([handlerModule], resolve, function() {
+          requirejs.undef(handlerModule);
+          var handler = {};
+          define(handlerModule, handler);
+          resolve(handler);
+        });
       });
     },
     getCapabilities: function() {
@@ -82,9 +88,26 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         return {
           split: typeof handler.split === 'function',
         };
-      },
-      function() {
-        return {};
+      });
+    },
+    split: function(eachCallback, endCallback) {
+      if (arguments.length === 0) {
+        var list = [];
+        eachCallback = function(entry) {
+          list.add(entry);
+        };
+        endCallback = function() {
+          return Promise.resolve(list);
+        };
+      }
+      var self = this;
+      return this.getTypeHandler().then(function(handler) {
+        if (typeof handler.split !== 'function') {
+          return Promise.reject('split operation not defined for ' + self.typeName);
+        }
+        var entries = new SplitEntries();
+        var result = handler.split(self, entries);
+        return endCallback ? result.then(endCallback) : result;
       });
     },
   };
@@ -524,6 +547,18 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       });
     },
   });
+  
+  function SplitEntries(cb) {
+    this.callback = cb;
+  }
+  SplitEntries.prototype = {
+    add: function(entry) {
+      this.callback(entry);
+    },
+    accepted: function() {
+      return true;
+    },
+  };
   
   function toBlobParameter(v) {
     if (v instanceof ArrayBuffer || ArrayBuffer.isView(v)) return v;
