@@ -72,7 +72,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
     getCapabilities: function() {
       var self = this;
-      return Promise(function(resolve, reject) {
+      return new Promise(function(resolve, reject) {
         require('typeServices/' + self.typeName,
           function(handler) {
             resolve({
