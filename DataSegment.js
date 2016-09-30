@@ -12,6 +12,37 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   
   var handlerCache = {};
   
+  function normalizeRegion(offset, length, contextLength, contextOffset) {
+    if (isNaN(offset)) offset = 0;
+    if (isNaN(length)) length = Infinity;
+    if (isNaN(contextLength)) contextLength = Infinity;
+    if (!isNaN(contextOffset) && (offset >= 0 || contextOffset >= 0)) {
+      offset += contextOffset;
+    }
+    if (offset < 0) {
+      if (!isFinite(length)) length = -offset;
+      else if (length > -offset) {
+        throw new Error('length exceeds negative offset');
+      }
+    }
+    if (isFinite(contextLength)) {
+      if (offset >= contextLength && length !== 0) {
+        throw new RangeError('offset out of range (' + offset + ' of ' + contextLength + ')');
+      }
+      if (offset < 0) {
+        offset = contextLength + offset;
+        if (offset < 0) {
+          throw new RangeError('offset out of range (' + offset + ' of ' + contextLength + ')');
+        }
+      }
+      if (!isFinite(length)) length = contextLength - offset;
+    }
+    if (length < 0) {
+      throw new Error('length cannot be negative');
+    }
+    return {offset:offset, length:length};
+  }
+  
   function DataSegment() {
   }
   DataSegment.prototype = {
@@ -42,6 +73,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       return this.type.replace(/^.*?\//, '').replace(/;.*/, '');
     },
     knownLength: Infinity,
+    offset: 0,
     get hasKnownLength() {
       return isFinite(this.knownLength);
     },
@@ -50,26 +82,50 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       if (typeof this.calculateLength === 'function') return this.calculateLength();
       throw new Error('no method defined to calculate length');
     },
-    getSegment: function(type, offset, length) {
-      if (isNaN(offset)) offset = 0;
-      if (isNaN(length)) length = this.knownLength - offset;
-      if (length === 0) return new EmptySegment(type, offset, length);
+    getSegmentNormalized: function(type, offset, length) {
       return new DataSegmentWrapper(this, type, offset, length);
     },
-    getArrayBuffer: function(offset, length) {
-      if (isNaN(offset)) offset = 0;
-      if (isNaN(length)) length = this.knownLength - offset;
-      if (length === 0) return p_emptyBuffer;
+    getBufferOrViewNormalized: function(offset, length) {
       throw new Error('no method defined to get bytes');
     },
-    getBytes: function(offset, length) {
-      if (isNaN(offset)) offset = 0;
-      if (offset < 0) offset = this.knownLength + offset;
-      if (isNaN(length)) length = this.knownLength - offset;
-      if (length === 0) return p_emptyBytes;
-      return this.getArrayBuffer(offset, length).then(function(arrayBuffer) {
-        return new Uint8Array(arrayBuffer);
+    getArrayBufferNormalized: function(offset, length) {
+      return this.getBufferOrViewNormalized(offset, length)
+      .then(function(borv) {
+        if (borv instanceof ArrayBuffer) return borv;
+        if (borv.byteOffset === 0 && borv.byteLength === borv.buffer.byteLength) {
+          return borv.buffer;
+        }
+        var copy = new ArrayBuffer(borv.byteLength);
+        if (!(borv instanceof Uint8Array)) {
+          borv = new Uint8Array(borv.buffer, borv.byteOffset, borv.byteLength);
+        }
+        new Uint8Array(copy).set(borv);
+        return copy;
       });
+    },
+    getSegment: function(type, offset, length) {
+      var region = normalizeRegion(offset, length, this.knownLength, this.offset);
+      if (region.length === 0) return new EmptySegment(type);
+      return this.getSegmentNormalized(type, region.offset, region.length);
+    },
+    getBytesNormalized: function(offset, length) {
+      var region = normalizeRegion(offset, length, this.knownLength, this.offset);
+      return this.getBufferOrViewNormalized(region.offset, region.length)
+      .then(function(borv) {
+        if (borv instanceof ArrayBuffer) return new Uint8Array(borv);
+        if (borv instanceof Uint8Array) return borv;
+        return new Uint8Array(borv.buffer, borv.byteOffet, borv.byteLength);
+      });
+    },
+    getArrayBuffer: function(offset, length) {
+      var region = normalizeRegion(offset, length, this.knownLength, this.offset);
+      if (region.length === 0) return p_emptyBuffer;
+      return this.getArrayBufferNormalized(region.offset, region.length);
+    },
+    getBytes: function(offset, length) {
+      var region = normalizeRegion(offset, length, this.knownLength, this.offset);
+      if (region.length === 0) return p_emptyBytes;
+      return this.getBytesNormalized(region.offset, region.length);
     },
     asBlobParameter: null,
     getBlob: function() {
@@ -161,6 +217,10 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         return endCallback ? result.then(endCallback) : result;
       });
     },
+    hint: function(what) {
+      console.warn('unused hint on '+this+': '+what);
+      return this;
+    },
   };
   
   function EmptySegment(type) {
@@ -169,26 +229,20 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   EmptySegment.prototype = Object.assign(new DataSegment, {
     knownLength: 0,
     asBlobParameter: emptyBuffer,
-    getSegment: function(type, offset, length) {
-      if (isNaN(offset)) offset = 0;
-      if (isNaN(length)) length = 0;
-      if (offset !== 0 || length !== 0) {
+    getSegmentNormalized: function(type, offset, length) {
+      if (offset || length) {
         throw new RangeError('cannot get ' + offset + '-' + (offset+length) + ' range from an empty segment');
       }
       return (type === this.type) ? this : new EmptySegment(type);
     },
-    getArrayBuffer: function(offset, length) {
-      if (isNaN(offset)) offset = 0;
-      if (isNaN(length)) length = 0;
-      if (offset !== 0 || length !== 0) {
+    getArrayBufferNormalized: function(offset, length) {
+      if (offset || length) {
         throw new RangeError('cannot get ' + offset + '-' + (offset+length) + ' range from an empty segment');
       }
       return p_emptyBuffer;
     },
-    getBytes: function(offset, length) {
-      if (isNaN(offset)) offset = 0;
-      if (isNaN(length)) length = 0;
-      if (offset !== 0 || length !== 0) {
+    getBytesNormalized: function(offset, length) {
+      if (offset || length) {
         throw new RangeError('cannot get ' + offset + '-' + (offset+length) + ' range from an empty segment');
       }
       return p_emptyBytes;
@@ -202,19 +256,21 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     this.blob = blob;
   }
   DataSegmentFromBlob.prototype = Object.assign(new DataSegment, {
-    getSegment: function(type, offset, length) {
-      if (isNaN(offset)) offset = 0;
-      if (offset < 0) offset = this.blob.size + offset;
-      if (offset < 0) throw new RangeError('negative offset too large for segment');
-      if (isNaN(length)) length = this.blob.size - offset;
-      if (length === 0) return new EmptySegment(type);
+    getSegmentNormalized: function(type, offset, length) {
+      if (offset === 0 && length === this.blob.size && type === this.blob.type) {
+        return this;
+      }
       return new DataSegmentFromBlob(this.blob.slice(offset, offset+length, type));
     },
-    getArrayBuffer: function(offset, length) {
+    getBufferOrViewNormalized: function(offset, length) {
+      return this.getArrayBufferNormalized(offset, length);
+    },
+    getBytesNormalized: function(offset, length) {
+      return this.getArrayBufferNormalized(offset, length)
+      .then(function(buffer){ return new Uint8Array(buffer); });
+    },
+    getArrayBufferNormalized: function(offset, length) {
       var blob = this.blob;
-      if (isNaN(offset)) offset = 0;
-      if (offset < 0) offset = blob.size + offset;
-      if (isNaN(length)) length = blob.size - offset;
       if (offset !== 0 || length !== blob.size) {
         blob = blob.slice(offset, offset + length);
       }
@@ -255,23 +311,28 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   function DataSegmentWrapper(wrappedSegment, type, offset, length) {
     this.wrappedSegment = wrappedSegment;
     this.type = type;
-    if (isNaN(offset)) offset = 0;
-    if (isNaN(length)) length = Infinity;
-    if (!isFinite(length)) length = wrappedSegment.knownLength - offset;
-    this.offset = offset;
-    this.knownLength = length;
+    var region = normalizeRegion(offset, length, wrappedSegment.knownLength);
+    this.offset = region.offset;
+    this.knownLength = region.length;
   }
   DataSegmentWrapper.prototype = Object.assign(new DataSegment, {
-    getSegment: function(type, offset, length) {
-      return new DataSegmentWrapper(this.wrappedSegment, type, this.offset + offset, length);
+    getSegmentNormalized: function(type, offset, length) {
+      if (type === this.type && offset === this.offset && length === this.knownLength) {
+        return this;
+      }
+      return new DataSegmentWrapper(this.wrappedSegment, type, offset, length);
     },
-    getArrayBuffer: function(offset, length) {
-      offset = this.offset + (isNaN(offset) ? 0 : offset);
-      if (isNaN(length)) length = this.knownLength - length;
-      return this.wrappedSegment.getArrayBuffer(offset, length);
+    getBufferOrViewNormalized: function(offset, length) {
+      return this.wrappedSegment.getBufferOrViewNormalized(offset, length);
+    },
+    getArrayBufferNormalized: function(offset, length) {
+      return this.wrappedSegment.getArrayBufferNormalized(offset, length);
+    },
+    getBytesNormalized: function(offset, length) {
+      return this.wrappedSegment.getBytesNormalized(offset, length);
     },
     saveForTransfer: function(transferables) {
-      return ['Wrapper', this.wrappedSegment.saveForTransfer(transferables), this.offset, this.length];
+      return ['Wrapper', this.wrappedSegment.saveForTransfer(transferables), this.type, this.offset, this.length];
     },
   });
   Object.defineProperties(DataSegmentWrapper.prototype, {
@@ -288,44 +349,34 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   
   function DataSegmentFromArrayBuffer(type, buffer, byteOffset, byteLength) {
     this.type = type;
-    if (isNaN(byteOffset)) byteOffset = 0;
-    if (isNaN(byteLength)) byteLength = buffer.byteLength - byteOffset;
+    var region = normalizeRegion(byteOffset, byteLength, buffer.byteLength, buffer.byteOffset || 0);
     if (ArrayBuffer.isView(buffer)) {
-      byteOffset += buffer.byteOffset;
       buffer = buffer.buffer;
     }
     this.buffer = buffer;
-    this.offset = byteOffset;
-    this.knownLength = byteLength;
+    this.offset = region.offset;
+    this.knownLength = region.length;
   }
   DataSegmentFromArrayBuffer.prototype = Object.assign(new DataSegment, {
-    getSegment: function(type, offset, length) {
-      offset = this.offset + (isNaN(offset) ? 0 : offset);
-      if (isNaN(length)) length = this.knownLength - offset;
-      if (length === 0) return new EmptySegment(type);
+    getSegmentNormalized: function(type, offset, length) {
+      if (type === this.type && offset === this.offset && length === this.knownLength) {
+        return this;
+      }
       return new DataSegmentFromArrayBuffer(type, this.buffer, offset, length);
     },
-    getBytes: function(offset, length) {
-      offset = this.offset + (isNaN(offset) ? 0 : offset);
-      if (isNaN(length)) length = this.knownLength - offset;
-      if (length === 0) return p_emptyBytes;
+    getBytesNormalized: function(offset, length) {
       return Promise.resolve(new Uint8Array(this.buffer, offset, length));
     },
-    getArrayBuffer: function(offset, length) {
-      offset = this.offset + (isNaN(offset) ? 0 : offset);
-      if (isNaN(length)) length = this.knownLength - offset;
-      if (length === 0) return p_emptyBuffer;
+    getBufferOrViewNormalized: function(offset, length) {
       if (offset === 0 && length === this.buffer.byteLength) {
         return Promise.resolve(this.buffer);
       }
-      var copyBuffer = new ArrayBuffer(length);
-      new Uint8Array(copyBuffer).set(new Uint8Array(this.buffer, offset, length));
-      return Promise.resolve(copyBuffer);
+      return Promise.resolve(new Uint8Array(this.buffer, offset, length));
     },
     saveForTransfer: function(transferables) {
       transferables.push(this.buffer);
       return ['FromArrayBuffer', this.buffer, this.offset, this.knownLength];
-    },    
+    },
   });
   Object.defineProperties(DataSegmentFromArrayBuffer.prototype, {
     asBlobParameter: {
@@ -360,11 +411,11 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
           return self.knownLength = allSizes.reduce(function(total, size){ return total + size; }, 0);
         });
     },
-    getSegment: function(type, offset, length) {
-      if (isNaN(offset)) offset = 0;
-      if (isNaN(length)) length = this.knownLength - offset;
-      if (length === 0) return new EmptySequence(type);
+    getSegmentNormalized: function(type, offset, length) {
       if (offset === 0 && length === this.knownLength) {
+        if (type === this.type) {
+          return this;
+        }
         return new DataSegmentSequence(type, this.segments);
       }
       var segments = this.segments;
@@ -400,13 +451,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       }
       return onSegment(0);
     },
-    getArrayBuffer: function(type, offset, length) {
-      return this.getBytes(type, offset, length, true);
-    },
-    getBytes: function(type, offset, length, bufferMode) {
-      if (isNaN(offset)) offset = 0;
-      if (isNaN(length)) length = this.knownLength - offset;
-      if (length === 0) return bufferMode ? p_emptyBuffer : p_emptyBytes;
+    getBufferOrViewNormalized: function(type, offset, length) {
       var segments = this.segments;
       function onAddBytes(list, i) {
         if (i >= segments.length) {
@@ -424,7 +469,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
               bytes.set(bytesList[i], pos);
               pos += bytesList[i].length;
             }
-            return bufferMode ? bytes.buffer : bytes;
+            return bytes;
           });
         });
       }
@@ -440,7 +485,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
           length -= chunkLength;
           return (length > 0)
             ? onSetBytes(promises, bytes, pos + chunkLength, ++i)
-            : Promise.all(promises).then(Promise.resolve(bufferMode ? bytes.buffer : bytes));
+            : Promise.all(promises).then(Promise.resolve(bytes));
         });
       }
       function onSegment(i) {
@@ -455,7 +500,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
           }
           var availableLength = segmentLength - offset;
           if (availableLength >= length) {
-            return bufferMode ? segment.getArrayBuffer(offset, length) : segment.getBytes(offset, length);
+            return segment.getBytesNormalized(offset, length);
           }
           if (isFinite(length)) {
             var bytes = new Uint8Array(length);
@@ -516,23 +561,30 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         }
       }
     }
-    if (isNaN(offset)) offset = 0;
-    if (isNaN(length)) length = Infinity;
-    this.offset = offset;
-    this.knownLength = length;
+    var region = normalizeRegion(offset, length);
+    this.offset = region.offset;
+    this.knownLength = region.length;
   }
   DataSegmentFromURL.prototype = Object.assign(new DataSegment, {
-    getSegment: function(type, offset, length) {
-      offset = this.offset + (isNaN(offset) ? 0 : offset);
-      if (isNaN(length)) length = this.knownLeft - offset;
-      if (length === 0) return new EmptySegment(type);
+    getSegmentNormalized: function(type, offset, length) {
       return new DataSegmentFromURL(this.url, offset, length, type);
     },
-    runXHR: function(req) {
-      var range = 'bytes=' + this.offset;
-      if (this.hasKnownLength) range += '-' + this.knownLength;
+    runXHRNormalized: function(req, offset, length) {
+      var range;
+      if (offset < 0) {
+        range = 'bytes='+offset;
+        if (length !== -offset) {
+          throw new Error('length cannot be specified for a suffix range');
+        }
+      }
+      else {
+        range = 'bytes='+offset+'-';
+        if (isFinite(length)) {
+          range += (offset + length - 1);
+        }
+      }
       req.open('GET', this.url);
-      if (this.range !== 'bytes=0-') {
+      if (range !== 'bytes=0-') {
         req.setRequestHeader('Range', this.range);
       }
       return new Promise(function(resolve, reject) {
@@ -548,19 +600,35 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         req.send();
       });
     },
-    getArrayBuffer: function() {
+    getBufferOrViewNormalized: function(offset, length) {
       var req = new XMLHttpRequest();
       req.responseType = 'arraybuffer';
-      return this.runXHR();
+      if (offset < 0 && length < -offset) {
+        return this.runXHRNormalized(req, offset, -offset)
+        .then(function(buffer) {
+          return new Uint8Array(buffer, 0, length);
+        });
+      }
+      return this.runXHRNormalized(req, offset, length);
     },
     getBlob: function() {
       var req = new XMLHttpRequest();
       req.responseType = 'blob';
-      return this.runXHR();
+      var type = this.type, offset = this.offset, length = this.knownLength;
+      if (offset < 0 && length < -offset) {
+        return this.runXHRNormalized(req, offset, -offset)
+        .then(function(blob) {
+          return blob.slice(0, length, type);
+        });
+      }
+      return this.runXHRNormalized(req, offset, length)
+      .then(function(blob) {
+        return blob.slice(0, blob.size, type);
+      });
     },
     saveForTransfer: function(transferables) {
       return ['FromURL', this.url, this.offset, this.byteLength];
-    },    
+    },
   });
   
   function RemoteDataSegment(worker) {
@@ -604,6 +672,208 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
   });
   
+  function BufferedSegment(wrappedSegment, type, offset, length) {
+    var region;
+    if (wrappedSegment instanceof BufferedSegment) {
+      region = normalizeRegion(offset, length, wrappedSegment.knownLength, wrappedSegment.offset);
+      this.buffered = wrappedSegment.buffered;
+      this.readyCallbacks = wrappedSegment.readyCallbacks;
+      this.wrappedSegment = wrappedSegment.wrappedSegment;
+    }
+    else {
+      region = normalizeRegion(offset, length, wrappedSegment.knownLength);
+      this.buffered = [];
+      this.readyCallbacks = [];
+      this.wrappedSegment = wrappedSegment;
+    }
+    this.offset = region.offset;
+    this.knownLength = region.length;
+  }
+  BufferedSegment.prototype = Object.assign(new DataSegment, {
+    BUFSIZE: 32 * 1024,
+    getSegmentNormalized: function(type, offset, length) {
+      if (type === this.type && offset === this.offset && length === this.knownLength) {
+        return this;
+      }
+      return new BufferedSegment(this, type, offset, length);
+    },
+    getLength: function() {
+      return this.wrappedSegment.getLength();
+    },
+    getIndex: function(offset) {
+      offset += this.offset;
+      var buffered = this.buffered;
+      for (var min_i = 0, max_i = buffered.length - 1; min_i <= max_i; ) {
+        var i = Math.floor((min_i + max_i) / 2);
+        if (offset < buffered[i].offset) {
+          max_i = i - 1;
+          if (max_i < 0 || offset >= (buffered[max_i].segmentOffset + buffered[max_i].byteLength)) {
+            return ~i;
+          }
+          continue;
+        }
+        if (offset >= (buffered[i].segmentOffset + buffered[i].byteLength)) {
+          min_i = i + 1;
+          continue;
+        }
+        return i;
+      }
+      return ~buffered.length;
+    },
+    put: function(part) {
+      var i = this.getIndex(part.segmentOffset);
+      var buffered = this.buffered;
+      if (i < 0) {
+        i = ~i;
+      }
+      else if (buffered[i].segmentOffset < part.segmentOffset) {
+        if (buffered[i] instanceof ArrayBuffer) {
+          buffered[i] = Object.assign(new Uint8Array(buffered[i], 0, part.segmentOffset - buffered[i].segmentOffset), {
+            segmentOffset: buffered[i].segmentOffset,
+          });
+        }
+        else if (buffered[i] instanceof Uint8Array) {
+          buffered[i] = Object.assign(buffered[i].subarray(0, part.segmentOffset - buffered[i].segmentOffset), {
+            segmentOffset: buffered[i].segmentOffset,
+          });
+        }
+        else {
+          buffered[i].byteLength = part.segmentOffset - buffered[i].segmentOffset;
+        }
+        i++;
+      }
+      buffered.splice(i++, 0, part);
+      var end = part.segmentOffset + part.byteLength;
+      while (i < buffered.length && buffered[i].segmentOffset < end) {
+        if (end >= (buffered[i].segmentOffset + buffered[i].length)) {
+          buffered.splice(i, 1);
+          continue;
+        }
+        var removePrefix = end - buffered[i].segmentOffset;
+        if (buffered[i] instanceof ArrayBuffer) {
+          buffered[i] = Object.assign(new Uint8Array(buffered[i], removePrefix), {
+            segmentOffset: end,
+          });
+        }
+        else if (buffered[i] instanceof Uint8Array) {
+          buffered[i] = Object.assign(buffered[i].subarray(removePrefix), {
+            segmentOffset: end,
+          });
+        }
+        else {
+          buffered[i].segmentOffset += removePrefix;
+          buffered[i].byteLength -= removePrefix;
+        }
+        break;
+      }
+      for (var i = this.readyCallbacks.length; i >= 0; i--) {
+        if (this.readyCallbacks[i](readyBytes.offset, readyBytes.length)) {
+          this.readyCallbacks.splice(i, 1);
+        }
+      }
+    },
+    putPlaceholders: function(offset, end) {
+      var newPlaceholders = [];
+      newPlaceholders.bytesRemaining = 0;
+      var buffered = this.buffered;
+      var i = this.getIndex(offset);
+      if (i < 0) {
+        i = ~i;
+        if (i < buffered.length) {
+          var prefixPlaceholder = {segmentOffset: offset, byteLength:buffered[i].segmentOffset - offset};
+          newPlaceholders.push(prefixPlaceholder);
+          newPlaceholders.bytesRemaining += prefixPlaceholder.byteLength;
+          offset = buffered[i].segmentOffset;
+          buffered.splice(i, 0, prefixPlaceholder);
+          i++;
+        }
+      }
+      while (i < buffered.length) {
+        if (buffered[i] instanceof ArrayBuffer || buffered[i] instanceof Uint8Array) {
+          offset = Math.min(end, offset + buffered[i].byteLength);
+        }
+        else {
+          var placeholderLen = Math.min(end - offset, buffered[i].byteLength);
+          newPlaceholders.bytesRemaining += placeholderLen;
+          offset += placeholderLen;
+        }
+        if (offset === end) {
+          return newPlaceholders;
+        }
+        i++;
+        if (i < buffered.length && buffered[i].segmentOffset > offset) {
+          var placeholder = {segmentOffset: offset, byteLength: buffered[i].segmentOffset - offset};
+          newPlaceholders.push(placeholder);
+          newPlaceholders.bytesRemaining += placeholder.byteLength;
+          buffered.splice(i, 0, placeholder);
+          i++;
+        }
+      }
+      var finalPart = {segmentOffset:offset, byteLength:end - offset};
+      newPlaceholders.push(finalPart);
+      buffered.push(finalPart);
+      newPlaceholders.bytesRemaining += end - offset;
+      return newPlaceholders;
+    },
+    rawGet: function(offset, length) {
+      
+    },
+    getBufferOrViewNormalized: function(offset, length) {
+      if (offset < 0) {
+        var self = this;
+        return this.getLength().then(function(totalLength) {
+          return self.getBufferOrViewNormalized(totalLength + offset, length);
+        });
+      }
+      else if (!isFinite(length)) {
+        var self = this;
+        return this.getLength().then(function(totalLength) {
+          return self.getBufferOrViewNormalized(offset, totalLength - offset);
+        });
+      }
+      var BUFSIZE = this.BUFSIZE;
+      var bufferedOffset = offset - offset % BUFSIZE;
+      var bufferedLength = length + offset % BUFSIZE;
+      if (bufferedLength % BUFSIZE !== 0) bufferedLength += BUFSIZE - (bufferedLength % BUFSIZE);
+      var placeholders = this.putPlaceholders(bufferedOffset, bufferedLength);
+      var self = this;
+      if (placeholders.bytesRemaining === 0) {
+        return this.rawGet(offset, length);
+      }
+      var bytesRemaining = length;
+      var result = new Promise(function(resolve, reject) {
+        this.readyCallbacks.push(function(readyOffset, readyLength) {
+          // TODO: subtract from bytesRemaining here
+          if (bytesRemaining === 0) {
+            resolve(self.rawGet(offset, length));
+            return true;
+          }
+        });
+      });
+      placeholders.forEach(function(placeholder) {
+        self.wrappedSegment.getBufferOrViewNormalized(placeholder.segmentOffset, placeholder.byteLength)
+        .then(function(borv) {
+          borv.segmentOffset = placeholder.segmentOffset;
+          self.put(borv);
+        });
+      });
+      return result;
+    },
+    hint: function(what, offset, length) {
+      if (what !== 'interesting' && what !== 'boring') {
+        return DataSegment.prototype.hint.apply(this, arguments);
+      }
+      var region = normalizeRegion(offset, length, this.knownLength, this.offset);
+    },
+  });
+  Object.defineProperties(BufferedRegion.prototype, {
+    knownLength: {
+      get: function() {
+        return this.wrappedSegment.knownLength;
+      },
+    },
+  });
+  
   function SplitEntries(cb) {
     this.callback = cb;
   }
@@ -630,6 +900,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     Sequence: DataSegmentSequence,
     FromURL: DataSegmentFromURL,
     Remote: RemoteDataSegment,
+    Buffered: BufferedSegment,
     from: function(value, overrideType) {
       if (value instanceof DataSegment) {
         return overrideType ? value.getSegment(overrideType) : value;
