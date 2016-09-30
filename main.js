@@ -64,10 +64,10 @@ function(ByteSource, Item, AppleVolume, DataSegment)
             });
           }
           if (capabilities.struct) {
-            segment.getBytes()
-            .then(function(struct) {
+            segment.getLength()
+            .then(function(len) {
               //console.log('struct', struct.toString());
-              fastLog('<S>\u200B');
+              fastLog('<'+len+'>\u200B');
             });
           }
         });
