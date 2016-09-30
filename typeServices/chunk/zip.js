@@ -139,7 +139,7 @@ define(['../../msdos/util.js'], function(dosUtil) {
       return this.dv.getUint32(24, true);
     },
     get isZip64() {
-      return this.compressedSize32 === 0xffffffff && this.uncompressedSize32 === 0xffffffff;
+      return this.compressedByteLength32 === 0xffffffff && this.uncompressedByteLength32 === 0xffffffff;
     },
     get pathByteLength() {
       return this.dv.getUint16(28, true);
@@ -261,14 +261,14 @@ define(['../../msdos/util.js'], function(dosUtil) {
     get crc32() {
       return ('0000000' + this.dv.getUint32(0xE, true).toString(16).toUpperCase()).slice(-8);
     },
-    get compressedSize32() {
+    get compressedByteLength32() {
       return this.dv.getUint32(0x12, true);
     },
-    get uncompressedSize32() {
+    get uncompressedByteLength32() {
       return this.dv.getUint32(0x16, true);
     },
     get isZip64() {
-      return this.compressedSize32 === 0xffffffff && this.uncompressedSize32 === 0xffffffff;
+      return this.compressedByteLength32 === 0xffffffff && this.uncompressedByteLength32 === 0xffffffff;
     },
     get pathByteLength() {
       return this.dv.getInt16(0x1a, true);
