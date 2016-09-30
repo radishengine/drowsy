@@ -866,7 +866,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       var region = normalizeRegion(offset, length, this.knownLength, this.offset);
     },
   });
-  Object.defineProperties(BufferedRegion.prototype, {
+  Object.defineProperties(BufferedSegment.prototype, {
     knownLength: {
       get: function() {
         return this.wrappedSegment.knownLength;
