@@ -2,23 +2,22 @@ define(['../../msdos/util'], function(dosUtil) {
 
   'use strict';
   
-  function split(entries) {
-    var rootSegment = this;
-    var headerSegment = rootSegment.getSegment('video/x-flic-chunk; type=file', 0, HeaderView.byteLength);
+  function split(rootSegment, entries) {
+    var headerSegment = rootSegment.getSegment('chunk/flic; type=file', 0, HeaderView.byteLength);
     return headerSegment.getBytes().then(function(rawHeader) {
       var header = new HeaderView(rawHeader.buffer, rawHeader.byteOffset, rawHeader.byteLength);
-      if (entries.accepted('video/x-flic-chunk; type=file')) {
+      if (entries.accepted('chunk/flic; type=file')) {
         entries.add(headerSegment);
       }
       var pos = HeaderView.byteLength;
       var end = header.totalByteLength;
-      function onContainerChunk(typeName, TChunk, totalLength) {
+      function onContainerChunk(typeName, headerLength, totalLength) {
         // TODO: use totalLength to skip if every possible subchunk type is not permissable
-        typeName = 'video/x-flic-chunk; type=' + typeName;
+        typeName = 'chunk/flic; type=' + typeName;
         if (entries.accepted(typeName)) {
-          entries.add(rootSegment.getSegment(typeName, pos, TChunk.byteLength));
+          entries.add(rootSegment.getSegment(typeName, pos, headerLength));
         }
-        pos += TChunk.byteLength;
+        pos += headerLength;
         if (pos < end) return rootSegment.getBytes(pos, 6).then(onChunk);
       }
       function onChunk(rawHeader) {
@@ -26,9 +25,9 @@ define(['../../msdos/util'], function(dosUtil) {
         var chunkType = rawHeader[4] | (rawHeader[5] << 8);
         pos += 6;
         switch (chunkType) {
-          case 0xF100: return onContainerChunk('prefix', PrefixChunk, chunkLength);
-          case 0xF1FA: return onContainerChunk('frame', FrameChunk, chunkLength);
-          case 0xF1FB: return onContainerChunk('segment-table', SegmentTableChunk, chunkLength);
+          case 0xF100: return onContainerChunk('prefix', 4, chunkLength);
+          case 0xF1FA: return onContainerChunk('frame', 10, chunkLength);
+          case 0xF1FB: return onContainerChunk('segment-table', 2, chunkLength);
           
           case 0x0003: chunkType = 'cel-data'; break;
           case 0x0004: chunkType = 'palette; bits=8'; break;
@@ -57,7 +56,7 @@ define(['../../msdos/util'], function(dosUtil) {
           case 0x002B: chunkType = 'path-map'; break;
           default: chunkType = '0x' + chunkType.toString(16).toUpperCase();
         }
-        chunkType = 'video/x-flic-chunk; type=' + chunkType;
+        chunkType = 'chunk/flic; type=' + chunkType;
         if (entries.accepted(chunkType)) {
           entries.add(rootSegment.getSegment(chunkType, pos, chunkLength));
         }
@@ -151,54 +150,6 @@ define(['../../msdos/util'], function(dosUtil) {
     // reserved: 40 bytes
   };
   HeaderView.byteLength = 128;
-  
-  function PrefixChunk(buffer, byteOffset, byteLength) {
-    this.dv = new DataView(buffer, byteOffset, byteLength);
-  }
-  PrefixChunk.prototype = {
-    get subchunkCount() {
-      return this.dv.getUint16(0, true);
-    },
-    // reserved: 2 bytes
-  };
-  PrefixChunk.byteLength = 4;
-  PrefixChunk.signature = 0xF100;
-  
-  function FrameTypeChunk(buffer, byteOffset, byteLength) {
-    this.dv = new DataView(buffer, byteOffset, byteLength);
-  }
-  FrameTypeChunk.prototype = {
-    get subchunkCount() {
-      return this.dv.getUint16(0, true);
-    },
-    get duration() {
-      var value = this.dv.getUint16(2, true);
-      return value === 0 ? 'default' : value;
-    },
-    // reserved: 2 bytes
-    
-    // width & height overrides: EGI 4.0+ extension
-    get width() {
-      var value = this.dv.getUint16(6, true);
-      return value === 0 ? 'default' : value;
-    },
-    get height() {
-      var value = this.dv.getUint16(6, true);
-      return value === 0 ? 'default' : value;
-    },
-  };
-  
-  function SegmentTableChunk(buffer, byteOffset, byteLength) {
-    this.dv = new DataView(buffer, byteOffset, byteLength);
-  }
-  SegmentTableChunk.prototype = {
-    get subchunkCount() {
-      return this.dv.getUint16(0, true);
-    },
-  };
-  SegmentTableChunk.byteLength = 2;
-  
-  function 
   
   return {
     split: split,
