@@ -93,18 +93,16 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       var t = this.typeName;
       if (t in handlerCache) return handlerCache[t];
       var self = this;
-      return new Promise(function(resolve, reject) {
+      return handlerCache[t] = new Promise(function(resolve, reject) {
         var handlerModule = 'typeServices/' + self.typeName;
         require([handlerModule],
         function(handler) {
-          handlerCache[t] = Promise.resolve(handler);
           resolve(handler);
         },
         function() {
           requirejs.undef(handlerModule);
           var handler = {};
           define(handlerModule, handler);
-          handlerCache[t] = Promise.resolve(handler);
           resolve(handler);
         });
       });
