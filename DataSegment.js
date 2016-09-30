@@ -672,6 +672,10 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         value = value.map(DataSegment.from);
         return new DataSegmentFromSequence(overrideType || value[0].type, value);
       }
+      if (value instanceof ImageData) {
+        overrideType = overrideType || ('image/x-pixels; format=r8g8b8a8; width='+value.width+'; height='+value.height);
+        return new DataSegmentFromArrayBuffer(value.data, overrideType);
+      }
       if (typeof value === 'string') {
         throw new TypeError('please use DataSegment.fromURL() if this was intended');
       }
