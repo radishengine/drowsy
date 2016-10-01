@@ -695,9 +695,8 @@ define(function() {
           }
           break;
         case 'Exceptions':
-          value = new Array(dv.getUint16(6, false));
           for (var i = 0; i < value.length; i++) {
-            value[i] = this.constants[dv.getUint16(8 + i*2)];
+            def.push(['throws', value[i]]);
           }
           break;
         default: def.push([this.name.toLowerCase()]); break;
