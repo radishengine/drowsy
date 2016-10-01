@@ -108,7 +108,7 @@ define(function() {
           case 8:
             c[i] = {
               type: 'string',
-              utf8Index: dv.getUint16(pos, false),
+              index: dv.getUint16(pos, false),
             };
             pos += 2;
             break;
@@ -616,9 +616,16 @@ define(function() {
           def.push(['enclosed', this.value.className, this.value.methodName]);
           break;
         case 'Signature':
-        case 'ConstantValue':
         case 'SourceDebugExtension':
           def.push([this.name.toLowerCase(), this.value]);
+          break;
+        case 'ConstantValue':
+          if (this.value.type === 'string') {
+            def.push(['=', this.constants[this.value.index]]);
+          }
+          else {
+            def.push(['=', this.value.value]);
+          }
           break;
         case 'SourceFile':
           def.push(['src', this.value]);
