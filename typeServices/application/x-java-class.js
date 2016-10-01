@@ -242,6 +242,25 @@ define(function() {
     get accessFlags() {
       return this.dv.getUint16(0, false);
     },
+    get name() {
+      return this.constants[this.dv.getUint16(2, false) - 1];
+    },
+    get descriptor() {
+      return this.constants[this.dv.getUint16(4, false) - 1];
+    },
+    get attributes() {
+      var list = new Array(this.dv.getUint16(6, false));
+      var dv = this.dv;
+      var pos = 8, buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength, constants = this.constants;
+      for (var i = 0; i < list.length; i++) {
+        var length = 2 + 4 + dv.getUint32(pos + 2, false);
+        list[i] = new AttributeView(constants, buffer, byteOffset + pos, length);
+        pos += length;
+      }
+      list.afterPos = pos;
+      Object.defineProperty(this, 'attributes', {value:list});
+      return list;
+    },
     get isPublic() {
       return !!(this.accessFlags & 1);
     },
@@ -286,31 +305,6 @@ define(function() {
     },
     get isEnumField() {
       return !!(this.accessFlags & 0x4000);
-    },
-    get nameIndex() {
-      return this.dv.getUint16(2, false) - 1;
-    },
-    get name() {
-      return this.constants[this.nameIndex];
-    },
-    get descriptorIndex() {
-      return this.dv.getUint16(4, false) - 1;
-    },
-    get descriptor() {
-      return this.constants[this.descriptorIndex];
-    },
-    get attributes() {
-      var list = new Array(this.dv.getUint16(6, false));
-      var dv = this.dv;
-      var pos = 8, buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength, constants = this.constants;
-      for (var i = 0; i < list.length; i++) {
-        var length = 2 + 4 + dv.getUint32(pos + 2, false);
-        list[i] = new AttributeView(constants, buffer, byteOffset + pos, length);
-        pos += length;
-      }
-      list.afterPos = pos;
-      Object.defineProperty(this, 'attributes', {value:list});
-      return list;
     },
     get byteLength() {
       return this.attributes.afterPos;
