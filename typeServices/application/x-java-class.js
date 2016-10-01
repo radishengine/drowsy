@@ -2,6 +2,7 @@ define(function() {
 
   'use strict';
   
+  // TODO: !!! this should be modified UTF-8 (long representation for \0)
   var utf8 = new TextDecoder('utf-8');
   
   function ClassView(buffer, byteOffset, byteLength) {
@@ -314,14 +315,382 @@ define(function() {
   function AttributeView(constants, buffer, byteOffset, byteLength) {
     this.constants = constants;
     this.dv = new DataView(buffer, byteOffset, byteLength);
-    this.info = new Uint8Array(buffer, byteOffset + 6, this.dv.getUint32(2, false));
   }
   AttributeView.prototype = {
-    get nameIndex() {
-      return this.dv.getUint16(0, false) - 1;
-    },
     get name() {
-      return this.constants[this.nameIndex];
+      return this.constants[this.dv.getUint16(0, false) - 1];
+    },
+    get value() {
+      var constants = this.constants;
+      var dv = this.dv;
+      var buffer = dv.buffer, byteOffset = dv.byteOffset + 6;
+      var value;
+      switch(this.name) {
+        case 'InnerClasses':
+          value = new Array(dv.getUint16(6, false));
+          for (var i = 0; i < value.length; i++) {
+            value[i] = new InnerClassAttrView(constants, buffer, byteOffset + i*8, 8);
+          }
+          break;
+        case 'EnclosingMethod':
+          value = new EnclosingMethodAttrView(constants, buffer, byteOffset, 4);
+          break;
+        case 'Synthetic':
+        case 'Deprecated':
+          value = true;
+          break;
+        case 'Signature':
+        case 'SourceFile':
+        case 'ConstantValue':
+          value = constants[dv.getUint16(6, false)];
+          break;
+        case 'SourceDebugExtension':
+          value = utf8.decode(new Uint8Array(buffer, byteOffset, dv.getUint32(2, false)));
+          break;
+        case 'RuntimeVisibleAnnotations':
+        case 'RuntimeInvisibleAnnotations':
+          value = new Array(dv.getUint16(6, false));
+          var pos = 8;
+          for (var i = 0; i < value.length; i++) {
+            value[i] = new AnnotationView(constants, buffer, byteOffset + pos, buffer.byteLength - (byteOffset + pos));
+            pos += value[i].byteLength;
+          }
+          break;
+        case 'RuntimeVisibleParameterAnnotations':
+        case 'RuntimeInvisibleParameterAnnotations':
+          value = new Array(dv.getUint8(6));
+          var pos = 7;
+          for (var i = 0; i < value.length; i++) {
+            value[i] = new Array(dv.getUint16(pos, false));
+            pos += 2;
+            for (var j = 0; j < value[i].length; j++) {
+              value[i][j] = new AnnotationView(constants, buffer, byteOffset + pos, buffer.byteLength - (byteOffset + pos));
+              pos += value[i][j].byteLength;
+            }
+          }
+          break;
+        case 'AnnotationDefault':
+          value = new AnnotationValueView(buffer, byteOffset, dv.getUint32(2, false));
+          break;
+        case 'BootstrapMethods':
+          value = new Array(dv.getUint16(6, false));
+          var pos = 8;
+          for (var i = 0; i < value.length; i++) {
+            var method = constants[dv.getUint16(pos)];
+            var parameters = new Array(dv.getUint16(pos + 2));
+            pos += 4;
+            for (var j = 0; j < parameters.length; j++) {
+              parameters[i] = constants[dv.getUint16(pos)];
+              pos += 2;
+            }
+            value[i] = {method:method, parameters:parameters};
+          }
+          break;
+        case 'LineNumberTable':
+          value = new Array(dv.getUint16(6, false));
+          for (var i = 0; i < value.length; i++) {
+            value[i] = {
+              codeOffset: dv.getUint16(8 + i*4, false),
+              lineNumber: dv.getUint16(8 + i*4 + 2, false),
+            };
+          }
+          break;
+        case 'LocalVariableTable':
+        case 'LocalVariableTypeTable':
+          value = new Array(dv.getUint16(6, false));
+          var fieldName = (this.name === 'LocalVariableTable') ? 'descriptor' : 'signature';
+          for (var i = 0; i < value.length; i++) {
+            value[i] = {
+              codeOffset: dv.getUint16(8 + i*10, false),
+              codeLength: dv.getUint16(8 + i*10 + 2, false),
+              name: constants[dv.getUint16(8 + i*10 + 4, false)],
+              index: dv.getUint16(8 + i*10 + 8, false), // 64-bit types take up 2 slots
+            };
+            value[i][fieldName] = constants[dv.getUint16(8 + i*10 + 6, false)];
+          }
+          break;
+        case 'StackMapTable':
+          value = new Array(dv.getUint16(6, false));
+          var pos = 8;
+          function readVTI() {
+            switch (dv.getUint8(pos++)) {
+              case 0: return 'top';
+              case 1: return 'int';
+              case 2: return 'float';
+              case 3: return 'long';
+              case 5: return 'null';
+              case 6: return 'uninitializedThis';
+              case 7:
+                value = constants[dv.getUint16(pos, false)];
+                pos += 2;
+                return value;
+              case 8:
+                value = {type:'uninitialized', newInstructionOffset:dv.getUint16(pos)};
+                pos += 2;
+                return value;
+            }
+          }
+          function readVTIList(count) {
+            var list = new Array(count);
+            for (var i = 0; i < list.length; i++) {
+              list[i] = readVTI();
+            }
+            return list;
+          }
+          for (var i = 0; i < value.length; i++) {
+            var frameType = dv.getUint8(pos++);
+            if (frameType < 64) {
+              value[i] = {locals:'same', offsetDelta:frameType, stack:[]};
+              continue;
+            }
+            if (frameType < 128) {
+              value[i] = {locals:'same', offsetDelta:frameType - 64, stack:readVTIList(1)};
+              continue;
+            }
+            if (frameType < 247) {
+              throw new Error('reserved tag: ' + frameType);
+            }
+            if (frameType === 247) {
+              var offsetDelta = dv.getUint16(pos, false);
+              pos += 2;
+              value[i] = {locals:'same', offsetDelta:offsetDelta, stack:readVTIList(1)};
+              continue;
+            }
+            if (frameType < 251) {
+              var offsetDelta = dv.getUint16(pos, false);
+              pos += 2;
+              value[i] = {locals:'samePopK', k:251-frameType, offsetDelta:offsetDelta, stack:[]};
+              continue;
+            }
+            if (frameType === 251) {
+              var offsetDelta = dv.getUint16(pos, false);
+              pos += 2;
+              value[i] = {local:'same', offsetDelta:offsetDelta, stack:[]};
+              continue;
+            }
+            if (frameType < 255) {
+              var offsetDelta = dv.getUint16(pos, false);
+              pos += 2;              
+              value[i] = {locals:readVTIList(frameType - 251), offsetDelta:offsetDelta, stack:[]};
+              continue;
+            }
+            // frameType === 255
+            var offsetDelta = dv.getUint16(pos, false);
+            var localCount = dv.getUint16(pos + 2, false);
+            pos += 4;
+            var locals = readVTIList(localCount);
+            var stackCount = dv.getUint16(pos, false);
+            pos += 2;
+            value[i] = {locals:locals, offsetDelta:offsetDelta, stack:readVTIList(stackCount)};
+            continue;
+          }
+          break;
+        case 'Exceptions':
+          value = new Array(dv.getUint16(6, false));
+          for (var i = 0; i < value.length; i++) {
+            value[i] = this.constants[dv.getUint16(8 + i*2)];
+          }
+          break;
+        default: value = new Uint8Array(buffer, byteOffset, dv.getUint32(2, false));
+      }
+      Object.defineProperty(this, 'value', {value:value});
+      return value;
+    },
+  };
+  
+  function InnerClassAttrView(constants, buffer, byteOffset, byteLength) {
+    this.constants = constants;
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  InnerClassAttrView.prototype = {
+    get innerClassInfo() {
+      return this.constants[this.dv.getUint16(0, false)];
+    },
+    get outerClassInfo() {
+      return this.constants[this.dv.getUint16(2, false)];
+    },
+    get innerName() {
+      return this.constants[this.dv.getUint16(4, false)];
+    },
+    get innerAccessFlags() {
+      return this.dv.getUint16(6, false);
+    },
+    get isPublic() {
+      return !!(this.innerAccessFlags & 1);
+    },
+    get isPrivate() {
+      return !!(this.innerAccessFlags & 2);
+    },
+    get isProtected() {
+      return !!(this.innerAccessFlags & 4);
+    },
+    get isStatic() {
+      return !!(this.innerAccessFlags & 8);
+    },
+    get isFinal() {
+      return !!(this.innerAccessFlags & 0x10);
+    },
+    get isInterface() {
+      return !!(this.innerAccessFlags & 0x200);
+    },
+    get isAbstract() {
+      return !!(this.innerAccessFlags & 0x400);
+    },
+    get isSynthetic() {
+      return !!(this.innerAccessFlags & 0x1000);
+    },
+    get isAnnotation() {
+      return !!(this.innerAccessFlags & 0x2000);
+    },
+    get isEnum() {
+      return !!(this.innerAccessFlags & 0x4000);
+    },
+  };
+  
+  function EnclosingMethodAttrView(constants, buffer, byteOffset, byteLength) {
+    this.constants = constants;
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  EnclosingMethodAttrView.prototype = {
+    get enclosingClass() {
+      return this.constants[this.dv.getUint16(0, false)];
+    },
+    get enclosingMethod() {
+      return this.constants[this.dv.getUint16(2, false)];
+    },
+  };
+  
+  function AnnotationView(constants, buffer, byteOffset, byteLength) {
+    this.constants = constants;
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  AnnotationView.prototype = {
+    get type() {
+      return this.constants[this.dv.getUint16(0, false)];
+    },
+    get pairs() {
+      var list = new Array(this.dv.getUint16(2, false));
+      var buffer = this.dv.buffer, byteOffset = this.dv.byteOffset;
+      var pos = 4;
+      for (var i = 0; i < list.length; i++) {
+        list[i] = new AnnotationValueView(constants, buffer, byteOffset + pos, buffer.byteLength - (byteOffset + pos));
+        pos += list[i].byteLength;
+      }
+      list.afterPos = pos;
+      Object.defineProperty(this, 'pairs', {value:list});
+      return list;
+    },
+    get byteLength() {
+      return this.pairs.afterPos;
+    },
+  };
+  
+  function AnnotationValueView(constants, buffer, byteOffset, byteLength) {
+    this.constants = constants;
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  AnnotationValueView.prototype = {
+    get tag() {
+      return String.fromCharCode(this.dv.getUint8(0));
+    },
+    get byteLength() {
+      switch(this.tag) {
+        case 'B': case 'C': case 'D': case 'F': case 'I': case 'J': case 'S': case 'Z': case 's': case 'c':
+          return 3;
+        case 'e':
+          return 5;
+        case '@': case '[':
+          return 1 + this.value.byteLength;
+        default:
+          throw new Error('unknown annotation value type tag: ' + this.tag);
+      }
+    },
+    get value() {
+      var value;
+      switch(this.tag) {
+        case 'B': case 'C': case 'D': case 'F': case 'I': case 'J': case 'S': case 'Z': case 's': case 'c':
+          value = this.constants[this.dv.getUint16(1, false)];
+          break;
+        case 'e':
+          value = {
+            enumTypeName: this.constants[this.dv.getUint16(1, false)],
+            enumValueName: this.constants[this.dv.getUint16(3, false)],
+          };
+        case '@':
+          value = new AnnotationView(this.dv.buffer, this.dv.byteOffset + 1, this.dv.byteLength - (this.dv.byteOffset + 1));
+          break;
+        case '[':
+          value = new Array(this.dv.getUint16(1, false));
+          var buffer = this.dv.buffer, byteOffset = this.dv.byteOffset + 3;
+          var baseOffset = byteOffset;
+          for (var i = 0; i < value.length; i++) {
+            byteOffset += (value[i] = new AnnotationValueView(buffer, byteOffset, buffer.byteLength - byteOffset)).byteLength;
+          }
+          value.byteLength = 2 + (byteOffset - baseOffset);
+          break;
+        default:
+          throw new Error('unknown annotation value type tag: ' + this.tag);
+      }
+      Object.defineProperty(this, 'value', {value:value});
+      return value;
+    },
+  };
+  
+  function CodeView(constants, buffer, byteOffset, byteLength) {
+    this.constants = constants;
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  CodeView.prototype = {
+    get maxStack() {
+      return this.dv.getUint16(0, false);
+    },
+    get maxLocals() {
+      return this.dv.getUint16(2, false);
+    },
+    get codeBytes() {
+      var buffer = this.dv.buffer, byteOffset = this.dv.byteOffset + 8, byteLength = this.dv.getUint32(4, false);
+      var bytes = new Uint8Array(buffer, byteOffset, byteLength);
+      bytes.afterPos = 8 + bytes.length;
+      Object.defineProperty(this, 'codeBytes', {value:bytes});
+      return bytes;
+    },
+    get exceptionTable() {
+      var dv = this.dv;
+      var pos = this.codeBytes.afterPos;
+      var list = new Array(dv.getUint16(pos, false));
+      pos += 2;
+      for (var i = 0; i < list.length; i++) {
+        var startPos = dv.getUint16(pos, false);
+        var endPos = dv.getUint16(pos + 2, false);
+        var handlerPos = dv.getUint16(pos + 4, false);
+        var catchType = dv.getUint16(pos + 6, false);
+        catchType = catchType ? this.constants[catchType] : 'finally';
+        list[i] = {
+          startPos: startPos,
+          endPos: endPos,
+          handlerPos: handlerPos,
+          catchType: catchType,
+        };
+        pos += 8;
+      }
+      list.afterPos = pos;
+      Object.defineProperty(this, 'exceptionTable', {value:list});
+      return list;
+    },
+    get attributes() {
+      var pos = this.exceptionTable.afterPos;
+      var list = new Array(this.dv.getUint16(pos, false));
+      pos += 2;
+      var dv = this.dv;
+      var buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength, constants = this.constants;
+      for (var i = 0; i < list.length; i++) {
+        var length = 2 + 4 + dv.getUint32(pos + 2, false);
+        list[i] = new AttributeView(constants, buffer, byteOffset + pos, length);
+        pos += length;
+      }
+      list.afterPos = pos;
+      Object.defineProperty(this, 'attributes', {value:list});
+      return list;
     },
   };
   
