@@ -393,7 +393,7 @@ define(function() {
       if (this.isSynthetic) def.push(['synthetic']);
       if (this.isEnumField) def.push(['enum']);
       for (var i = 0; i < this.attributes.length; i++) {
-        this.attributes.pushJSONTo(def);
+        this.attributes[i].pushJSONTo(def);
       }
       return ['field', this.name, descriptorToJSON(this.descriptor), def];
     },
@@ -410,7 +410,7 @@ define(function() {
         def.push(['arg', signature[i]]);
       }
       for (var i = 0; i < this.attributes.length; i++) {
-        this.attributes.pushJSONTo(def);
+        this.attributes[i].pushJSONTo(def);
       }
       return ['method', this.name, def];
     },
