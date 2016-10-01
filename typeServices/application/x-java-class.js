@@ -22,11 +22,11 @@ define(function() {
       return this.dv.getUint16(6, false);
     },
     get constants() {
-      var c = new Array(this.dv.getUint16(8, false));
+      var c = new Array(this.dv.getUint16(8, false) + 1);
       var pos = 10;
       var bytes = this.bytes;
       var dv = this.dv;
-      for (var i = 2; i < c.length; i++) {
+      for (var i = 1; i < c.length; i++) {
         var constantType = bytes[pos++];
         switch (constantType) {
           case 1:
@@ -52,42 +52,71 @@ define(function() {
             pos += 8;
             break;
           case 7:
-            c[i] = {type:'class', nameIndex:dv.getUint16(pos, false)};
+            c[i] = {
+              type: 'class',
+              nameIndex: dv.getUint16(pos, false) + 1,
+            };
             pos += 2;
             break;
           case 8:
-            c[i] = {type:'string', utf8Index:dv.getUint16(pos, false)};
+            c[i] = {
+              type: 'string',
+              utf8Index: dv.getUint16(pos, false) + 1,
+            };
             pos += 2;
             break;
           case 9:
-            c[i] = {type:'fieldRef', classIndex:dv.getUint16(pos, false), nameAndTypeIndex:dv.getUint16(pos + 2, false)};
+            c[i] = {
+              type: 'fieldRef',
+              classIndex: dv.getUint16(pos, false) + 1,
+              nameAndTypeIndex: dv.getUint16(pos + 2, false) + 1,
+            };
             pos += 4;
             break;
           case 10:
-            c[i] = {type:'methodRef', classIndex:dv.getUint16(pos, false), nameAndTypeIndex:dv.getUint16(pos + 2, false)};
+            c[i] = {
+              type: 'methodRef',
+              classIndex: dv.getUint16(pos, false) + 1,
+              nameAndTypeIndex: dv.getUint16(pos + 2, false) + 1,
+            };
             pos += 4;
             break;
           case 11:
-            c[i] = {type:'interfacMethodRef', classIndex:dv.getUint16(pos, false), nameAndTypeIndex:dv.getUint16(pos + 2, false)};
+            c[i] = {
+              type: 'interfacMethodRef',
+              classIndex: dv.getUint16(pos, false) + 1,
+              nameAndTypeIndex: dv.getUint16(pos + 2, false) + 1,
+            };
             pos += 4;
             break;
           case 12:
-            c[i] = {type:'nameAndType', nameIndex:dv.getUint16(pos, false), descriptorIndex:dv.getUint16(pos+2, false)};
+            c[i] = {
+              type: 'nameAndType',
+              nameIndex: dv.getUint16(pos, false) + 1,
+              descriptorIndex: dv.getUint16(pos+2, false) + 1,
+            };
             pos += 4;
             break;
           case 15:
-            c[i] = {type:'methodHandle', refKind:bytes[pos], refIndex:dv.getUint16(pos+1, false)};
+            c[i] = {
+              type: 'methodHandle',
+              refKind: bytes[pos],
+              refIndex: dv.getUint16(pos+1, false) + 1,
+            };
             pos += 3;
             break;
           case 16:
-            c[i] = {type:'methodType', descriptorIndex:dv.getUint16(pos, false)};
+            c[i] = {
+              type: 'methodType',
+              descriptorIndex: dv.getUint16(pos, false) + 1,
+            };
             pos += 2;
             break;
           case 18:
             c[i] = {
-              type:'invokeDynamic',
-              bootstrapMethodAttrIndex:dv.getUint16(pos, false),
-              nameAndTypeIndex:dv.getUint16(pos+2, false),
+              type: 'invokeDynamic',
+              bootstrapMethodAttrIndex: dv.getUint16(pos, false) + 1,
+              nameAndTypeIndex: dv.getUint16(pos+2, false) + 1,
             };
             pos += 4;
             break;
