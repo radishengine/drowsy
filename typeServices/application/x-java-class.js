@@ -90,12 +90,12 @@ define(function() {
             break;
           case 5:
             c[i] = {type:'long', valueHi:dv.getInt32(pos, false), valueLo:dv.getInt32(pos+4, false)};
-            c[++i] = c[i]; // 64-bit constants take two slots
+            i++; // 64-bit constants take two slots
             pos += 8;
             break;
           case 6:
             c[i] = {type:'double', value:dv.getFloat64(pos, false)};
-            c[++i] = c[i]; // 64-bit constants take two slots
+            i++; // 64-bit constants take two slots
             pos += 8;
             break;
           case 7:
