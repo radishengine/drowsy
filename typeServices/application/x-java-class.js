@@ -627,56 +627,57 @@ define(function() {
       return value;
     },
     pushJSONTo: function(def) {
+      var value = this.value;
       switch(this.name) {
         case 'InnerClasses':
-          for (var i = 0; i < this.value.length; i++) {
-            def.push(['class', this.value[i]]);
+          for (var i = 0; i < value.length; i++) {
+            def.push(['class', value[i]]);
           }
           break;
         case 'EnclosingMethod':
-          def.push(['enclosed', this.value.className, this.value.methodName]);
+          def.push(['enclosed', value.className, value.methodName]);
           break;
         case 'Signature':
         case 'SourceDebugExtension':
-          def.push([this.name.toLowerCase(), this.value]);
+          def.push([this.name.toLowerCase(), value]);
           break;
         case 'ConstantValue':
           if (this.value.type === 'string') {
-            def.push(['=', this.constants[this.value.index]]);
+            def.push(['=', this.constants[value.index]]);
           }
           else {
-            def.push(['=', this.value.value]);
+            def.push(['=', value.value]);
           }
           break;
         case 'SourceFile':
-          def.push(['src', this.value]);
+          def.push(['src', value]);
           break;
         case 'RuntimeVisibleAnnotations':
-          for (var i = 0; i < this.value.length; i++) {
-            def.push(['annotation', true, this.value[i]]);
+          for (var i = 0; i < value.length; i++) {
+            def.push(['annotation', true, value[i]]);
           }
           break;
         case 'RuntimeInvisibleAnnotations':
-          for (var i = 0; i < this.value.length; i++) {
-            def.push(['annotation', false, this.value[i]]);
+          for (var i = 0; i < value.length; i++) {
+            def.push(['annotation', false, value[i]]);
           }
           break;
         case 'RuntimeVisibleParameterAnnotations':
-          for (var i = 0; i < this.value.length; i++) {
-            def.push(['parameter-annotation', true, this.value[i]]);
+          for (var i = 0; i < value.length; i++) {
+            def.push(['parameter-annotation', true, value[i]]);
           }
           break;
         case 'RuntimeInvisibleParameterAnnotations':
-          for (var i = 0; i < this.value.length; i++) {
-            def.push(['parameter-annotation', false, this.value[i]]);
+          for (var i = 0; i < value.length; i++) {
+            def.push(['parameter-annotation', false, value[i]]);
           }
           break;
         case 'AnnotationDefault':
-          def.push(['default', this.value.toJSON()]);
+          def.push(['default', value.toJSON()]);
           break;
         case 'BootstrapMethods':
-          for (var i = 0; i < this.value.length; i++) {
-            def.push(['bootstrap-method', this.value[i].method].concat(this.value[i].parameters));
+          for (var i = 0; i < value.length; i++) {
+            def.push(['bootstrap-method', value[i].method].concat(value[i].parameters));
           }
           break;
         case 'LineNumberTable':
