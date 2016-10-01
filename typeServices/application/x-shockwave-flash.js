@@ -7,7 +7,7 @@ define(function() {
   function split(rootSegment, entries) {
     return rootSegment.getBytes(0, 9)
     .then(function(rawPartialHeader) {
-      var headerSize = 8 + Math.min(1, Math.ceil(((5 + (rawPartialHeader[8] >>> 3)) * 4) / 8)) + 4;
+      var headerSize = 8 + Math.max(1, Math.ceil(((5 + (rawPartialHeader[8] >>> 3)) * 4) / 8)) + 4;
       if (entries.accepted('chunk/swf; which=header')) {
         entries.add(rootSegment.getSegment('chunk/swf; which=header', 0, headerSize));
       }
