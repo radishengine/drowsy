@@ -17,7 +17,10 @@ define(function() {
         case 'J': return 'int64';
         case 'S': return 'int16';
         case 'Z': return 'boolean';
-        case '[': return ['[', parsePart()];
+        case '[':
+          var elementType = parsePart();
+          if (typeof elementType === 'string') return elementType + '[]';
+          return ['T[]', elementType];
         case 'L':
           var startPos = pos;
           var endPos = descriptor.indexOf(';', pos);
