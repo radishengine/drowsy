@@ -25,7 +25,10 @@ define(function() {
           var startPos = pos;
           var endPos = descriptor.indexOf(';', pos);
           pos = endPos + 1;
-          return descriptor.slice(startPos, endPos);
+          var className = descriptor.slice(startPos, endPos);
+          if (className === 'java/lang/Object') return 'object';
+          if (className === 'java/lang/String') return 'string';
+          return className;
         case '(':
           var signature = [];
           while (descriptor[pos] !== ')') {
