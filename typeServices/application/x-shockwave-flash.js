@@ -226,7 +226,7 @@ define(function() {
       for (var i = 0; i < values.length; i++) {
         values[i] = {
           id: this.dv.getUint16(pos, false),
-          identifier: readNullTerminatedSubarray(this.bytes, pos);
+          identifier: readNullTerminatedSubarray(this.bytes, pos),
         };
         pos += 2 + values[i].length + 1;
       }
