@@ -341,6 +341,8 @@ define(function() {
           break;
         case 'Signature':
         case 'SourceFile':
+          value = constants[dv.getUint16(6, false) - 1];
+          break;
         case 'ConstantValue':
           value = constants[dv.getUint16(6, false)];
           break;
