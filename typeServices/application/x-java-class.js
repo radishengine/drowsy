@@ -21,12 +21,12 @@ define(function() {
     get versionMajor() {
       return this.dv.getUint16(6, false);
     },
-    get constantPools() {
-      var c = new Array(this.dv.getUint16(8, false) - 1);
+    get constants() {
+      var c = new Array(this.dv.getUint16(8, false));
       var pos = 10;
       var bytes = this.bytes;
       var dv = this.dv;
-      for (var i = 1; i < c.length; i++) {
+      for (var i = 2; i < c.length; i++) {
         var constantType = bytes[pos++];
         switch (constantType) {
           case 1:
@@ -95,11 +95,11 @@ define(function() {
         }
       }
       c.afterPos = pos;
-      Object.defineProperty(this, 'constantPools', {value:c});
+      Object.defineProperty(this, 'constants', {value:c});
       return c;
     },
     get accessFlags() {
-      return this.dv.getUint16(this.constantPools.afterPos, false);
+      return this.dv.getUint16(this.constants.afterPos, false);
     },
     get isPublic() {
       return !!(this.accessFlags & 0x0001);
@@ -126,17 +126,17 @@ define(function() {
       return !!(this.accessFlags & 0x4000);
     },
     get thisClass() {
-      return this.constantPools[this.dv.getUint16(this.constantPools.afterPos + 2, false)];
+      return this.constants[this.dv.getUint16(this.constants.afterPos + 2, false)];
     },
     get superClass() {
-      return this.constantPools[this.dv.getUint16(this.constantPools.afterPos + 4, false)];
+      return this.constants[this.dv.getUint16(this.constants.afterPos + 4, false)];
     },
     get interfaces() {
-      var pos = this.constantPools.afterPos + 6;
+      var pos = this.constants.afterPos + 6;
       var list = new Array(this.dv.getUint16(pos, false));
       pos += 2;
       for (var i = 0; i < list.length; i++) {
-        list[i] = this.constantPools[this.dv.getUint16(pos, false)];
+        list[i] = this.constants[this.dv.getUint16(pos, false)];
         pos += 2;
       }
       list.afterPos = pos;
