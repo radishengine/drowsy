@@ -397,7 +397,7 @@ define(function() {
       }
       var result = ['field', this.name, descriptorToJSON(this.descriptor)];
       if (def.length > 0) result.push(def);
-      return def;
+      return result;
     },
     toJSONMethod: function() {
       var signature = descriptorToJSON(this.descriptor);
@@ -416,7 +416,7 @@ define(function() {
       }
       var result = ['method', this.name];
       if (def.length > 0) result.push(def);
-      return def;
+      return result;
     },
   };
   
