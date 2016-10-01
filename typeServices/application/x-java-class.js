@@ -342,7 +342,7 @@ define(function() {
         case 'Signature':
         case 'SourceFile':
         case 'ConstantValue':
-          value = constants[dv.getUint16(6, false) - 1];
+          value = constants[dv.getUint16(6, false)];
           break;
         case 'SourceDebugExtension':
           value = utf8.decode(new Uint8Array(buffer, byteOffset, dv.getUint32(2, false)));
