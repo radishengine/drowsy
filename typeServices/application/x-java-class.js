@@ -186,10 +186,11 @@ define(function() {
       var dv = this.dv;
       var buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength;
       var pos = this.interfaces.afterPos;
+      var constants = this.constants;
       var list = new Array(dv.getUint16(pos, false));
       pos += 2;
       for (var i = 0; i < list.length; i++) {
-        pos += (list[i] = new MemberView(buffer, byteOffset + pos, byteLength - pos)).byteLength;
+        pos += (list[i] = new MemberView(constants, buffer, byteOffset + pos, byteLength - pos)).byteLength;
       }
       list.afterPos = pos;
       Object.defineProperty(this, 'fields', {value:list});
@@ -199,10 +200,11 @@ define(function() {
       var dv = this.dv;
       var buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength;
       var pos = this.fields.afterPos;
+      var constants = this.constants;
       var list = new Array(dv.getUint16(pos, false));
       pos += 2;
       for (var i = 0; i < list.length; i++) {
-        pos += (list[i] = new MemberView(buffer, byteOffset + pos, byteLength - pos)).byteLength;
+        pos += (list[i] = new MemberView(constants, buffer, byteOffset + pos, byteLength - pos)).byteLength;
       }
       list.afterPos = pos;
       Object.defineProperty(this, 'methods', {value:list});
@@ -213,10 +215,11 @@ define(function() {
       var list = new Array(this.dv.getUint16(pos, false));
       pos += 2;
       var dv = this.dv;
+      var constants = this.constants;
       var buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength;
       for (var i = 0; i < list.length; i++) {
         var length = 2 + 4 + dv.getUint32(pos + 2, false);
-        list[i] = new AttributeView(buffer, byteOffset + pos, length);
+        list[i] = new AttributeView(constants, buffer, byteOffset + pos, length);
         pos += length;
       }
       list.afterPos = pos;
@@ -225,7 +228,8 @@ define(function() {
     },
   };
   
-  function MemberView(buffer, byteOffset, byteLength) {
+  function MemberView(constants, buffer, byteOffset, byteLength) {
+    this.constants = constants;
     this.dv = new DataView(buffer, byteOffset, byteLength);
   }
   MemberView.prototype = {
@@ -280,16 +284,22 @@ define(function() {
     get nameIndex() {
       return this.dv.getUint16(2, false) - 1;
     },
+    get name() {
+      return this.constants[this.nameIndex];
+    },
     get descriptorIndex() {
       return this.dv.getUint16(4, false) - 1;
+    },
+    get descriptor() {
+      return this.constants[this.descriptorIndex];
     },
     get attributes() {
       var list = new Array(this.dv.getUint16(6, false));
       var dv = this.dv;
-      var pos = 8, buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength;
+      var pos = 8, buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength, constants = this.constants;
       for (var i = 0; i < list.length; i++) {
         var length = 2 + 4 + dv.getUint32(pos + 2, false);
-        list[i] = new AttributeView(buffer, byteOffset + pos, length);
+        list[i] = new AttributeView(constants, buffer, byteOffset + pos, length);
         pos += length;
       }
       list.afterPos = pos;
@@ -301,13 +311,17 @@ define(function() {
     },
   };
   
-  function AttributeView(buffer, byteOffset, byteLength) {
+  function AttributeView(constants, buffer, byteOffset, byteLength) {
+    this.constants = constants;
     this.dv = new DataView(buffer, byteOffset, byteLength);
     this.info = new Uint8Array(buffer, byteOffset + 6, this.dv.getUint32(2, false));
   }
   AttributeView.prototype = {
     get nameIndex() {
       return this.dv.getUint16(0, false) - 1;
+    },
+    get name() {
+      return this.constants[this.nameIndex];
     },
   };
   
