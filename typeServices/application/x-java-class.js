@@ -654,22 +654,22 @@ define(function() {
           break;
         case 'RuntimeVisibleAnnotations':
           for (var i = 0; i < value.length; i++) {
-            def.push(['annotation', true, value[i]]);
+            def.push(['@', true, value[i]]);
           }
           break;
         case 'RuntimeInvisibleAnnotations':
           for (var i = 0; i < value.length; i++) {
-            def.push(['annotation', false, value[i]]);
+            def.push(['@', false, value[i]]);
           }
           break;
         case 'RuntimeVisibleParameterAnnotations':
           for (var i = 0; i < value.length; i++) {
-            def.push(['parameter-annotation', true, value[i]]);
+            def.push(['arg@', true, value[i]]);
           }
           break;
         case 'RuntimeInvisibleParameterAnnotations':
           for (var i = 0; i < value.length; i++) {
-            def.push(['parameter-annotation', false, value[i]]);
+            def.push(['arg@', false, value[i]]);
           }
           break;
         case 'AnnotationDefault':
