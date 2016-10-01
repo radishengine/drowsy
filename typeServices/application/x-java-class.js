@@ -150,17 +150,46 @@ define(function() {
       var list = new Array(dv.getUint16(pos, false));
       pos += 2;
       for (var i = 0; i < list.length; i++) {
-        pos += (list[i] = new FieldView(buffer, byteOffset + pos, byteLength - pos)).byteLength;
+        pos += (list[i] = new MemberView(buffer, byteOffset + pos, byteLength - pos)).byteLength;
       }
+      list.afterPos = pos;
       Object.defineProperty(this, 'fields', {value:list});
+      return list;
+    },
+    get methods() {
+      var dv = this.dv;
+      var buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength;
+      var pos = this.fields.afterPos;
+      var list = new Array(dv.getUint16(pos, false));
+      pos += 2;
+      for (var i = 0; i < list.length; i++) {
+        pos += (list[i] = new MemberView(buffer, byteOffset + pos, byteLength - pos)).byteLength;
+      }
+      list.afterPos = pos;
+      Object.defineProperty(this, 'methods', {value:list});
+      return list;
+    },
+    get attributes() {
+      var pos = this.methods.afterPos;
+      var list = new Array(this.dv.getUint16(pos, false));
+      pos += 2;
+      var dv = this.dv;
+      var buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength;
+      for (var i = 0; i < list.length; i++) {
+        var length = 2 + 4 + dv.getUint32(pos + 2, false);
+        list[i] = new AttributeView(buffer, byteOffset + pos, length);
+        pos += length;
+      }
+      list.afterPos = pos;
+      Object.defineProperty(this, 'attributes', {value:list});
       return list;
     },
   };
   
-  function FieldView(buffer, byteOffset, byteLength) {
+  function MemberView(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
   }
-  FieldView.prototype = {
+  MemberView.prototype = {
     get accessFlags() {
       return this.dv.getUint16(0, false);
     },
@@ -179,16 +208,34 @@ define(function() {
     get isFinal() {
       return !!(this.accessFlags & 0x10);
     },
-    get isVolatile() {
+    get isSynchronizedMethod() {
+      return !!(this.accessFlags & 0x20);
+    },
+    get isBridgeMethod() {
       return !!(this.accessFlags & 0x40);
     },
-    get isTransient() {
+    get isVolatileField() {
+      return !!(this.accessFlags & 0x40);
+    },
+    get isVarargsMethod() {
       return !!(this.accessFlags & 0x80);
+    },
+    get isTransientField() {
+      return !!(this.accessFlags & 0x80);
+    },
+    get isNativeMethod() {
+      return !!(this.accessFlags & 0x100);
+    },
+    get isAbstractMethod() {
+      return !!(this.accessFlags & 0x400);
+    },
+    get isStrictMethod() {
+      return !!(this.accessFlags & 0x800);
     },
     get isSynthetic() {
       return !!(this.accessFlags & 0x1000);
     },
-    get isEnum() {
+    get isEnumField() {
       return !!(this.accessFlags & 0x4000);
     },
     get nameIndex() {
