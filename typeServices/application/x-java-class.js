@@ -172,11 +172,16 @@ define(function() {
       return this.constants[c.nameIndex];
     },
     get interfaces() {
-      var pos = this.constants.afterPos + 6;
-      var list = new Array(this.dv.getUint16(pos, false));
+      var constants = this.constants, dv = this.dv;
+      var pos = constants.afterPos + 6;
+      var list = new Array(dv.getUint16(pos, false));
       pos += 2;
       for (var i = 0; i < list.length; i++) {
-        list[i] = this.constants[this.dv.getUint16(pos, false)];
+        var c = constants[dv.getUint16(pos, false)];
+        if (typeof c !== 'object' || c.type !== 'class') {
+          throw new Error('invalid interface');
+        }
+        list[i] = constants[c.nameIndex];
         pos += 2;
       }
       list.afterPos = pos;
