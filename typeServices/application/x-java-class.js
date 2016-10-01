@@ -382,7 +382,20 @@ define(function() {
       return this.attributes.afterPos;
     },
     toJSONField: function() {
-      return ['field', descriptorToJSON(this.descriptor), this.name];
+      var def = [];
+      if (this.isPublic) def.push(['public']);
+      if (this.isPrivate) def.push(['private']);
+      if (this.isProtected) def.push(['protected']);
+      if (this.isStatic) def.push(['static']);
+      if (this.isFinal) def.push(['final']);
+      if (this.isVolatileField) def.push(['volatile']);
+      if (this.isTransientField) def.push(['transient']);
+      if (this.isSynthetic) def.push(['synthetic']);
+      if (this.isEnumField) def.push(['enum']);
+      for (var i = 0; i < this.attributes.length; i++) {
+        this.attributes.pushJSONTo(def);
+      }
+      return ['field', this.name, descriptorToJSON(this.descriptor), def];
     },
     toJSONMethod: function() {
       var signature = descriptorToJSON(this.descriptor);
@@ -395,6 +408,9 @@ define(function() {
       }
       for (var i = 2; i < signature.length; i++) {
         def.push(['arg', signature[i]]);
+      }
+      for (var i = 0; i < this.attributes.length; i++) {
+        this.attributes.pushJSONTo(def);
       }
       return ['method', this.name, def];
     },
