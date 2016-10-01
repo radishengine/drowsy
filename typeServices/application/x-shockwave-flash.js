@@ -4,13 +4,12 @@ define(function() {
   
   var typeNames;
   
-  function split(entries) {
-    var rootSegment = this;
+  function split(rootSegment, entries) {
     return rootSegment.getBytes(0, 9)
     .then(function(rawPartialHeader) {
       var headerSize = 8 + Math.min(1, Math.ceil((rawPartialHeader[8] >>> 3) / 2)) + 4;
-      if (entries.accepts('application/x-swf-header')) {
-        entries.add(rootSegment.getSegment('application/x-swf-header', 0, headerSize));
+      if (entries.accepts('chunk/swf; which=header')) {
+        entries.add(rootSegment.getSegment('chunk/swf; which=header', 0, headerSize));
       }
       return rootSegment.getBytes(0, headerSize);
     })
@@ -37,7 +36,7 @@ define(function() {
         var tagCodeAndLength = rawHeader[0] | rawHeader[1] << 8;
         var tagCode = tagCodeAndLength >>> 6;
         var shortLength = tagCodeAndLength & ((1 << 6) - 1);
-        var chunkType = 'application/x-swf-chunk; type=' + (typeNames[tagCode] || tagCode);
+        var chunkType = 'chunk/swf; which=' + (typeNames[tagCode] || tagCode);
         var chunkHeaderLength, bodyLengthKnown;
         if (shortLength < 0x3f) {
           chunkHeaderLength = 2;
