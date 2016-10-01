@@ -101,46 +101,46 @@ define(function() {
           case 7:
             c[i] = {
               type: 'class',
-              nameIndex: dv.getUint16(pos, false) - 1,
+              nameIndex: dv.getUint16(pos, false),
             };
             pos += 2;
             break;
           case 8:
             c[i] = {
               type: 'string',
-              utf8Index: dv.getUint16(pos, false) - 1,
+              utf8Index: dv.getUint16(pos, false),
             };
             pos += 2;
             break;
           case 9:
             c[i] = {
               type: 'fieldRef',
-              classIndex: dv.getUint16(pos, false) - 1,
-              nameAndTypeIndex: dv.getUint16(pos + 2, false) - 1,
+              classIndex: dv.getUint16(pos, false),
+              nameAndTypeIndex: dv.getUint16(pos + 2, false),
             };
             pos += 4;
             break;
           case 10:
             c[i] = {
               type: 'methodRef',
-              classIndex: dv.getUint16(pos, false) - 1,
-              nameAndTypeIndex: dv.getUint16(pos + 2, false) - 1,
+              classIndex: dv.getUint16(pos, false),
+              nameAndTypeIndex: dv.getUint16(pos + 2, false),
             };
             pos += 4;
             break;
           case 11:
             c[i] = {
               type: 'interfaceMethodRef',
-              classIndex: dv.getUint16(pos, false) - 1,
-              nameAndTypeIndex: dv.getUint16(pos + 2, false) - 1,
+              classIndex: dv.getUint16(pos, false),
+              nameAndTypeIndex: dv.getUint16(pos + 2, false),
             };
             pos += 4;
             break;
           case 12:
             c[i] = {
               type: 'nameAndType',
-              nameIndex: dv.getUint16(pos, false) - 1,
-              descriptorIndex: dv.getUint16(pos+2, false) - 1,
+              nameIndex: dv.getUint16(pos, false),
+              descriptorIndex: dv.getUint16(pos+2, false),
             };
             pos += 4;
             break;
@@ -148,22 +148,22 @@ define(function() {
             c[i] = {
               type: 'methodHandle',
               refKind: bytes[pos],
-              refIndex: dv.getUint16(pos+1, false) - 1,
+              refIndex: dv.getUint16(pos+1, false),
             };
             pos += 3;
             break;
           case 16:
             c[i] = {
               type: 'methodType',
-              descriptorIndex: dv.getUint16(pos, false) - 1,
+              descriptorIndex: dv.getUint16(pos, false),
             };
             pos += 2;
             break;
           case 18:
             c[i] = {
               type: 'invokeDynamic',
-              bootstrapMethodAttrIndex: dv.getUint16(pos, false) - 1,
-              nameAndTypeIndex: dv.getUint16(pos+2, false) - 1,
+              bootstrapMethodAttrIndex: dv.getUint16(pos, false),
+              nameAndTypeIndex: dv.getUint16(pos+2, false),
             };
             pos += 4;
             break;
@@ -308,10 +308,10 @@ define(function() {
       return this.dv.getUint16(0, false);
     },
     get name() {
-      return this.constants[this.dv.getUint16(2, false) - 1];
+      return this.constants[this.dv.getUint16(2, false)];
     },
     get descriptor() {
-      return this.constants[this.dv.getUint16(4, false) - 1];
+      return this.constants[this.dv.getUint16(4, false)];
     },
     get attributes() {
       var list = new Array(this.dv.getUint16(6, false));
@@ -388,7 +388,7 @@ define(function() {
   }
   AttributeView.prototype = {
     get name() {
-      return this.constants[this.dv.getUint16(0, false) - 1];
+      return this.constants[this.dv.getUint16(0, false)];
     },
     get value() {
       var constants = this.constants;
@@ -411,7 +411,7 @@ define(function() {
           break;
         case 'Signature':
         case 'SourceFile':
-          value = constants[dv.getUint16(6, false) - 1];
+          value = constants[dv.getUint16(6, false)];
           break;
         case 'ConstantValue':
           value = constants[dv.getUint16(6, false)];
@@ -448,11 +448,11 @@ define(function() {
           value = new Array(dv.getUint16(6, false));
           var pos = 8;
           for (var i = 0; i < value.length; i++) {
-            var method = constants[dv.getUint16(pos) - 1];
+            var method = constants[dv.getUint16(pos)];
             var parameters = new Array(dv.getUint16(pos + 2));
             pos += 4;
             for (var j = 0; j < parameters.length; j++) {
-              parameters[i] = constants[dv.getUint16(pos) - 1];
+              parameters[i] = constants[dv.getUint16(pos)];
               pos += 2;
             }
             value[i] = {method:method, parameters:parameters};
@@ -478,10 +478,10 @@ define(function() {
             value[i] = {
               codeOffset: dv.getUint16(8 + i*10, false),
               codeLength: dv.getUint16(8 + i*10 + 2, false),
-              name: constants[dv.getUint16(8 + i*10 + 4, false) - 1],
+              name: constants[dv.getUint16(8 + i*10 + 4, false)],
               index: dv.getUint16(8 + i*10 + 8, false), // 64-bit types take up 2 slots
             };
-            value[i][fieldName] = constants[dv.getUint16(8 + i*10 + 6, false) - 1];
+            value[i][fieldName] = constants[dv.getUint16(8 + i*10 + 6, false)];
           }
           break;
         case 'StackMapTable':
@@ -496,7 +496,7 @@ define(function() {
               case 5: return 'null';
               case 6: return 'uninitializedThis';
               case 7:
-                value = constants[dv.getUint16(pos, false) - 1];
+                value = constants[dv.getUint16(pos, false)];
                 pos += 2;
                 return value;
               case 8:
@@ -563,7 +563,7 @@ define(function() {
         case 'Exceptions':
           value = new Array(dv.getUint16(6, false));
           for (var i = 0; i < value.length; i++) {
-            value[i] = this.constants[dv.getUint16(8 + i*2) - 1];
+            value[i] = this.constants[dv.getUint16(8 + i*2)];
           }
           break;
         default: value = new Uint8Array(buffer, byteOffset, dv.getUint32(2, false));
@@ -633,7 +633,7 @@ define(function() {
         case 'Exceptions':
           value = new Array(dv.getUint16(6, false));
           for (var i = 0; i < value.length; i++) {
-            value[i] = this.constants[dv.getUint16(8 + i*2) - 1];
+            value[i] = this.constants[dv.getUint16(8 + i*2)];
           }
           break;
         default: def.push([this.name.toLowerCase()]); break;
@@ -647,13 +647,13 @@ define(function() {
   }
   InnerClassAttrView.prototype = {
     get innerClassInfo() {
-      return this.constants[this.dv.getUint16(0, false) - 1];
+      return this.constants[this.dv.getUint16(0, false)];
     },
     get outerClassInfo() {
-      return this.constants[this.dv.getUint16(2, false) - 1];
+      return this.constants[this.dv.getUint16(2, false)];
     },
     get innerName() {
-      return this.constants[this.dv.getUint16(4, false) - 1];
+      return this.constants[this.dv.getUint16(4, false)];
     },
     get innerAccessFlags() {
       return this.dv.getUint16(6, false);
@@ -696,10 +696,10 @@ define(function() {
   }
   EnclosingMethodAttrView.prototype = {
     get enclosingClass() {
-      return this.constants[this.dv.getUint16(0, false) - 1];
+      return this.constants[this.dv.getUint16(0, false)];
     },
     get enclosingMethod() {
-      return this.constants[this.dv.getUint16(2, false) - 1];
+      return this.constants[this.dv.getUint16(2, false)];
     },
   };
   
@@ -709,7 +709,7 @@ define(function() {
   }
   AnnotationView.prototype = {
     get type() {
-      return this.constants[this.dv.getUint16(0, false) - 1];
+      return this.constants[this.dv.getUint16(0, false)];
     },
     get pairs() {
       var list = new Array(this.dv.getUint16(2, false));
@@ -752,12 +752,12 @@ define(function() {
       var value;
       switch(this.tag) {
         case 'B': case 'C': case 'D': case 'F': case 'I': case 'J': case 'S': case 'Z': case 's': case 'c':
-          value = this.constants[this.dv.getUint16(1, false) - 1];
+          value = this.constants[this.dv.getUint16(1, false)];
           break;
         case 'e':
           value = {
-            enumTypeName: this.constants[this.dv.getUint16(1, false) - 1],
-            enumValueName: this.constants[this.dv.getUint16(3, false) - 1],
+            enumTypeName: this.constants[this.dv.getUint16(1, false)],
+            enumValueName: this.constants[this.dv.getUint16(3, false)],
           };
         case '@':
           value = new AnnotationView(this.dv.buffer, this.dv.byteOffset + 1, this.dv.byteLength - (this.dv.byteOffset + 1));
