@@ -290,7 +290,7 @@ define(function() {
       if (this.isSynthetic) def.push(['synthetic']);
       if (this.isAnnotation) def.push(['annotation']);
       if (this.isEnum) def.push(['enum']);
-      if (this.extendsName !== 'java/awt/Object') {
+      if (this.extendsName !== 'java/lang/Object') {
         def.push(['extends', this.extendsName | null]);
       }
       for (var i = 0; i < this.interfaces.length; i++) {
