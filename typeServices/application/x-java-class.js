@@ -30,7 +30,7 @@ define(function() {
           case 1:
             var length = dv.getUint16(pos, false);
             pos += 2;
-            c[i] = {type:'utf9', value:new TextDecoder('utf-8').decode(bytes.subarray(pos, pos + length)};
+            c[i] = {type:'utf9', value:new TextDecoder('utf-8').decode(bytes.subarray(pos, pos + length))};
             pos += length;
             break;
           case 3:
