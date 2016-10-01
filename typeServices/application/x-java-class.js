@@ -291,7 +291,7 @@ define(function() {
       if (this.isAnnotation) def.push(['annotation']);
       if (this.isEnum) def.push(['enum']);
       if (this.extendsName !== 'java/lang/Object') {
-        def.push(['extends', this.extendsName | null]);
+        def.push(['extends', this.extendsName || null]);
       }
       for (var i = 0; i < this.interfaces.length; i++) {
         def.push(['implements', this.interfaces[i]]);
