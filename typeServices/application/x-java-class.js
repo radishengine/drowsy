@@ -156,7 +156,7 @@ define(function() {
     },
     get thisClassName() {
       var c = this.constants[this.dv.getUint16(this.constants.afterPos + 2, false)];
-      if (typeof c !== 'object' || c.kind !== 'class') {
+      if (typeof c !== 'object' || c.type !== 'class') {
         throw new Error('invalid this_class');
       }
       return this.constants[c.nameIndex];
@@ -165,8 +165,8 @@ define(function() {
       var i = this.dv.getUint16(this.constants.afterPos + 4, false);
       if (i === 0) return null; // should only be true for the root Object
       var c = this.constants[i];
-      if (typeof c !== 'object' || c.kind !== 'class') {
-        throw new Error('invalid this_class');
+      if (typeof c !== 'object' || c.type !== 'class') {
+        throw new Error('invalid super_class');
       }
       return this.constants[c.nameIndex];
     },
