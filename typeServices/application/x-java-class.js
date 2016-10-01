@@ -20,7 +20,7 @@ define(function() {
       return this.dv.getUint16(6, false);
     },
     get constantPools() {
-      var c = new Array(this.dv.getUint16(8, false));
+      var c = new Array(this.dv.getUint16(8, false) - 1);
       var pos = 10;
       var bytes = this.bytes;
       var dv = this.dv;
