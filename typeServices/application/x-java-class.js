@@ -514,7 +514,7 @@ define(function() {
           }
           break;
         case 'Code':
-          value = new CodeView(buffer, byteOffset, dv.getUint32(2, false));
+          value = new CodeView(constants, buffer, byteOffset, dv.getUint32(2, false));
           break;
         case 'LineNumberTable':
           value = new Array(dv.getUint16(6, false));
