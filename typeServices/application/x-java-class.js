@@ -131,6 +131,18 @@ define(function() {
     get superClass() {
       return this.constantPools[this.dv.getUint16(this.constantPools.afterPos + 4, false)];
     },
+    get interfaces() {
+      var pos = this.constantPools.afterPos + 6;
+      var list = new Array(this.dv.getUint16(pos, false));
+      pos += 2;
+      for (var i = 0; i < list.length; i++) {
+        list[i] = this.constantPools[this.dv.getUint16(pos, false)];
+        pos += 2;
+      }
+      list.afterPos = pos;
+      Object.defineProperty(this, 'interfaces', {value:list});
+      return list;
+    },
   };
   
   return {
