@@ -278,10 +278,10 @@ define(function() {
       return !!(this.accessFlags & 0x4000);
     },
     get nameIndex() {
-      return this.dv.getUint16(2, false);
+      return this.dv.getUint16(2, false) - 1;
     },
     get descriptorIndex() {
-      return this.dv.getUint16(4, false);
+      return this.dv.getUint16(4, false) - 1;
     },
     get attributes() {
       var list = new Array(this.dv.getUint16(6, false));
@@ -307,7 +307,7 @@ define(function() {
   }
   AttributeView.prototype = {
     get nameIndex() {
-      return this.dv.getUint16(0, false);
+      return this.dv.getUint16(0, false) - 1;
     },
   };
   
