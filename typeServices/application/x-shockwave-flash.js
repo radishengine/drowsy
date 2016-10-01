@@ -8,7 +8,7 @@ define(function() {
     return rootSegment.getBytes(0, 9)
     .then(function(rawPartialHeader) {
       var headerSize = 8 + Math.min(1, Math.ceil((rawPartialHeader[8] >>> 3) / 2)) + 4;
-      if (entries.accepts('chunk/swf; which=header')) {
+      if (entries.accepted('chunk/swf; which=header')) {
         entries.add(rootSegment.getSegment('chunk/swf; which=header', 0, headerSize));
       }
       return rootSegment.getBytes(0, headerSize);
@@ -50,7 +50,7 @@ define(function() {
           });
         }
         return bodyLengthKnown.then(function(chunkBodyLength) {
-          if (entries.accepts(chunkType)) {
+          if (entries.accepted(chunkType)) {
             entries.add(chunkStream.getSegment(chunkType, chunkHeaderLength, chunkBodyLength));
           }
           end -= chunkHeaderLength + chunkBodyLength;
