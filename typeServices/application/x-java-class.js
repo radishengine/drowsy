@@ -395,7 +395,9 @@ define(function() {
       for (var i = 0; i < this.attributes.length; i++) {
         this.attributes[i].pushJSONTo(def);
       }
-      return ['field', this.name, descriptorToJSON(this.descriptor), def];
+      var result = ['field', this.name, descriptorToJSON(this.descriptor)];
+      if (def.length > 0) result.push(def);
+      return def;
     },
     toJSONMethod: function() {
       var signature = descriptorToJSON(this.descriptor);
@@ -412,7 +414,9 @@ define(function() {
       for (var i = 0; i < this.attributes.length; i++) {
         this.attributes[i].pushJSONTo(def);
       }
-      return ['method', this.name, def];
+      var result = ['method', this.name];
+      if (def.length > 0) result.push(def);
+      return def;
     },
   };
   
