@@ -5,6 +5,50 @@ define(function() {
   // TODO: !!! this should be modified UTF-8 (long representation for \0)
   var utf8 = new TextDecoder('utf-8');
   
+  function descriptorToJSON(descriptor) {
+    var pos = 0;
+    function parsePart() {
+      switch(descriptor[pos++]) {
+        case 'I': return 'int32';
+        case 'B': return 'int8';
+        case 'C': return 'char';
+        case 'D': return 'float64';
+        case 'F': return 'float32';
+        case 'J': return 'int64';
+        case 'S': return 'int16';
+        case 'Z': return 'boolean';
+        case '[': return ['[', parsePart()];
+        case 'L':
+          var startPos = pos;
+          var endPos = descriptor.indexOf(';', pos);
+          pos = endPos + 1;
+          return descriptor.slice(startPos, endPos);
+        case '(':
+          var signature = [];
+          while (descriptor[pos] !== ')') {
+            if (pos > descriptor.length) {
+              throw new Error('unterminated parameter list: ' + descriptor);
+            }
+            signature.push(parsePart());
+          }
+          var returnType;
+          if (descriptor[++pos] === 'V') {
+            pos++;
+            signature.splice(0, 0, '(', null);
+          }
+          else {
+            signature.splice(0, 0, '(', parsePart());
+          }
+          return signature;
+      }
+    }
+    var result = parsePart();
+    if (pos < descriptor.length) {
+      throw new Error('unknown content in descriptor: ' + descriptor);
+    }
+    return result;
+  }
+  
   function ClassView(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
     this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
@@ -232,6 +276,25 @@ define(function() {
       Object.defineProperty(this, 'attributes', {value:list});
       return list;
     },
+    toJSON: function() {
+      var def = [];
+      if (this.superClassName) {
+        def.push(['extends', this.superClassName]);
+      }
+      for (var i = 0; i < this.interfaces.length; i++) {
+        def.push(['implements', this.interfaces[i]]);
+      }
+      for (var i = 0; i < this.attributes.length; i++) {
+        this.attributes[i].pushJSONTo(def);
+      }
+      for (var i = 0; i < this.fields.length; i++) {
+        def.push(this.fields[i].toJSON());
+      }
+      for (var i = 0; i < this.methods.length; i++) {
+        def.push(this.methods[i].toJSON());
+      }
+      return [this.isInterface ? 'interface' : 'class', this.thisClassName, def];
+    },
   };
   
   function MemberView(constants, buffer, byteOffset, byteLength) {
@@ -308,6 +371,12 @@ define(function() {
     },
     get byteLength() {
       return this.attributes.afterPos;
+    },
+    toJSONField: function() {
+      return ['field', descriptorToJSON(this.descriptor), this.name];
+    },
+    toJSONMethod: function() {
+      return ['method', descriptorToJSON(this.descriptor), this.name];
     },
   };
   
@@ -386,6 +455,9 @@ define(function() {
             }
             value[i] = {method:method, parameters:parameters};
           }
+          break;
+        case 'Code':
+          value = new CodeView(buffer, byteOffset, dv.getUint32(2, false));
           break;
         case 'LineNumberTable':
           value = new Array(dv.getUint16(6, false));
@@ -496,6 +568,74 @@ define(function() {
       }
       Object.defineProperty(this, 'value', {value:value});
       return value;
+    },
+    pushJSONTo: function(def) {
+      switch(this.name) {
+        case 'InnerClasses':
+          for (var i = 0; i < this.value.length; i++) {
+            def.push(['inner', this.value[i]]);
+          }
+          break;
+        case 'EnclosingMethod':
+          def.push(['enclosed', this.value.className, this.value.methodName]);
+          break;
+        case 'Signature':
+        case 'SourceFile':
+        case 'ConstantValue':
+        case 'SourceDebugExtension':
+          def.push([this.name.toLowerCase(), this.value]);
+          break;
+        case 'RuntimeVisibleAnnotations':
+          for (var i = 0; i < this.value.length; i++) {
+            def.push(['annotation', true, this.value[i]]);
+          }
+          break;
+        case 'RuntimeInvisibleAnnotations':
+          for (var i = 0; i < this.value.length; i++) {
+            def.push(['annotation', false, this.value[i]]);
+          }
+          break;
+        case 'RuntimeVisibleParameterAnnotations':
+          for (var i = 0; i < this.value.length; i++) {
+            def.push(['parameter-annotation', true, this.value[i]]);
+          }
+          break;
+        case 'RuntimeInvisibleParameterAnnotations':
+          for (var i = 0; i < this.value.length; i++) {
+            def.push(['parameter-annotation', false, this.value[i]]);
+          }
+          break;
+        case 'AnnotationDefault':
+          def.push(['default', this.value.toJSON()]);
+          break;
+        case 'BootstrapMethods':
+          for (var i = 0; i < this.value.length; i++) {
+            def.push(['bootstrap-method', this.value[i].method].concat(this.value[i].parameters));
+          }
+          break;
+        case 'LineNumberTable':
+          for (var i = 0; i < value.length; i++) {
+            def.push(['L#', value[i].codeOffset, value[i].lineNumber]);
+          }
+          break;
+        case 'LocalVariableTable':
+          for (var i = 0; i < value.length; i++) {
+            def.push(['var', descriptorToJSON(value[i].descriptor), value[i].name, value[i].codeOffset, value[i].codeLength, value[i].index]);
+          }
+          break;
+        case 'LocalVariableTypeTable':
+          for (var i = 0; i < value.length; i++) {
+            def.push(['var', descriptorToJSON(value[i].signature), value[i].name, value[i].codeOffset, value[i].codeLength, value[i].index]);
+          }
+          break;
+        case 'Exceptions':
+          value = new Array(dv.getUint16(6, false));
+          for (var i = 0; i < value.length; i++) {
+            value[i] = this.constants[dv.getUint16(8 + i*2) - 1];
+          }
+          break;
+        default: def.push([this.name.toLowerCase()]); break;
+      }
     },
   };
   
