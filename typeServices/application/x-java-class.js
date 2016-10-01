@@ -288,10 +288,10 @@ define(function() {
         this.attributes[i].pushJSONTo(def);
       }
       for (var i = 0; i < this.fields.length; i++) {
-        def.push(this.fields[i].toJSON());
+        def.push(this.fields[i].toJSONField());
       }
       for (var i = 0; i < this.methods.length; i++) {
-        def.push(this.methods[i].toJSON());
+        def.push(this.methods[i].toJSONMethod());
       }
       return [this.isInterface ? 'interface' : 'class', this.thisClassName, def];
     },
