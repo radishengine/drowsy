@@ -99,6 +99,9 @@ define(function() {
   };
   
   return {
+    getStructView: function() {
+      return ClassView;
+    },
   };
 
 });
