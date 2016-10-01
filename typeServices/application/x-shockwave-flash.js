@@ -178,7 +178,7 @@ define(function() {
     },
     // note: x & y of frameRect are always zero, so it is really just width and height
     get sizeof_frameRect() {
-      return Math.min(1, Math.ceil((this.bytes[8] >>> 3) / 2));
+      return  Math.ceil((5 + ((this.bytes[8] >>> 3) * 4)) / 8);
     },
     get framesPerSecond() {
       return this.dv.getUint16(this.offsetof_frameRect + this.sizeof_frameRect, true);
