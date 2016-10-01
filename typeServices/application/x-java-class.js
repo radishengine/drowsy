@@ -183,8 +183,8 @@ define(function() {
     get isFinal() {
       return !!(this.accessFlags & 0x0010);
     },
-    get isSuper() {
-      return !!(this.accessFlags & 0x0020);
+    get usesOldInvokeSuper() {
+      return !(this.accessFlags & 0x0020);
     },
     get isInterface() {
       return !!(this.accessFlags & 0x0200);
@@ -282,7 +282,7 @@ define(function() {
       var def = [];
       if (this.isPublic) def.push(['public']);
       if (this.isFinal) def.push(['final']);
-      if (this.isSuper) def.push(['super']);
+      if (this.usesOldInvokeSuper) def.push(['old_invokesuper']);
       if (this.isInterface) def.push(['interface']);
       if (this.isSynthetic) def.push(['synthetic']);
       if (this.isAnnotation) def.push(['annotation']);
