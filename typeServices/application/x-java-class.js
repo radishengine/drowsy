@@ -201,14 +201,14 @@ define(function() {
     get isEnum() {
       return !!(this.accessFlags & 0x4000);
     },
-    get thisClassName() {
+    get name() {
       var c = this.constants[this.dv.getUint16(this.constants.afterPos + 2, false)];
       if (typeof c !== 'object' || c.type !== 'class') {
         throw new Error('invalid this_class');
       }
       return this.constants[c.nameIndex];
     },
-    get superClassName() {
+    get extendsName() {
       var i = this.dv.getUint16(this.constants.afterPos + 4, false);
       if (i === 0) return null; // should only be true for the root Object
       var c = this.constants[i];
@@ -287,8 +287,8 @@ define(function() {
       if (this.isSynthetic) def.push(['synthetic']);
       if (this.isAnnotation) def.push(['annotation']);
       if (this.isEnum) def.push(['enum']);
-      if (this.superClassName) {
-        def.push(['extends', this.superClassName]);
+      if (this.extendsName) {
+        def.push(['extends', this.extendsName]);
       }
       for (var i = 0; i < this.interfaces.length; i++) {
         def.push(['implements', this.interfaces[i]]);
