@@ -128,7 +128,7 @@ define(function() {
             break;
           case 11:
             c[i] = {
-              type: 'interfacMethodRef',
+              type: 'interfaceMethodRef',
               classIndex: dv.getUint16(pos, false) - 1,
               nameAndTypeIndex: dv.getUint16(pos + 2, false) - 1,
             };
