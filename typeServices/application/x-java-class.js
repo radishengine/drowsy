@@ -10,10 +10,10 @@ define(function() {
   }
   ClassView.prototype = {
     get signature() {
-      return this.dv.getUint32(0, false);
+      return this.dv.getUint32(0, false).toString(16).toUpperCase();
     },
     get hasValidSignature() {
-      return this.signature === 0xCAFEBABE;
+      return this.signature === 'CAFEBABE';
     },
     get versionMinor() {
       return this.dv.getUint16(4, false);
