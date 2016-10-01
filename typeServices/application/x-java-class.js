@@ -30,7 +30,7 @@ define(function() {
           case 1:
             var length = dv.getUint16(pos, false);
             pos += 2;
-            c[i] = {type:'utf9', value:new TextDecoder('utf-8').decode(bytes.subarray(pos, pos + length))};
+            c[i] = {type:'utf8', value:new TextDecoder('utf-8').decode(bytes.subarray(pos, pos + length))};
             pos += length;
             break;
           case 3:
@@ -95,6 +95,39 @@ define(function() {
       c.afterPos = pos;
       Object.defineProperty(this, 'constantPools', {value:c});
       return c;
+    },
+    get accessFlags() {
+      return this.dv.getUint16(this.constantPools.afterPos, false);
+    },
+    get isPublic() {
+      return !!(this.accessFlags & 0x0001);
+    },
+    get isFinal() {
+      return !!(this.accessFlags & 0x0010);
+    },
+    get isSuper() {
+      return !!(this.accessFlags & 0x0020);
+    },
+    get isInterface() {
+      return !!(this.accessFlags & 0x0200);
+    },
+    get isAbstract() {
+      return !!(this.accessFlags & 0x0400);
+    },
+    get isSynthetic() {
+      return !!(this.accessFlags & 0x1000);
+    },
+    get isAnnotation() {
+      return !!(this.accessFlags & 0x2000);
+    },
+    get isEnum() {
+      return !!(this.accessFlags & 0x4000);
+    },
+    get thisClass() {
+      return this.constantPools[this.getUint16(this.constantPools.afterPos + 2, false)];
+    },
+    get superClass() {
+      return this.constantPools[this.getUint16(this.constantPools.afterPos + 4, false)];
     },
   };
   
