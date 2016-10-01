@@ -280,6 +280,13 @@ define(function() {
     },
     toJSON: function() {
       var def = [];
+      if (this.isPublic) def.push(['public']);
+      if (this.isFinal) def.push(['final']);
+      if (this.isSuper) def.push(['super']);
+      if (this.isInterface) def.push(['interface']);
+      if (this.isSynthetic) def.push(['synthetic']);
+      if (this.isAnnotation) def.push(['annotation']);
+      if (this.isEnum) def.push(['enum']);
       if (this.superClassName) {
         def.push(['extends', this.superClassName]);
       }
@@ -295,7 +302,7 @@ define(function() {
       for (var i = 0; i < this.methods.length; i++) {
         def.push(this.methods[i].toJSONMethod());
       }
-      return [this.isInterface ? 'interface' : 'class', this.thisClassName, def];
+      return ['class', this.name, def];
     },
   };
   
@@ -378,7 +385,18 @@ define(function() {
       return ['field', descriptorToJSON(this.descriptor), this.name];
     },
     toJSONMethod: function() {
-      return ['method', descriptorToJSON(this.descriptor), this.name];
+      var signature = descriptorToJSON(this.descriptor);
+      if (signature[0] !== '(') {
+        throw new Error('method does not have a callable signature');
+      }
+      var def = [];
+      if (signature[1]) {
+        def.push(['ret', signature[1]]);
+      }
+      for (var i = 2; i < signature.length; i++) {
+        def.push(['arg', signature[i]]);
+      }
+      return ['method', this.name, def];
     },
   };
   
@@ -582,10 +600,12 @@ define(function() {
           def.push(['enclosed', this.value.className, this.value.methodName]);
           break;
         case 'Signature':
-        case 'SourceFile':
         case 'ConstantValue':
         case 'SourceDebugExtension':
           def.push([this.name.toLowerCase(), this.value]);
+          break;
+        case 'SourceFile':
+          def.push(['src', this.value]);
           break;
         case 'RuntimeVisibleAnnotations':
           for (var i = 0; i < this.value.length; i++) {
