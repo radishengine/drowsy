@@ -9,13 +9,13 @@ define(function() {
     var pos = 0;
     function parsePart() {
       switch(descriptor[pos++]) {
-        case 'I': return 'int32';
-        case 'B': return 'int8';
+        case 'I': return 'i32';
+        case 'B': return 'i8';
         case 'C': return 'char';
-        case 'D': return 'float64';
-        case 'F': return 'float32';
-        case 'J': return 'int64';
-        case 'S': return 'int16';
+        case 'D': return 'f64';
+        case 'F': return 'f32';
+        case 'J': return 'i64';
+        case 'S': return 'i16';
         case 'Z': return 'boolean';
         case '[':
           var elementType = parsePart();
@@ -385,7 +385,7 @@ define(function() {
       return this.attributes.afterPos;
     },
     toJSONField: function() {
-      var def = [['type', descriptorToJSON(this.descriptor)]];
+      var def = [[':', descriptorToJSON(this.descriptor)]];
       if (this.isPublic) def.push(['public']);
       if (this.isPrivate) def.push(['private']);
       if (this.isProtected) def.push(['protected']);
@@ -397,7 +397,7 @@ define(function() {
       for (var i = 0; i < this.attributes.length; i++) {
         this.attributes[i].pushJSONTo(def);
       }
-      var result = ['field', this.name, def];
+      var result = ['.', this.name, def];
       if (this.isStatic) result = ['static', result];
       return result;
     },
@@ -427,7 +427,7 @@ define(function() {
       for (var i = 0; i < this.attributes.length; i++) {
         this.attributes[i].pushJSONTo(def);
       }
-      var result = ['method', this.name];
+      var result = ['m()', this.name];
       if (def.length > 0) result.push(def);
       if (this.isStatic) result = ['static', result];
       return result;
@@ -627,7 +627,7 @@ define(function() {
       switch(this.name) {
         case 'InnerClasses':
           for (var i = 0; i < this.value.length; i++) {
-            def.push(['inner', this.value[i]]);
+            def.push(['class', this.value[i]]);
           }
           break;
         case 'EnclosingMethod':
