@@ -382,7 +382,7 @@ define(function() {
       return this.attributes.afterPos;
     },
     toJSONField: function() {
-      var def = [];
+      var def = [['type', descriptorToJSON(this.descriptor)]];
       if (this.isPublic) def.push(['public']);
       if (this.isPrivate) def.push(['private']);
       if (this.isProtected) def.push(['protected']);
@@ -395,9 +395,7 @@ define(function() {
       for (var i = 0; i < this.attributes.length; i++) {
         this.attributes[i].pushJSONTo(def);
       }
-      var result = ['field', this.name, descriptorToJSON(this.descriptor)];
-      if (def.length > 0) result.push(def);
-      return result;
+      return ['field', this.name, def];
     },
     toJSONMethod: function() {
       var signature = descriptorToJSON(this.descriptor);
