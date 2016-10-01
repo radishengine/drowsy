@@ -407,13 +407,6 @@ define(function() {
         throw new Error('method does not have a callable signature');
       }
       var def = [];
-      if (signature[1]) {
-        def.push(['ret', signature[1]]);
-      }
-      for (var i = 2; i < signature.length; i++) {
-        def.push(['arg', signature[i]]);
-      }
-      if (this.isVarargsMethods) def.push(['varargs']);
       if (this.isPublic) def.push(['public']);
       if (this.isPrivate) def.push(['private']);
       if (this.isProtected) def.push(['protected']);
@@ -423,6 +416,13 @@ define(function() {
       if (this.isNativeMethod) def.push(['native']);
       if (this.isAbstractMethod) def.push(['abstract']);
       if (this.isSynthetic) def.push(['synthetic']);
+      if (signature[1]) {
+        def.push(['ret', signature[1]]);
+      }
+      for (var i = 2; i < signature.length; i++) {
+        def.push(['arg', signature[i]]);
+      }
+      if (this.isVarargsMethods) def.push(['varargs']);
       
       for (var i = 0; i < this.attributes.length; i++) {
         this.attributes[i].pushJSONTo(def);
