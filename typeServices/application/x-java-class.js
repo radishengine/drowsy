@@ -143,6 +143,86 @@ define(function() {
       Object.defineProperty(this, 'interfaces', {value:list});
       return list;
     },
+    get fields() {
+      var dv = this.dv;
+      var buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength;
+      var pos = this.interfaces.afterPos;
+      var list = new Array(dv.getUint16(pos, false));
+      pos += 2;
+      for (var i = 0; i < list.length; i++) {
+        pos += (list[i] = new FieldView(buffer, byteOffset + pos, byteLength - pos)).byteLength;
+      }
+      Object.defineProperty(this, 'fields', {value:list});
+      return list;
+    },
+  };
+  
+  function FieldView(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  FieldView.prototype = {
+    get accessFlags() {
+      return this.dv.getUint16(0, false);
+    },
+    get isPublic() {
+      return !!(this.accessFlags & 1);
+    },
+    get isPrivate() {
+      return !!(this.accessFlags & 2);
+    },
+    get isProtected() {
+      return !!(this.accessFlags & 4);
+    },
+    get isStatic() {
+      return !!(this.accessFlags & 8);
+    },
+    get isFinal() {
+      return !!(this.accessFlags & 0x10);
+    },
+    get isVolatile() {
+      return !!(this.accessFlags & 0x40);
+    },
+    get isTransient() {
+      return !!(this.accessFlags & 0x80);
+    },
+    get isSynthetic() {
+      return !!(this.accessFlags & 0x1000);
+    },
+    get isEnum() {
+      return !!(this.accessFlags & 0x4000);
+    },
+    get nameIndex() {
+      return this.dv.getUint16(2, false);
+    },
+    get descriptorIndex() {
+      return this.dv.getUint16(4, false);
+    },
+    get attributes() {
+      var list = new Array(this.dv.getUint16(6, false));
+      var dv = this.dv;
+      var pos = 8, buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength;
+      for (var i = 0; i < list.length; i++) {
+        var length = 2 + 4 + dv.getUint32(pos + 2, false);
+        list[i] = new AttributeView(buffer, byteOffset + pos, length);
+        pos += length;
+      }
+      list.afterPos = pos;
+      Object.defineProperty(this, 'attributes', {value:list});
+      return list;
+    },
+    get byteLength() {
+      return this.attributes.afterPos;
+    },
+  };
+  
+  function AttributeView(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+    this.info = new Uint8Array(buffer, byteOffset + 6, this.dv.getUint32(2, false));
+  }
+  AttributeView.prototype = {
+    get nameIndex() {
+      return this.dv.getUint16(0, false);
+    },
   };
   
   return {
