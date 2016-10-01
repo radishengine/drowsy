@@ -124,10 +124,10 @@ define(function() {
       return !!(this.accessFlags & 0x4000);
     },
     get thisClass() {
-      return this.constantPools[this.getUint16(this.constantPools.afterPos + 2, false)];
+      return this.constantPools[this.dv.getUint16(this.constantPools.afterPos + 2, false)];
     },
     get superClass() {
-      return this.constantPools[this.getUint16(this.constantPools.afterPos + 4, false)];
+      return this.constantPools[this.dv.getUint16(this.constantPools.afterPos + 4, false)];
     },
   };
   
