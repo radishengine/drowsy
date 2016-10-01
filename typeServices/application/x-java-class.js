@@ -2,6 +2,8 @@ define(function() {
 
   'use strict';
   
+  var utf8 = new TextDecoder('utf-8');
+  
   function ClassView(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
     this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
@@ -30,7 +32,7 @@ define(function() {
           case 1:
             var length = dv.getUint16(pos, false);
             pos += 2;
-            c[i] = {type:'utf8', value:new TextDecoder('utf-8').decode(bytes.subarray(pos, pos + length))};
+            c[i] = utf8.decode(bytes.subarray(pos, pos + length));
             pos += length;
             break;
           case 3:
