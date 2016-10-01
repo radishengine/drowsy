@@ -389,7 +389,6 @@ define(function() {
       if (this.isPublic) def.push(['public']);
       if (this.isPrivate) def.push(['private']);
       if (this.isProtected) def.push(['protected']);
-      if (this.isStatic) def.push(['static']);
       if (this.isFinal) def.push(['final']);
       if (this.isVolatileField) def.push(['volatile']);
       if (this.isTransientField) def.push(['transient']);
@@ -398,7 +397,9 @@ define(function() {
       for (var i = 0; i < this.attributes.length; i++) {
         this.attributes[i].pushJSONTo(def);
       }
-      return ['field', this.name, def];
+      var result = ['field', this.name, def];
+      if (this.isStatic) result = ['static', result];
+      return result;
     },
     toJSONMethod: function() {
       var signature = descriptorToJSON(this.descriptor);
@@ -412,11 +413,23 @@ define(function() {
       for (var i = 2; i < signature.length; i++) {
         def.push(['arg', signature[i]]);
       }
+      if (this.isVarargsMethods) def.push(['varargs']);
+      if (this.isPublic) def.push(['public']);
+      if (this.isPrivate) def.push(['private']);
+      if (this.isProtected) def.push(['protected']);
+      if (this.isFinal) def.push(['final']);
+      if (this.isSynchronizedMethod) def.push(['synchronized']);
+      if (this.isBridgeMethod) def.push(['bridge']);
+      if (this.isNativeMethod) def.push(['native']);
+      if (this.isAbstractMethod) def.push(['abstract']);
+      if (this.isSynthetic) def.push(['synthetic']);
+      
       for (var i = 0; i < this.attributes.length; i++) {
         this.attributes[i].pushJSONTo(def);
       }
       var result = ['method', this.name];
       if (def.length > 0) result.push(def);
+      if (this.isStatic) result = ['static', result];
       return result;
     },
   };
