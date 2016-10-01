@@ -342,7 +342,7 @@ define(function() {
         case 'Signature':
         case 'SourceFile':
         case 'ConstantValue':
-          value = constants[dv.getUint16(6, false)];
+          value = constants[dv.getUint16(6, false) - 1];
           break;
         case 'SourceDebugExtension':
           value = utf8.decode(new Uint8Array(buffer, byteOffset, dv.getUint32(2, false)));
@@ -376,11 +376,11 @@ define(function() {
           value = new Array(dv.getUint16(6, false));
           var pos = 8;
           for (var i = 0; i < value.length; i++) {
-            var method = constants[dv.getUint16(pos)];
+            var method = constants[dv.getUint16(pos) - 1];
             var parameters = new Array(dv.getUint16(pos + 2));
             pos += 4;
             for (var j = 0; j < parameters.length; j++) {
-              parameters[i] = constants[dv.getUint16(pos)];
+              parameters[i] = constants[dv.getUint16(pos) - 1];
               pos += 2;
             }
             value[i] = {method:method, parameters:parameters};
@@ -403,10 +403,10 @@ define(function() {
             value[i] = {
               codeOffset: dv.getUint16(8 + i*10, false),
               codeLength: dv.getUint16(8 + i*10 + 2, false),
-              name: constants[dv.getUint16(8 + i*10 + 4, false)],
+              name: constants[dv.getUint16(8 + i*10 + 4, false) - 1],
               index: dv.getUint16(8 + i*10 + 8, false), // 64-bit types take up 2 slots
             };
-            value[i][fieldName] = constants[dv.getUint16(8 + i*10 + 6, false)];
+            value[i][fieldName] = constants[dv.getUint16(8 + i*10 + 6, false) - 1];
           }
           break;
         case 'StackMapTable':
@@ -421,7 +421,7 @@ define(function() {
               case 5: return 'null';
               case 6: return 'uninitializedThis';
               case 7:
-                value = constants[dv.getUint16(pos, false)];
+                value = constants[dv.getUint16(pos, false) - 1];
                 pos += 2;
                 return value;
               case 8:
@@ -488,7 +488,7 @@ define(function() {
         case 'Exceptions':
           value = new Array(dv.getUint16(6, false));
           for (var i = 0; i < value.length; i++) {
-            value[i] = this.constants[dv.getUint16(8 + i*2)];
+            value[i] = this.constants[dv.getUint16(8 + i*2) - 1];
           }
           break;
         default: value = new Uint8Array(buffer, byteOffset, dv.getUint32(2, false));
@@ -504,13 +504,13 @@ define(function() {
   }
   InnerClassAttrView.prototype = {
     get innerClassInfo() {
-      return this.constants[this.dv.getUint16(0, false)];
+      return this.constants[this.dv.getUint16(0, false) - 1];
     },
     get outerClassInfo() {
-      return this.constants[this.dv.getUint16(2, false)];
+      return this.constants[this.dv.getUint16(2, false) - 1];
     },
     get innerName() {
-      return this.constants[this.dv.getUint16(4, false)];
+      return this.constants[this.dv.getUint16(4, false) - 1];
     },
     get innerAccessFlags() {
       return this.dv.getUint16(6, false);
@@ -553,10 +553,10 @@ define(function() {
   }
   EnclosingMethodAttrView.prototype = {
     get enclosingClass() {
-      return this.constants[this.dv.getUint16(0, false)];
+      return this.constants[this.dv.getUint16(0, false) - 1];
     },
     get enclosingMethod() {
-      return this.constants[this.dv.getUint16(2, false)];
+      return this.constants[this.dv.getUint16(2, false) - 1];
     },
   };
   
@@ -566,7 +566,7 @@ define(function() {
   }
   AnnotationView.prototype = {
     get type() {
-      return this.constants[this.dv.getUint16(0, false)];
+      return this.constants[this.dv.getUint16(0, false) - 1];
     },
     get pairs() {
       var list = new Array(this.dv.getUint16(2, false));
@@ -609,12 +609,12 @@ define(function() {
       var value;
       switch(this.tag) {
         case 'B': case 'C': case 'D': case 'F': case 'I': case 'J': case 'S': case 'Z': case 's': case 'c':
-          value = this.constants[this.dv.getUint16(1, false)];
+          value = this.constants[this.dv.getUint16(1, false) - 1];
           break;
         case 'e':
           value = {
-            enumTypeName: this.constants[this.dv.getUint16(1, false)],
-            enumValueName: this.constants[this.dv.getUint16(3, false)],
+            enumTypeName: this.constants[this.dv.getUint16(1, false) - 1],
+            enumValueName: this.constants[this.dv.getUint16(3, false) - 1],
           };
         case '@':
           value = new AnnotationView(this.dv.buffer, this.dv.byteOffset + 1, this.dv.byteLength - (this.dv.byteOffset + 1));
