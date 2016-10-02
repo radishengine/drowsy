@@ -1015,10 +1015,14 @@ define(function() {
       function put(where, v) {
         def.push(['put', where, v]);
       }
+      var pos;
       function pop() {
+        if (sites[site_pos-1] < pos-1 && def[def.length-1][0] === 'push') {
+          return def.splice(-1, 1)[0][1];
+        }
         return ['pop'];
       }
-      for (var pos = 0; pos < bytes.length; ) {
+      for (pos = 0; pos < bytes.length; ) {
         if (pos === sites[site_pos]) {
           def.push(['->o', pos]);
           site_pos++;
