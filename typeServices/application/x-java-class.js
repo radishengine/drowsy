@@ -1027,7 +1027,7 @@ define(function() {
         else if (typeof v === 'string') {
           var argNum = v.match(/^arg(\d+)$/);
           if (argNum) {
-            vt = argTypes[argNum - 1];
+            vt = argTypes[argNum[1] - 1];
           }
         }
         if (vt && /^i(32|16|8)$/.test(vt)) return v;
