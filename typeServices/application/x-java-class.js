@@ -339,6 +339,16 @@ define(function() {
       Object.defineProperty(this, 'attributes', {value:list});
       return list;
     },
+    get code() {
+      for (var i = 0; i < this.attribute[i].length; i++) {
+        if (this.attributes[i].name === 'Code') {
+          var code = this.attributes[i].value;
+          Object.defineProperty(this, 'code', {value:code});
+          return code;
+        }
+      }
+      return null;
+    },
     get isPublic() {
       return !!(this.accessFlags & 1);
     },
