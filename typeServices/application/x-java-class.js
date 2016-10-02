@@ -340,7 +340,7 @@ define(function() {
       return list;
     },
     get code() {
-      for (var i = 0; i < this.attribute[i].length; i++) {
+      for (var i = 0; i < this.attributes[i].length; i++) {
         if (this.attributes[i].name === 'Code') {
           var code = this.attributes[i].value;
           Object.defineProperty(this, 'code', {value:code});
