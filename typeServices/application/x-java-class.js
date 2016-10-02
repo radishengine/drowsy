@@ -909,7 +909,10 @@ define(function() {
       var bytes = this.codeBytes;
       function addSite(n) {
         var i = sites.length - 1;
-        if (n > sites[i]) sites.push(n);
+        if (n > sites[i]) {
+          sites.push(n);
+          return;
+        }
         while (n < sites[i]) i--;
         if (n > sites[i]) sites.splice(i+1, n);
       }
