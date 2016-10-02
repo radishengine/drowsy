@@ -1270,7 +1270,7 @@ define(function() {
             break;
           case 0xC4:
             var opcode = bytes[pos], arg = (bytes[pos + 1] << 8) | bytes[pos + 2];
-            pos ++ 3;
+            pos += 3;
             switch(opcode) {
               case 0x15: def.push(['iload', arg]); break;
               case 0x16: def.push(['lload', arg]); break;
