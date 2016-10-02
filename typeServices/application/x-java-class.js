@@ -1003,7 +1003,7 @@ define(function() {
         knownVars.push('var' + (i++));
       }
       function local(n) {
-        if (n < 0 || >= knownVars.length) throw new RangeError('local index out of range: ' + n);
+        if (n < 0 || n >= knownVars.length) throw new RangeError('local index out of range: ' + n);
         return knownVars[n];
       }
       function _static(n) {
