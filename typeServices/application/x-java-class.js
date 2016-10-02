@@ -1083,11 +1083,11 @@ define(function() {
             pos += 2;
             break;
           case 0xA7:
-            def.push(['goto', (pos - 1) + (bytes[pos] << 8) | bytes[pos + 1]]);
+            def.push(['goto', pos - 1 + ((bytes[pos] << 8) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0xC8:
-            def.push(['goto', (pos - 1) + (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3]]);
+            def.push(['goto', pos - 1 + ((bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3])]);
             pos += 4;
             break;
           case 0x91: def.push(['i2b']); break;
@@ -1109,67 +1109,67 @@ define(function() {
           case 0x08: def.push(['push', ['i32', 5]]); break;
           case 0x6C: def.push(['idiv']); break;
           case 0xA5:
-            def.push(['if_acmpeq', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['if_acmpeq', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0xA6:
-            def.push(['if_acmpne', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['if_acmpne', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0x9F:
-            def.push(['if_icmpeq', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['if_icmpeq', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0xA0:
-            def.push(['if_icmpne', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['if_icmpne', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0xA1:
-            def.push(['if_icmplt', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['if_icmplt', pos - 1 + (bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0xA2:
-            def.push(['if_icmpge', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['if_icmpge', pos - 1 + (bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0xA3:
-            def.push(['if_icmpgt', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['if_icmpgt', pos - 1 + (bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0xA4:
-            def.push(['if_icmple', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['if_icmple', pos - 1 + (bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0x99:
-            def.push(['ifeq', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['ifeq', pos - 1 + (bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0x9A:
-            def.push(['ifne', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['ifne', pos - 1 + (bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0x9B:
-            def.push(['iflt', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['iflt', pos - 1 + (bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0x9C:
-            def.push(['ifge', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['ifge', pos - 1 + (bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0x9D:
-            def.push(['ifgt', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['ifgt', pos - 1 + (bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0x9E:
-            def.push(['ifle', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['ifle', pos - 1 + (bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0xC7:
-            def.push(['ifnonnull', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['ifnonnull', pos - 1 + (bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0xC6:
-            def.push(['ifnull', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['ifnull', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0x84:
@@ -1222,12 +1222,12 @@ define(function() {
           case 0x82: def.push(['ixor']); break;
           case 0xA8:
             def.push(['push', ['return_address', pos + 2]]);
-            def.push(['goto', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
+            def.push(['goto', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
           case 0xC9:
             def.push(['push', ['return_address', pos + 4]]);
-            def.push(['goto', (pos - 1) + (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3]]);
+            def.push(['goto', pos - 1 + ((bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3])]);
             pos += 4;
             break;
           case 0x8A: def.push(['l2d']); break;
