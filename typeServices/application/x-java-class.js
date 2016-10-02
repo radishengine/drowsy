@@ -1251,10 +1251,10 @@ define(function() {
             break;
           case 0x6D: def.push(['ldiv']); break;
           case 0x16: def.push(['push', ['i64', ['var', bytes[pos++]]]]); break;
-          case 0x1E: def.push(['push', ['i64', 0]]]); break;
-          case 0x1F: def.push(['push', ['i64', 1]]]); break;
-          case 0x20: def.push(['push', ['i64', 2]]]); break;
-          case 0x21: def.push(['push', ['i64', 3]]]); break;
+          case 0x1E: def.push(['push', ['i64', ['var', 0]]]); break;
+          case 0x1F: def.push(['push', ['i64', ['var', 1]]]); break;
+          case 0x20: def.push(['push', ['i64', ['var', 2]]]); break;
+          case 0x21: def.push(['push', ['i64', ['var', 3]]]); break;
           case 0x69: def.push(['lmul']); break;
           case 0x75: def.push(['lneg']); break;
           case 0xAB:
