@@ -421,8 +421,7 @@ define(function() {
       for (var i = 0; i < this.attributes.length; i++) {
         this.attributes[i].pushJSONTo(def);
       }
-      var result = ['.', this.name, def];
-      if (this.isStatic) result = ['static', result];
+      var result = [this.isStatic ? 'S.' : '.', this.name, def];
       return result;
     },
     toJSONMethod: function() {
@@ -451,9 +450,10 @@ define(function() {
       for (var i = 0; i < this.attributes.length; i++) {
         this.attributes[i].pushJSONTo(def);
       }
-      var result = ['m()', this.name];
+      var result = this.name === '<init>' ? ['c()']
+        : this.name === '<clinit>' ? ['C()']
+        : [this.isStatic ? 'M()' : 'm()', this.name];
       if (def.length > 0) result.push(def);
-      if (this.isStatic) result = ['static', result];
       return result;
     },
   };
