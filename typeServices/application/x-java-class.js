@@ -1221,19 +1221,13 @@ define(function() {
           case 0x7C: def.push(['iushr']); break;
           case 0x82: def.push(['ixor']); break;
           case 0xA8:
-            def.push([
-              'jsr',
-              (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1],
-              pos + 2,
-            ]);
+            def.push(['push', ['return_address', pos + 2]]);
+            def.push(['goto', (pos - 1) + (bytes[pos] << 24 >> 16) | bytes[pos + 1]]);
             pos += 2;
             break;
           case 0xC9:
-            def.push([
-              'jsr',
-              (pos - 1) + (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3],
-              pos + 4,
-            ]);
+            def.push(['push', ['return_address', pos + 4]]);
+            def.push(['goto', (pos - 1) + (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3]]);
             pos += 4;
             break;
           case 0x8A: def.push(['l2d']); break;
