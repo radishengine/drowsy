@@ -1037,7 +1037,7 @@ define(function() {
         }
         var opcode;
         switch (opcode = bytes[pos++]) {
-          case 0x32: def.push(['aaload']); break;
+          case 0x32: push(['aaload']); break;
           case 0x53: def.push(['aastore']); break;
           case 0x01: push(null); break;
           case 0x19: push(ref(local(bytes[pos++]))); break;
@@ -1046,7 +1046,7 @@ define(function() {
           case 0x2C: push(ref(local(2))); break;
           case 0x2D: push(ref(local(3))); break;
           case 0xBD:
-            def.push(['anewarray', (bytes[pos] << 8) | bytes[pos + 1], pop()]);
+            push(['anewarray', (bytes[pos] << 8) | bytes[pos + 1], pop()]);
             pos += 2;
             break;
           case 0xB0: def.push(['return', ref(pop())]); break;
@@ -1057,10 +1057,10 @@ define(function() {
           case 0x4D: put(local(2), pop()); break;
           case 0x4E: put(local(3), pop()); break;
           case 0xBF: def.push(['throw', ref(pop())]); break;
-          case 0x33: def.push(['baload']); break;
+          case 0x33: push(['baload']); break;
           case 0x54: def.push(['bastore']); break;
           case 0x10: push(i8(bytes[pos++] << 24 >> 24)); break;
-          case 0x34: def.push(['caload']); break;
+          case 0x34: push(['caload']); break;
           case 0x55: def.push(['castore']); break;
           case 0xC0:
             push(['checkcast', pop(), (bytes[pos] << 8) | bytes[pos + 1]]);
@@ -1069,31 +1069,34 @@ define(function() {
           case 0x90: push(f32(f64(pop()))); break;
           case 0x8E: push(i32(f64(pop()))); break;
           case 0x8F: push(i64(f64(pop()))); break;
-          case 0x63: def.push(['dadd']); break;
-          case 0x31: def.push(['daload']); break;
+          case 0x63: push(['dadd']); break;
+          case 0x31: push(['daload']); break;
           case 0x52: def.push(['dastore']); break;
-          case 0x98: def.push(['dcmpg']); break;
-          case 0x97: def.push(['dcmpl']); break;
+          case 0x98: push(['dcmpg']); break;
+          case 0x97: push(['dcmpl']); break;
           case 0x0E: push(f64(0)); break;
           case 0x0F: push(f64(1)); break;
-          case 0x6F: def.push(['ddiv']); break;
+          case 0x6F: push(['ddiv']); break;
           case 0x18: push(f64(local(bytes[pos++]))); break;
           case 0x26: push(f64(local(0))); break;
           case 0x27: push(f64(local(1))); break;
           case 0x28: push(f64(local(2))); break;
           case 0x29: push(f64(local(3))); break;
-          case 0x6B: def.push(['dmul']); break;
+          case 0x6B: push(['dmul']); break;
           case 0x77: push(['-', f64(pop())]); break;
-          case 0x73: def.push(['drem']); break;
+          case 0x73: push(['drem']); break;
           case 0xAF: def.push(['return', f64(pop())]); break;
           case 0x39: put(local(bytes[pos++]), f64(pop())); break;
           case 0x47: put(local(0), f64(pop())); break;
           case 0x48: put(local(1), f64(pop())); break;
           case 0x49: put(local(2), f64(pop())); break;
           case 0x4A: put(local(3), f64(pop())); break;
-          case 0x67: def.push(['dsub']); break;
-          case 0x59: def.push(['dup']); break;
-          case 0x5A: def.push(['dup_x1']); break;
+          case 0x67: push(['dsub']); break;
+          case 0x59: push(['peek']); break;
+          case 0x5A:
+            push(['peek']);
+            def.push(['insert', -2]);
+            break;
           case 0x5B: def.push(['dup_x2']); break;
           case 0x5C: def.push(['dup2']); break;
           case 0x5D: def.push(['dup2_x1']); break;
@@ -1101,30 +1104,30 @@ define(function() {
           case 0x8D: push(f64(f32(pop()))); break;
           case 0x8B: push(i32(f32(pop()))); break;
           case 0x8C: push(i64(f32(pop()))); break;
-          case 0x62: def.push(['fadd']); break;
-          case 0x30: def.push(['faload']); break;
+          case 0x62: push(['fadd']); break;
+          case 0x30: push(['faload']); break;
           case 0x51: def.push(['fastore']); break;
-          case 0x96: def.push(['fcmpg']); break;
-          case 0x95: def.push(['fcmpl']); break;
+          case 0x96: push(['fcmpg']); break;
+          case 0x95: push(['fcmpl']); break;
           case 0x0B: push(f32(0)); break;
           case 0x0C: push(f32(1)); break;
           case 0x0D: push(f32(2)); break;
-          case 0x6E: def.push(['fdiv']); break;
+          case 0x6E: push(['fdiv']); break;
           case 0x17: push(f32(local(bytes[pos++]))); break;
           case 0x22: push(f32(local(0))); break;
           case 0x23: push(f32(local(1))); break;
           case 0x24: push(f32(local(2))); break;
           case 0x25: push(f32(local(3))); break;
-          case 0x6A: def.push(['fmul']); break;
+          case 0x6A: push(['fmul']); break;
           case 0x76: push(['-', f32(pop())]); break;
-          case 0x72: def.push(['frem']); break;
+          case 0x72: push(['frem']); break;
           case 0xAE: def.push(['return', f32(pop())]); break;
           case 0x38: put(local(bytes[pos++]), f32(pop())); break;
           case 0x43: put(local(0), f32(pop())); break;
           case 0x44: put(local(1), f32(pop())); break;
           case 0x45: put(local(2), f32(pop())); break;
           case 0x46: put(local(3), f32(pop())); break;
-          case 0x66: def.push(['fsub']); break;
+          case 0x66: push(['fsub']); break;
           case 0xB4:
             push(['field', pop(), (bytes[pos] << 8) | bytes[pos + 1]]);
             pos += 2;
@@ -1147,10 +1150,10 @@ define(function() {
           case 0x86: push(f32(i32(pop()))); break;
           case 0x85: push(i64(i32(pop()))); break;
           case 0x93: push(i16(i32(pop()))); break;
-          case 0x60: def.push(['iadd']); break;
-          case 0x2E: def.push(['iaload']); break;
-          case 0x7E: def.push(['iand']); break;
-          case 0x4F: def.push(['iastore']); break;
+          case 0x60: push(['iadd']); break;
+          case 0x2E: push(['iaload']); break;
+          case 0x7E: push(['iand']); break;
+          case 0x4F: push(['iastore']); break;
           case 0x02: push(i32(-1)); break;
           case 0x03: push(i32(0)); break;
           case 0x04: push(i32(1)); break;
@@ -1158,7 +1161,7 @@ define(function() {
           case 0x06: push(i32(3)); break;
           case 0x07: push(i32(4)); break;
           case 0x08: push(i32(5)); break;
-          case 0x6C: def.push(['idiv']); break;
+          case 0x6C: push(['idiv']); break;
           case 0xA5:
             def.push(['if_acmpeq', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
@@ -1232,7 +1235,7 @@ define(function() {
           case 0x1B: push(i32(local(1))); break;
           case 0x1C: push(i32(local(2))); break;
           case 0x1D: push(i32(local(3))); break;
-          case 0x68: def.push(['imul']); break;
+          case 0x68: push(['imul']); break;
           case 0x74: push(['-', i32(pop())]); break;
           case 0xC1:
             push(['instanceof', pop(), (bytes[pos] << 8) | bytes[pos + 1]]);
@@ -1258,19 +1261,19 @@ define(function() {
             def.push(['invokevirtual', (bytes[pos] << 8) | bytes[pos + 1]]);
             pos += 2;
             break;
-          case 0x80: def.push(['ior']); break;
-          case 0x70: def.push(['irem']); break;
+          case 0x80: push(['ior']); break;
+          case 0x70: push(['irem']); break;
           case 0xAC: def.push(['return', i32(pop())]); break;
-          case 0x78: def.push(['ishl']); break;
-          case 0x7A: def.push(['ishr']); break;
+          case 0x78: push(['ishl']); break;
+          case 0x7A: push(['ishr']); break;
           case 0x36: put(local(bytes[pos++]), i32(pop())); break;
           case 0x3B: put(local(0), i32(pop())); break;
           case 0x3C: put(local(1), i32(pop())); break;
           case 0x3D: put(local(2), i32(pop())); break;
           case 0x3E: put(local(3), i32(pop())); break;
-          case 0x64: def.push(['isub']); break;
-          case 0x7C: def.push(['iushr']); break;
-          case 0x82: def.push(['ixor']); break;
+          case 0x64: push(['isub']); break;
+          case 0x7C: push(['iushr']); break;
+          case 0x82: push(['ixor']); break;
           case 0xA8:
             push(['return_address', pos + 2]);
             def.push(['goto', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
@@ -1284,11 +1287,11 @@ define(function() {
           case 0x8A: push(f64(i64(pop()))); break;
           case 0x89: push(f32(i64(pop()))); break;
           case 0x88: push(i32(i64(pop()))); break;
-          case 0x61: def.push(['ladd']); break;
-          case 0x2F: def.push(['laload']); break;
-          case 0x7F: def.push(['land']); break;
+          case 0x61: push(['ladd']); break;
+          case 0x2F: push(['laload']); break;
+          case 0x7F: push(['land']); break;
           case 0x50: def.push(['lastore']); break;
-          case 0x94: def.push(['lcmp']); break;
+          case 0x94: push(['lcmp']); break;
           case 0x09: push(i64(0)); break;
           case 0x0A: push(i64(1)); break;
           case 0x12: push(['constant', bytes[pos++]]); break;
@@ -1300,13 +1303,13 @@ define(function() {
             push(['constant64', (bytes[pos] << 8) | bytes[pos + 1]]);
             pos += 2;
             break;
-          case 0x6D: def.push(['ldiv']); break;
+          case 0x6D: push(['ldiv']); break;
           case 0x16: push(i64(local(bytes[pos++]))); break;
           case 0x1E: push(i64(local(0))); break;
           case 0x1F: push(i64(local(1))); break;
           case 0x20: push(i64(local(2))); break;
           case 0x21: push(i64(local(3))); break;
-          case 0x69: def.push(['lmul']); break;
+          case 0x69: push(['lmul']); break;
           case 0x75: push(['-', i64(pop())]); break;
           case 0xAB:
             if (pos%4) pos += 4 - (pos%4); // skip padding
@@ -1325,23 +1328,23 @@ define(function() {
             op.push('default', defaultOffset);
             def.push(op);
             break;
-          case 0x81: def.push(['lor']); break;
-          case 0x71: def.push(['lrem']); break;
+          case 0x81: push(['lor']); break;
+          case 0x71: push(['lrem']); break;
           case 0xAD: def.push(['return', i64(pop())]); break;
-          case 0x79: def.push(['lshl']); break;
-          case 0x7B: def.push(['lshr']); break;
+          case 0x79: push(['lshl']); break;
+          case 0x7B: push(['lshr']); break;
           case 0x37: put(local(bytes[pos++]), i64(pop())); break;
           case 0x3F: put(local(0), i64(pop())); break;
           case 0x40: put(local(1), i64(pop())); break;
           case 0x41: put(local(2), i64(pop())); break;
           case 0x42: put(local(3), i64(pop())); break;
-          case 0x65: def.push(['lsub']); break;
-          case 0x7D: def.push(['lushr']); break;
-          case 0x83: def.push(['lxor']); break;
+          case 0x65: push(['lsub']); break;
+          case 0x7D: push(['lushr']); break;
+          case 0x83: push(['lxor']); break;
           case 0xC2: def.push(['monitorenter', pop()]); break;
           case 0xC3: def.push(['monitorexit', pop()]); break;
           case 0xC5:
-            def.push(['multianewarray', (bytes[pos] << 8) | bytes[pos + 1], bytes[pos + 2]]);
+            push(['multianewarray', (bytes[pos] << 8) | bytes[pos + 1], bytes[pos + 2]]);
             pos += 3;
             break;
           case 0xBB:
@@ -1376,7 +1379,7 @@ define(function() {
             break;
           case 0xA9: def.push(['ret', ['var', bytes[pos++]]]); break;
           case 0xB1: def.push(['return']); break;
-          case 0x35: def.push(['saload']); break;
+          case 0x35: push(['saload']); break;
           case 0x56: def.push(['sastore']); break;
           case 0x11:
             push(i16((bytes[pos] << 24 >> 8) | bytes[pos + 1]));
