@@ -1417,14 +1417,18 @@ define(function() {
           case 0xB5:
             var field = this.constants[(bytes[pos] << 8) | bytes[pos + 1]];
             var theClass = this.constants[field.classIndex];
+            theClass = this.constants[theClass.nameIndex];
             var theNameAndType = this.constants[field.nameAndTypeIndex];
+            var fieldName = this.constants[theNameAndType.nameIndex];
+            var descriptor = this.constants[theNameAndType.descriptorIndex];
+            descriptor = descriptorToJSON(descriptor);
             pos += 2;
             var operands = popn(2);
             if (operands) {
-              def.push(['.=', theClass, theNameAndType, operands[0], operands[1]]);
+              def.push(['.=', theClass, fieldName, descriptor, operands[0], operands[1]]);
             }
             else {
-              def.push(['.=', theClass, theNameAndType, ['pop', 2]]);
+              def.push(['.=', theClass, fieldName, descriptor, ['pop', 2]]);
             }
             break;
           case 0xB3:
