@@ -1177,10 +1177,10 @@ define(function() {
             pos += 2;
             break;
           case 0x15: def.push(['push', ['i32', ['var', bytes[pos++]]]]); break;
-          case 0x1A: def.push(['push', ['i32', ['var', 0]]]]); break;
-          case 0x1B: def.push(['push', ['i32', ['var', 1]]]]); break;
-          case 0x1C: def.push(['push', ['i32', ['var', 2]]]]); break;
-          case 0x1D: def.push(['push', ['i32', ['var', 3]]]]); break;
+          case 0x1A: def.push(['push', ['i32', ['var', 0]]]); break;
+          case 0x1B: def.push(['push', ['i32', ['var', 1]]]); break;
+          case 0x1C: def.push(['push', ['i32', ['var', 2]]]); break;
+          case 0x1D: def.push(['push', ['i32', ['var', 3]]]); break;
           case 0x68: def.push(['imul']); break;
           case 0x74: def.push(['ineg']); break;
           case 0xC1:
