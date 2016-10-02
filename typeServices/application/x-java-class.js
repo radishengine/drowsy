@@ -1204,8 +1204,15 @@ define(function() {
             push(['.', theClass, fieldName, descriptor, pop()]);
             break;
           case 0xB2:
-            push(_static((bytes[pos] << 8) | bytes[pos + 1]));
+            var field = this.constants[(bytes[pos] << 8) | bytes[pos + 1]];
             pos += 2;
+            var theClass = this.constants[field.classIndex];
+            theClass = this.constants[theClass.nameIndex];
+            var theNameAndType = this.constants[field.nameAndTypeIndex];
+            var fieldName = this.constants[theNameAndType.nameIndex];
+            var descriptor = this.constants[theNameAndType.descriptorIndex];
+            descriptor = descriptorToJSON(descriptor);
+            push(['S.', theClass, fieldName, descriptor]);
             break;
           case 0xA7:
             def.push(['goto', pos - 1 + ((bytes[pos] << 8) | bytes[pos + 1])]);
@@ -1489,8 +1496,13 @@ define(function() {
             }
             break;
           case 0xB3:
-            put(_static((bytes[pos] << 8) | bytes[pos + 1]), pop());
+            var field = this.constants[ (bytes[pos] << 8) | bytes[pos + 1] ];
             pos += 2;
+            var className = this.constants[ this.constants[ field.methodIndex ].nameIndex ];
+            field = constants[ field.nameAndTypeIndex ];
+            var descriptor = descriptorToJSON(field.descriptorIndex);
+            field = constants[ field.nameIndex ];
+            def.push(['S.=', className, field, descriptor, pop()]);
             break;
           case 0xA9: def.push(['ret', ['var', bytes[pos++]]]); break;
           case 0xB1: def.push(['return']); break;
