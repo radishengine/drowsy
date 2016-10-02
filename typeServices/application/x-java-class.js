@@ -1440,7 +1440,7 @@ define(function() {
             pos += 3;
             break;
           case 0xBB:
-            push(['new', (bytes[pos] << 8) | bytes[pos + 1]]);
+            push(['new', this.constants[ this.constants[ (bytes[pos] << 8) | bytes[pos + 1] ].nameIndex ]]);
             pos += 2;
             break;
           case 0xBC:
