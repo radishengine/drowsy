@@ -277,7 +277,7 @@ define(function() {
       var buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength;
       for (var i = 0; i < list.length; i++) {
         var length = 2 + 4 + dv.getUint32(pos + 2, false);
-        list[i] = new AttributeView(constants, buffer, byteOffset + pos, length);
+        list[i] = new AttributeView(this, buffer, byteOffset + pos, length);
         pos += length;
       }
       list.afterPos = pos;
@@ -332,7 +332,7 @@ define(function() {
       var pos = 8, buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength, constants = this.constants;
       for (var i = 0; i < list.length; i++) {
         var length = 2 + 4 + dv.getUint32(pos + 2, false);
-        list[i] = new AttributeView(constants, buffer, byteOffset + pos, length);
+        list[i] = new AttributeView(this, buffer, byteOffset + pos, length);
         pos += length;
       }
       list.afterPos = pos;
@@ -447,8 +447,9 @@ define(function() {
     },
   };
   
-  function AttributeView(constants, buffer, byteOffset, byteLength) {
-    this.constants = constants;
+  function AttributeView(context, buffer, byteOffset, byteLength) {
+    this.context = context;
+    this.constants = context.constants;
     this.dv = new DataView(buffer, byteOffset, byteLength);
   }
   AttributeView.prototype = {
@@ -524,7 +525,7 @@ define(function() {
           }
           break;
         case 'Code':
-          value = new CodeView(constants, buffer, byteOffset, dv.getUint32(2, false));
+          value = new CodeView(this.context, buffer, byteOffset, dv.getUint32(2, false));
           break;
         case 'LineNumberTable':
           value = new Array(dv.getUint16(6, false));
@@ -858,8 +859,9 @@ define(function() {
     },
   };
   
-  function CodeView(constants, buffer, byteOffset, byteLength) {
-    this.constants = constants;
+  function CodeView(method, buffer, byteOffset, byteLength) {
+    this.method = method;
+    this.constants = method.constants;
     this.dv = new DataView(buffer, byteOffset, byteLength);
   }
   CodeView.prototype = {
@@ -907,7 +909,7 @@ define(function() {
       var buffer = dv.buffer, byteOffset = dv.byteOffset, byteLength = dv.byteLength, constants = this.constants;
       for (var i = 0; i < list.length; i++) {
         var length = 2 + 4 + dv.getUint32(pos + 2, false);
-        list[i] = new AttributeView(constants, buffer, byteOffset + pos, length);
+        list[i] = new AttributeView(this, buffer, byteOffset + pos, length);
         pos += length;
       }
       list.afterPos = pos;
