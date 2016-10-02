@@ -1010,8 +1010,7 @@ define(function() {
         return ['static', n];
       }
       function ref(v) {
-        if (typeof v === 'object' && v[0] === 'ref') return v;
-        return ['ref', v];
+        return v;
       }
       function i8(v) {
         if (typeof v === 'object' && v[0] === 'i8') return v;
