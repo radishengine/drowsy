@@ -1229,7 +1229,7 @@ define(function() {
             def.push(['if_acmpeq', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
-          case 0xA6:
+          case 0xA6: // if_acmpne: reference comparison
             var jump = ['goto', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])];
             pos += 2;
             var operands = popn(2);
@@ -1245,9 +1245,17 @@ define(function() {
             def.push(['if_icmpeq', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
             pos += 2;
             break;
-          case 0xA0:
-            def.push(['if_icmpne', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
+          case 0xA0: // if_icmpne: integer comparison
+            var jump = ['goto', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])];
             pos += 2;
+            var operands = popn(2);
+            if (operands) {
+              operands.splice(0, 0, '!=');
+            }
+            else {
+              operands = ['!=', ['pop', 2]];
+            }
+            def.push(['if', operands, [jump]]);
             break;
           case 0xA1:
             def.push(['if_icmplt', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
