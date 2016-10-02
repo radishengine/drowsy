@@ -1498,7 +1498,7 @@ define(function() {
           case 0xB3:
             var field = this.constants[ (bytes[pos] << 8) | bytes[pos + 1] ];
             pos += 2;
-            var className = this.constants[ this.constants[ field.methodIndex ].nameIndex ];
+            var className = this.constants[ this.constants[ field.classIndex ].nameIndex ];
             field = constants[ field.nameAndTypeIndex ];
             var descriptor = descriptorToJSON(field.descriptorIndex);
             field = constants[ field.nameIndex ];
