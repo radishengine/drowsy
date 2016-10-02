@@ -1185,8 +1185,15 @@ define(function() {
           case 0x46: put(local(3), f32(pop())); break;
           case 0x66: push(['fsub']); break;
           case 0xB4:
-            push(['field', pop(), (bytes[pos] << 8) | bytes[pos + 1]]);
+            var field = this.constants[(bytes[pos] << 8) | bytes[pos + 1]];
             pos += 2;
+            var theClass = this.constants[field.classIndex];
+            theClass = this.constants[theClass.nameIndex];
+            var theNameAndType = this.constants[field.nameAndTypeIndex];
+            var fieldName = this.constants[theNameAndType.nameIndex];
+            var descriptor = this.constants[theNameAndType.descriptorIndex];
+            descriptor = descriptorToJSON(descriptor);
+            push(['.', theClass, fieldName, descriptor, pop()]);
             break;
           case 0xB2:
             push(_static((bytes[pos] << 8) | bytes[pos + 1]));
@@ -1427,13 +1434,13 @@ define(function() {
           case 0x58: def.push(['pop2']); break;
           case 0xB5:
             var field = this.constants[(bytes[pos] << 8) | bytes[pos + 1]];
+            pos += 2;
             var theClass = this.constants[field.classIndex];
             theClass = this.constants[theClass.nameIndex];
             var theNameAndType = this.constants[field.nameAndTypeIndex];
             var fieldName = this.constants[theNameAndType.nameIndex];
             var descriptor = this.constants[theNameAndType.descriptorIndex];
             descriptor = descriptorToJSON(descriptor);
-            pos += 2;
             var operands = popn(2);
             if (operands) {
               def.push(['.=', theClass, fieldName, descriptor, operands[0], operands[1]]);
