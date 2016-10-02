@@ -1288,9 +1288,10 @@ define(function() {
                 pos += 2;
                 def.push(['iinc', arg, arg2]);
                 break;
-              default: throw new Error('unsupport opcode for wide: 0x' + opcode.toString(16));
+              default: throw new Error('unsupported opcode for wide: 0x' + opcode.toString(16));
             }
             break;
+          default: throw new Error('unknown opcode: 0x' + opcode.toString(16));
         }
       }
       return ['code', def];
