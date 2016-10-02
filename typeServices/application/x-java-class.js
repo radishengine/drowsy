@@ -1184,7 +1184,7 @@ define(function() {
             var npairs = (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3];
             pos += 4;
             var op = ['lookupswitch'];
-            for (var i = 0; i < pairs.length; i++) {
+            for (var i = 0; i < npairs; i++) {
               var match = (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3];
               pos += 4;
               var offset = (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3];
