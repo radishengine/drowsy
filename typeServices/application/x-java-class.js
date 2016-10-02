@@ -1088,7 +1088,7 @@ define(function() {
       var constants = this.constants;
       function constant(c) {
         c = constants[c];
-        if (c.type === 'string') return ['string', this.constants[c.index]];
+        if (c.type === 'string') return ['string', constants[c.index]];
         return [c.type, c.value];
       }
       for (pos = 0; pos < bytes.length; ) {
