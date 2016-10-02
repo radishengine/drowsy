@@ -1165,7 +1165,7 @@ define(function() {
             def.push(['ldc', (bytes[pos] << 8) | bytes[pos + 1]]);
             pos += 2;
             break;
-          case 0x13:
+          case 0x14:
             def.push(['ldc2', (bytes[pos] << 8) | bytes[pos + 1]]);
             pos += 2;
             break;
