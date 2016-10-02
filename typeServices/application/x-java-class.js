@@ -292,6 +292,8 @@ define(function() {
           deps[this.constants[this.constants[i].nameIndex]] = true;
         }
       }
+      delete deps['java/lang/Object'];
+      delete deps['java/lang/String'];
       delete deps[this.name];
       deps = Object.keys(deps);
       if (deps.length > 0) def.push(['deps', deps]);
