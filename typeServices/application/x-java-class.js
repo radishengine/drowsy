@@ -1108,8 +1108,9 @@ define(function() {
           case 0x2C: push(ref(local(2))); break;
           case 0x2D: push(ref(local(3))); break;
           case 0xBD:
-            push(['anewarray', (bytes[pos] << 8) | bytes[pos + 1], pop()]);
+            var classType = this.constants[ this.constants[ (bytes[pos] << 8) | bytes[pos + 1] ].nameIndex ];
             pos += 2;
+            push(['anewarray', classType, pop()]);
             break;
           case 0xB0: def.push(['return', ref(pop())]); break;
           case 0xBE: push(['arraylength', pop()]); break;
