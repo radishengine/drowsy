@@ -991,8 +991,20 @@ define(function() {
       var def = [];
       var bytes = this.codeBytes;
       var sites = this.getJumpSites(), site_pos = 0;
+      var sig = descriptorToJSON(this.method.descriptor);
+      var retType = sig[0];
+      var knownVars = [];
+      if (!this.method.isStatic) knownVars.push('this');
+      for (var i = 2; i < sig.length; i++) {
+        knownVars.push('arg' + (i - 1));
+      }
+      i = 1;
+      while (knownVars.length < this.method.maxLocals) {
+        knownVars.push('var' + (i++));
+      }
       function local(n) {
-        return ['var', n];
+        if (n < 0 || >= knownVars.length) throw new RangeError('local index out of range: ' + n);
+        return knownVars[n];
       }
       function _static(n) {
         return ['static', n];
