@@ -1062,7 +1062,7 @@ define(function() {
         if (stack.length === 0) {
           return ['pop'];
         }
-        return def.splice(stack.pop(), 1)[0];
+        return def.splice(stack.pop(), 1)[0][1];
       }
       function popn(n) {
         if (stack.length < n) {
@@ -1070,7 +1070,7 @@ define(function() {
         }
         var pops = new Array(n);
         for (n--; n >= 0; n--) {
-          pops[n] = def.splice(stack.pop(), 1)[0];
+          pops[n] = def.splice(stack.pop(), 1)[0][1];
         }
         return pops;
       }
