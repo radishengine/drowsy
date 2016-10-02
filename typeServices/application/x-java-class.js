@@ -995,8 +995,9 @@ define(function() {
       var retType = sig[0];
       var knownVars = [];
       if (!this.method.isStatic) knownVars.push('this');
-      for (var i = 2; i < sig.length; i++) {
-        knownVars.push('arg' + (i - 1));
+      var argTypes = sig.slice(2);
+      for (var i = 0; i < argTypes.length; i++) {
+        knownVars.push('arg' + (i + 1));
       }
       i = 1;
       while (knownVars.length < this.method.maxLocals) {
@@ -1021,7 +1022,15 @@ define(function() {
         return ['i16', v];
       }
       function i32(v) {
-        if (typeof v === 'object' && v[0] === 'i32') return v;
+        var vt;
+        if (typeof v === 'object') vt = v[0];
+        else if (typeof v === 'string') {
+          var argNum = v.match(/^arg(\d+)$/);
+          if (argNum) {
+            vt = argTypes[argNum - 1];
+          }
+        }
+        if (vt && /^i(32|16|8)$/.test(vt)) return v;
         return ['i32', v];
       }
       function i64(v) {
