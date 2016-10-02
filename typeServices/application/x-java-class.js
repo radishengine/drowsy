@@ -1154,15 +1154,16 @@ define(function() {
           case 0x49: put(local(2), f64(pop())); break;
           case 0x4A: put(local(3), f64(pop())); break;
           case 0x67: push(['dsub']); break;
-          case 0x59: push(['peek']); break;
+          case 0x59: push(['peek']); stack.length = 0; break;
           case 0x5A:
             push(['peek']);
             def.push(['insert', -2]);
+            stack.length = 0;
             break;
-          case 0x5B: def.push(['dup_x2']); break;
-          case 0x5C: def.push(['dup2']); break;
-          case 0x5D: def.push(['dup2_x1']); break;
-          case 0x5E: def.push(['dup2_x2']); break;
+          case 0x5B: def.push(['dup_x2']); stack.length = 0; break;
+          case 0x5C: def.push(['dup2']); stack.length = 0; break;
+          case 0x5D: def.push(['dup2_x1']); stack.length = 0; break;
+          case 0x5E: def.push(['dup2_x2']); stack.length = 0; break;
           case 0x8D: push(f64(f32(pop()))); break;
           case 0x8B: push(i32(f32(pop()))); break;
           case 0x8C: push(i64(f32(pop()))); break;
