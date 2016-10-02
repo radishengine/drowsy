@@ -1230,8 +1230,16 @@ define(function() {
             pos += 2;
             break;
           case 0xA6:
-            def.push(['if_acmpne', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
+            var jump = ['goto', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])];
             pos += 2;
+            var operands = popn(2);
+            if (operands) {
+              operands.splice(0, 0, '!=');
+            }
+            else {
+              operands = ['!=', ['pop', 2]];
+            }
+            def.push(['if', operands, [jump]]);
             break;
           case 0x9F:
             def.push(['if_icmpeq', pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1])]);
