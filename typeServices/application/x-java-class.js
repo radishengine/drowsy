@@ -690,12 +690,14 @@ define(function() {
           break;
         case 'LocalVariableTable':
           for (var i = 0; i < value.length; i++) {
-            def.push(['var', descriptorToJSON(value[i].descriptor), value[i].name, value[i].codeOffset, value[i].codeLength, value[i].index]);
+            def.push(['var', descriptorToJSON(value[i].descriptor),
+                      value[i].name, value[i].codeOffset, value[i].codeLength, value[i].index]);
           }
           break;
         case 'LocalVariableTypeTable':
           for (var i = 0; i < value.length; i++) {
-            def.push(['var', descriptorToJSON(value[i].signature), value[i].name, value[i].codeOffset, value[i].codeLength, value[i].index]);
+            def.push(['var', descriptorToJSON(value[i].signature),
+                      value[i].name, value[i].codeOffset, value[i].codeLength, value[i].index]);
           }
           break;
         case 'Exceptions':
