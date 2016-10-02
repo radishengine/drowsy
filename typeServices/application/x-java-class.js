@@ -286,6 +286,15 @@ define(function() {
     },
     toJSON: function() {
       var def = [];
+      var deps = {};
+      for (var i = 0; i < this.constants.length; i++) {
+        if (this.constants[i].type === 'class') {
+          deps[this.constants[this.constants[i].nameIndex]] = true;
+        }
+      }
+      delete deps[this.name];
+      deps = Object.keys(deps);
+      if (deps.length > 0) def.push(['deps', deps]);
       if (this.isPublic) def.push(['public']);
       if (this.isFinal) def.push(['final']);
       if (this.usesOldInvokeSuper) def.push(['old_invokesuper']);
