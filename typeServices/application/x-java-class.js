@@ -904,10 +904,79 @@ define(function() {
       Object.defineProperty(this, 'attributes', {value:list});
       return list;
     },
+    getJumpSites: function() {
+      var sites = [0];
+      var bytes = this.codeBytes;
+      function addSite(n) {
+        var i = sites.length - 1;
+        if (n > sites[i]) sites.push(n);
+        while (n < sites[i]) i--;
+        if (n > sites[i]) sites.splice(i+1, n);
+      }
+      for (var pos = 0; pos < bytes.length; ) {
+        switch (bytes[pos++]) {
+          case 0x99: case 0x9A: case 0x9B: case 0x9C: case 0x9D: case 0x9E:
+          case 0x9F: case 0xA0: case 0xA1: case 0xA2: case 0xA3: case 0xA4:
+          case 0xA5: case 0xA6: case 0xA7: case 0xC6: case 0xC7:
+            addSite(pos - 1 + ((bytes[pos] << 24 >> 16) | bytes[pos + 1]));
+          case 0xC0: case 0xBD: case 0xB4: case 0xB2: case 0x84: case 0xC1:
+          case 0xB7: case 0xB8: case 0xB6: case 0xA8: case 0xC9: case 0x13:
+          case 0x14: case 0xBB: case 0xB5: case 0xB3: case 0x11:
+            pos += 2;
+            break;
+          case 0xC8:
+            addSite(pos - 1 + ((bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3]));
+          case 0xBA: case 0xB9:
+            pos += 4;
+            break;
+          case 0x3A: case 0x10: case 0x18: case 0x39: case 0x17:
+          case 0x36: case 0x38: case 0x15: case 0x12: case 0x16:
+          case 0x37: case 0xBC: case 0xA9:
+            pos++;
+            break;
+          case 0xC5: pos += 3; break;
+          case 0xC4: pos += (bytes[pos] === 0x84) ? 5 : 3; break;
+          case 0xAB: // lookupswitch
+            var base = pos - 1;
+            if (pos%4) pos += 4 - (pos%4); // skip padding
+            addSite(base + (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3]);
+            pos += 4;
+            var npairs = (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3];
+            pos += 4;
+            for (var i = 0; i < npairs; i++) {
+              pos += 4;
+              addSite(base + (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3]);
+              pos += 4;
+            }
+            break;
+          case 0xAA: // tableswitch
+            var base = pos - 1;
+            if (pos%4) pos += 4 - (pos%4);
+            addSite(base + (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3]);
+            pos += 4;
+            var low = (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3];
+            pos += 4;
+            var high = (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3];
+            pos += 4;
+            for (var i = low; i <= high; i++) {
+              addSite(base + (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3]);
+              pos += 4;
+            }
+            break;
+        }
+      }
+      sites.push(bytes.length);
+      return sites;
+    },
     toJSON: function() {
       var def = [];
       var bytes = this.codeBytes;
+      var sites = this.getJumpSites(), site_pos = 0;
       for (var pos = 0; pos < bytes.length; ) {
+        if (pos === sites[site_pos]) {
+          def.push(['->o', pos]);
+          site_pos++;
+        }
         var opcode;
         switch (opcode = bytes[pos++]) {
           case 0x32: def.push(['aaload']); break;
@@ -1264,7 +1333,7 @@ define(function() {
             pos += 4;
             var op = ['tableswitch', low];
             for (var i = low; i <= high; i++) {
-              op.push((bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3]);;
+              op.push((bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3]);
               pos += 4;
             }
             op.push('default', defaultOffset);
@@ -1285,7 +1354,7 @@ define(function() {
               case 0x37: def.push(['lstore', arg]); break;
               case 0x39: def.push(['dstore', arg]); break;
               case 0xA9: def.push(['ret', arg]); break;
-              case 0xC4:
+              case 0x84:
                 var arg2 = (bytes[pos] << 8) | bytes[pos + 1];
                 pos += 2;
                 def.push(['iinc', arg, arg2]);
