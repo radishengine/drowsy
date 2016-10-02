@@ -1305,7 +1305,7 @@ define(function() {
             pos += 2;
             break;
           case 0xBA:
-            def.push(['invokedynamic', (bytes[pos] << 8) | bytes[pos + 1]]);
+            def.push(['invokedynamic', (bytes[pos] <<  8) | bytes[pos + 1]]);
             pos += 4; // indexbyte1, indexbyte2, 0, 0
             break;
           case 0xB9:
@@ -1313,8 +1313,21 @@ define(function() {
             pos += 4; // indexbyte1, indexbyte2, count, 0
             break;
           case 0xB7:
-            def.push(['invokespecial', (bytes[pos] << 8) | bytes[pos + 1]]);
+            var method = this.constants[(bytes[pos] << 8) | bytes[pos + 1]];
             pos += 2;
+            var theClass = this.constants[method.classIndex];
+            theClass = this.constants[theClass.nameIndex];
+            method = this.constants[method.nameAndTypeIndex];
+            var methodName = this.constants[method.nameIndex];
+            var methodType = descriptorToJSON(this.constants[method.descriptorIndex]);
+            var argCount = 1 + methodType.length - 2;
+            var args = popn(argCount);
+            if (!args) {
+              def.push(['invokespecial', theClass, methodName, ['pop', argCount]]);
+            }
+            else {
+              def.push(['invokespecial', theClass, methodName, args]);
+            }
             break;
           case 0xB8:
             def.push(['invokestatic', (bytes[pos] << 8) | bytes[pos + 1]]);
