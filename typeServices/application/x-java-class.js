@@ -982,7 +982,7 @@ define(function() {
       function local(n) {
         return ['var', n];
       }
-      function static(n) {
+      function _static(n) {
         return ['static', n];
       }
       function ref(v) {
@@ -1109,7 +1109,7 @@ define(function() {
             pos += 2;
             break;
           case 0xB2:
-            push(static((bytes[pos] << 8) | bytes[pos + 1]));
+            push(_static((bytes[pos] << 8) | bytes[pos + 1]));
             pos += 2;
             break;
           case 0xA7:
