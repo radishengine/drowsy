@@ -1085,6 +1085,11 @@ define(function() {
         }
         return pops;
       }
+      function constant(c) {
+        c = this.constants[c];
+        if (c.type === 'string') return ['string', this.constants[c.index]];
+        return [c.type, c.value];
+      }
       for (pos = 0; pos < bytes.length; ) {
         if (pos === sites[site_pos]) {
           def.push(['->o', pos]);
@@ -1386,9 +1391,11 @@ define(function() {
           case 0x94: push(['lcmp']); break;
           case 0x09: push(i64(0)); break;
           case 0x0A: push(i64(1)); break;
-          case 0x12: push(['constant', bytes[pos++]]); break;
+          case 0x12:
+            push(constant(bytes[pos++]));
+            break;
           case 0x13:
-            push(['constant', (bytes[pos] << 8) | bytes[pos + 1]]);
+            push(constant((bytes[pos] << 8) | bytes[pos + 1]));
             pos += 2;
             break;
           case 0x14:
