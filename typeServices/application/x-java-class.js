@@ -1077,6 +1077,7 @@ define(function() {
       }
       function popn(n) {
         if (stack.length < n) {
+          stack.length = 0;
           return null;
         }
         var pops = new Array(n);
@@ -1329,7 +1330,15 @@ define(function() {
           case 0x1B: push(i32(local(1))); break;
           case 0x1C: push(i32(local(2))); break;
           case 0x1D: push(i32(local(3))); break;
-          case 0x68: push(['imul']); break;
+          case 0x68:
+            var operands = popn(2);
+            if (operands) {
+              push(['i*', operands[0], operands[1]]);
+            }
+            else {
+              push(['i*', ['pop', 2]]);
+            }
+            break;
           case 0x74: push(['-', i32(pop())]); break;
           case 0xC1:
             push(['instanceof', pop(), (bytes[pos] << 8) | bytes[pos + 1]]);
