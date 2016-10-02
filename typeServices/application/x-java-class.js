@@ -1416,13 +1416,15 @@ define(function() {
           case 0x58: def.push(['pop2']); break;
           case 0xB5:
             var field = this.constants[(bytes[pos] << 8) | bytes[pos + 1]];
+            var theClass = this.constants[field.classIndex];
+            var theNameAndType = this.constants[field.nameAndTypeIndex];
             pos += 2;
             var operands = popn(2);
             if (operands) {
-              def.push(['putfield', field, operands[0], operands[1]]);
+              def.push(['.=', theClass, theNameAndType, operands[0], operands[1]]);
             }
             else {
-              def.push(['putfield', field, ['pop', 2]]);
+              def.push(['.=', theClass, theNameAndType, ['pop', 2]]);
             }
             break;
           case 0xB3:
