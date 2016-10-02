@@ -1419,7 +1419,7 @@ define(function() {
             pos += 2;
             var operands = popn(2);
             if (operands) {
-              def.push(['putfield', field, operands[1], operands[2]]);
+              def.push(['putfield', field, operands[0], operands[1]]);
             }
             else {
               def.push(['putfield', field, ['pop', 2]]);
