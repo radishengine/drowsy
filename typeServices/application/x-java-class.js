@@ -1049,7 +1049,9 @@ define(function() {
         if (typeof v === 'object' && v[0] === 'char') return v;
         return ['char', v];
       }
+      var stack = [];
       function push(v) {
+        stack.push(def.length);
         def.push(['push', v]);
       }
       function put(where, v) {
@@ -1057,15 +1059,16 @@ define(function() {
       }
       var pos;
       function pop() {
-        if (sites[site_pos-1] < pos-1 && def[def.length-1][0] === 'push') {
-          return def.splice(-1, 1)[0][1];
+        if (stack.length === 0) {
+          return ['pop'];
         }
-        return ['pop'];
+        return def.splice(stack.pop(), 1)[0];
       }
       for (pos = 0; pos < bytes.length; ) {
         if (pos === sites[site_pos]) {
           def.push(['->o', pos]);
           site_pos++;
+          stack.length = 0;
         }
         var opcode;
         switch (opcode = bytes[pos++]) {
