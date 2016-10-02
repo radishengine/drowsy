@@ -986,27 +986,35 @@ define(function() {
         return ['static', n];
       }
       function ref(v) {
+        if (typeof v === 'object' && v[0] === 'ref') return v[1];
         return ['ref', v];
       }
       function i8(v) {
+        if (typeof v === 'object' && v[0] === 'i8') return v[1];
         return ['i8', v];
       }
       function i16(v) {
+        if (typeof v === 'object' && v[0] === 'i16') return v[1];
         return ['i16', v];
       }
       function i32(v) {
+        if (typeof v === 'object' && v[0] === 'i32') return v[1];
         return ['i32', v];
       }
       function i64(v) {
+        if (typeof v === 'object' && v[0] === 'i64') return v[1];
         return ['i64', v];
       }
       function f32(v) {
+        if (typeof v === 'object' && v[0] === 'f32') return v[1];
         return ['f32', v];
       }
       function f64(v) {
+        if (typeof v === 'object' && v[0] === 'f64') return v[1];
         return ['f64', v];
       }
       function char(v) {
+        if (typeof v === 'object' && v[0] === 'char') return v[1];
         return ['char', v];
       }
       function push(v) {
