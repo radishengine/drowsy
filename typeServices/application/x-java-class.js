@@ -287,7 +287,7 @@ define(function() {
     toJSON: function() {
       var def = [];
       var deps = {};
-      for (var i = 0; i < this.constants.length; i++) {
+      for (var i = 1; i < this.constants.length; i++) {
         if (this.constants[i].type === 'class') {
           deps[this.constants[this.constants[i].nameIndex]] = true;
         }
