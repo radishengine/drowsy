@@ -1500,7 +1500,7 @@ define(function() {
             pos += 2;
             var className = this.constants[ this.constants[ field.classIndex ].nameIndex ];
             field = constants[ field.nameAndTypeIndex ];
-            var descriptor = descriptorToJSON(field.descriptorIndex);
+            var descriptor = descriptorToJSON(constants[field.descriptorIndex]);
             field = constants[ field.nameIndex ];
             def.push(['S.=', className, field, descriptor, pop()]);
             break;
