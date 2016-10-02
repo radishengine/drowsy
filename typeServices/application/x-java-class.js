@@ -1011,7 +1011,7 @@ define(function() {
         knownVars.push('arg' + (i + 1));
       }
       i = 1;
-      while (knownVars.length <= this.method.maxLocals) {
+      while (knownVars.length < this.maxLocals) {
         knownVars.push('var' + (i++));
       }
       function local(n) {
