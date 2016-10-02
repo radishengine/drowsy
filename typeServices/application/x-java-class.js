@@ -1064,6 +1064,16 @@ define(function() {
         }
         return def.splice(stack.pop(), 1)[0];
       }
+      function popn(n) {
+        if (stack.length < n) {
+          return null;
+        }
+        var pops = new Array(n);
+        for (n--; n >= 0; n--) {
+          pops[n] = def.splice(stack.pop(), 1)[0];
+        }
+        return pops;
+      }
       for (pos = 0; pos < bytes.length; ) {
         if (pos === sites[site_pos]) {
           def.push(['->o', pos]);
@@ -1405,8 +1415,15 @@ define(function() {
           case 0x57: def.push(['pop']); break;
           case 0x58: def.push(['pop2']); break;
           case 0xB5:
-            def.push(['putfield', (bytes[pos] << 8) | bytes[pos + 1]]);
+            var field = this.constants[(bytes[pos] << 8) | bytes[pos + 1]];
             pos += 2;
+            var operands = popn(2);
+            if (operands) {
+              def.push(['putfield', field, operands[1], operands[2]]);
+            }
+            else {
+              def.push(['putfield', field, ['pop', 2]]);
+            }
             break;
           case 0xB3:
             put(_static((bytes[pos] << 8) | bytes[pos + 1]), pop());
