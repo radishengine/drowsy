@@ -14,9 +14,8 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   
   function getTypeHandler(t) {
     if (t in handlerCache) return handlerCache[t];
-    var self = this;
     return handlerCache[t] = new Promise(function(resolve, reject) {
-      var handlerModule = 'typeServices/' + self.typeName;
+      var handlerModule = 'typeServices/' + t;
       require([handlerModule],
       function(handler) {
         resolve(handler);
