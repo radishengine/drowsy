@@ -1101,7 +1101,7 @@ define(function() {
         var opcode;
         switch (opcode = bytes[pos++]) {
           case 0x32: // aaload
-            var opcodes = popn();
+            var opcodes = popn(2);
             if (opcodes) {
               push(ref(['[', ref(opcodes[0]), i32(opcodes[1])]));
             }
@@ -1109,7 +1109,15 @@ define(function() {
               push(['[', ['pop', 2]]);
             }
             break;
-          case 0x53: def.push(['aastore']); break;
+          case 0x53: // aastore
+            var opcodes = popn(3);
+            if (opcodes) {
+              def.push(['[=', ref(opcodes[0]), i32(opcodes[1]), ref(opcodes[2])]);
+            }
+            else {
+              def.push(['[=', ['pop', 3]]);
+            }
+            break;
           case 0x01: push(null); break;
           case 0x19: push(ref(local(bytes[pos++]))); break;
           case 0x2A: push(ref(local(0))); break;
