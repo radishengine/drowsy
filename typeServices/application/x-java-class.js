@@ -1374,8 +1374,21 @@ define(function() {
             pos += 2;
             break;
           case 0xB6:
-            def.push(['invokevirtual', (bytes[pos] << 8) | bytes[pos + 1]]);
+            var method = this.constants[(bytes[pos] << 8) | bytes[pos + 1]];
             pos += 2;
+            var theClass = this.constants[method.classIndex];
+            theClass = this.constants[theClass.nameIndex];
+            method = this.constants[method.nameAndTypeIndex];
+            var methodName = this.constants[method.nameIndex];
+            var methodType = descriptorToJSON(this.constants[method.descriptorIndex]);
+            var argCount = 1 + methodType.length - 2;
+            var args = popn(argCount);
+            if (!args) {
+              def.push(['invokevirtual', theClass, methodName, ['pop', argCount]]);
+            }
+            else {
+              def.push(['invokevirtual', theClass, methodName, args]);
+            }
             break;
           case 0x80: push(['ior']); break;
           case 0x70: push(['irem']); break;
