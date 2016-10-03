@@ -26,6 +26,7 @@ define(function() {
       gif: 'image/gif',
       hlp: 'application/x-winhelp',
       ico: 'image/x-icon',
+      jar: 'application/zip',
       jpg: 'image/jpeg',
       jpeg: 'image/jpeg',
       lha: 'application/x-lha',
