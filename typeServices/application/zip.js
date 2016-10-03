@@ -1,4 +1,4 @@
-define(function() {
+define(['DataSegment'], function(DataSegment) {
 
   'use strict';
   
@@ -6,7 +6,21 @@ define(function() {
   var CENTRAL_RECORD_TYPE = 'chunk/zip; type=central-record';
   var LOCAL_RECORD_TYPE = 'chunk/zip; type=local-record';
   
+  function join(parts) {
+    var knownLengths = parts.map(function(part){ return part.getLength(); });
+    return Promise.all(knownLengths).then(function(lengths) {
+      var cumulativeOffsets = new Array(lengths.length);
+      cumulativeOffsets[0] = 0;
+      for (var i = 0; i < lengths.length - 1; i++) {
+        cumulativeOffsets[i+1] = cumulativeOffsets[i] + lengths[i];
+      }
+      return DataSegment.from(parts, 'application/zip; parts=' + cumulativeOffsets.join(','));
+    });
+  }
+  
   function split(segment, entries) {
+    var partOffsets = segment.getTypeParameter('parts');
+    partOffsets = partOffsets ? partOffsets.split(',').map(parseInt) : [0];
     var trailerSegment = segment.getSegment(TRAILER_TYPE, -TrailerView.byteLength);
     return trailerSegment.getBytes().then(function(rawTrailer) {
       var trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset, rawTrailer.byteLength);
@@ -89,24 +103,33 @@ define(function() {
       return segment.getBytes(bufferPos, commentBufferSize).then(onTrackback);
     })
     .then(function(trailer) {
-      if (trailer.partEntryCount === 0 || (
+      if (trailer.totalEntryCount === 0 || (
           !entries.accepted(CENTRAL_RECORD_TYPE)
           && !entries.accepted(LOCAL_RECORD_TYPE))) {
         return;
       }
-      var pos = trailer.partNumber === trailer.centralDirFirstPart ? trailer.centralDirFirstOffset : 0;
-      var count = trailer.partEntryCount;
+      if (trailer.trailerPartNumber !== partOffsets.length - 1) {
+        if (partOffsets.length === 1) {
+          return Promise.reject('multipart zip archives must be joined before reading');
+        }
+        else {
+          return Promise.reject('joined-up multipart zip archive has incorrect number of parts');
+        }
+      }
+      var pos = partOffsets[trailer.centralDirPart] + trailer.centralDirOffset;
+      var count = trailer.totalEntryCount;
       var pending = [];
       function onPart(rawCentral) {
         var central = new CentralRecordView(rawCentral.buffer, rawCentral.byteOffset, rawCentral.byteLength);
+        var localOffset = partOffsets[central.partNumber] + central.localRecordOffset;
         if (entries.accepted(CENTRAL_RECORD_TYPE)) {
           entries.add(segment.getSegment(CENTRAL_RECORD_TYPE, pos, central.byteLength));
         }
         if (entries.accepted(LOCAL_RECORD_TYPE)) {
-          pending.push(segment.getBytes(central.localRecordOffset, LocalRecordView.byteLength)
+          pending.push(segment.getBytes(localOffset, LocalRecordView.byteLength)
           .then(function(rawLocal) {
             var local = new LocalRecordView(rawLocal.buffer, rawLocal.byteOffset, rawLocal.byteLength);
-            entries.add(segment.getSegment(LOCAL_RECORD_TYPE, central.localRecordOffset, local.byteLength));
+            entries.add(segment.getSegment(LOCAL_RECORD_TYPE, localOffset, local.byteLength));
           }));
         }
         if (--count > 0) {
@@ -129,13 +152,13 @@ define(function() {
     get hasValidSignature() {
       return String.fromCharCode.apply(null, this.bytes.subarray(0, 4)) === TrailerView.signature;
     },
-    get partNumber() {
+    get trailerPartNumber() {
       return this.dv.getUint16(4, true);
     },
-    get centralDirFirstPart() {
+    get centralDirPartNumber() {
       return this.dv.getUint16(6, true);
     },
-    get partEntryCount() {
+    get trailerPartEntryCount() {
       return this.dv.getUint16(8, true);
     },
     get totalEntryCount() {
@@ -269,7 +292,7 @@ define(function() {
     get commentByteLength() {
       return this.dv.getUint16(32, true);
     },
-    get firstDiskNumber() {
+    get partNumber() {
       return this.dv.getUint16(34, true);
     },
     get internalAttributes() {
@@ -418,6 +441,7 @@ define(function() {
   
   return {
     split: split,
+    join: join,
     bytePattern: /PK\x05\x06.{18}.{0,65535}$/,
   };
 
