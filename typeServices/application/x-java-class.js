@@ -1378,12 +1378,15 @@ define(function() {
             var methodType = descriptorToJSON(this.constants[method.descriptorIndex]);
             var argCount = 1 + methodType.length - 2;
             var args = popn(argCount);
+            var op;
             if (!args) {
-              def.push(['invokespecial', theClass, methodName, ['pop', argCount]]);
+              op = ['invokespecial', theClass, methodName, ['pop', argCount]];
             }
             else {
-              def.push(['invokespecial', theClass, methodName, args]);
+              op = ['invokespecial', theClass, methodName, args];
             }
+            if (methodType[1] === null) def.push(op);
+            else push(op);
             break;
           case 0xB8:
             def.push(['invokestatic', (bytes[pos] << 8) | bytes[pos + 1]]);
@@ -1399,12 +1402,15 @@ define(function() {
             var methodType = descriptorToJSON(this.constants[method.descriptorIndex]);
             var argCount = 1 + methodType.length - 2;
             var args = popn(argCount);
+            var op;
             if (!args) {
-              def.push(['invokevirtual', theClass, methodName, ['pop', argCount]]);
+              op = (['invokevirtual', theClass, methodName, ['pop', argCount]]);
             }
             else {
-              def.push(['invokevirtual', theClass, methodName, args]);
+              op = (['invokevirtual', theClass, methodName, args]);
             }
+            if (methodType[1] === null) def.push(op);
+            else push(op);
             break;
           case 0x80: push(['ior']); break;
           case 0x70: push(['irem']); break;
