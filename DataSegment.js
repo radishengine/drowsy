@@ -12,6 +12,24 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   
   var handlerCache = {};
   
+  function getTypeHandler(t) {
+    if (t in handlerCache) return handlerCache[t];
+    var self = this;
+    return handlerCache[t] = new Promise(function(resolve, reject) {
+      var handlerModule = 'typeServices/' + self.typeName;
+      require([handlerModule],
+      function(handler) {
+        resolve(handler);
+      },
+      function() {
+        requirejs.undef(handlerModule);
+        var handler = {};
+        define(handlerModule, handler);
+        resolve(handler);
+      });
+    });
+  }
+  
   function normalizeRegion(offset, length, contextLength, contextOffset) {
     if (isNaN(offset)) offset = 0;
     if (isNaN(length)) length = Infinity;
@@ -145,23 +163,8 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     toLocal: function() {
       return Promise.resolve(this);
     },
-    getTypeHandler: function(thenDo, elseDo) {
-      var t = this.typeName;
-      if (t in handlerCache) return handlerCache[t];
-      var self = this;
-      return handlerCache[t] = new Promise(function(resolve, reject) {
-        var handlerModule = 'typeServices/' + self.typeName;
-        require([handlerModule],
-        function(handler) {
-          resolve(handler);
-        },
-        function() {
-          requirejs.undef(handlerModule);
-          var handler = {};
-          define(handlerModule, handler);
-          resolve(handler);
-        });
-      });
+    getTypeHandler: function() {
+      return getTypeHandler(this.typeName);
     },
     getStructView: function() {
       var self = this;
@@ -193,6 +196,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       .then(function(handler) {
         return {
           split: typeof handler.split === 'function',
+          join: typeof handler.join === 'function',
           struct: typeof handler.getStructView === 'function' && handler.getStructView(self) !== null,
         };
       });
@@ -981,6 +985,12 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         case 'FromURL': return new DataSegmentFromURL(serialized[1], serialized[2], serialized[3]);
         default: throw new Error('unsupported segment type: ' + serialized[0]);
       }
+    },
+    join: function(type, parts) {
+      return getTypeHandler(type).then(function(handler) {
+        if (typeof handler.join === 'function') return handler.join(parts);
+        return DataSegment.from(parts, type);
+      });
     },
   });
   
