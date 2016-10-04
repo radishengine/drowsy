@@ -21,7 +21,7 @@ define(['DataSegment'], function(DataSegment) {
   function split(segment, entries) {
     var partOffsets = segment.getTypeParameter('parts');
     partOffsets = partOffsets ? partOffsets.split(',').map(parseInt) : [0];
-    var trailerSegment = segment.getSegment(TRAILER_TYPE, -TrailerView.byteLength);
+    var trailerSegment = segment.getSegment(TRAILER_TYPE, 'suffix', TrailerView.byteLength);
     return trailerSegment.getBytes().then(function(rawTrailer) {
       var trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset, rawTrailer.byteLength);
       if (trailer.hasValidSignature && trailer.commentByteLength === 0) {
@@ -31,23 +31,20 @@ define(['DataSegment'], function(DataSegment) {
         return trailer;
       }
       // do the dance
-      trailerSegment = null;
-      var bufferPos = -TrailerView.byteLength;
-      var commentBufferSize = 0x20;
-      var earliestPos = bufferPos - 0x10000;
-      function onTrackback(moreBytes) {
-        var expanded = new Uint8Array(moreBytes.length + rawTrailer.length);
-        expanded.set(moreBytes);
-        expanded.set(rawTrailer, moreBytes.length);
-        rawTrailer = expanded;
+      var minSize = TrailerView.byteLength + 1;
+      var maxSize = TrailerView.byteLength + 0xffff;
+      var nextOffset = -minSize;
+      trailerSegment = segment.getSegment(segment.type, 'suffix', minSize, maxSize);
+      function onTrackback(rawTrailer) {
         trailer = null;
-        findTrailer: for (var pos = moreBytes.length-1; pos >= 3; pos -= 4) {
-          switch(rawTrailer[pos]) {
+        var pos;
+        findTrailer: for (pos = rawTrailer.length + nextOffset; pos >= 3; pos -= 4) {
+          switch (rawTrailer[pos]) {
             case 0x50: // 'P'
               if (rawTrailer[pos+1] === 0x4B && rawTrailer[pos+2] === 0x05 && rawTrailer[pos+3] === 0x06) {
                 trailer = new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset + pos, TrailerView.byteLength);
-                if (trailer.commentByteLength === (rawTrailer.length - pos - TrailerView.byteLength)) {
-                  trailerSegment = segment.getSegment(TRAILER_TYPE, bufferPos + pos);
+                if (trailer.commentByteLength === (rawTrailer.length - pos - 1 - TrailerView.byteLength)) {
+                  trailerSegment = trailerSegment.getSegment(TRAILER_TYPE, 'suffix', pos - rawTrailer.length);
                   break findTrailer;
                 }
                 trailer = null;
@@ -86,12 +83,13 @@ define(['DataSegment'], function(DataSegment) {
           }
         }
         if (!trailerSegment) {
-          bufferPos -= commentBufferSize;
-          if (bufferPos < earliestPos) {
-            return Promise.reject('application/zip: trailer chunk not found');
+          if (rawTrailer.length >= maxSize) {
+            return Promise.reject('zip trailer not found (part of a multi-part archive?)');
           }
-          commentBufferSize *= 2;
-          return segment.getBytes(bufferPos, commentBufferSize).then(onTrackback);
+          nextOffset = pos - rawTrailer.length;
+          minSize = rawTrailer.length + 1;
+          trailerSegment = segment.getSegment(segment.type, 'suffix', minSize, maxSize);
+          return trailerSegment.getBytes().then(onTrackback);
         }
         if (entries.accepted(TRAILER_TYPE)) {
           entries.add(trailerSegment);
@@ -99,8 +97,7 @@ define(['DataSegment'], function(DataSegment) {
         rawTrailer = new Uint8Array(rawTrailer.subarray(pos, pos + TrailerView.byteLength));
         return new TrailerView(rawTrailer.buffer, rawTrailer.byteOffset + pos, TrailerView.byteLength);
       }
-      bufferPos -= commentBufferSize;
-      return segment.getBytes(bufferPos, commentBufferSize).then(onTrackback);
+      return trailerSegment.getBytes().then(onTrackback);
     })
     .then(function(trailer) {
       if (trailer.totalEntryCount === 0 || (
