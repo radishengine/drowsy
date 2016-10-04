@@ -270,6 +270,15 @@ define(['../../msdos/util.js'], function(dosUtil) {
     get isZip64() {
       return this.compressedByteLength32 === 0xffffffff && this.uncompressedByteLength32 === 0xffffffff;
     },
+    get pathPos() {
+      return LocalRecordView.fixedByteLength;
+    },
+    get decode() {
+      return this.hasUTF8Encoding ? utf_8.decode : latin_us.decode;
+    },
+    get path() {
+      return this.decode(this.bytes, this.pathPos, this.pathByteLength);
+    },
     get pathByteLength() {
       return this.dv.getInt16(0x1a, true);
     },
