@@ -1,5 +1,5 @@
-require(['ByteSource', 'Item', 'AppleVolume', 'DataSegment'],
-function(ByteSource, Item, AppleVolume, DataSegment)
+require(['ByteSource', 'Item', 'AppleVolume', 'DataSegment', 'runtime/Volume'],
+function(ByteSource, Item, AppleVolume, DataSegment, Volume)
 {
   
   'use strict';
@@ -50,6 +50,12 @@ function(ByteSource, Item, AppleVolume, DataSegment)
         document.body.appendChild(document.createTextNode(v.toString()));
       }
       function handleSegment(segment) {
+        var volume = new Volume();
+        volume.onfile = function(path, segment) {
+          console.log(path, segment.type);
+        }
+        volume.load(segment);
+        /*
         segment.getCapabilities()
         .then(function(capabilities) {
           if (capabilities.split) {
@@ -71,6 +77,7 @@ function(ByteSource, Item, AppleVolume, DataSegment)
             });
           }
         });
+        */
       }
       var segment = DataSegment.from(droppedFile);
       handleSegment(segment);
