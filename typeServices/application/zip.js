@@ -122,7 +122,6 @@ define(['DataSegment'], function(DataSegment) {
       function onPart(rawCentral) {
         var central = new CentralRecordView(rawCentral.buffer, rawCentral.byteOffset, rawCentral.byteLength);
         var localOffset = partOffsets[central.partNumber] + central.localRecordOffset;
-        var compressedLength = central.compressedByteLength32; // TOOD: zip64
         if (entries.accepted(CENTRAL_RECORD_TYPE)) {
           entries.add(segment.getSegment(CENTRAL_RECORD_TYPE, pos, central.byteLength));
         }
@@ -130,8 +129,8 @@ define(['DataSegment'], function(DataSegment) {
           pending.push(segment.getBytes(localOffset, LocalRecordView.byteLength)
           .then(function(rawLocal) {
             var local = new LocalRecordView(rawLocal.buffer, rawLocal.byteOffset, rawLocal.byteLength);
-            var localType = LOCAL_RECORD_TYPE + '; offset=' + local.byteLength;
-            entries.add(segment.getSegment(localType, localOffset, local.byteLength + compressedLength));
+            var localType = LOCAL_RECORD_TYPE + '; offset=' + local.contentOffset;
+            entries.add(segment.getSegment(localType, localOffset, local.byteLength));
           }));
         }
         if (--count > 0) {
@@ -420,8 +419,11 @@ define(['DataSegment'], function(DataSegment) {
     get extraByteLength() {
       return this.dv.getInt16(0x1c, true);
     },
+    get contentOffset() {
+      return LocalRecordView.byteLength + this.pathByteLength + this.extraByteLength;
+    },
     get byteLength() {
-      return LocalRecordView.byteLength + this.pathByteLength + this.extraByteLength + this.compressedByteLength32;
+      return this.contentOffset + this.compressedByteLength32;
     },
   };
   LocalRecordView.byteLength = 0x1e;
