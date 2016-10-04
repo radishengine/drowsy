@@ -68,7 +68,7 @@ define(function() {
         case 3: return 'characterDeviceNode';
         case 4: return 'blockDeviceNode';
         case 5: return 'directory';
-        case 6: return 'fifoNode;
+        case 6: return 'fifoNode';
         default: return flag;
       }
     },
