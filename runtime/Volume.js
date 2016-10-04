@@ -30,7 +30,7 @@ define(['typeServices/dispatch'], function(dispatch) {
             var ext = record.path.match(/[^\.]*$/)[0].toLowerCase();
             var type = dispatch.byExtension[ext] || 'application/octet-stream';
             if (record.compressionMethod !== 'none') {
-              var compressedType;
+              var innerType = type;
               switch (record.compressionMethod) {
                 case 'shrunk': type = 'application/x-lzw; variant=shrink'; break;
                 case 'factor1': type = 'application/x-reduced; factor=1'; break;
@@ -51,10 +51,9 @@ define(['typeServices/dispatch'], function(dispatch) {
                 case 'aes': type = 'application/x-aes'; break;
                 default: return Promise.reject('unknown compression: ' + record.compressionMethod);
               }
-              compressedType += '; type='+type;
+              type += '; type='+innerType;
               var full = record.uncompressedByteLength32; // TODO: zip64
-              compressedType += '; full='+full;
-              type = compressedType;
+              type += '; full='+full;
             }
             self.addFile(entry.path, entry.getSegment(type, entry.byteLength));
           }));
