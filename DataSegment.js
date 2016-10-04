@@ -101,7 +101,9 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         offset += ctxOffset;
         minLength -= ctxOffset;
         maxLength -= ctxOffset;
-      }      
+        maxLength = Math.min(ctxMaxLength, maxLength);
+        minLength = Math.max(ctxMinLength, minLength);
+      }
     }
     
     return {offset:offset, minLength:minLength, maxLength:maxLength};
