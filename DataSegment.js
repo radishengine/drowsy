@@ -92,9 +92,16 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       }
     }
     else {
-      minLength -= ctxOffset;
-      maxLength -= ctxOffset;
-      
+      if (offset === 'suffix') {
+        if (ctxMinLength === ctxMaxLength && minLength === maxLength) {
+          offset = ctxMinLength - minLength;
+        }
+      }
+      else {
+        offset += ctxOffset;
+        minLength -= ctxOffset;
+        maxLength -= ctxOffset;
+      }      
     }
     
     return {offset:offset, minLength:minLength, maxLength:maxLength};
