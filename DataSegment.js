@@ -101,8 +101,8 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         if (minLength > ctxMaxLength) {
           throw new RangeError('cannot get '+minLength+' bytes from '+ctxMaxLength+' bytes)');
         }
-        maxLength = Math.min(maxLength, ctxMaxLength);
-        minLength = Math.min(maxLength, Math.max(minLength, ctxMinLength));
+        maxLength = Math.min(maxLength, ctxMaxLength - offset);
+        minLength = Math.min(maxLength, Math.max(minLength, ctxMinLength - offset));
         offset += ctxOffset;
       }
     }
