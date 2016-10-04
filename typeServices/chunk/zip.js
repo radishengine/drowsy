@@ -271,7 +271,7 @@ define(['../../msdos/util.js'], function(dosUtil) {
       return this.compressedByteLength32 === 0xffffffff && this.uncompressedByteLength32 === 0xffffffff;
     },
     get pathPos() {
-      return LocalRecordView.byteLength;
+      return LocalRecordView.fixedByteLength;
     },
     get decode() {
       return this.hasUTF8Encoding ? utf_8.decode : dosUtil.decodeLatinUS;
@@ -286,10 +286,10 @@ define(['../../msdos/util.js'], function(dosUtil) {
       return this.dv.getInt16(0x1c, true);
     },
     get byteLength() {
-      return LocalRecordView.byteLength + this.pathByteLength + this.extraByteLength + this.compressedByteLength32;
+      return LocalRecordView.fixedByteLength + this.pathByteLength + this.extraByteLength + this.compressedByteLength32;
     },
   };
-  LocalRecordView.byteLength = 0x1e;
+  LocalRecordView.fixedByteLength = 0x1e;
   LocalRecordView.signature = 'PK\x03\x04';
   
   return {
