@@ -2,6 +2,16 @@ define(function() {
 
   'use strict';
   
+  /*
+  DOS unpackers: STEALTH, ZZAP, PCI FID
+  
+  ZZAP: ICE, LBR, LZH, MD, PAK, SDN, ZIP, ZOO
+  STEALTH: ZIP, ARC, ZOO, DWC, LHARC, ARJ, PAK, SDN, SQZ, ICE, LARC, HAP, HYPER
+  PCI FID: AIN, ARC, ARI, ARJ, ARK, BSN, COD, DWC, ESP, HAP, HA, HPK, HYP, ICE,
+     JAR, J, LIM, LZH, LZS, MAR, PAK, RAR, RKV, SAR, SHK, SQZ, UFA, UC2, YC, ZET,
+     ZIP, ZOO, ZPK
+  */
+  
   return {
     byExtension: {
       '7z': 'application/x-7z-compressed',
