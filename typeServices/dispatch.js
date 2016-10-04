@@ -10,6 +10,7 @@ define(function() {
       adz: 'application/gzip; compressed-type=application/x-amiga-disk-format',
       aif: 'audio/x-aiff',
       aiff: 'audio/x-aiff',
+      au: 'audio/basic',
       avi: 'video/x-avi',
       bat: 'application/x-bat',
       bmp: 'image/bmp',
@@ -31,6 +32,7 @@ define(function() {
       htm: 'text/html',
       html: 'text/html',
       ico: 'image/x-icon',
+      ini: 'application/x-ini',
       jar: 'application/zip',
       jpg: 'image/jpeg',
       jpeg: 'image/jpeg',
@@ -61,6 +63,7 @@ define(function() {
       xls: 'application/vnd.ms-excel',
       xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       zip: 'application/zip',
+      zzt: 'application/x-zzt',
     },
     byMacResourceType: {
       '8BIM': 'image/x-photoshop-image-resource-block',
