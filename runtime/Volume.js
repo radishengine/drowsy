@@ -26,7 +26,9 @@ define(['typeServices/dispatch'], function(dispatch) {
       return zip.split(
         function(entry) {
           if (entry.getTypeParameter('type') !== 'local') return;
-          promises.push(entry.getStruct().then(function(record) {
+          var offset = +entry.getTypeParameter('offset');
+          var headerSegment = entry.getSegment(entry.type, 0, offset);
+          promises.push(headerSegment.getStruct().then(function(record) {
             var ext = record.path.match(/[^\.]*$/)[0].toLowerCase();
             var type = dispatch.byExtension[ext] || 'application/octet-stream';
             if (record.compressionMethod !== 'none') {
@@ -57,7 +59,7 @@ define(['typeServices/dispatch'], function(dispatch) {
               var full = record.uncompressedByteLength32; // TODO: zip64
               type += '; full='+full;
             }
-            self.addFile(record.path, entry.getSegment(type, record.byteLength));
+            self.addFile(record.path, entry.getSegment(type, offset));
           }));
         },
         function() {
