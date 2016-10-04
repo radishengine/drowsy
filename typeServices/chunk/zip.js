@@ -271,7 +271,7 @@ define(['../../msdos/util.js'], function(dosUtil) {
       return this.compressedByteLength32 === 0xffffffff && this.uncompressedByteLength32 === 0xffffffff;
     },
     get pathPos() {
-      return LocalRecordView.fixedByteLength;
+      return LocalRecordView.byteLength;
     },
     get decode() {
       return this.hasUTF8Encoding ? utf_8.decode : dosUtil.decodeLatinUS;
