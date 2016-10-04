@@ -67,6 +67,7 @@ define(function() {
       sit: 'application/x-stuffit',
       swf: 'application/x-shockwave-flash',
       tar: 'application/x-tar',
+      tga: 'image/x-targa',
       tgz: 'application/gzip; compressed-type=application/x-tar',
       tiff: 'image/tiff',
       txt: 'text/plain',
@@ -80,8 +81,9 @@ define(function() {
     },
     byMacResourceType: {
       '8BIM': 'image/x-photoshop-image-resource-block',
-      ACHR: 'application/x-world-builder-character',
-      ACOD: 'application/x-world-builder-code',
+      ACHR: 'chunk/world-builder; which=character',
+      ACOD: 'chunk/world-builder; which=code',
+      TPIC: 'image/x-targa',
     },
     byMacFileType: {
       AIFF: 'audio/x-aiff',
