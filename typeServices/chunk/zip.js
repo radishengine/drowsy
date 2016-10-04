@@ -172,7 +172,7 @@ define(['../../msdos/util.js'], function(dosUtil) {
       return CentralRecordView.fixedByteLength;
     },
     get decode() {
-      return this.hasUTF8Encoding ? utf_8.decode : latin_us.decode;
+      return this.hasUTF8Encoding ? utf_8.decode : dosUtil.decodeLatinUS;
     },
     get path() {
       return this.decode(this.bytes, this.pathPos, this.pathByteLength);
@@ -274,7 +274,7 @@ define(['../../msdos/util.js'], function(dosUtil) {
       return LocalRecordView.fixedByteLength;
     },
     get decode() {
-      return this.hasUTF8Encoding ? utf_8.decode : latin_us.decode;
+      return this.hasUTF8Encoding ? utf_8.decode : dosUtil.decodeLatinUS;
     },
     get path() {
       return this.decode(this.bytes, this.pathPos, this.pathByteLength);
