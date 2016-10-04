@@ -27,7 +27,7 @@ define(['typeServices/dispatch'], function(dispatch) {
         function(entry) {
           if (entry.getTypeParameter('type') !== 'local') return;
           promises.push(entry.getStruct().then(function(record) {
-            var ext = record.name.match(/[^\.]*$/)[0].toLowerCase();
+            var ext = record.path.match(/[^\.]*$/)[0].toLowerCase();
             var type = dispatch.byExtension[ext] || 'application/octet-stream';
             if (entry.compressionMethod !== 'none') {
               var compressedType;
