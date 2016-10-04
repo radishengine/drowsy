@@ -34,6 +34,8 @@ define(['../../msdos/util.js'], function(dosUtil) {
   };
   TrailerView.signature = 'PK\x05\x06';
   TrailerView.byteLength = 22;
+  TrailerView.minLength = 22;
+  TrailerView.maxLength = 22 + 0xffff;
   
   function CentralRecordView(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
@@ -192,6 +194,8 @@ define(['../../msdos/util.js'], function(dosUtil) {
   };
   CentralRecordView.signature = 'PK\x01\x02';
   CentralRecordView.fixedByteLength = 46;
+  CentralRecordView.minLength = 46;
+  CentralRecordView.maxLength = 46 + 0xffff + 0xffff + 0xffff;
   
   function LocalRecordView(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
@@ -291,6 +295,8 @@ define(['../../msdos/util.js'], function(dosUtil) {
   };
   LocalRecordView.fixedByteLength = 0x1e;
   LocalRecordView.signature = 'PK\x03\x04';
+  LocalRecordView.minLength = 0x1e;
+  LocalRecordView.maxLength = Infinity; // effectively, with zip64
   
   return {
     getStructView: function(segment) {
