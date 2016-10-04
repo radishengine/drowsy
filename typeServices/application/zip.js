@@ -132,13 +132,13 @@ define(['DataSegment'], function(DataSegment) {
         }
         if (--count > 0) {
           pos += central.byteLength;
-          return segment.getBytes(pos, CentralRecordView.byteLength).then(onPart);
+          return segment.getBytes(pos, CentralRecordView.fixedByteLength).then(onPart);
         }
         else {
           return Promise.all(pending);
         }
       }
-      return segment.getBytes(pos, CentralRecordView.byteLength).then(onPart);
+      return segment.getBytes(pos, CentralRecordView.fixedByteLength).then(onPart);
     });
   }
   
