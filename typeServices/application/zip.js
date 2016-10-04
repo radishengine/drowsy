@@ -116,7 +116,7 @@ define(['DataSegment'], function(DataSegment) {
           return Promise.reject('joined-up multipart zip archive has incorrect number of parts');
         }
       }
-      var pos = partOffsets[trailer.centralDirPart] + trailer.centralDirOffset;
+      var pos = partOffsets[trailer.centralDirPartNumber] + trailer.centralDirOffset;
       var count = trailer.totalEntryCount;
       var pending = [];
       function onPart(rawCentral) {
@@ -169,7 +169,7 @@ define(['DataSegment'], function(DataSegment) {
     get centralDirByteLength() {
       return this.dv.getUint32(12, true);
     },
-    get centralDirFirstOffset() {
+    get centralDirOffset() {
       return this.dv.getUint32(16, true);
     },
     get commentByteLength() {
