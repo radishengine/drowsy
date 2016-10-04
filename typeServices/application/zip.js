@@ -3,8 +3,8 @@ define(['DataSegment'], function(DataSegment) {
   'use strict';
   
   var TRAILER_TYPE = 'chunk/zip; type=trailer';
-  var CENTRAL_RECORD_TYPE = 'chunk/zip; type=central-record';
-  var LOCAL_RECORD_TYPE = 'chunk/zip; type=local-record';
+  var CENTRAL_RECORD_TYPE = 'chunk/zip; type=central';
+  var LOCAL_RECORD_TYPE = 'chunk/zip; type=local';
   
   function join(parts) {
     var knownLengths = parts.map(function(part){ return part.getLength(); });
