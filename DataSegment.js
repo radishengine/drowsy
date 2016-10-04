@@ -43,7 +43,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       }
     }
     if (isFinite(contextLength)) {
-      if (offset >= contextLength && length !== 0) {
+      if (offset >= contextLength && isFinite(length) && length !== 0) {
         throw new RangeError('offset out of range (' + offset + ' of ' + contextLength + ')');
       }
       if (offset < 0) {
