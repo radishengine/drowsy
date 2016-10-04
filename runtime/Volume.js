@@ -29,9 +29,9 @@ define(['typeServices/dispatch'], function(dispatch) {
           promises.push(entry.getStruct().then(function(record) {
             var ext = record.path.match(/[^\.]*$/)[0].toLowerCase();
             var type = dispatch.byExtension[ext] || 'application/octet-stream';
-            if (entry.compressionMethod !== 'none') {
+            if (record.compressionMethod !== 'none') {
               var compressedType;
-              switch (entry.compressionMethod) {
+              switch (record.compressionMethod) {
                 case 'shrunk': type = 'application/x-lzw; variant=shrink'; break;
                 case 'factor1': type = 'application/x-reduced; factor=1'; break;
                 case 'factor2': type = 'application/x-reduced; factor=2'; break;
@@ -49,7 +49,7 @@ define(['typeServices/dispatch'], function(dispatch) {
                 case 'wavpack': type = 'audio/x-wavpack'; break;
                 case 'ppmd': type = 'application/x-ppmd; version=i; rev=1'; break;
                 case 'aes': type = 'application/x-aes'; break;
-                default: return Promise.reject('unknown compression: ' + entry.compressionMethod);
+                default: return Promise.reject('unknown compression: ' + record.compressionMethod);
               }
               compressedType += '; type='+type;
               var full = record.uncompressedByteLength32; // TODO: zip64
