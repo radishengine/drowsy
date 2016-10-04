@@ -52,7 +52,7 @@ function(ByteSource, Item, AppleVolume, DataSegment, Volume)
       function handleSegment(segment) {
         var volume = new Volume();
         volume.onfile = function(path, segment) {
-          console.log(path, segment.type, segment.knownLength);
+          console.log(path, segment.type, segment.fixedLength);
         }
         volume.load(segment);
         /*
