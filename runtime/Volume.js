@@ -57,7 +57,7 @@ define(['typeServices/dispatch'], function(dispatch) {
               var full = record.uncompressedByteLength32; // TODO: zip64
               type += '; full='+full;
             }
-            self.addFile(entry.path, entry.getSegment(type, entry.byteLength));
+            self.addFile(record.path, entry.getSegment(type, record.byteLength));
           }));
         },
         function() {
