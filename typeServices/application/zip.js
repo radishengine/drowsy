@@ -122,6 +122,7 @@ define(['DataSegment'], function(DataSegment) {
       function onPart(rawCentral) {
         var central = new CentralRecordView(rawCentral.buffer, rawCentral.byteOffset, rawCentral.byteLength);
         var localOffset = partOffsets[central.partNumber] + central.localRecordOffset;
+        var compressedLength = central.compressedByteLength32; // TOOD: zip64
         if (entries.accepted(CENTRAL_RECORD_TYPE)) {
           entries.add(segment.getSegment(CENTRAL_RECORD_TYPE, pos, central.byteLength));
         }
@@ -129,7 +130,8 @@ define(['DataSegment'], function(DataSegment) {
           pending.push(segment.getBytes(localOffset, LocalRecordView.byteLength)
           .then(function(rawLocal) {
             var local = new LocalRecordView(rawLocal.buffer, rawLocal.byteOffset, rawLocal.byteLength);
-            entries.add(segment.getSegment(LOCAL_RECORD_TYPE, localOffset, local.byteLength));
+            var localType = LOCAL_RECORD_TYPE + '; offset=' + local.byteLength;
+            entries.add(segment.getSegment(localType, localOffset, local.byteLength + compressedLength));
           }));
         }
         if (--count > 0) {
