@@ -51,7 +51,9 @@ define(['typeServices/dispatch'], function(dispatch) {
                 case 'aes': type = 'application/x-aes'; break;
                 default: return Promise.reject('unknown compression: ' + record.compressionMethod);
               }
-              type += '; type='+innerType;
+              if (innerType !== 'application/octet-stream') {
+                type += '; type='+innerType;
+              }
               var full = record.uncompressedByteLength32; // TODO: zip64
               type += '; full='+full;
             }
