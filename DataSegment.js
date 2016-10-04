@@ -29,35 +29,75 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     });
   }
   
-  function normalizeRegion(offset, length, contextLength, contextOffset) {
-    if (isNaN(offset)) offset = 0;
-    if (isNaN(length)) length = Infinity;
-    if (isNaN(contextLength)) contextLength = Infinity;
-    if (!isNaN(contextOffset) && (offset >= 0 || contextOffset >= 0)) {
-      offset += contextOffset;
+  function normalizeRegion(
+  offset, minLength, maxLength,
+  ctxOffset, ctxMinLength, ctxMaxLength) {
+    // normalize the value range
+    if (isNaN(offset) && offset !== 'suffix') offset = 0;
+    if (isNaN(minLength)) {
+      minLength = 0;
+      if (isNaN(maxLength)) maxLength = Infinity;
     }
-    if (offset < 0) {
-      if (!isFinite(length)) length = -offset;
-      else if (length > -offset) {
-        throw new Error('length exceeds negative offset');
-      }
+    else if (isNaN(maxLength)) maxLength = minLength;
+    if (offset === 'suffix' && !isFinite(maxLength)) {
+      offset = 0;
     }
-    if (isFinite(contextLength)) {
-      if (offset >= contextLength && isFinite(length) && length !== 0) {
-        throw new RangeError('offset out of range (' + offset + ' of ' + contextLength + ')');
-      }
-      if (offset < 0) {
-        offset = contextLength + offset;
-        if (offset < 0) {
-          throw new RangeError('offset out of range (' + offset + ' of ' + contextLength + ')');
+    if ((offset !== 'suffix' && offset < 0) || minLength < 0 || maxLength < 0 ) {
+      throw new RangeError('offset and range length values must not be negative');
+    }
+    if (!isFinite(minLength) || (offset !== 'suffix' && !isFinite(offset))) {
+      throw new RangeError('offset and min length must be finite');
+    }
+    if (minLength > maxLength) {
+      throw new RangeError('min length must not exceed max length');
+    }
+    // normalize the context range
+    if (isNaN(ctxOffset) && ctxOffset !== 'suffix') ctxOffset = 0;
+    if (isNaN(ctxMinLength)) {
+      ctxMinLength = 0;
+      if (isNaN(ctxMaxLength)) ctxMaxLength = Infinity;
+    }
+    else if (isNaN(ctxMaxLength)) ctxMaxLength = ctxMinLength;
+    if (ctxOffset === 'suffix' && !isFinite(ctxMaxLength)) {
+      ctxOffset = 0;
+    }
+    if ((ctxOffset !== 'suffix' && ctxOffset < 0) || ctxMinLength < 0 || ctxMaxLength < 0 ) {
+      throw new RangeError('offset and range length values must not be negative');
+    }
+    if (!isFinite(ctxMinLength) || (ctxOffset !== 'suffix' && !isFinite(ctxOffset))) {
+      throw new RangeError('offset and min length must be finite');
+    }
+    if (ctxMinLength > ctxMaxLength) {
+      throw new RangeError('context min length must not exceed max length');
+    }
+  
+    // at this stage:
+    // - offset is either 'suffix', or a finite number >= 0
+    // - min length is a finite number >= 0
+    // - max length is a number >= min length
+    // - max length MAY be infinite, UNLESS offset is 'suffix'
+    
+    // put the values in context, if applicable
+    if (ctxOffset === 'suffix') {
+      // so ctxMaxLength must be finite
+      if (offset !== 'suffix') {
+        if (offset > ctxMaxLength) {
+          throw new RangeError('offset out of range ('+offset+' in '+ctxMaxLength+' bytes)');
         }
+        if ((offset + maxLength) < ctxMaxLength) {
+          throw new RangeError('cannot derive a non-suffix from a suffix context');
+        }
+        offset = 'suffix';
+        minLength = maxLength = ctxMaxLength - offset;
       }
-      if (!isFinite(length)) length = contextLength - offset;
     }
-    if (length < 0) {
-      throw new Error('length cannot be negative');
+    else {
+      minLength -= ctxOffset;
+      maxLength -= ctxOffset;
+      
     }
-    return {offset:offset, length:length};
+    
+    return {offset:offset, minLength:minLength, maxLength:maxLength};
   }
   
   function DataSegment() {
@@ -89,72 +129,79 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     get subtype() {
       return this.type.replace(/^.*?\//, '').replace(/;.*/, '');
     },
-    knownLength: Infinity,
+    get fixedLength() {
+      var min = this.minLength, max = this.maxLength;
+      return (min === max) ? min : NaN;
+    },
     offset: 0,
-    get hasKnownLength() {
-      return isFinite(this.knownLength);
+    minLength: 0,
+    maxLength: Infinity,
+    get hasFixedLength() {
+      return this.minLength === this.maxLength;
     },
-    getLength() {
-      if (isFinite(this.knownLength)) return Promise.resolve(this.knownLength);
-      if (typeof this.calculateLength === 'function') return this.calculateLength();
-      throw new Error('no method defined to calculate length');
+    withFixedLength() {
+      if (this.hasFixedLength) return Promise.resolve(this);
+      throw new Error('withFixedLength not defined for ' + this);
     },
-    getSegmentNormalized: function(type, offset, length) {
-      return new DataSegmentWrapper(this, type, offset, length);
+    getSegmentNormalized: function(type, offset, minLength, maxLength) {
+      return new DataSegmentWrapper(this, type, offset, minLength, maxLength);
     },
-    getBufferOrViewNormalized: function(offset, length) {
+    getBufferOrViewNormalized: function(offset, minLength, maxLength) {
       throw new Error('no method defined to get bytes');
     },
-    getArrayBufferNormalized: function(offset, length) {
-      return this.getBufferOrViewNormalized(offset, length)
+    getArrayBufferNormalized: function(offset, minLength, maxLength) {
+      return this.getBufferOrViewNormalized(offset, minLength, maxLength)
       .then(function(borv) {
         if (borv instanceof ArrayBuffer) return borv;
-        if (borv.byteOffset === 0 && borv.byteLength === borv.buffer.byteLength) {
+        if (borv.byteLength === borv.buffer.byteLength) {
           return borv.buffer;
         }
-        var copy = new ArrayBuffer(borv.byteLength);
-        if (!(borv instanceof Uint8Array)) {
-          borv = new Uint8Array(borv.buffer, borv.byteOffset, borv.byteLength);
-        }
-        new Uint8Array(copy).set(borv);
-        return copy;
+        return borv.buffer.slice(borv.byteOffset, borv.byteOffset + borv.byteLength);
       });
     },
-    getSegment: function(type, offset, length) {
-      var region = normalizeRegion(offset, length, this.knownLength, this.offset);
-      if (region.length === 0) return new EmptySegment(type);
-      return this.getSegmentNormalized(type, region.offset, region.length);
+    getSegment: function(type, offset, minLength, maxLength) {
+      var region = normalizeRegion(
+        offset, minLength, maxLength,
+        this.offset, this.minLength, this.maxLength);
+      if (region.maxLength === 0) return new EmptySegment(type);
+      return this.getSegmentNormalized(type, region.offset, region.minLength, region.maxLength);
     },
-    getBytesNormalized: function(offset, length) {
-      var region = normalizeRegion(offset, length, this.knownLength, this.offset);
-      return this.getBufferOrViewNormalized(region.offset, region.length)
+    getBytesNormalized: function(offset, minLength, maxLength) {
+      return this.getBufferOrViewNormalized(offset, minLength, maxLength)
       .then(function(borv) {
         if (borv instanceof ArrayBuffer) return new Uint8Array(borv);
         if (borv instanceof Uint8Array) return borv;
-        return new Uint8Array(borv.buffer, borv.byteOffet, borv.byteLength);
+        return new Uint8Array(borv.buffer, borv.byteOffset, borv.byteLength);
       });
     },
-    getArrayBuffer: function(offset, length) {
-      var region = normalizeRegion(offset, length, this.knownLength, this.offset);
-      if (region.length === 0) return p_emptyBuffer;
-      return this.getArrayBufferNormalized(region.offset, region.length);
+    getArrayBuffer: function(offset, minLength, maxLength) {
+      var region = normalizeRegion(
+        offset, minLength, maxLength,
+        this.offset, this.minLength, this.maxLength);
+      if (region.maxLength === 0) return p_emptyBuffer;
+      return this.getArrayBufferNormalized(region.offset, region.minLength, region.maxLength);
     },
-    getBytes: function(offset, length) {
-      var region = normalizeRegion(offset, length, this.knownLength, this.offset);
-      if (region.length === 0) return p_emptyBytes;
-      return this.getBytesNormalized(region.offset, region.length);
+    getBytes: function(offset, minLength, maxLength) {
+      var region = normalizeRegion(
+        offset, minLength, maxLength,
+        this.offset, this.minLength, this.maxLength);
+      if (region.maxLength === 0) return p_emptyBytes;
+      return this.getBytesNormalized(region.offset, region.minLength, region.maxLength);
     },
-    asBlobParameter: null,
+    get asBlobParameter() {
+      throw new Error('asBlobParameter not defined for ' + this);
+    },
     getBlob: function() {
       var blobParam = this.asBlobParameter;
       if (blobParam) return Promise.resolve(new Blob([blobParam], this.type));
       var self = this;
-      return this.getArrayBuffer().then(function(bytes) {
-        return new Blob([bytes], self.type);
+      return this.getBufferOrViewNormalized(0, this.minLength, this.maxLength)
+      .then(function(borv) {
+        return new Blob([borv], self.type);
       });
     },
     saveForTransfer: function(transferables) {
-      throw new Error('saveForTransfer not implemented');
+      throw new Error('saveForTransfer not implemented on ' + this);
     },
     toRemote: function(worker) {
       return new RemoteDataSegment(worker).transfer(this);
@@ -230,52 +277,50 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     this.type = type;
   }
   EmptySegment.prototype = Object.assign(new DataSegment, {
-    knownLength: 0,
-    asBlobParameter: emptyBuffer,
-    getSegmentNormalized: function(type, offset, length) {
-      if (offset || length) {
-        throw new RangeError('cannot get ' + offset + '-' + (offset+length) + ' range from an empty segment');
-      }
+    getSegmentNormalized: function(type, offset, minLength, maxLength) {
       return (type === this.type) ? this : new EmptySegment(type);
     },
-    getArrayBufferNormalized: function(offset, length) {
-      if (offset || length) {
-        throw new RangeError('cannot get ' + offset + '-' + (offset+length) + ' range from an empty segment');
-      }
+    getArrayBufferNormalized: function(offset, minLength, maxLength) {
       return p_emptyBuffer;
     },
-    getBytesNormalized: function(offset, length) {
-      if (offset || length) {
-        throw new RangeError('cannot get ' + offset + '-' + (offset+length) + ' range from an empty segment');
-      }
+    getBytesNormalized: function(offset, minLength, maxLength) {
       return p_emptyBytes;
     },
     saveForTransfer: function(transferables) {
       return ['Empty', this.type];
     },
   });
+  Object.defineProperties(EmptySegment.prototype, {
+    asBlobParameter: {value:emptyBuffer},
+    fixedLength: {value:0},
+    minLength: {value:0},
+    maxLength: {value:0},
+    hasFixedLength: {value:true},
+  });
   
   function DataSegmentFromBlob(blob) {
     this.blob = blob;
   }
   DataSegmentFromBlob.prototype = Object.assign(new DataSegment, {
-    getSegmentNormalized: function(type, offset, length) {
-      if (offset === 0 && length === this.blob.size && type === this.blob.type) {
-        return this;
-      }
-      return new DataSegmentFromBlob(this.blob.slice(offset, offset+length, type));
+    getSegmentNormalized: function(type, offset, minLength, maxLength) {
+      // in this normalized context, we should not have to worry about:
+      // - 'suffix' ranges
+      // - offset out of range
+      // - offset+minLength out of range
+      if (offset === 0 && maxLength >= this.blob.size) return this;
+      return new DataSegmentFromBlob(this.blob.slice(offset, offset+maxLength, type));
     },
-    getBufferOrViewNormalized: function(offset, length) {
-      return this.getArrayBufferNormalized(offset, length);
+    getBufferOrViewNormalized: function(offset, minLength, maxLength) {
+      return this.getArrayBufferNormalized(offset, minLength, maxLength);
     },
-    getBytesNormalized: function(offset, length) {
-      return this.getArrayBufferNormalized(offset, length)
+    getBytesNormalized: function(offset, minLength, maxLength) {
+      return this.getArrayBufferNormalized(offset, minLength, maxLength)
       .then(function(buffer){ return new Uint8Array(buffer); });
     },
-    getArrayBufferNormalized: function(offset, length) {
+    getArrayBufferNormalized: function(offset, minLength, maxLength) {
       var blob = this.blob;
-      if (offset !== 0 || length !== blob.size) {
-        blob = blob.slice(offset, offset + length);
+      if (offset !== 0 || maxLength < blob.size) {
+        blob = blob.slice(offset, offset + maxLength);
       }
       var frdr = new FileReader();
       return new Promise(function(resolve, reject) {
@@ -299,11 +344,17 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
   });
   Object.defineProperties(DataSegmentFromBlob.prototype, {
-    hasKnownLength: {value:true},
+    hasFixedLength: {value:true},
     type: {
       get: function() { return this.blob.type || 'application/octet-stream'; },
     },
-    knownLength: {
+    fixedLength: {
+      get: function() { return this.blob.size; },
+    },
+    minLength: {
+      get: function() { return this.blob.size; },
+    },
+    maxLength: {
       get: function() { return this.blob.size; },
     },
     asBlobParameter: {
@@ -311,40 +362,85 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
   });
   
-  function DataSegmentWrapper(wrappedSegment, type, offset, length) {
+  function DataSegmentWrapper(wrappedSegment, type, offset, minLength, maxLength) {
     this.wrappedSegment = wrappedSegment;
     this.type = type;
-    var region = normalizeRegion(offset, length, wrappedSegment.knownLength);
+    var region = normalizeRegion(
+      offset, minLength, maxLength,
+      0, wrappedSegment.minLength, wrappedSegment.maxLength);
     this.offset = region.offset;
-    this.knownLength = region.length;
+    this.minLength = region.minLength;
+    this.maxLength = region.maxLength;
   }
   DataSegmentWrapper.prototype = Object.assign(new DataSegment, {
-    getSegmentNormalized: function(type, offset, length) {
-      if (type === this.type && offset === this.offset && length === this.knownLength) {
+    getSegmentNormalized: function(type, offset, minLength, maxLength) {
+      if (type === this.type && offset === this.offset && minLength <= this.minLength && maxLength >= this.maxLength) {
         return this;
       }
-      return new DataSegmentWrapper(this.wrappedSegment, type, offset, length);
+      return new DataSegmentWrapper(this.wrappedSegment, type, offset, minLength, maxLength);
     },
-    getBufferOrViewNormalized: function(offset, length) {
-      return this.wrappedSegment.getBufferOrViewNormalized(offset, length);
+    getBufferOrViewNormalized: function(offset, minLength, maxLength) {
+      return this.wrappedSegment.getBufferOrViewNormalized(offset, minLength, maxLength);
     },
-    getArrayBufferNormalized: function(offset, length) {
-      return this.wrappedSegment.getArrayBufferNormalized(offset, length);
+    getArrayBufferNormalized: function(offset, minLength, maxLength) {
+      return this.wrappedSegment.getArrayBufferNormalized(offset, minLength, maxLength);
     },
-    getBytesNormalized: function(offset, length) {
-      return this.wrappedSegment.getBytesNormalized(offset, length);
+    getBytesNormalized: function(offset, length, minLength, maxLength) {
+      return this.wrappedSegment.getBytesNormalized(offset, minLength, maxLength);
     },
     saveForTransfer: function(transferables) {
-      return ['Wrapper', this.wrappedSegment.saveForTransfer(transferables), this.type, this.offset, this.length];
+      return ['Wrapper', this.wrappedSegment.saveForTransfer(transferables), this.type, this.offset, this.minLength, this.maxLength];
     },
   });
   Object.defineProperties(DataSegmentWrapper.prototype, {
     asBlobParameter: {
       get: function() {
         var inner = this.wrappedSegment.asBlobParameter;
-        if (inner instanceof Blob) return inner.slice(this.offset, this.offset + this.length);
-        if (inner instanceof ArrayBuffer) return new Uint8Array(inner, this.offset, this.length);
-        if (ArrayBuffer.isView(inner)) return new Uint8Array(inner.buffer, inner.byteOffset + this.offset, this.length);
+        if (inner instanceof Blob) {
+          if (inner.size < this.minLength) {
+            throw new RangeError('not enough bytes (wanted ' + this.minLength + ', got ' + inner.size + ')');
+          }
+          if (this.offset === 'suffix') {
+            if (inner.size > this.maxLength) {
+              inner = inner.slice(-this.maxLength);
+            }
+          }
+          else if (this.offset !== 0 || inner.size > this.maxLength) {
+            inner = inner.slice(this.offset, Math.min(inner.size, this.offset + this.maxLength));
+          }
+          return inner;
+        }
+        if (inner instanceof ArrayBuffer) {
+          if (inner.byteLength < this.minLength) {
+            throw new RangeError('not enough bytes (wanted ' + this.minLength + ', got ' + inner.byteLength + ')');
+          }
+          if (this.offset === 'suffix') {
+            if (inner.byteLength > this.maxLength) {
+              inner = new Uint8Array(inner, inner.byteLength-this.maxLength, this.maxLength);
+            }
+          }
+          else if (this.offset !== 0 || inner.byteLength > this.maxLength) {
+            inner = new Uint8Array(inner, this.offset, Math.min(inner.byteLength - this.offset, this.maxLength));
+          }
+          return inner;
+        }
+        if (ArrayBuffer.isView(inner)) {
+          if (inner.byteLength < this.minLength) {
+            throw new RangeError('not enough bytes (wanted '+this.minLength+', got '+inner.byteLength+')');
+          }
+          if (this.offset === 'suffix') {
+            if (inner.byteLength > this.maxLength) {
+              inner = new Uint8Array(inner.buffer, inner.byteOffset + inner.byteLength - this.maxLength, this.maxLength);
+            }
+          }
+          else if (this.offset !== 0 || inner.byteLength > this.maxLength) {
+            inner = new Uint8Array(
+              inner.buffer,
+              inner.byteOffset + this.offset,
+              Math.min(inner.byteLength - this.offset, this.maxLength));
+          }
+          return inner;
+        }
         return null;
       },
     },
@@ -352,70 +448,75 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   
   function DataSegmentFromArrayBuffer(type, buffer, byteOffset, byteLength) {
     this.type = type;
-    var region = normalizeRegion(byteOffset, byteLength, buffer.byteLength, buffer.byteOffset || 0);
+    var region = normalizeRegion(
+      byteOffset, byteLength, byteLength,
+      buffer.byteOffset || 0, buffer.byteLength, buffer.byteLength);
     if (ArrayBuffer.isView(buffer)) {
       buffer = buffer.buffer;
     }
-    this.buffer = buffer;
-    this.offset = region.offset;
-    this.knownLength = region.length;
+    Object.defineProperties(this, {
+      buffer: {value:buffer},
+      offset: {value:region.offset},
+      fixedLength: {value:region.minLength},
+      minLength: {value:region.minLength},
+      maxLength: {value:region.maxLength},
+    });
   }
   DataSegmentFromArrayBuffer.prototype = Object.assign(new DataSegment, {
-    getSegmentNormalized: function(type, offset, length) {
-      if (type === this.type && offset === this.offset && length === this.knownLength) {
+    getSegmentNormalized: function(type, offset, minLength, maxLength) {
+      if (type === this.type && offset === this.offset && minLength <= this.fixedLength && maxLength >= this.fixedLength) {
         return this;
       }
-      return new DataSegmentFromArrayBuffer(type, this.buffer, offset, length);
+      return new DataSegmentFromArrayBuffer(type, this.buffer, offset, minLength, maxLength);
     },
-    getBytesNormalized: function(offset, length) {
-      return Promise.resolve(new Uint8Array(this.buffer, offset, length));
+    getBytesNormalized: function(offset, minLength, maxLength) {
+      return Promise.resolve(new Uint8Array(this.buffer, offset, maxLength));
     },
-    getBufferOrViewNormalized: function(offset, length) {
-      if (offset === 0 && length === this.buffer.byteLength) {
+    getBufferOrViewNormalized: function(offset, minLength, maxLength) {
+      if (offset === 0 && maxLength >= this.fixedLength) {
         return Promise.resolve(this.buffer);
       }
-      return Promise.resolve(new Uint8Array(this.buffer, offset, length));
+      return Promise.resolve(new Uint8Array(this.buffer, offset, maxLength));
     },
     saveForTransfer: function(transferables) {
       transferables.push(this.buffer);
-      return ['FromArrayBuffer', this.buffer, this.offset, this.knownLength];
+      return ['FromArrayBuffer', this.buffer, this.offset, this.fixedLength];
     },
   });
   Object.defineProperties(DataSegmentFromArrayBuffer.prototype, {
     asBlobParameter: {
       get: function() {
-        if (this.offset === 0 && this.knownLength === this.buffer.byteLength) {
+        if (this.offset === 0 && this.fixedLength === this.buffer.byteLength) {
           return this.buffer;
         }
-        return new Uint8Array(this.buffer, this.offset, this.byteLength);
+        return new Uint8Array(this.buffer, this.offset, this.fixedLength);
       },
     },
-    hasKnownLength: {value:true},
+    hasFixedLength: {value:true},
   });
   
   function DataSegmentSequence(type, segments) {
     this.type = type;
     this.segments = segments;
-    var length = 0;
+    var minLength = 0, maxLength = 0;
     for (var i = 0; i < segments.length; i++) {
-      length += segments[i].knownLength;
-      if (!isFinite(length)) break;
+      minLength += segments[i].minLength;
+      maxLength += segments[i].maxLength;
     }
-    this.knownLength = length;
+    this.minLength = minLength;
+    this.maxLength = maxLength;
   }
   DataSegmentSequence.prototype = Object.assign(new DataSegment, {
-    getLength: function() {
-      if (this.hasKnownLength) return Promise.resolve(this.knownLength);
+    withFixedLength: function() {
+      if (this.hasFixedLength) return Promise.resolve(this);
       var self = this;
-      return this.p_knownLength = this.p_knownLength
-      || Promise.all(this.segments.map(function(seg){ return seg.getLength(); }))
-        .then(function(allSizes) {
-          delete self.p_knownLength;
-          return self.knownLength = allSizes.reduce(function(total, size){ return total + size; }, 0);
-        });
+      return Promise.all(this.segments.map(function(seg){ return seg.withFixedLength(); }))
+      .then(function(allFixed) {
+        return DataSegment.from(allFixed, type);
+      });
     },
-    getSegmentNormalized: function(type, offset, length) {
-      if (offset === 0 && length === this.knownLength) {
+    getSegmentNormalized: function(type, offset, minLength, maxLength) {
+      if (offset === 0 && minLength <= this.minLength && maxLength >= this.maxLength) {
         if (type === this.type) {
           return this;
         }
@@ -426,10 +527,32 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         if (i >= segments.length) {
           return Promise.reject('segment subset out of range');
         }
-        return segments[i].getLength().then(function(segmentLength) {
-          list.push(segments[i].getSegment(0, Math.min(segmentLength, length)));
-          length -= segmentLength;
-          return length > 0 ? onAddSegment(list, ++i) : DataSegment.from(list, type);
+        var segment = segments[i];
+        if (segment.minLength >= minLength) {
+          list.push(segment.getSegmentNormalized(segment.type, 0, minLength, maxLength));
+          return DataSegment.from(list, type);
+        }
+        return segment.getSegmentNormalized(segment.type, 0, 0, maxLength).withFixedLength().then(function(segment) {
+          list.push(segment);
+          minLength -= segment.fixedLength;
+          maxLength -= segment.fixedLength;
+          return (minLength > 0) ? onAddSegment(list, i + 1) : DataSegment.from(list, type);
+        });
+      }
+      function onAddSuffix(list, i) {
+        if (i < 0) {
+          return Promise.reject('segment subset out of range');
+        }
+        var segment = segments[i];
+        if (segment.minLength >= minLength) {
+          list.unshift(segment.getSegmentNormalized(segment.type, 'suffix', minLength, maxLength));
+          return DataSegment.from(list, type);
+        }
+        return segment.getSegmentNormalized(segment.type, 'suffix', 0, maxLength).withFixedLength().then(function(segment) {
+          list.unshift(segment);
+          minLength -= segment.fixedLength;
+          maxLength -= segment.fixedLength;
+          return (minLength > 0) ? onAddSuffix(list, i - 1) : DataSegment.from(list, type);
         });
       }
       function onSegment(i) {
@@ -437,58 +560,96 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
           return Promise.reject('segment subset out of range');
         }
         var segment = segments[i];
-        return segments[i].getLength().then(function(segmentLength) {
-          if (offset >= segmentLength) {
-            offset -= segmentLength;
-            return onSegment(++i);
+        if ((offset + minLength) <= segment.minLength) {
+          return segment.getSegment(type, offset, minLength, maxLength);
+        }
+        return segment.withFixedLength().then(function(segment) {
+          if (offset >= segment.fixedLength) {
+            offset -= segment.fixedLength;
+            return onSegment(i + 1);
           }
-          var availableLength = segmentLength - offset;
-          if (availableLength >= length) {
-            return segment.getSegment(type, offset, length);
+          var availableLength = segment.fixedLength - offset;
+          if (availableLength >= minLength) {
+            return segment.getSegmentNormalized(type, offset, Math.min(maxLength, availableLength));
           }
-          segment = segment.getSegment('application/octet-stream', offset, availableLength);
+          segment = segment.getSegmentNormalized(segment.type, offset, availableLength);
           offset = 0;
-          length -= availableLength;
+          minLength -= availableLength;
+          maxLength -= availableLength;
           return onAddSegment([segment], ++i);
         });
       }
-      return onSegment(0);
-    },
-    getBufferOrViewNormalized: function(type, offset, length) {
-      var segments = this.segments;
-      function onAddBytes(list, i) {
-        if (i >= segments.length) {
+      function onSuffix(i) {
+        if (i < 0) {
           return Promise.reject('segment subset out of range');
         }
-        return segments[i].getLength().then(function(segmentLength) {
-          list.push(segments[i].getBytes(0, Math.min(segmentLength, length)));
-          length -= segmentLength;
-          if (length > 0) {
-            return onAddBytes(list, ++i);
+        var segment = segments[i];
+        if (minLength <= segment.minLength) {
+          return segment.getSegment(type, 'suffix', minLength, maxLength);
+        }
+        return segment.withFixedLength().then(function(segment) {
+          var availableLength = segment.fixedLength;
+          if (availableLength >= minLength) {
+            return segment.getSegmentNormalized(type, 'suffix', minLength, Math.min(maxLength, availableLength));
           }
-          return Promise.all(list).then(function(bytesList) {
-            var bytes = new Uint8Array(bytesList.reduce(function(total, b){ return total + b.length; }, 0));
-            for (var i = 0, pos = 0; i < bytesList.length; i++) {
-              bytes.set(bytesList[i], pos);
-              pos += bytesList[i].length;
-            }
-            return bytes;
-          });
+          minLength -= availableLength;
+          maxLength -= availableLength;
+          return onAddSuffix([segment], i - 1);
         });
       }
-      function onSetBytes(promises, bytes, pos, i) {
+      return (offset === 'suffix') ? onSuffix(segments.length-1) : onSegment(0);
+    },
+    getBufferOrViewNormalized: function(type, offset, minLength, maxLength) {
+      var segments = this.segments;
+      function concatBuffers(buffers) {
+        var totalLength = buffers.reduce(function(count, b){ return count + b.byteLength; }, 0);
+        var buffer = new ArrayBuffer(totalLength);
+        var bytes = new Uint8Array(buffer);
+        for (var i=0, pos=0; i < buffers.length; i++) {
+          var el = buffers[i];
+          if (!(el instanceof Uint8Array)) {
+            el = new Uint8Array(el.buffer || el, el.byteOffset || 0, el.byteLength);
+          }
+          bytes.set(el, pos);
+          pos += el.byteLength;
+        }
+        return buffer;
+      }
+      function appendBorV(promises, i) {
         if (i >= segments.length) {
           return Promise.reject('segment subset out of range');
         }
-        return segments[i].getLength().then(function(segmentLength) {
-          var chunkLength = Math.min(segmentLength, length);
-          promises.push(segments[i].getBytes(0, chunkLength).then(function(part) {
-            bytes.set(part, pos);
-          }));
-          length -= chunkLength;
-          return (length > 0)
-            ? onSetBytes(promises, bytes, pos + chunkLength, ++i)
-            : Promise.all(promises).then(Promise.resolve(bytes));
+        var segment = segment[i];
+        if (segment.minLength >= minLength) {
+          promises.push(segment.getSegment(segment.type, 0, minLength, maxLength));
+          return Promise.all(promises).then(concatBuffers);
+        }
+        return segment.getSegment(segment.type, 0, maxLength).withFixedLength().then(function(segment) {
+          promises.push(segment.getBufferOrViewNormalized(segment.offset, segment.minLength, segment.maxLength));
+          minLength -= segment.fixedLength;
+          maxLength -= segment.fixedLength;
+          return (minLength > 0) ? appendBorV(promises, i + 1) : Promise.all(promises).then(concatBuffers);
+        });
+      }
+      function prependBorV(promises, i) {
+        if (i < 0) {
+          return Promise.reject('segment subset out of range');
+        }
+        var segment = segment[i];
+        if (segment.minLength >= minLength) {
+          maxLength = Math.min(segment.maxLength, maxLength);
+          promises.unshift(segment.getBufferOrViewNormalized(
+            segment.type,
+            'suffix',
+            minLength,
+            maxLength));
+          return Promise.all(promises).then(concatBuffers);
+        }
+        return segment.getSegmentNormalized(segment.type, 0, maxLength).withFixedLength().then(function(segment) {
+          promises.unshift(segment.getBufferOrViewNormalized(segment.offset, segment.minLength, segment.maxLength));
+          minLength -= segment.fixedLength;
+          maxLength -= segment.fixedLength;
+          return (minLength > 0) ? appendBorV(promises, i - 1) : Promise.all(promises).then(concatBuffers);
         });
       }
       function onSegment(i) {
@@ -496,28 +657,46 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
           return Promise.reject('segment subset out of range');
         }
         var segment = segments[i];
-        return segments[i].getLength().then(function(segmentLength) {
-          if (offset >= segmentLength) {
-            offset -= segmentLength;
-            return onSegment(++i);
+        if ((offset + minLength) <= segment.minLength) {
+          return segment.getBufferOrViewNormalized(offset, minLength, maxLength);
+        }
+        return segment.withFixedLength().then(function(segment) {
+          if (offset >= segment.fixedLength) {
+            offset -= segment.fixedLength;
+            return onSegment(i + 1);
           }
-          var availableLength = segmentLength - offset;
-          if (availableLength >= length) {
-            return segment.getBytesNormalized(offset, length);
+          var availableLength = segment.fixedLength - offset;
+          if (availableLength >= minLength) {
+            return segment.getBufferOrViewNormalized(offset, Math.min(maxLength, availableLength));
           }
-          if (isFinite(length)) {
-            var bytes = new Uint8Array(length);
-            var promises = [segment.getBytes().then(function(part) {
-              bytes.set(part);
-            })];
-            return onSetBytes(promises, bytes, 0, ++i);
-          }
+          segment = segment.getSegment(segment.type, offset, availableLength);
           offset = 0;
-          length -= availableLength;
-          return onAddBytes([segment.getBytes()], ++i);
+          minLength -= availableLength;
+          maxLength -= availableLength;
+          return appendBorV([segment.getBufferOrView()], i + 1);
         });
       }
-      return onSegment(0);
+      function onSuffix(i) {
+        if (i < 0) {
+          return Promise.reject('segment subset out of range');
+        }
+        var segment = segments[i];
+        if (minLength <= segment.minLength) {
+          return segment.getBufferOrViewNormalized('suffix', minLength, maxLength);
+        }
+        return segment.withFixedLength().then(function(segment) {
+          var availableLength = segment.fixedLength;
+          if (availableLength >= minLength) {
+            availableLength = Math.min(maxLength, availableLength);
+            return segment.getBufferOrViewNormalized('suffix', availableLength, availableLength);
+          }
+          segment = segment.getSegmentNormalized(segment.type, 'suffix', availableLength, availableLength);
+          minLength -= availableLength;
+          maxLength -= availableLength;
+          return prependBorV([segment.getBufferOrView()], i + 1);
+        });
+      }
+      return (offset === 'suffix') ? onSuffix(segments.length - 1) : onSegment(0);
     },
     getBlob: function() {
       var promised = [];
@@ -550,7 +729,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
   });
   
-  function DataSegmentFromURL(url, offset, length, type) {
+  function DataSegmentFromURL(url, type, offset, minLength, maxLength) {
     this.url = url;
     if (type) {
       this.type = type;
@@ -564,26 +743,29 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         }
       }
     }
-    var region = normalizeRegion(offset, length);
+    var region = normalizeRegion(
+      offset, minLength, maxLength,
+      0, 0, Infinity);
     this.offset = region.offset;
-    this.knownLength = region.length;
+    this.minLength = region.minLength;
+    this.maxLength = region.maxLength;
   }
   DataSegmentFromURL.prototype = Object.assign(new DataSegment, {
-    getSegmentNormalized: function(type, offset, length) {
-      return new DataSegmentFromURL(this.url, offset, length, type);
+    getSegmentNormalized: function(type, offset, minLength, maxLength) {
+      return new DataSegmentFromURL(this.url, type, offset, minLength, maxLength);
     },
-    runXHRNormalized: function(req, offset, length) {
+    runXHRNormalized: function(req, offset, minLength, maxLength) {
       var range;
-      if (offset < 0) {
-        range = 'bytes='+offset;
+      if (offset === 'suffix') {
+        range = 'bytes=-'+maxLength;
         if (length !== -offset) {
           throw new Error('length cannot be specified for a suffix range');
         }
       }
       else {
         range = 'bytes='+offset+'-';
-        if (isFinite(length)) {
-          range += (offset + length - 1);
+        if (isFinite(maxLength)) {
+          range += (offset + maxLength - 1);
         }
       }
       req.open('GET', this.url);
@@ -592,7 +774,13 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       }
       return new Promise(function(resolve, reject) {
         req.addEventListener('load', function(e) {
-          resolve(req.response);
+          var size = (req.responseType === 'blob') ? req.response.size : req.response.byteLength;
+          if (size < minLength) {
+            reject('not enough bytes returned - need ' + minLength + ', got ' + size);
+          }
+          else {
+            resolve(req.response);
+          }
         });
         req.addEventListener('abort', function(e) {
           reject('request aborted');
@@ -603,34 +791,22 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         req.send();
       });
     },
-    getBufferOrViewNormalized: function(offset, length) {
+    getBufferOrViewNormalized: function(offset, minLength, maxLength) {
       var req = new XMLHttpRequest();
       req.responseType = 'arraybuffer';
-      if (offset < 0 && length < -offset) {
-        return this.runXHRNormalized(req, offset, -offset)
-        .then(function(buffer) {
-          return new Uint8Array(buffer, 0, length);
-        });
-      }
-      return this.runXHRNormalized(req, offset, length);
+      return this.runXHRNormalized(req, offset, minLength, maxLength);
     },
     getBlob: function() {
       var req = new XMLHttpRequest();
       req.responseType = 'blob';
-      var type = this.type, offset = this.offset, length = this.knownLength;
-      if (offset < 0 && length < -offset) {
-        return this.runXHRNormalized(req, offset, -offset)
-        .then(function(blob) {
-          return blob.slice(0, length, type);
-        });
-      }
-      return this.runXHRNormalized(req, offset, length)
+      var type = this.type;
+      return this.runXHRNormalized(req, this.offset, this.minLength, this.maxLength)
       .then(function(blob) {
         return blob.slice(0, blob.size, type);
       });
     },
     saveForTransfer: function(transferables) {
-      return ['FromURL', this.url, this.offset, this.byteLength];
+      return ['FromURL', this.url, this.offset, this.minLength, this.maxLength];
     },
   });
   
@@ -675,33 +851,42 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
   });
   
-  function BufferedSegment(wrappedSegment, type, offset, length) {
+  function BufferedSegment(wrappedSegment, type, offset, minLength, maxLength) {
     var region;
     if (wrappedSegment instanceof BufferedSegment) {
-      region = normalizeRegion(offset, length, wrappedSegment.knownLength, wrappedSegment.offset);
+      region = normalizeRegion(
+        offset, minLength, maxLength,
+        wrappedSegment.offset, wrappedSegment.minLength, wrappedSegment.maxLength);
       this.buffered = wrappedSegment.buffered;
       this.readyCallbacks = wrappedSegment.readyCallbacks;
       this.wrappedSegment = wrappedSegment.wrappedSegment;
     }
     else {
-      region = normalizeRegion(offset, length, wrappedSegment.knownLength);
+      region = normalizeRegion(
+        offset, minLength, maxLength,
+        0, wrappedSegment.minLength, wrappedSegment.maxLength);
       this.buffered = [];
       this.readyCallbacks = [];
       this.wrappedSegment = wrappedSegment;
     }
     this.offset = region.offset;
-    this.knownLength = region.length;
+    this.minLength = region.minLength;
+    this.maxLength = region.maxLength;
   }
   BufferedSegment.prototype = Object.assign(new DataSegment, {
     BUFSIZE: 32 * 1024,
-    getSegmentNormalized: function(type, offset, length) {
-      if (type === this.type && offset === this.offset && length === this.knownLength) {
+    getSegmentNormalized: function(type, offset, minLength, maxLength) {
+      if (type === this.type && offset === this.offset && minLength <= this.minLength && maxLength >= this.maxLength) {
         return this;
       }
-      return new BufferedSegment(this, type, offset, length);
+      return new BufferedSegment(this, type, offset, minLength, maxLength);
     },
-    getLength: function() {
-      return this.wrappedSegment.getLength();
+    withFixedLength: function() {
+      var self = this;
+      return this.wrappedSegment.withFixedLength().then(function(segment) {
+        if (segment === self.wrappedSegment) return self;
+        return new BufferedSegment(segment, self.type, self.offset, self.minLength, self.maxLength);
+      });
     },
     getIndex: function(offset) {
       offset += this.offset;
@@ -866,13 +1051,25 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       if (what !== 'interesting' && what !== 'boring') {
         return DataSegment.prototype.hint.apply(this, arguments);
       }
-      var region = normalizeRegion(offset, length, this.knownLength, this.offset);
+      var region = normalizeRegion(
+        offset, length, length,
+        this.offset, this.minLength, this.maxLength);
     },
   });
   Object.defineProperties(BufferedSegment.prototype, {
-    knownLength: {
+    fixedLength: {
       get: function() {
-        return this.wrappedSegment.knownLength;
+        return this.wrappedSegment.fixedLength;
+      },
+    },
+    minLength: {
+      get: function() {
+        return this.wrappedSegment.minLength;
+      },
+    },
+    maxLength: {
+      get: function() {
+        return this.wrappedSegment.maxLength;
       },
     },
   });
@@ -978,10 +1175,10 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       switch(serialized[0]) {
         case 'Empty': return new EmptySegment(serialized[1]);
         case 'FromBlob': return new DataSegmentFromBlob(serialized[1]);
-        case 'Wrapper': return new DataSegmentWrapper(serialized[1], serialized[2], serialized[3]);
+        case 'Wrapper': return new DataSegmentWrapper(serialized[1], serialized[2], serialized[3], serialized[4]);
         case 'FromArrayBuffer': return new DataSegmentFromArrayBuffer(serialized[1], serialized[2], serialized[3]);
         case 'Sequence': return new DataSegmentSequence(serialized.subarray(1).map(DataSegment.loadAfterTransfer));
-        case 'FromURL': return new DataSegmentFromURL(serialized[1], serialized[2], serialized[3]);
+        case 'FromURL': return new DataSegmentFromURL(serialized[1], serialized[2], serialized[3], serialized[4]);
         default: throw new Error('unsupported segment type: ' + serialized[0]);
       }
     },
