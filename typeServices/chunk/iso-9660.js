@@ -244,7 +244,7 @@ define(function() {
     },
     get after_identifier() {
       var identifierLength = this.bytes[32];
-      return 33 + identifierLength + (identifierLength % 2);
+      return 33 + identifierLength + ((identifierLength + 1) % 2);
     },
     get byteLength() {
       var extendedLength = this.extendedAttributeRecordLength;
