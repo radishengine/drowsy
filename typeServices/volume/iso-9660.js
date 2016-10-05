@@ -25,7 +25,7 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
             var volumeSegment = segment.getSegment(
               type,
               0,
-              descriptor.body.blockByteLength * descriptor.blockCount);
+              descriptor.body.blockByteLength * descriptor.body.blockCount);
             entries.add(volumeSegment);
             return doVolumeDescriptor(n + 1);
           default:
