@@ -49,7 +49,7 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
             pos += blockSize - (pos % blockSize);
             if (pos >= raw.length) break;
           }
-          var record = new chunks.VolumeDescriptorView(
+          var record = new chunkTypes.VolumeDescriptorView(
             raw.buffer,
             raw.byteOffset + pos,
             raw.byteLength - pos);
