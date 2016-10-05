@@ -19,6 +19,10 @@ define(['typeServices/dispatch'], function(dispatch) {
       this.onfile(path, segment);
     },
     onfile: function(){},
+    guessTypeForFilename: function(filename) {
+      var ext = filename.match(/[^\.\/\\\:]*$/)[0].toLowerCase();
+      return dispatch.byExtension[ext] || 'application/octet-stream';
+    },
   };
   
   return Volume;
