@@ -68,7 +68,7 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
               var subfolderSegment = segment.getSegment(
                 'chunk/iso-9660; which=folder; parent=' + folderBlock,
                 blockSize * folderBlock + pos,
-                record.byteLength));
+                record.byteLength);
               if (!promises) promises = [];
               promises.push(doFolderSegment(subfolderSegment, folderBlock));
             }
