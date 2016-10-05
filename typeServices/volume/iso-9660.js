@@ -37,7 +37,7 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
   }
   
   function split_directory_tree(segment, entries) {
-    var root = (segment.getTypeParameter('root') || '').match(/^(\d+)\s*,\s*(\d+)$/;
+    var root = (segment.getTypeParameter('root') || '').match(/^(\d+)\s*,\s*(\d+)$/);
     if (!root) return Promise.reject('root must be specified as a block,length pair');
     var blockSize = +(segment.getTypeParameter('block-size') || 2048);
     function doFolder(blockNumber, byteLength, parentBlockNumber) {
