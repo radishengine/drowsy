@@ -79,7 +79,7 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
         if (promises) return Promise.all(promises);
       });
     }
-    return doFolder(+root[1], +root[2]);
+    return doFolder(+root[1], +root[2], -1);
   }
   
   function split(segment, entries) {
