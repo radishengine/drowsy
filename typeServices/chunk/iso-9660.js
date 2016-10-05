@@ -201,7 +201,7 @@ define(function() {
       return this.dv.getUint32(10, true);
     },
     get recordedAt() {
-      return readBinaryDateTime(18, true);
+      return readBinaryDateTime(this.bytes, 18);
     },
     get flags() {
       return this.bytes[25];
