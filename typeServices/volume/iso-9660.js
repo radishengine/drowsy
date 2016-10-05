@@ -10,22 +10,22 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
           return Promise.reject('ISO 9660 volume descriptor signature not found');
         }
         entries.add(descriptorSegment);
-        switch (descriptorSegment.descriptorType) {
+        switch (descriptor.descriptorType) {
           case 'terminator':
             // i.e. don't call doVolumeDescriptor for the next n
             return;
           case 'volume':
             var type = 'volume/iso-9660';
-            type += 'volume=' + (descriptorSegment.isPrimaryVolume ? 'primary' : 'supplementary');
-            if (descriptorSegment.body.blockByteLength !== 2048) {
-              type += 'block-size=' + descriptorSegment.body.blockByteLength;
+            type += 'volume=' + (descriptor.isPrimaryVolume ? 'primary' : 'supplementary');
+            if (descriptor.body.blockByteLength !== 2048) {
+              type += 'block-size=' + descriptor.body.blockByteLength;
             }
-            type += 'root=' + descriptorSegment.body.rootDirectory.dataBlockAddress
-              + ',' + descriptorSegment.body.rootDirectory.dataByteLength;
+            type += 'root=' + descriptor.body.rootDirectory.dataBlockAddress
+              + ',' + descriptor.body.rootDirectory.dataByteLength;
             var volumeSegment = segment.getSegment(
               type,
               0,
-              descriptorSegment.body.blockByteLength * descriptor.blockCount);
+              descriptor.body.blockByteLength * descriptor.blockCount);
             entries.add(volumeSegment);
             return doVolumeDescriptor(n + 1);
           default:
