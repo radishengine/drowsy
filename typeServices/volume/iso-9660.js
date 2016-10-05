@@ -16,11 +16,11 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
             return;
           case 'volume':
             var type = 'volume/iso-9660';
-            type += 'volume=' + (descriptor.isPrimaryVolume ? 'primary' : 'supplementary');
+            type += '; volume=' + (descriptor.isPrimaryVolume ? 'primary' : 'supplementary');
             if (descriptor.body.blockByteLength !== 2048) {
-              type += 'block-size=' + descriptor.body.blockByteLength;
+              type += '; block-size=' + descriptor.body.blockByteLength;
             }
-            type += 'root=' + descriptor.body.rootDirectory.dataBlockAddress
+            type += '; root=' + descriptor.body.rootDirectory.dataBlockAddress
               + ',' + descriptor.body.rootDirectory.dataByteLength;
             var volumeSegment = segment.getSegment(
               type,
