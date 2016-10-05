@@ -135,6 +135,9 @@ define(function() {
     get optionalPathTableBlockAddressLE() {
       return this.dv.getUint32(152, false);
     },
+    get offsetof_rootDirectory() {
+      return 156;
+    },
     get rootDirectory() {
       var root = new DirectoryRecordView(this.dv.buffer, this.dv.byteOffset + 156, 34);
       Object.defineProperty(this, 'rootDirectory', {value:root});
