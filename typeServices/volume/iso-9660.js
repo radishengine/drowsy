@@ -54,18 +54,16 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
             raw.byteOffset + pos,
             raw.byteLength - pos);
           if (record.dataBlockAddress === blockNumber) {
-            var segment = segment.getSegment(
+            entries.add(segment.getSegment(
               'chunk/iso-9660; which=folder; parent=' + parentBlockNumber,
               (blockNumber * blockSize) + pos,
-              record.byteLength);
-            entries.add(segment);
+              record.byteLength));
           }
           else if (!record.isDirectory) {
-            var segment = segment.getSegment(
+            entries.add(segment.getSegment(
               'chunk/iso-9660; which=file; parent=' + blockNumber,
               (blockNumber * blockSize) + pos,
-              record.byteLength);
-            entries.add(segment);
+              record.byteLength));
           }
           else if (record.dataBlockAddress !== parentBlockNumber) {
             if (!promises) promises = [];
