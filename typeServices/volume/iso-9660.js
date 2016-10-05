@@ -128,7 +128,7 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
             return entry.getStruct()
             .then(function(fileInfo) {
               var name = fileInfo.name;
-              var type = volume.guessTypeFromFilename(name);
+              var type = volume.guessTypeForFilename(name);
               var path = parentPaths[parentID] + encodeURIComponent(name);
               volume.addFile(name, segment.getSegment(type, fileInfo.dataBlockAddress * blockSize, fileInfo.dataByteLength));
             });
