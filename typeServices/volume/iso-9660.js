@@ -119,7 +119,7 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
           promiseChain = promiseChain.then(function() {
             return entry.getStruct()
             .then(function(folderInfo) {
-              if (parentID === -1) {
+              if (+parentID === -1) {
                 parentPaths[folderInfo.dataBlockAddress] = '';
                 return;
               }
