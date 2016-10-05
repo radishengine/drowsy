@@ -271,7 +271,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       if (arguments.length === 0) {
         var list = [];
         eachCallback = function(entry) {
-          list.add(entry);
+          list.push(entry);
         };
         endCallback = function() {
           return Promise.resolve(list);
