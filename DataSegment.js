@@ -233,6 +233,15 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         return TView;
       });
     },
+    mount: function(volume) {
+      var self = this;
+      return this.getTypeHandler().then(function(handler) {
+        if (typeof handler.mount !== 'function') {
+          return Promise.reject('mount not implemented for ' + self.typeName);
+        }
+        return handler.mount(self, volume);
+      });
+    },
     getStruct: function() {
       var self = this;
       return Promise.all([this.getStructView(), this.getBytes()])
@@ -254,6 +263,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
           split: typeof handler.split === 'function',
           join: typeof handler.join === 'function',
           struct: typeof handler.getStructView === 'function' && handler.getStructView(self) !== null,
+          mount: typeof handler.mount === 'function',
         };
       });
     },
