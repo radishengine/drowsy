@@ -145,6 +145,7 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
   
   return {
     split: split,
+    mount: mount,
   };
 
 });
