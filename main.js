@@ -56,7 +56,7 @@ function(ByteSource, Item, AppleVolume, DataSegment, Volume)
           volume.onfile = function(path, segment) {
             console.log(path, segment.type, segment.fixedLength);
           }
-          segment.load(volume);
+          segment.mount(volume);
         }
       });
       
