@@ -10,8 +10,7 @@ define(['DataSegment'], function(DataSegment) {
         var offset = +entry.getTypeParameter('offset');
         var headerSegment = entry.getSegment(entry.type, 0, offset);
         promises.push(headerSegment.getStruct().then(function(record) {
-          var ext = record.path.match(/[^\.]*$/)[0].toLowerCase();
-          var type = dispatch.byExtension[ext] || 'application/octet-stream';
+          var type = volume.guessTypeForFilename(record.path);
           if (record.compressionMethod !== 'none') {
             var innerType = type;
             switch (record.compressionMethod) {
