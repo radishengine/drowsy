@@ -21,8 +21,8 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
             if (descriptor.body.blockByteLength !== 2048) {
               type += '; block-size=' + descriptor.body.blockByteLength;
             }
-            type += '; root=' + (descriptorOffset + descriptor.offsetof_rootDirectory)
-              + ',' + descriptor.sizeof_rootDirectory;
+            type += '; root=' + (descriptorOffset + descriptor.body.offsetof_rootDirectory)
+              + ',' + descriptor.body.sizeof_rootDirectory;
             var volumeSegment = segment.getSegment(
               type,
               0,
