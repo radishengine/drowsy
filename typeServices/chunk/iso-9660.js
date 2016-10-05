@@ -45,12 +45,12 @@ define(function() {
   };
   
   function readSpacePadded(bytes) {
-    return String.fromCharCode.apply(null, byte).replace(/\s*$/, '');
+    return String.fromCharCode.apply(null, bytes).replace(/\s*$/, '');
   }
   
   function decodeTimeZoneSuffix(tz) {
     tz = (tz - 48) * 15;
-    var sign = (tz < 0) ? '-' + ':';
+    var sign = (tz < 0) ? '-' : ':';
     tz = Math.abs(tz);
     return sign + ('0' + Math.floor(tz / 60)).slice(-2) + ':' + ('0' + tz%60).slice(-2);
   }
