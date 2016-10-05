@@ -136,7 +136,7 @@ define(function() {
       return this.dv.getUint32(152, false);
     },
     get rootDirectory() {
-      var root = new DirectoryRecord(this.dv.buffer, this.dv.byteOffset + 156, 34);
+      var root = new DirectoryRecordView(this.dv.buffer, this.dv.byteOffset + 156, 34);
       Object.defineProperty(this, 'rootDirectory', {value:root});
       return root;
     },
