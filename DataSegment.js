@@ -327,7 +327,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       // - 'suffix' ranges
       // - offset out of range
       // - offset+minLength out of range
-      if (offset === 0 && maxLength >= this.blob.size) return this;
+      if (offset === 0 && maxLength >= this.blob.size && type === this.type) return this;
       return new DataSegmentFromBlob(this.blob.slice(offset, offset+maxLength, type));
     },
     getBufferOrViewNormalized: function(offset, minLength, maxLength) {
