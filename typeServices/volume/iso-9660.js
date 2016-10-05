@@ -113,13 +113,16 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
       var blockSize = +(primaryVolumeSegment.getTypeParameter('block-size') || 2048);
       var promiseChain = Promise.resolve(null);
       var parentPaths = {};
-      parentPaths['-1'] = '';
       return primaryVolumeSegment.split(function(entry) {
         var parentID = entry.getTypeParameter('parent');
         if (entry.getTypeParameter('which') === 'folder') {
           promiseChain = promiseChain.then(function() {
             return entry.getStruct()
             .then(function(folderInfo) {
+              if (parentID === -1) {
+                parentPaths[folderInfo.dataBlockAddress] = '';
+                return;
+              }
               parentPaths[folderInfo.dataBlockAddress] = parentPaths[parentID] + encodeURIComponent(folderInfo.name) + '/';
             });
           });
