@@ -138,6 +138,9 @@ define(function() {
     get offsetof_rootDirectory() {
       return 156;
     },
+    get sizeof_rootDirectory() {
+      return 34;
+    },
     get rootDirectory() {
       var root = new DirectoryRecordView(this.dv.buffer, this.dv.byteOffset + 156, 34);
       Object.defineProperty(this, 'rootDirectory', {value:root});
