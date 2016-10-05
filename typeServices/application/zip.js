@@ -39,7 +39,8 @@ define(['DataSegment'], function(DataSegment) {
             var full = record.uncompressedByteLength32; // TODO: zip64
             type += '; full='+full;
           }
-          volume.addFile(record.path, entry.getSegment(type, offset));
+          var normalizedPath = record.path.split('/').map(encodeURIComponent).join('/');
+          volume.addFile(normalizedPath, entry.getSegment(type, offset));
         }));
       },
       function() {
