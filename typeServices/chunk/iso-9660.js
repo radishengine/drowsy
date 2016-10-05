@@ -283,7 +283,8 @@ define(function() {
         case 'path-table-entry': return PathTableEntryView;
         case 'boot-record': return BootRecordView;
         case 'volume-record': return VolumeRecordView;
-        case 'directory-record': return DirectoryRecordView;
+        case 'folder': return DirectoryRecordView;
+        case 'file': return DirectoryRecordView;
         default: return null;
       }
     },
