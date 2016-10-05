@@ -4,7 +4,8 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
   
   function split_descriptors(segment, entries) {
     function doVolumeDescriptor(n) {
-      var descriptorSegment = segment.getSegment('chunk/iso-9660; which=volume-descriptor', 2048 * (0x10 + n), 2048);
+      var descriptorOffset = 2048 * (0x10 + n);
+      var descriptorSegment = segment.getSegment('chunk/iso-9660; which=volume-descriptor', descriptorOffset, 2048);
       return descriptorSegment.getStruct().then(function(descriptor) {
         if (!descriptor.hasValidSignature) {
           return Promise.reject('ISO 9660 volume descriptor signature not found');
@@ -20,8 +21,8 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
             if (descriptor.body.blockByteLength !== 2048) {
               type += '; block-size=' + descriptor.body.blockByteLength;
             }
-            type += '; root=' + descriptor.body.rootDirectory.dataBlockAddress
-              + ',' + descriptor.body.rootDirectory.dataByteLength;
+            type += '; root=' + (descriptorOffset + descriptor.offsetof_rootDirectory)
+              + ',' + descriptor.sizeof_rootDirectory;
             var volumeSegment = segment.getSegment(
               type,
               0,
@@ -40,44 +41,44 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
     var root = (segment.getTypeParameter('root') || '').match(/^(\d+)\s*,\s*(\d+)$/);
     if (!root) return Promise.reject('root must be specified as a block,length pair');
     var blockSize = +(segment.getTypeParameter('block-size') || 2048);
-    function doFolder(blockNumber, byteLength, parentBlockNumber) {
-      return segment.getBytes(blockNumber * blockSize, byteLength)
-      .then(function(raw) {
-        var promises;
-        for (var pos = 0; pos < raw.length; ) {
-          if (raw[pos] === 0) {
-            pos += blockSize - (pos % blockSize);
-            if (pos >= raw.length) break;
+    var rootFolderSegment = segment.getSegment('chunk/iso-9660; which=folder; parent=-1', +root[1], +root[2]);
+    function doFolderSegment(folderSegment, parentBlock) {
+      entries.add(folderSegment);
+      return folderSegment.getStruct().then(function(folder) {
+        var folderBlock = folder.dataBlockAddress;
+        return segment.getBytes(blockSize * folderBlock, folder.dataByteLength)
+        .then(function(raw) {
+          var promises;
+          for (var pos = 0; pos < raw.length; ) {
+            if (raw[pos] === 0) {
+              pos += blockSize - (pos % blockSize);
+              if (pos >= raw.length) break;
+            }
+            var record = new chunkTypes.DirectoryRecordView(
+              raw.buffer,
+              raw.byteOffset + pos,
+              raw.byteLength - pos);
+            if (!record.isDirectory) {
+              entries.add(segment.getSegment(
+                'chunk/iso-9660; which=file; parent=' + folderBlock,
+                blockSize * folderBlock + pos,
+                record.byteLength));
+            }
+            else if (record.dataBlockAddress !== parentBlock && record.dataBlockAddress !== folderBlock) {
+              var subfolderSegment = segment.getSegment(
+                'chunk/iso-9660; which=folder; parent=' + folderBlock,
+                blockSize * folderBlock + pos,
+                record.byteLength));
+              if (!promises) promises = [];
+              promises.push(doFolderSegment(subfolderSegment, folderBlock));
+            }
+            pos += record.byteLength;
           }
-          var record = new chunkTypes.DirectoryRecordView(
-            raw.buffer,
-            raw.byteOffset + pos,
-            raw.byteLength - pos);
-          if (record.dataBlockAddress === blockNumber) {
-            entries.add(segment.getSegment(
-              'chunk/iso-9660; which=folder; parent=' + parentBlockNumber,
-              (blockNumber * blockSize) + pos,
-              record.byteLength));
-          }
-          else if (!record.isDirectory) {
-            entries.add(segment.getSegment(
-              'chunk/iso-9660; which=file; parent=' + blockNumber,
-              (blockNumber * blockSize) + pos,
-              record.byteLength));
-          }
-          else if (record.dataBlockAddress !== parentBlockNumber) {
-            if (!promises) promises = [];
-            promises.push(doFolder(
-              record.dataBlockAddress,
-              record.dataByteLength,
-              blockNumber));
-          }
-          pos += record.byteLength;
-        }
-        if (promises) return Promise.all(promises);
+          if (promises) return Promise.all(promises);
+        });
       });
     }
-    return doFolder(+root[1], +root[2], -1);
+    return doFolderSegment(rootFolderSegment, -1);
   }
   
   function split(segment, entries) {
