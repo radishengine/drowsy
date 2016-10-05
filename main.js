@@ -46,60 +46,21 @@ function(ByteSource, Item, AppleVolume, DataSegment, Volume)
     
     }
     else {
-      function fastLog(v) {
-        document.body.appendChild(document.createTextNode(v.toString()));
-      }
+      
       function handleSegment(segment) {
-        var volume = new Volume();
-        volume.onfile = function(path, segment) {
-          console.log(path, segment.type, segment.fixedLength);
-        }
-        volume.load(segment);
-        /*
         segment.getCapabilities()
         .then(function(capabilities) {
-          if (capabilities.split) {
-            fastLog('splitting');
-            //console.log('splitting...');
-            segment.split(function(entry) {
-              fastLog('.\u200B');
-              handleSegment(entry);
-            })
-            .then(function() {
-              fastLog('done');
-            });
-          }
-          if (capabilities.struct) {
-            segment.getStruct()
-            .then(function(struct) {
-              //console.log('struct', struct.toString());
-              fastLog('<'+struct.toString()+'>\u200B');
-            });
+          console.log(capabilities);
+          if (capabilities.mount) {
+            var volume = new Volume();
+            volume.onfile = function(path, segment) {
+              console.log(path, segment.type, segment.fixedLength);
+            }
+            segment.load(volume);
           }
         });
-        */
       }
-      var segment = DataSegment.from(droppedFile);
-      handleSegment(segment);
-      /*
-      var item = new Item(ByteSource.from(droppedFile));
-      var extension = droppedFile.name.match(/\.([^\.]+)$/);
-      if (extension) {
-        extension = extension && encodeURIComponent(extension[1].toUpperCase().replace(/[\\\/\*\"\:\?\|<>]/g, '_'));
-        var importString = 'ext/open_' + extension;
-        require([importString],
-        function(open) {
-          open.apply(item);
-          item.getListing()
-          .then(function(listing) {
-            console.log(listing);
-          });
-        },
-        function() {
-          console.log('Unsupported extension: ' + extension);
-        });
-      }
-      */
+      
     }
 
   });
