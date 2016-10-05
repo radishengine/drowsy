@@ -27,8 +27,16 @@ define(function() {
     
   }
   
+  function mount(segment, volume) {
+    return segment.split().then(function(parts) {
+      if (parts.length === 0) return Promise.reject('No disk volume found');
+      return parts[0].mount(volume);
+    });
+  }
+  
   return {
     split: split,
+    mount: mount,
   };
 
 });
