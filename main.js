@@ -38,7 +38,7 @@ function(ByteSource, Item, AppleVolume, DataSegment, Volume)
     
     var ext = droppedFile.name.match(/[^\.]*$/)[0].toLowerCase();
     
-    if (/^(iso|toast|dsk|img)$/i.test(ext)) {
+    if (false && /^(iso|toast|dsk|img)$/i.test(ext)) {
       
       var byteSource = ByteSource.from(droppedFile);
       var appleVolume = new AppleVolume(byteSource);
