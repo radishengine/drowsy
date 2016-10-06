@@ -78,7 +78,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macRoman, macDate, Re
     },
     get records() {
       var records;
-      switch (this.nodeType) {
+      switch (this.type) {
         case 'index':
           records = this.rawRecords
           .map(function(recordBytes) {
