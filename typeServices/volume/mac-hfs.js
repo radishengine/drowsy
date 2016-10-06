@@ -179,7 +179,7 @@ define(['typeServices/dispatch', 'DataSegment'], function(dispatch, DataSegment)
           var dataForkExtents, resourceForkExtents, needDataBlocks, needResourceBlocks;
           if (dataFork.logicalEOF === 0) {
             needDataBlocks = 0;
-            volume.add(path, new DataSegment.Empty(type));
+            volume.addFile(path, new DataSegment.Empty(type));
           }
           else {
             dataForkExtents = record.fileInfo.dataForkFirstExtentRecord;
@@ -192,7 +192,7 @@ define(['typeServices/dispatch', 'DataSegment'], function(dispatch, DataSegment)
                 type,
                 dataFork.logicalEOF,
                 dataForkExtents);
-              volume.add(path, dataForkSegment);
+              volume.addFile(path, dataForkSegment);
             }
           }
           if (resourceFork.logicalEOF === 0) {
@@ -209,7 +209,7 @@ define(['typeServices/dispatch', 'DataSegment'], function(dispatch, DataSegment)
                 'application/x-mac-resource-fork',
                 resourceFork.logicalEOF,
                 resourceForkExtents);
-              volume.add(path + '/resources', resourceForkSegment);
+              volume.addFile(path + '/resources', resourceForkSegment);
             }
           }
           if (needDataBlocks > 0 || needResourceBlocks > 0) {
@@ -227,7 +227,7 @@ define(['typeServices/dispatch', 'DataSegment'], function(dispatch, DataSegment)
                     type,
                     dataFork.logicalEOF,
                     dataForkExtents);
-                  volume.add(path, dataForkSegment);
+                  volume.addFile(path, dataForkSegment);
                 }
                 if (resourceForkExtents) {
                   resourceForkExtents = resourceForkExtents.concat(result.resourceExtents);
@@ -237,7 +237,7 @@ define(['typeServices/dispatch', 'DataSegment'], function(dispatch, DataSegment)
                     'application/x-mac-resource-fork',
                     resourceFork.logicalEOF,
                     resourceForkExtents);
-                  volume.add(path + '/resources', resourceForkSegment);
+                  volume.addFile(path + '/resources', resourceForkSegment);
                 }
               });
             })(promiseChain, dataForkExtents, resourceForkExtents, record, dataFork, resourceFork, type, path);
