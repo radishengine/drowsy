@@ -47,18 +47,29 @@ function(ByteSource, Item, AppleVolume, DataSegment, Volume)
     }
     else {
       
-      var segment = DataSegment.from(droppedFile);
-      segment.getCapabilities()
-      .then(function(capabilities) {
-        console.log(capabilities);
-        if (capabilities.mount) {
-          var volume = new Volume();
-          volume.onfile = function(path, segment) {
-            console.log(path, segment.type, segment.fixedLength);
+      function handleSegment(segment) {
+        segment.getCapabilities()
+        .then(function(capabilities) {
+          console.log(capabilities);
+          if (capabilities.mount) {
+            var volume = new Volume();
+            volume.onfile = function(path, segment) {
+              console.log(path, segment.type, segment.fixedLength);
+            }
+            segment.mount(volume);
           }
-          segment.mount(volume);
-        }
-      });
+          else if (capabilities.split) {
+            segment.split(function(subsegment) {
+              console.log(subsegment);
+              // handleSegment(subsegment);
+            });
+          }
+        });
+      }
+      
+      var segment = DataSegment.from(droppedFile);
+      
+      handleSegment(segment);
       
     }
 
