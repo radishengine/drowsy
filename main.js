@@ -69,6 +69,7 @@ function(ByteSource, Item, AppleVolume, DataSegment, Volume)
                   context[part] = newContext;
                   if (!('childContainer' in context)) {
                     context.appendChild(context.childContainer = document.createElement('DIV'));
+                    context.childContainer.style.paddingLeft = '1em';
                   }
                   context.childContainer.appendChild(newContext);
                   context = newContext;
