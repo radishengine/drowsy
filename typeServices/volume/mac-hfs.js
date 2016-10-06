@@ -30,7 +30,7 @@ define(['typeServices/dispatch', 'DataSegment'], function(dispatch, DataSegment)
       var allocChunkSize = masterDirectoryBlock.allocationChunkByteLength;
       allocationType += '; chunk=' + allocChunkSize;
       var allocSegment = segment.getSegment(allocationType,
-        masterDirectoryBlock.firstAllocationBlock,
+        masterDirectoryBlock.firstAllocationBlock * 512,
         masterDirectoryBlock.allocationChunkCount * masterDirectoryBlock.allocationChunkByteLength);
       entries.add(allocSegment);
       entries.add(getSegmentFromExtents(
