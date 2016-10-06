@@ -9,15 +9,15 @@ define(function() {
     var maybeHFS = segment.getBytes(512 * 2, 2).then(function(sigBytes) {
       var sig = String.fromCharCode(sigBytes[0], sigBytes[1]);
       if (sig === 'BD') {
-        entries.add(segment.getSegment('volume/hfs'));
+        entries.add(segment.getSegment('volume/mac-hfs'));
         return true;
       }
       if (sig === 'H+') {
-        entries.add(segment.getSegment('volume/hfs-plus'));
+        entries.add(segment.getSegment('volume/mac-hfs-plus'));
         return true;
       }
       else if (sig === 'HX') {
-        entries.add(segment.getSegment('volume/hfs-plus; variant=case-sensitive'));
+        entries.add(segment.getSegment('volume/mac-hfs-plus; variant=case-sensitive'));
         return false;
       }
       return false;
