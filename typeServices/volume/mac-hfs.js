@@ -158,7 +158,7 @@ define(['typeServices/dispatch', 'DataSegment'], function(dispatch, DataSegment)
           var record = leaf.records[i];
           if (!/^(folder|file)$/.test(record.leafType)) continue;
           var parentPath = parentPaths[record.parentFolderID];
-          var path = parentPath = parentPath + encodeURIComponent(record.name);
+          var path = parentPath + encodeURIComponent(record.name);
           if (record.leafType === 'folder') {
             parentPaths[record.folderInfo.id] = path + '/';
             continue;
