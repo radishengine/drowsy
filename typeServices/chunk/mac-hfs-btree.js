@@ -11,7 +11,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macRoman, macDate, Re
     var headerSegment = segment.getSegment('chunk/mac-hfs-btree; tree=' + tree + '; node=header', 0, NODE_BYTES);
     return headerSegment.getStruct().then(function(header) {
       if (header.type !== 'header') return Promise.reject('not a valid B*Tree');
-      entries.add(header);
+      entries.add(headerSegment);
       var map = header.records[2];
       header = header.records[0];
       // TODO: entries filtering to specify whether index nodes should be included or not
@@ -19,7 +19,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macRoman, macDate, Re
         var leafSegment = segment.getSegment(leafType, NODE_BYTES * nodeNumber, NODE_BYTES);
         return leafSegment.getStruct().then(function(leaf) {
           if (leaf.type !== 'leaf') return Promise.reject('non-leaf node in the leaf chain');
-          entries.add(leaf);
+          entries.add(leafSegment);
           if (leaf.nextNodeNumber !== 0) {
             doLeaf(leaf.nextNodeNumber);
           }
