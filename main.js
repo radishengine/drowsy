@@ -77,6 +77,23 @@ function(ByteSource, Item, AppleVolume, DataSegment, Volume)
                 }
               }
               // console.log([path, segment.type, segment.fixedLength]);
+              segment.getCapabilities()
+              .then(function(caps) {
+                if (caps.mount) {
+                  var button = document.createElement('BUTTON');
+                  button.innerHTML = 'open';
+                  if ('childContainer' in context) {
+                    context.insertBefore(button, context.childContainer);
+                  }
+                  else {
+                    context.appendChild(button);
+                  }
+                  button.onclick = function() {
+                    context.removeChild(button);
+                    context.mount(volume.getSubVolume(path + '/'));
+                  };
+                }
+              });
             }
             segment.mount(volume);
           }
