@@ -4,6 +4,9 @@ define(['DataSegment'], function(DataSegment) {
   
   function getSegmentFromExtents(allocationSegment, chunkSize, type, byteLength, extents) {
     if (byteLength === 0) return new DataSegment.Empty(type);
+    if (byteLength <= chunkSize * extents[0].length) {
+      return allocationSegment.getSegment(type, chunkSize * extents[0].offset, chunkSize * extents[0].length);
+    }
     var list = [], i = 0;
     do {
       if (i > extents.length) throw new Error('insufficient space in extents');
@@ -12,7 +15,6 @@ define(['DataSegment'], function(DataSegment) {
       byteLength -= len;
       i++;
     } while (byteLength > 0);
-    if (list.length === 1) return list[0];
     return DataSegment.from(list, type);
   }
   
