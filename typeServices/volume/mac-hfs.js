@@ -36,13 +36,13 @@ define(['DataSegment'], function(DataSegment) {
       entries.add(getSegmentFromExtents(
         allocSegment,
         allocChunkSize,
-        'volume/mac-hfs; part=catalog',
+        'chunk/mac-hfs-btree; which=catalog',
         masterDirectoryBlock.catalogFileByteLength,
         masterDirectoryBlock.catalogFileExtentRecord));
       entries.add(getSegmentFromExtents(
         allocSegment,
         allocChunkSize,
-        'volume/mac-hfs; part=overflow',
+        'volume/mac-hfs-btree; which=overflow',
         masterDirectoryBlock.extentsOverflowFileByteLength,
         masterDirectoryBlock.extentsOverflowFileExtentRecord));
     });
@@ -57,8 +57,8 @@ define(['DataSegment'], function(DataSegment) {
           chunkSize = +allocation.getTypeParameter('chunk');
           if (isNaN(chunkSize)) return Promise.reject('chunk parameter must be set on allocation table');
         }
-        else if (parts[i].typeName === 'volume/mac-hfs') {
-          switch(parts[i].getTypeParameter('part')) {
+        else if (parts[i].typeName === 'chunk/mac-hfs-btree') {
+          switch(parts[i].getTypeParameter('which')) {
             case 'catalog': catalog = parts[i]; break;
             case 'overflow': overflow = parts[i]; break;
           }
