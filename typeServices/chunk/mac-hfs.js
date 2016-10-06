@@ -19,9 +19,9 @@ define(['mac/date', 'mac/roman'], function(macDate, macRoman) {
     return record;
   }  
   
-  function MasterDirectoryBlockView(buffer, byteOffset) {
-    this.dv = new DataView(buffer, byteOffset || 0, BLOCK_BYTES);
-    this.bytes = new Uint8Array(buffer, byteOffset || 0, BLOCK_BYTES);
+  function MasterDirectoryBlockView(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
   MasterDirectoryBlockView.prototype = {
     get signature() {
