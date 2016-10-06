@@ -4,7 +4,7 @@ define(function() {
   
   function split(segment, entries) {
     function doPartition(n) {
-      var partitionRecord = byteSource.getSegment('chunk/mac-partition-map', 512 * n, 512);
+      var partitionRecord = segment.getSegment('chunk/mac-partition-map', 512 * n, 512);
       var promises = [];
       return partitionRecord.getStruct().then(function(partition) {
         if (!partition.hasValidTag) {
