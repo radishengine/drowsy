@@ -36,6 +36,7 @@ define(function() {
       dms: 'application/x-disk-masher-system',
       doc: 'application/x-doc-ambiguous',
       docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      dsk: 'volume/ambiguous',
       emf: 'image/emf',
       exe: 'application/x-exe-ambiguous',
       flc: 'video/x-flic',
