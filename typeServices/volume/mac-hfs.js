@@ -42,7 +42,7 @@ define(['DataSegment'], function(DataSegment) {
       entries.add(getSegmentFromExtents(
         allocSegment,
         allocChunkSize,
-        'volume/mac-hfs-btree; which=overflow',
+        'chunk/mac-hfs-btree; which=overflow',
         masterDirectoryBlock.extentsOverflowFileByteLength,
         masterDirectoryBlock.extentsOverflowFileExtentRecord));
     });
