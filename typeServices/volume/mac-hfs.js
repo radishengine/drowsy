@@ -32,6 +32,7 @@ define(['DataSegment'], function(DataSegment) {
       var allocSegment = segment.getSegment(allocationType,
         masterDirectoryBlock.firstAllocationBlock,
         masterDirectoryBlock.allocationChunkCount * masterDirectoryBlock.allocationChunkByteLength);
+      entries.add(allocSegment);
       entries.add(getSegmentFromExtents(
         allocSegment,
         allocChunkSize,
