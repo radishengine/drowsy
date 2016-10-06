@@ -153,10 +153,9 @@ define(['typeServices/dispatch', 'DataSegment'], function(dispatch, DataSegment)
       
       var promiseChain = Promise.resolve(null);
       
-      return catalog.split(function(entry) {
-        if (entry.getTypeParameter('node') !== 'leaf') return;
-        for (var i = 0; i < entry.records.length; i++) {
-          var record = entry.records[i];
+      function onLeaf(leaf) {
+        for (var i = 0; i < leaf.records.length; i++) {
+          var record = leaf.records[i];
           if (!/^(folder|file)$/.test(record.leafType)) continue;
           var parentPath = parentPaths[record.parentFolderID];
           var path = parentPath = parentPath + encodeURIComponent(record.name);
@@ -243,6 +242,12 @@ define(['typeServices/dispatch', 'DataSegment'], function(dispatch, DataSegment)
               });
             })(promiseChain, dataForkExtents, resourceForkExtents, record, dataFork, resourceFork, type, path);
           }
+        }
+      }
+      
+      return catalog.split(function(entry) {
+        if (entry.getTypeParameter('node') === 'leaf') {
+          entry.getStruct().then(onLeaf);
         }
       },
       function() {
