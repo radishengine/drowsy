@@ -194,7 +194,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macRoman, macDate, Re
   
   function LeafRecordView(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
-    this.value = new Uint8Array(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
     
     if (!this.isDeleted) {
       var dataOffset = 1 + this.bytes[0];
