@@ -1,20 +1,16 @@
-define(['charset/macintosh'], function(macRoman) {
+define(['typeServices/dispatch', 'charset/macintosh'], function(dispatch, macRoman) {
 
   'use strict';
   
-  function split() {
-    var context = this;
-    return context.getBytes(0, ResourceHeaderView.byteLength)
+  function split(segment, entries) {
+    return segment.getBytes(0, ResourceHeaderView.byteLength)
     .then(function(rawHeader) {
       var header = new ResourceHeaderView(rawHeader);
-      var dataSegment = context.getSegment(header.dataOffset, header.dataLength);
+      var dataSegment = segment.getSegment(header.dataOffset, header.dataLength);
       return context.getBytes(header.mapOffset, header.mapLength)
       .then(function(rawMap) {
         var map = new ResourceMapView(rawMap);
         return Promise.all(map.resourceList.map(function(resourceInfo) {
-          var metadata = {
-            id: resourceInfo.id,
-          };
           if (resourceInfo.name) metadata.name = resourceInfo.name;
           if (resourceInfo.type) metadata.type = resourceInfo.type;
           return dataSegment.getBytes(resourceInfo.dataOffset)
@@ -170,8 +166,12 @@ define(['charset/macintosh'], function(macRoman) {
   };
   ReferenceListEntryView.byteLength = 12;
   
+  function mount(segment, volume) {
+  }
+  
   return {
     split: split,
+    mount: mount,
   };
 
 });
