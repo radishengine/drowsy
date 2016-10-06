@@ -23,7 +23,40 @@ define(['typeServices/dispatch'], function(dispatch) {
       var ext = filename.match(/[^\.\/\\\:]*$/)[0].toLowerCase();
       return dispatch.byExtension[ext] || 'application/octet-stream';
     },
+    getSubVolume: function(path) {
+      return new SubVolume(this, path);
+    },
   };
+  
+  function SubVolume(volume, path) {
+    this.volume = volume;
+    this.path = path;
+  };
+  SubVolume.prototype = {
+    get charset() {
+      return this.volume.charset;
+    },
+    get pathSeparator() {
+      return this.volume.pathSeparator();
+    },
+    joinPath: function(parts) {
+      return this.volume.joinPath(parts);
+    },
+    splitPath: function(path) {
+      return this.volume.splitPath(parts);
+    },
+    addFile: function(path, segment) {
+      this.volume.addFile(this.path + path, segment);
+    },
+    guessTypeForFilename: function(filename) {
+      return this.volume.guessTypeForFilename(filename);
+    },
+    getSubVolume: function(path) {
+      return this.volume.getSubVolume(this.path + path);
+    },
+  };
+  
+  Volume.SubVolume = SubVolume;
   
   return Volume;
 
