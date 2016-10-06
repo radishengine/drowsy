@@ -34,8 +34,31 @@ define(function() {
     return doPartition(1);
   }
   
+  function mount(segment, volume) {
+    return segment.split().then(function(partitions) {
+      return Promise.all(partitions.map(function(partition) {
+        return partition.getCapabilities()
+        .then(function(capabilities) {
+          return (capabilities.mount) ? partition : null;
+        });
+      }));
+    })
+    .then(function(mountables) {
+      mountables = mountables.filter(function(v){ return v !== null; });
+      if (mountables.length === 0) {
+        return Promise.reject('no mountable partition found');
+      }
+      if (mountables.length > 1) {
+        console.log('multiple mountable partitions found:', mountables);
+        console.log('(using the first one)');
+      }
+      return mountables[0].mount(volume);
+    });
+  }
+  
   return {
     split: split,
+    mount: mount,
   };
 
 });
