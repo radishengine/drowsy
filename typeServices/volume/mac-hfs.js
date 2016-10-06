@@ -50,7 +50,24 @@ define(['DataSegment'], function(DataSegment) {
   
   function mount(segment, volume) {
     return segment.split().then(function(parts) {
-      console.log(parts);
+      var allocation, catalog, overflow, chunkSize;
+      for (var i = 0; i < parts.length; i++) {
+        if (parts[i].typeName === 'chunk/mac-hfs' && parts[i].getTypeParameter('which') === 'allocation') {
+          allocation = parts[i];
+          chunkSize = +allocation.getTypeParameter('chunk');
+          if (isNaN(chunkSize)) return Promise.reject('chunk parameter must be set on allocation table');
+        }
+        else if (parts[i].typeName === 'volume/mac-hfs') {
+          switch(parts[i].getTypeParameter('part')) {
+            case 'catalog': catalog = parts[i]; break;
+            case 'overflow': overflow = parts[i]; break;
+          }
+        }
+      }
+      if (!(allocation && catalog && overflow)) {
+        return Promise.reject('HFS split did not yield allocation, catalog and overflow');
+      }
+      console.log(allocation, catalog, overflow, chunkSize);
     });
   }
   
