@@ -8,7 +8,7 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macRoman, macDate, Re
     if (segment.getTypeParameter('node')) return Promise.resolve(null);
     var tree = segment.getTypeParameter('tree');
     var leafType = 'chunk/mac-hfs-btree; tree=' + tree + '; node=leaf';
-    var headerSegment = segment.getSegment('chunk/mac-hfs-btree; tree=' + tree + '; node=header');
+    var headerSegment = segment.getSegment('chunk/mac-hfs-btree; tree=' + tree + '; node=header', 0, NODE_BYTES);
     return headerSegment.getStruct().then(function(header) {
       if (header.type !== 'header') return Promise.reject('not a valid B*Tree');
       entries.add(header);
