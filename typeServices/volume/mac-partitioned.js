@@ -6,15 +6,15 @@ define(function() {
     function doPartition(n) {
       var partitionMapSegment = segment.getSegment('chunk/mac-partition-map', 512 * n, 512);
       var promises = [];
-      return partitionMapSegment.getStruct().then(function(partition) {
-        if (!partition.hasValidTag) {
+      return partitionMapSegment.getStruct().then(function(partitionInfo) {
+        if (!partitionInfo.hasValidTag) {
           return Promise.reject('invalid partition map signature');
         }
         entries.add(partitionMapSegment);
         var partitionSegment = segment.getSegment(
-          partition.partitionSegmentType,
-          512 * partition.blockOffset,
-          512 * partition.blockCount);
+          partitionInfo.partitionSegmentType,
+          512 * partitionInfo.blockOffset,
+          512 * partitionInfo.blockCount);
         if (partitionSegment.typeName === 'volume/ambiguous') {
           promises.push(partitionSegment.split(function(entry) {
             entries.add(entry);
@@ -23,7 +23,7 @@ define(function() {
         else {
           entries.add(partitionSegment);
         }
-        if (n < partition.totalPartitionCount) {
+        if (n < partitionInfo.totalPartitionCount) {
           return doPartition(n + 1);
         }
       })
