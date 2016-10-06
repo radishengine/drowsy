@@ -90,7 +90,7 @@ function(ByteSource, Item, AppleVolume, DataSegment, Volume)
                   }
                   button.onclick = function() {
                     context.removeChild(button);
-                    context.mount(volume.getSubVolume(path + '/'));
+                    segment.mount(volume.getSubVolume(path + '/'));
                   };
                 }
               });
