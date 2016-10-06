@@ -35,7 +35,7 @@ define(function() {
     
     if (!noRecurse) {
       tries = tries.then(function(results) {
-        if (results.filter(function(v){ return v; }).length !== 0) return;
+        for (var i = 0; i < results.length; i++) { if (results[i]) return; }
         // if all else fails, try shifting 0x54 bytes (DiskCopy 4.2 header size) and trying again
         split(segment.getSegment(segment.type, 0x54), entries, true);
       });
