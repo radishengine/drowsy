@@ -204,14 +204,30 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macRoman, macDate, Re
     }
   }
   LeafRecordView.prototype = {
-    get isDeleted: {
+    get isDeleted() {
       return !(this.bytes.length > 0 && this.bytes[0]);
+    },
+    get overflowForkType() {
+      switch (this.bytes[1]) {
+        case 0x00: return 'data';
+        case 0xFF: return 'resource';
+        default: return 'unknown';
+      }
+    },
+    get overflowFileID() {
+      return this.dv.getUint32(2, false);
     },
     get parentFolderID() {
       return this.dv.getUint32(2, false);
     },
+    get overflowStartingFileAllocationBlock() {
+      return this.dv.getUint32(6, false);
+    },
     get name() {
       return macRoman(this.bytes, 7, this.bytes[6]);
+    },
+    get overflowExtentDataRecord() {
+      return extentDataRecord(this.dv, 1 + this.bytes[0]);
     },
     get leafType() {
       switch (this.dataBytes[0]) {
