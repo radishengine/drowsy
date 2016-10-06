@@ -34,6 +34,9 @@ function(ByteSource, Item, AppleVolume, DataSegment, Volume)
     }
   }
   
+  var rootContainer = document.createElement('DIV');
+  document.body.appendChild(rootContainer);
+
   makeFileDrop('drop-zone', function(droppedFile) {
     
     var ext = droppedFile.name.match(/[^\.]*$/)[0].toLowerCase();
@@ -47,14 +50,32 @@ function(ByteSource, Item, AppleVolume, DataSegment, Volume)
     }
     else {
       
-      function handleSegment(segment) {
+      function handleSegment(segment, container) {
         segment.getCapabilities()
         .then(function(capabilities) {
           console.log(capabilities);
           if (capabilities.mount) {
             var volume = new Volume();
             volume.onfile = function(path, segment) {
-              console.log([path, segment.type, segment.fixedLength]);
+              var pathParts = path.split('/').map(decodeURIComponent);
+              var context = container;
+              for (var i = 0; i < pathParts.length; i++) {
+                var part = '/' + pathParts[i];
+                if (part in context) {
+                  context = context[part];
+                }
+                else {
+                  var newContext = document.createElement('DIV');
+                  context[part] = newContext;
+                  if (!('childContainer' in context)) {
+                    context.appendChild(context.childContainer = document.createElement('DIV'));
+                  }
+                  context.childContainer.appendChild(newContext);
+                  context = newContext;
+                  context.appendChild(document.createTextNode(pathParts[i]));
+                }
+              }
+              // console.log([path, segment.type, segment.fixedLength]);
             }
             segment.mount(volume);
           }
@@ -69,7 +90,7 @@ function(ByteSource, Item, AppleVolume, DataSegment, Volume)
       
       var segment = DataSegment.from(droppedFile);
       
-      handleSegment(segment);
+      handleSegment(segment, rootContainer);
       
     }
 
