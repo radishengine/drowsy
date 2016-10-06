@@ -46,6 +46,7 @@ define(function() {
       htm: 'text/html',
       html: 'text/html',
       ico: 'image/vnd.microsoft.icon',
+      img: 'volume/ambiguous',
       ini: 'application/x-ini',
       iso: 'volume/optical-media',
       jar: 'application/zip',
