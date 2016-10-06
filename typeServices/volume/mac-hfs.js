@@ -5,7 +5,7 @@ define(['typeServices/dispatch', 'DataSegment'], function(dispatch, DataSegment)
   function getSegmentFromExtents(allocationSegment, chunkSize, type, byteLength, extents) {
     if (byteLength === 0) return new DataSegment.Empty(type);
     if (byteLength <= chunkSize * extents[0].length) {
-      return allocationSegment.getSegment(type, chunkSize * extents[0].offset, chunkSize * extents[0].length);
+      return allocationSegment.getSegment(type, chunkSize * extents[0].offset, byteLength);
     }
     var list = [], i = 0;
     do {
