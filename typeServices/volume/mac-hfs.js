@@ -31,10 +31,10 @@ define(function() {
           masterDirectoryBlock.catalogFileByteLength,
           masterDirectoryBlock.catalogFileExtentRecord);
       }
-      if (masterDirectoryBlock.extentsFileByteLength > 0) {
-        allocationType += '; extents=' + extentString(
-          masterDirectoryBlock.extentsFileByteLength,
-          masterDirectoryBlock.extentsFileExtentRecord);
+      if (masterDirectoryBlock.extentsOverflowFileByteLength > 0) {
+        allocationType += '; overflow=' + extentString(
+          masterDirectoryBlock.extentsOverflowFileByteLength,
+          masterDirectoryBlock.extentsOverflowFileExtentRecord);
       }
       var allocationSegment = segment.getSegment(allocationType,
         masterDirectoryBlock.firstAllocationBlock,
