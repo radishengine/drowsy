@@ -28,7 +28,8 @@ define(function() {
     
     return Promise.all([
       maybeHFS,
-    });
+      maybeFAT,
+    ]);
     
   }
   
