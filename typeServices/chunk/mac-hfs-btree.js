@@ -4,6 +4,30 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macRoman, macDate, Re
   
   var NODE_BYTES = 512;
   
+  function split(segment, entries) {
+    if (segment.getTypeParameter('node')) return Promise.resolve(null);
+    var tree = segment.getTypeParameter('tree');
+    var headerSegment = segment.getSegment('chunk/mac-hfs-tree; tree=' + tree + '; node=header');
+    return headerSegment.getStruct().then(function(header) {
+      if (header.type !== 'header') return Promise.reject('not a valid B*Tree');
+      entries.add(header);
+      var map = header.records[2];
+      header = header.records[0];
+      // TODO: entries filtering to specify whether index nodes should be included or not
+      function doLeaf(nodeNumber) {
+        var leafSegment = segment.getSegment('chunk/mac-hfs-tree; tree=' + tree + '; node=leaf');
+        return leafSegment.getStruct().then(function(leaf) {
+          if (leaf.type !== 'leaf') return Promise.reject('non-leaf node in the leaf chain');
+          entries.add(leaf);
+          if (leaf.nextNodeNumber !== 0) {
+            doLeaf(leaf.nextNodeNumber);
+          }
+        });
+      }
+      return doLeaf(header.firstLeaf);
+    });
+  }
+  
   function extentDataRecord(dv, offset) {
     var record = [];
     for (var i = 0; i < 3; i++) {
@@ -432,10 +456,14 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macRoman, macDate, Re
   
   return {
     getStructView: function(segment) {
-      if (/\-node$/.test(struct.getTypeParameter('which') || '')) return BTreeNodeView;
+      if (segment.getTypeParameter('node')) return BTreeNodeView;
       return null;
     },
+    canSplit: function(segment) {
+      return !segment.getTypeParameter('node');
+    },
     NodeView: BTreeNodeView,
+    split: split,
   };
 
 });
