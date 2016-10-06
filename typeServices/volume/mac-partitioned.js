@@ -4,17 +4,17 @@ define(function() {
   
   function split(segment, entries) {
     function doPartition(n) {
-      var partitionRecord = segment.getSegment('chunk/mac-partition-map', 512 * n, 512);
+      var partitionMapSegment = segment.getSegment('chunk/mac-partition-map', 512 * n, 512);
       var promises = [];
-      return partitionRecord.getStruct().then(function(partition) {
+      return partitionMapSegment.getStruct().then(function(partition) {
         if (!partition.hasValidTag) {
           return Promise.reject('invalid partition map signature');
         }
-        entries.add(partitionRecord);
+        entries.add(partitionMapSegment);
         var partitionSegment = segment.getSegment(
-          partitionRecord.partitionSegmentType,
-          512 * partitionRecord.blockOffset,
-          512 * partitionRecord.blockCount);
+          partition.partitionSegmentType,
+          512 * partition.blockOffset,
+          512 * partition.blockCount);
         if (partitionSegment.typeName === 'volume/ambiguous') {
           promises.push(partitionSegment.split(function(entry) {
             entries.add(entry);
