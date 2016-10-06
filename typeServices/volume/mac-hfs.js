@@ -1,4 +1,4 @@
-define(['DataSegment'], function(DataSegment) {
+define(['typeServices/dispatch', 'DataSegment'], function(dispatch, DataSegment) {
   
   'use strict';
   
@@ -50,12 +50,19 @@ define(['DataSegment'], function(DataSegment) {
   
   function mount(segment, volume) {
     return segment.split().then(function(parts) {
-      var allocation, catalog, overflow, chunkSize;
+      var mdb, allocation, catalog, overflow, chunkSize;
       for (var i = 0; i < parts.length; i++) {
-        if (parts[i].typeName === 'chunk/mac-hfs' && parts[i].getTypeParameter('which') === 'allocation') {
-          allocation = parts[i];
-          chunkSize = +allocation.getTypeParameter('chunk');
-          if (isNaN(chunkSize)) return Promise.reject('chunk parameter must be set on allocation table');
+        if (parts[i].typeName === 'chunk/mac-hfs') {
+          switch (parts[i].getTypeParameter('which')) {
+            case 'master-directory-block':
+              mdb = parts[i];
+              break;
+            case 'allocation':
+              allocation = parts[i];
+              chunkSize = +allocation.getTypeParameter('chunk');
+              if (isNaN(chunkSize)) return Promise.reject('chunk parameter must be set on allocation table');
+              break;
+          }
         }
         else if (parts[i].typeName === 'chunk/mac-hfs-btree') {
           switch(parts[i].getTypeParameter('tree')) {
@@ -64,10 +71,183 @@ define(['DataSegment'], function(DataSegment) {
           }
         }
       }
-      if (!(allocation && catalog && overflow)) {
-        return Promise.reject('HFS split did not yield allocation, catalog and overflow');
+      if (!(mdb && allocation && catalog && overflow)) {
+        return Promise.reject('HFS split did not yield mdb, allocation, catalog and overflow');
       }
-      console.log(allocation, catalog, overflow, chunkSize);
+      var parentPaths = {};
+      parentPaths[0] = '';
+      parentPaths[1] = '';
+      parentPaths[2] = '$EXTENTS/';
+      parentPaths[3] = '$CATALOG/';
+      parentPaths[4] = '$BADALLOC/';
+      
+      var lastOverflowLeaf = null, nextLeafRecord_i = 0;
+      function getOverflowExtents(fileID, dataBlockCount, resourceBlockCount) {
+        if (lastOverflowLeaf === null) {
+          var overflowHeaderSegment = overflow.getSegment('chunk/mac-hfs-btree; tree=overflow; node=header', 0, 512);
+          lastOverflowLeaf = overflowHeaderSegment.getStruct().then(function(overflowHeader) {
+            if (overflowHeader.firstLeaf === 0) return Promise.reject('no leaf found');
+            var firstLeafSegment = overflow.getSegment(
+              'chunk/mac-hfs-btree; tree=overflow; node=leaf',
+              overflowHeader.firstLeaf * 512,
+              512);
+            return firstLeafSegment.getStruct();
+          });
+        }
+        var result = {dataExtents:[], resourceExtents:[]};
+        function onOverflowLeaf(leaf) {
+          for (; nextLeafRecord_i < leaf.records.length; nextLeafRecord_i++) {
+            var record = leaf.records[nextLeafRecord_i];
+            if (record.overflowFileID === 5) {
+              // file ID 5 is used for bad block
+              continue;
+            }
+            if (record.overflowFileID < fileID) {
+              if (record.overflowExtentDataRecord[0].length !== 0) {
+                return Promise.reject('unretrieved extents for file ' + record.overflowFileID);
+              }
+              continue;
+            }
+            if (record.overflowFileID > fileID) {
+              return Promise.reject('missing extents for file ' + fileID);
+            }
+            var addMe = record.overflowExtentDataRecord;
+            switch (record.overflowForkType) {
+              case 'data':
+                var addTo = result.dataExtents;
+                for (var i = 0; i < addMe.length; i++) {
+                  addTo.push(addMe[i]);
+                  dataBlockCount -= addMe[i].length;
+                }
+                if (dataBlockCount <= 0) {
+                  nextLeafRecord_i++;
+                  return result;
+                }
+                break;
+              case 'resource':
+                var addTo = result.resourceExtents;
+                for (var i = 0; i < addMe.length; i++) {
+                  addTo.push(addMe[i]);
+                  resourceBlockCount -= addMe[i].length;
+                }
+                if (resourceBlockCount <= 0) {
+                  nextLeafRecord_i++;
+                  return result;
+                }
+                break;
+              default: return Promise.reject('unknown overflow record fork type');
+            }
+          }
+          if (leaf.nextNodeNumber === 0) {
+            return Promise.reject('missing extents for file ' + fileID);
+          }
+          var nextLeafSegment = overflow.getSegment(
+            'chunk/mac-hfs-btree; tree=overflow; node=leaf',
+            leaf.nextNodeNumber * 512,
+            512);
+          nextLeafRecord_i = 0;
+          return (lastOverflowLeaf = nextLeafSegment.getStruct()).then(onLeaf);
+        }
+        return lastOverflowLeaf.then(onOverflowLeaf);
+      }
+      
+      var promiseChain = Promise.resolve(null);
+      
+      return catalog.split(function(entry) {
+        if (entry.getTypeParameter('node') !== 'leaf') return;
+        for (var i = 0; i < entry.records.length; i++) {
+          var record = entry.records[i];
+          if (!/^(folder|file)$/.test(record.leafType)) continue;
+          var parentPath = parentPaths[record.parentFolderID];
+          var path = parentPath = parentPath + encodeURIComponent(record.name);
+          if (record.leafType === 'folder') {
+            parentPaths[record.folderInfo.id] = path + '/';
+            continue;
+          }
+          var dataFork = record.fileInfo.dataForkInfo;
+          var resourceFork = record.fileInfo.resourceForkInfo;
+          var type = record.fileInfo.type;
+          if (type) {
+            type = dispatch.byMacFileType[type] || ('application/octet-stream; mac-type=' + encodeURIComponent(type));
+          }
+          else {
+            type = 'application/octet-stream';
+          }
+          var creator = record.fileInfo.creator;
+          if (creator) {
+            type += '; mac-creator=' + encodeURIComponent(creator);
+          }
+          var dataForkExtents, resourceForkExtents, needDataBlocks, needResourceBlocks;
+          if (dataFork.logicalEOF === 0) {
+            needDataBlocks = 0;
+            volume.add(path, new DataSegment.Empty(type));
+          }
+          else {
+            dataForkExtents = record.fileInfo.dataForkFirstExtentRecord;
+            needDataBlocks = Math.ceil(dataFork.logicalEOF / chunkSize);
+            needDataBlocks -= dataForkExtents.reduce(function(total,e){ return total + e.length; }, 0);
+            if (needDataBlocks <= 0) {
+              var dataForkSegment = getSegmentFromExtents(
+                allocation,
+                chunkSize,
+                type,
+                dataFork.logicalEOF,
+                dataForkExtents);
+              volume.add(path, dataForkSegment);
+            }
+          }
+          if (resourceFork.logicalEOF === 0) {
+            needResourceBlocks = 0;
+          }
+          else {
+            resourceForkExtents = record.fileInfo.resourceForkFirstExtentRecord;
+            needResourceBlocks = Math.ceil(resourceFork.logicalEOF / chunkSize);
+            needResourceBlocks -= resourceForkExtents.reduce(function(total,e){ return total + e.length; }, 0);
+            if (needResourceBlocks <= 0) {
+              var resourceForkSegment = getSegmentFromExtents(
+                allocation,
+                chunkSize,
+                'application/x-mac-resource-fork',
+                resourceFork.logicalEOF,
+                resourceForkExtents);
+              volume.add(path + '/resources', resourceForkSegment);
+            }
+          }
+          if (needDataBlocks > 0 || needResourceBlocks > 0) {
+            if (needDataBlocks <= 0) dataForkExtents = null;
+            if (needResourceBlocks <= 0) resourceForkExtents = null;
+            promiseChain = (function(promiseChain, dataForkExtents, resourceForkExtents, record, dataFork, resourceFork, type, path) {
+              return promiseChain
+              .then(getOverflowExtents(record.fileInfo.id, needDataBlocks, needResourceBlocks))
+              .then(function(result) {
+                if (dataForkExtents) {
+                  dataForkExtents = dataForkExtents.concat(result.dataExtents);
+                  var dataForkSegment = getSegmentFromExtents(
+                    allocation,
+                    chunkSize,
+                    type,
+                    dataFork.logicalEOF,
+                    dataForkExtents);
+                  volume.add(path, dataForkSegment);
+                }
+                if (resourceForkExtents) {
+                  resourceForkExtents = resourceForkExtents.concat(result.resourceExtents);
+                  var resourceForkSegment = getSegmentFromExtents(
+                    allocation,
+                    chunkSize,
+                    'application/x-mac-resource-fork',
+                    resourceFork.logicalEOF,
+                    resourceForkExtents);
+                  volume.add(path + '/resources', resourceForkSegment);
+                }
+              });
+            })(promiseChain, dataForkExtents, resourceForkExtents, record, dataFork, resourceFork, type, path);
+          }
+        }
+      },
+      function() {
+        return promiseChain;
+      });
     });
   }
   
