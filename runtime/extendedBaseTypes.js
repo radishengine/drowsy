@@ -533,7 +533,7 @@ define(function() {
   
   Object.assign(Number.prototype, {
     i64_negate: function() {
-      return -this.value;
+      return -this;
     },
   });
   Object.defineProperties(Number.prototype, {
