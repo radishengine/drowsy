@@ -621,6 +621,11 @@ define(function() {
     asBoxedInt32: {
       get: function() { return new BoxedInt32(this); }
     },
+    asBoxedInt64: {
+      get: function() {
+        return new BoxedInt64((this / 0x100000000) | 0, this | 0);
+      },
+    },
     asBoxedUint8: {
       get: function(){ return new BoxedUint8(this); }
     },
@@ -629,6 +634,11 @@ define(function() {
     },
     asBoxedUint32: {
       get: function() { return new BoxedUint32(this); }
+    },
+    asBoxedUint64: {
+      get: function() {
+        return new BoxedUint64((this / 0x100000000) | 0, this | 0);
+      },
     },
     asBoxedFloat32: {
       get: function() { return new BoxedFloat32(this); }
