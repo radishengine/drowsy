@@ -623,7 +623,25 @@ define(function() {
     },
     asBoxedInt64: {
       get: function() {
-        return new BoxedInt64((this / 0x100000000) | 0, this | 0);
+        var v = Math.floor(this);
+        var hi, lo;
+        if (v < 0) {
+          v = -v;
+          hi = (v / 0x100000000) | 0;
+          lo = v | 0;
+          if (lo === 0) {
+            hi = -hi;
+          }
+          else {
+            hi = ~hi;
+            lo = -lo;
+          }
+        }
+        else {
+          hi = (v / 0x100000000) | 0;
+          lo = v | 0;
+        }
+        return new BoxedInt64(hi, lo);
       },
     },
     asBoxedUint8: {
@@ -637,7 +655,25 @@ define(function() {
     },
     asBoxedUint64: {
       get: function() {
-        return new BoxedUint64((this / 0x100000000) | 0, this | 0);
+        var v = Math.floor(this);
+        var hi, lo;
+        if (v < 0) {
+          v = -v;
+          hi = (v / 0x100000000) | 0;
+          lo = v | 0;
+          if (lo === 0) {
+            hi = -hi;
+          }
+          else {
+            hi = ~hi;
+            lo = -lo;
+          }
+        }
+        else {
+          hi = (v / 0x100000000) | 0;
+          lo = v | 0;
+        }
+        return new BoxedUint64(hi, lo);
       },
     },
     asBoxedFloat32: {
