@@ -383,10 +383,41 @@ define(function() {
   });
   
   Object.defineProperties(BoxedInt64.prototype, {
-    asInt64: {get:retThis},
+    normalized: {
+      get: function() {
+        var hi = this.hi;
+        if (hi < 0) {
+          var negativeHi = -hi;
+          if (negativeHi < 0x200000) {
+            var negativeLo = this.lo;
+            if (negativeLo === 0) {
+              negativeHi = -negativeHi;
+            }
+            else {
+              negativeHi = ~negativeHi;
+              negativeLo = -negativeLo >>> 0;
+            }
+            return -((negativeHi * 0x100000000) + (negativeLo >>> 0));
+          }
+        }
+        else if (hi < 0x200000) {
+          return (hi * 0x100000000) + (this.lo >>> 0);
+        }
+        return this;
+      },
+    },
+    asInt64: {
+      get: function() {
+        return this.normalized;
+      }
+    },
     asUint64: {
       get: function() {
-        return new BoxedUint64(this.hi, this.lo);
+        var hi = this.hi, lo = this.lo;
+        if (hi >= 0 && hi < 0x200000) {
+          return (hi * 0x100000000) + (lo >>> 0);
+        }
+        return new BoxedUint64(hi, lo);
       },
     },
     asBoxedInt64: {get:retThis},
@@ -419,10 +450,39 @@ define(function() {
   });
   
   Object.defineProperties(BoxedUint64.prototype, {
-    asUint64: {get:retThis},
+    normalized: {
+      get: function() {
+        var hi = this.hi;
+        if (hi < 0 || hi >= 0x200000) return this;
+        return (hi * 0x100000000) + this.lo;
+      },
+    },
+    asUint64: {
+      get: function() {
+        return this.normalized;
+      }
+    },
     asInt64: {
       get: function() {
-        return new BoxedInt64(this.hi, this.lo);
+        var hi = this.hi, lo = this.lo;
+        if (hi < 0) {
+          var negativeHi, negativeLo;
+          if (lo === 0) {
+            negativeHi = -hi;
+            negativeLo = 0;
+          }
+          else {
+            negativeHi = ~hi;
+            negativeLo = -lo >>> 0;
+          }
+          if (negativeHi < 0x200000) {
+            return -((negativeHi * 0x100000000) + negativeLo);
+          }
+        }
+        else if (hi < 0x200000) {
+          return (hi * 0x100000000) + (lo >>> 0);
+        }
+        return new BoxedInt64(hi, lo);
       },
     },
     asBoxedUint64: {get:retThis},
