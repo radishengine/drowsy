@@ -82,7 +82,7 @@ define(function() {
   Object.defineProperty(Object.prototype, HASH_PROP, {
     get: function() {
       var hash = (Math.random() * 0xffffffff) | 0;
-      Object.defineProperty(Object.prototype, HASH_PROP, {value:hash});
+      Object.defineProperty(this, HASH_PROP, {value:hash});
       return hash;
     },
   });
