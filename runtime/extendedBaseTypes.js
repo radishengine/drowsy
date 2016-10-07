@@ -449,7 +449,7 @@ define(function() {
       get: function() { return this; },
     },
     asBoolean: {
-      get: function() { return !!this.value; },
+      get: function() { return !!this; },
     },
     asInt8: {
       get: function() { return this << 24 >> 24; },
