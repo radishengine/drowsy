@@ -192,7 +192,7 @@ define(function() {
           lo = 0;
         }
         else {
-          lo = ~hi;
+          hi = ~hi;
           lo = -lo >>> 0;
         }
         if (hi < 0x200000) {
