@@ -198,9 +198,6 @@ define(function() {
           hi = ~hi;
           lo = -lo >>> 0;
         }
-        if (hi < 0x200000) {
-          return (hi * 0x100000000) + lo;
-        }
       }
       else if (lo === 0) {
         hi = -hi;
@@ -208,6 +205,9 @@ define(function() {
       else {
         hi = ~hi;
         lo = -lo >>> 0;
+      }
+      if (hi < 0x200000) {
+        return (hi * 0x100000000) + lo;
       }
       return new BoxedInt64(hi, lo);
     },
