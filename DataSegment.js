@@ -191,6 +191,61 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       if (region.maxLength === 0) return p_emptyBuffer;
       return this.getArrayBufferNormalized(region.offset, region.minLength, region.maxLength);
     },
+    getDataView: function(offset, minLength, maxLength) {
+      var region = normalizeRegion(
+        offset, minLength, maxLength,
+        this.offset, this.minLength, this.maxLength);
+      if (region.maxLength === 0) return new DataView(p_emptyBuffer);
+      return this.getBufferOrViewNormalized(region.offset, region.minLength, region.maxLength)
+      .then(function(borv) {
+        if (borv instanceof ArrayBuffer) return new DataView(borv);
+        return new DataView(borv.buffer, borv.byteOffset, borv.byteLength);
+      });
+    },
+    getUint8: function(offset) {
+      return this.getBufferOrViewNormalized(region.offset, 1, 1)
+      .then(function(borv) {
+        if (borv instanceof Uint8Array) return borv[0];
+        if (borv instanceof ArrayBuffer) return new Uint8Array(borv)[0];
+        return new Uint8Array(borv.buffer, borv.byteOffset, 1)[0];
+      });
+    },
+    getInt16: function(offset, littleEndian) {
+      return this.getDataView(offset, 2, 2)
+      .then(function(dv) {
+        return dv.getInt16(0, littleEndian);
+      });
+    },
+    getUint16: function(offset, littleEndian) {
+      return this.getDataView(offset, 2, 2)
+      .then(function(dv) {
+        return dv.getUint16(0, littleEndian);
+      });
+    },
+    getInt32: function(offset, littleEndian) {
+      return this.getDataView(offset, 4, 4)
+      .then(function(dv) {
+        return dv.getInt32(0, littleEndian);
+      });
+    },
+    getUint32: function(offset, littleEndian) {
+      return this.getDataView(offset, 4, 4)
+      .then(function(dv) {
+        return dv.getUint32(0, littleEndian);
+      });
+    },
+    getFloat32: function(offset, littleEndian) {
+      return this.getDataView(offset, 4, 4)
+      .then(function(dv) {
+        return dv.getFloat32(0, littleEndian);
+      });
+    },
+    getFloat64: function(offset, littleEndian) {
+      return this.getDataView(offset, 8, 8)
+      .then(function(dv) {
+        return dv.getFloat64(0, littleEndian);
+      });
+    },
     getBytes: function(offset, minLength, maxLength) {
       var region = normalizeRegion(
         offset, minLength, maxLength,
