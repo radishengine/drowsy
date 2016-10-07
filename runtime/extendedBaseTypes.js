@@ -146,53 +146,6 @@ define(function() {
     asBoxedFloat64: {get: retBoxedFloat64},
   });
   
-  function Boxed64() {
-  }
-  Boxed64.prototype = Object.defineProperties({
-    asBoolean: {
-      get: function() { return this.lo && this.hi; },
-    },
-    asInt8: {
-      get: function() { return this.lo << 24 >> 24; },
-    },
-    asInt16: {
-      get: function() { return this.lo << 16 >> 16; },
-    },
-    asInt32: {
-      get: function() { return this.lo; },
-    },
-    asUint8: {
-      get: function() { return this.lo & 0xff; },
-    },
-    asUint16: {
-      get: function() { return this.lo & 0xffff; },
-    },
-    asUint32: {
-      get: function() { return this.lo >>> 0; },
-    },
-    asBoxedBoolean: {
-      get: function() { return new BoxedBoolean(this.lo && this.hi); },
-    },
-    asBoxedInt8: {
-      get: function() { return new BoxedInt8(this.lo); },
-    },
-    asBoxedInt16: {
-      get: function() { return new BoxedInt16(this.lo); },
-    },
-    asBoxedInt32: {
-      get: function() { return new BoxedInt32(this.lo); },
-    },
-    asBoxedUint8: {
-      get: function() { return new BoxedUint8(this.lo); },
-    },
-    asBoxedUint16: {
-      get: function() { return new BoxedUint16(this.lo); },
-    },
-    asBoxedUint32: {
-      get: function() { return new BoxedUint32(this.lo); },
-    },
-  });  
-  
   function BoxedBoolean(value) { this.value = !!value; }
   function BoxedInt8(value) { this.value = value << 24 >> 24; }
   function BoxedUint8(value) { this.value = value & 0xff; }
@@ -200,8 +153,6 @@ define(function() {
   function BoxedUint16(value) { this.value = value & 0xffff; }
   function BoxedInt32(value) { this.value = value | 0; }
   function BoxedUint32(value) { this.value = value >>> 0; }
-  function BoxedInt64(hi, lo) { this.hi = hi | 0; this.lo = lo | 0; }
-  function BoxedUint64(hi, lo) { this.hi = hi | 0; this.lo = lo | 0; }
   function BoxedFloat32(value) { tempFloat32[0] = value; this.value = tempFloat32[0]; }
   function BoxedFloat64(value) { this.value = +value; }
   
@@ -212,6 +163,28 @@ define(function() {
   .forEach(function(T) {
     T.prototype = new Boxed;
   });
+  
+  function Boxed64() {
+  }
+  Boxed64.prototype = {
+    get asBoolean() { return this.lo && this.hi; },
+    get asInt8() { return this.lo << 24 >> 24; },
+    get asInt16() { return this.lo << 16 >> 16; },
+    get asInt32() { return this.lo; },
+    get asUint8() { return this.lo & 0xff; },
+    get asUint16() { return this.lo & 0xffff; },
+    get asUint32() { return this.lo >>> 0; },
+    get asBoxedBoolean() { return new BoxedBoolean(this.lo && this.hi); },
+    get asBoxedInt8() { return new BoxedInt8(this.lo); },
+    get asBoxedInt16() { return new BoxedInt16(this.lo); },
+    get asBoxedInt32() { return new BoxedInt32(this.lo); },
+    get asBoxedUint8() { return new BoxedUint8(this.lo); },
+    get asBoxedUint16() { return new BoxedUint16(this.lo); },
+    get asBoxedUint32() { return new BoxedUint32(this.lo); },
+  };
+  
+  function BoxedInt64(hi, lo) { this.hi = hi | 0; this.lo = lo | 0; }
+  function BoxedUint64(hi, lo) { this.hi = hi | 0; this.lo = lo | 0; }
   
   [BoxedInt64, BoxedUint64]
   .forEach(function(T) {
