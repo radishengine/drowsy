@@ -122,6 +122,9 @@ define(function() {
     i64_negate: function() {
       return -this.value;
     },
+    i64_bnot: function() {
+      return ~this.value;
+    },
   };
   Object.defineProperties(Boxed.prototype, {
     normalized: {get: retValue},
@@ -205,6 +208,27 @@ define(function() {
       else {
         hi = ~hi;
         lo = -lo >>> 0;
+      }
+      return new BoxedInt64(hi, lo);
+    },
+    i64_bnot: function() {
+      var hi = ~this.hi, lo = ~this.lo;
+      if (hi < 0) {
+        var negatedHi, negatedLo;
+        if (lo === 0) {
+          negatedHi = -hi;
+          negatedLo = 0;
+        }
+        else {
+          negatedHi = ~hi;
+          negatedLo = -lo >>> 0;
+        }
+        if (negatedHi < 0x200000) {
+          return -((negatedHi * 0x100000000) + negatedLo);
+        }
+      }
+      else if (hi < 0x200000) {
+        return (hi * 0x100000000) + lo;
       }
       return new BoxedInt64(hi, lo);
     },
@@ -534,6 +558,9 @@ define(function() {
   Object.assign(Number.prototype, {
     i64_negate: function() {
       return -this;
+    },
+    i64_bnot: function() {
+      return ~this;
     },
   });
   Object.defineProperties(Number.prototype, {
