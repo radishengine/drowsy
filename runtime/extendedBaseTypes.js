@@ -119,6 +119,9 @@ define(function() {
   }
   Boxed.prototype = {
     toString: retString,
+    i64_negate: function() {
+      return -this.value;
+    },
   };
   Object.defineProperties(Boxed.prototype, {
     normalized: {get: retValue},
@@ -181,6 +184,30 @@ define(function() {
     get asBoxedUint8() { return new BoxedUint8(this.lo); },
     get asBoxedUint16() { return new BoxedUint16(this.lo); },
     get asBoxedUint32() { return new BoxedUint32(this.lo); },
+    i64_negate: function() {
+      var hi = this.hi, lo = this.lo;
+      if (hi < 0) {
+        if (lo === 0) {
+          hi = -hi;
+          lo = 0;
+        }
+        else {
+          lo = ~hi;
+          lo = -lo >>> 0;
+        }
+        if (hi < 0x200000) {
+          return (hi * 0x100000000) + lo;
+        }
+      }
+      else if (lo === 0) {
+        hi = -hi;
+      }
+      else {
+        hi = ~hi;
+        lo = -lo >>> 0;
+      }
+      return new BoxedInt64(hi, lo);
+    },
   };
   
   function BoxedInt64(hi, lo) { this.hi = hi | 0; this.lo = lo | 0; }
@@ -504,6 +531,11 @@ define(function() {
     asBoxedFloat64: {get:retThis},
   });
   
+  Object.assign(Number.prototype, {
+    i64_negate: function() {
+      return -this.value;
+    },
+  });
   Object.defineProperties(Number.prototype, {
     normalized: {
       get: function() { return this; },
