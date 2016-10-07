@@ -7,6 +7,26 @@ define(function() {
   var LATEST_FORMAT_VERSION = 43;
   var LATEST_GUI_VERSION = 330;
   
+  function getVersionedType(T, formatVersion, guiVersion) {
+    if (formatVersion === T.prototype.formatVersion
+    && (isNaN(T.prototype.guiVersion) || guiVersion === T.prototype.guiVersion)) {
+      return T;
+    }
+    var idstr = 'v' + formatVersion;
+    if (!('guiVersion' in T)) guiVersion = NaN;
+    if (!isNaN(guiVersion)) idstr += '_g' + guiVersion;
+    if (idstr in T) return T[idstr];
+    function TVersioned(buffer, byteOffset, byteLength) {
+      T.call(this, buffer, byteOffset, byteLength);
+    }
+    TVersioned.prototype = new T(voidBuffer, 0, 0);
+    TVersioned.prototype.formatVersion = formatVersion;
+    if (!isNaN(guiVersion)) {
+      TVersioned.prototype.guiVersion = guiVersion;
+    }
+    return T[idstr] = TVersioned;
+  }
+  
   function nullTerminated(bytes, offset, length) {
   }
   
@@ -775,26 +795,6 @@ define(function() {
       },
     },
   });
-  
-  function getVersionedType(T, formatVersion, guiVersion) {
-    if (formatVersion === T.prototype.formatVersion
-    && (isNaN(T.prototype.guiVersion) || guiVersion === T.prototype.guiVersion)) {
-      return T;
-    }
-    var idstr = 'v' + formatVersion;
-    if (!('guiVersion' in T)) guiVersion = NaN;
-    if (!isNaN(guiVersion)) idstr += '_g' + guiVersion;
-    if (idstr in T) return T[idstr];
-    function TVersioned(buffer, byteOffset, byteLength) {
-      T.call(this, buffer, byteOffset, byteLength);
-    }
-    TVersioned.prototype = new T(voidBuffer, 0, 0);
-    TVersioned.prototype.formatVersion = formatVersion;
-    if (!isNaN(guiVersion)) {
-      TVersioned.prototype.guiVersion = guiVersion;
-    }
-    return T[idstr] = TVersioned;
-  }
   
   return {
     getStructView: function(segment) {
