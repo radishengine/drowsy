@@ -123,7 +123,17 @@ define(function() {
       return -this.value;
     },
     i64_bnot: function() {
-      return ~this.value;
+      var v = Math.floor(this.value);
+      if (v < -0x80000000) {
+        v = -v;
+        var hi = ~(v / 0x100000000), lo = ~v >>> 0;
+        return -((hi * 0x100000000) + lo);
+      }
+      else if (v >= 0x100000000) {
+        var hi = ~(v / 0x10000000), lo = ~v >>> 0;
+        return (hi * 0x10000000) + lo;
+      }
+      return ~v;
     },
   };
   Object.defineProperties(Boxed.prototype, {
@@ -560,7 +570,17 @@ define(function() {
       return -this;
     },
     i64_bnot: function() {
-      return ~this;
+      var v = Math.floor(this);
+      if (v < -0x80000000) {
+        v = -v;
+        var hi = ~(v / 0x100000000), lo = ~v >>> 0;
+        return -((hi * 0x100000000) + lo);
+      }
+      else if (v >= 0x100000000) {
+        var hi = ~(v / 0x10000000), lo = ~v >>> 0;
+        return (hi * 0x10000000) + lo;
+      }
+      return ~v;
     },
   });
   Object.defineProperties(Number.prototype, {
@@ -695,5 +715,6 @@ define(function() {
   Number.BoxedUint64 = BoxedUint64;
   Number.BoxedFloat32 = BoxedFloat32;
   Number.BoxedFloat64 = BoxedFloat64;
+  Number.Boxed = BoxedFloat64;
   
 });
