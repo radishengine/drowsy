@@ -81,9 +81,10 @@ define(function() {
   
   Object.defineProperty(Object.prototype, HASH_PROP, {
     get: function() {
-      return this[HASH_PROP] = (Math.random() * 0xffffffff) | 0;
+      var hash = (Math.random() * 0xffffffff) | 0;
+      Object.defineProperty(Object.prototype, HASH_PROP, {value:hash});
+      return hash;
     },
-    writable: true,
   });
   
   Object.defineProperty(String.prototype, HASH_PROP, {
