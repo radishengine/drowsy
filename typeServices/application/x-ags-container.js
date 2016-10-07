@@ -28,6 +28,18 @@ define(['../dispatch'], function(dispatch) {
             }
           });
         });
+      case 10:
+      case 11:
+      case 15:
+        return segment.getBytes(0, 5).then(function(bytes) {
+          if (bytes[0] !== 0) return Promise.reject('not first datafile in chain');
+          var containerCount = (bytes[1] | (bytes[2] << 8) | (bytes[3] << 16) | (bytes[4] << 24)) >>> 0;
+          return segment.getBytes(1 + 4 + 20*containerCount, 4).then(function(bytes) {
+            var fileCount = (bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24)) >>> 0;
+            var totalSize = 1 + 4 + 20*containerCount + 4 + 25*fileCount + 4*fileCount + 4*fileCount + fileCount;
+            entries.add(segment.getSegment('chunk/ags; which=file-list-v' + formatVersion, 0, totalSize));
+          });
+        });
     }
   }
   
