@@ -40,6 +40,43 @@ define(['../dispatch'], function(dispatch) {
             entries.add(segment.getSegment('chunk/ags; which=file-list-v' + formatVersion, 0, totalSize));
           });
         });
+      case 20:
+        return segment.getDataView(0, 5).then(function(dv) {
+          if (dv.getUint8(0) !== 0) return Promise.reject('not first datafile in chain');
+          var pos = 5;
+          function doFileNames(fileCount) {
+            if (fileCount === 0) return;
+            return segment.getInt16(pos, true)
+            .then(function(nameLength) {
+              nameLength = (nameLength / 5) | 0;
+              pos += 4 + nameLength;
+              return doFileNames(fileCount - 1);
+            });
+          }
+          function doFiles(fileCount) {
+            return doFileNames(fileCount).then(function() {
+              pos += fileCount*4 + fileCount*4 + fileCount;
+            });
+          }
+          function doContainers(containerCount) {
+            if (containerCount === 0) {
+              return segment.getInt32(pos, true).then(function(fileCount) {
+                pos += 4;
+                doFiles(fileCount);
+              });
+            }
+            function onByte(b) {
+              pos++;
+              if (b === 0) return doContainers(containerCount - 1);
+              return segment.getUint8(pos).then(onByte);
+            }
+            return segment.getUint8(pos).then(onByte);
+          }
+          return doContainers(dv.getUint32(1, true))
+          .then(function() {
+            entries.add(segment.getSegment('chunk/ags; which=file-list-v' + formatVersion', 0, pos);
+          });
+        });
     }
   }
   
