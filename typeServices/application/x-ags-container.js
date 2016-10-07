@@ -23,7 +23,7 @@ define(['../dispatch'], function(dispatch) {
               var file = fileList.files[i];
               var ext = file.name.match(/[^\.]*$/)[1].toLowerCase();
               var type = dispatch.byExtension[ext] || 'application/octet-stream';
-              entries.add(segment.getSegment(type, offset, file.byteLength);
+              entries.add(segment.getSegment(type, offset, file.byteLength));
               offset += file.byteLength;
             }
           });
