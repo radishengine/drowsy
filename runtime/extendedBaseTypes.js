@@ -205,6 +205,16 @@ define(function() {
       if (typeof other === 'number' || typeof other === 'boolean') return (this.value + other).asUint64;
       return other.u64_add(this);
     },
+    i64_sub: function(subtraction) {
+      subtraction = subtraction.i64_negate();
+      if (typeof subtraction === 'number') return this.value + subtraction;
+      return subtraction.i64_add(this);
+    },
+    u64_sub: function(subtraction) {
+      subtraction = subtraction.i64_negate();
+      if (typeof subtraction === 'number') return this.value + subtraction;
+      return subtraction.u64_add(this);
+    },
   };
   Object.defineProperties(Boxed.prototype, {
     normalized: {get: retValue},
@@ -270,6 +280,16 @@ define(function() {
   BoxedFloat32.prototype.set_add = function(value) { return this.value = (this.value + value.asFloat64).asFloat32; }
   BoxedFloat64.prototype.set_add = function(value) { return this.value = this.value + value.asFloat64; }
   
+  BoxedBoolean.prototype.set_sub = function(value) { return this.value = !!(this.value - value.asBoolean); }
+  BoxedInt8.prototype.set_sub = function(value) { return this.value = (this.value - value.asInt8) << 24 >> 24; }
+  BoxedInt16.prototype.set_sub = function(value) { return this.value = (this.value - value.asInt16) << 16 >> 16; }
+  BoxedInt32.prototype.set_sub = function(value) { return this.value = (this.value - value.asInt32) | 0; }
+  BoxedUint8.prototype.set_sub = function(value) { return this.value = (this.value - value.asUint8) & 0xff; }
+  BoxedUint16.prototype.set_sub = function(value) { return this.value = (this.value - value.asUint16) & 0xffff; }
+  BoxedUint32.prototype.set_sub = function(value) { return this.value = (this.value - value.asUint32) >>> 0; }
+  BoxedFloat32.prototype.set_sub = function(value) { return this.value = (this.value - value.asFloat64).asFloat32; }
+  BoxedFloat64.prototype.set_sub = function(value) { return this.value = this.value - value.asFloat64; }
+  
   function Boxed64() {
   }
   Boxed64.prototype = {
@@ -310,6 +330,9 @@ define(function() {
       }
       this.lo = lo | 0;
       return this;
+    },
+    set_sub: function(value) {
+      return this.set_add(value.i64_negate());
     },
     get asBoolean() { return !!(this.lo || this.hi); },
     get asInt8() { return this.lo << 24 >> 24; },
@@ -470,10 +493,16 @@ define(function() {
       return !this.lt64(other);
     },
     i64_add: function(other) {
-      return new BoxedInt64(this.hi, this.lo).set_add(other);
+      return new BoxedInt64(this.hi, this.lo).set_add(other).normalized;
     },
     u64_add: function(other) {
-      return new BoxedUint64(this.hi, this.lo).set_add(other);
+      return new BoxedUint64(this.hi, this.lo).set_add(other).normalized;
+    },
+    i64_sub: function(subtraction) {
+      return new BoxedInt64(this.hi, this.lo).set_add(subtraction.i64_negate()).normalized;
+    },
+    u64_sub: function(subtraction) {
+      return new BoxedUint64(this.hi, this.lo).set_add(subtraction.i64_negate()).normalized;
     },
   };
   
@@ -903,6 +932,7 @@ define(function() {
   Object.assign(Number.prototype, {
     set: badSet,
     set_add: badSet,
+    set_sub: badSet,
     i64_negate: function() {
       return -this;
     },
@@ -963,6 +993,12 @@ define(function() {
     },
     u64_add: function(other) {
       return this.asBoxedUint64.set_add(other).normalized;
+    },
+    i64_sub: function(subtraction) {
+      return this.asBoxedInt64.set_add(subtraction.i64_negate()).normalized;
+    },
+    u64_sub: function(subtraction) {
+      return this.asBoxedUint64.set_add(subtraction.i64_negate()).normalized;
     },
     eq64: function(other) {
       if (typeof other !== 'number' && typeof other !== 'boolean') return other.eq64(this);
@@ -1113,6 +1149,7 @@ define(function() {
   Object.assign(Boolean.prototype, {
     set: badSet,
     set_add: badSet,
+    set_sub: badSet,
     i64_negate: function() {
       return -this;
     },
@@ -1157,6 +1194,12 @@ define(function() {
     },
     u64_add: function(other) {
       return this.asBoxedUint64.set_add(other).normalized;
+    },
+    i64_sub: function(subtraction) {
+      return this.asBoxedInt64.set_add(subtraction.i64_negate()).normalized;
+    },
+    u64_sub: function(subtraction) {
+      return this.asBoxedUint64.set_add(subtraction.i64_negate()).normalized;
     },
     eq64: function(other) {
       if (typeof other !== 'number' && typeof other !== 'boolean') return other.eq64(this);
