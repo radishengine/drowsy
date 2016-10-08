@@ -155,6 +155,9 @@ define(function() {
     i64_lshift: function(count) {
       return this.value.i64_lshift(count);
     },
+    u64_lshift: function(count) {
+      return this.value.u64_lshift(count);
+    },
     i64_arshift: function(count) {
       return this.value.i64_arshift(count);
     },
@@ -765,6 +768,9 @@ define(function() {
     i64_lshift: function(count) {
       return this.asBoxedInt64.i64_lshift(count);
     },
+    u64_lshift: function(count) {
+      return this.asBoxedUint64.u64_lshift(count);
+    },
     i64_arshift: function(count) {
       return this.asBoxedInt64.i64_arshift(count);
     },
@@ -927,6 +933,9 @@ define(function() {
     },
     i64_lshift: function(count) {
       return this.asBoxedInt64.i64_lshift(count);
+    },
+    u64_lshift: function(count) {
+      return this.asBoxedUint64.u64_lshift(count);
     },
     i64_arshift: function(count) {
       return this.asBoxedInt64.i64_arshift(count);
