@@ -301,6 +301,11 @@ define(function() {
     },
     i64_lshift: function(count) {
       var hi = this.hi, lo = this.lo;
+      while (count >= 32) {
+        hi = lo;
+        lo = 0;
+        count -= 32;
+      }
       hi <<= count;
       hi |= (lo >> (32 - count)) & ((1 << count) - 1);
       lo <<= count;
@@ -308,6 +313,11 @@ define(function() {
     },
     u64_lshift: function(count) {
       var hi = this.hi, lo = this.lo;
+      while (count >= 32) {
+        hi = lo;
+        lo = 0;
+        count -= 32;
+      }
       hi <<= count;
       hi |= (lo >> (32 - count)) & ((1 << count) - 1);
       lo <<= count;
@@ -315,6 +325,11 @@ define(function() {
     },
     i64_arshift: function(count) {
       var hi = this.hi, lo = this.lo;
+      while (count >= 32) {
+        lo = hi;
+        hi = (hi < 0) ? -1 : 0;
+        count -= 32;
+      }
       lo >>= count;
       lo |= (hi & ((1 << count) - 1)) << (32 - count);
       hi >>= count;
@@ -322,6 +337,11 @@ define(function() {
     },
     u64_rshift: function(count) {
       var hi = this.hi, lo = this.lo;
+      while (count >= 32) {
+        lo = hi;
+        hi = 0;
+        count -= 32;
+      }
       lo >>>= count;
       lo |= (hi & ((1 << count) - 1)) << (32 - count);
       hi >>>= count;
