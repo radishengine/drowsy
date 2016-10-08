@@ -174,6 +174,26 @@ define(function() {
       if (typeof other === 'number' || typeof other === 'boolean') return +this.value !== +other;
       return !other.eq64(this);
     },
+    lt64: function(other) {
+      if (other instanceof Boxed) other = other.value;
+      if (typeof other === 'number' || typeof other === 'boolean') return this.value < other;
+      return !other.lte64(this);
+    },
+    lte64: function(other) {
+      if (other instanceof Boxed) other = other.value;
+      if (typeof other === 'number' || typeof other === 'boolean') return this.value <= other;
+      return !other.lt64(this);
+    },
+    gt64: function(other) {
+      if (other instanceof Boxed) other = other.value;
+      if (typeof other === 'number' || typeof other === 'boolean') return this.value > other;
+      return other.lte64(this);
+    },
+    gte64: function(other) {
+      if (other instanceof Boxed) other = other.value;
+      if (typeof other === 'number' || typeof other === 'boolean') return this.value >= other;
+      return other.lt64(this);
+    },
   };
   Object.defineProperties(Boxed.prototype, {
     normalized: {get: retValue},
@@ -370,6 +390,15 @@ define(function() {
       lo |= (hi & ((1 << count) - 1)) << (32 - count);
       hi >>>= count;
       return new BoxedUint64(hi | 0, lo).normalized;
+    },
+    neq64: function(other) {
+      return !this.eq64(other);
+    },
+    gt64: function(other) {
+      return !this.lte64(other);
+    },
+    gte64: function(other) {
+      return !this.lt64(other);
     },
   };
   
@@ -591,8 +620,51 @@ define(function() {
       if (other instanceof BoxedUint64 && hi < 0) return false;
       return hi === other.hi && lo === other.lo;
     },
-    neq64: function(other) {
-      return !this.eq64(other);
+    lt64: function(other) {
+      var hi = this.hi, lo = this.lo;
+      if (typeof other === 'number' || typeof other === 'boolean') {
+        if (hi < 0) {
+          if (other >= 0) return true;
+          if (lo === 0) {
+            hi = -hi;
+          }
+          else {
+            hi = ~hi;
+            lo = -lo >>> 0;
+          }
+          return -((hi * 0x100000000) + lo) < other;
+        }
+        return ((hi * 0x100000000) + (lo >>> 0)) < other;
+      }
+      var other_hi = other.hi;
+      if (hi < 0 && (other_hi >= 0 || other instanceof BoxedUint64)) return true;
+      if (hi === other_hi) {
+        return lo < other.lo;
+      }
+      return hi < other_hi;
+    },
+    lte64: function(other) {
+      var hi = this.hi, lo = this.lo;
+      if (typeof other === 'number' || typeof other === 'boolean') {
+        if (hi < 0) {
+          if (other >= 0) return true;
+          if (lo === 0) {
+            hi = -hi;
+          }
+          else {
+            hi = ~hi;
+            lo = -lo >>> 0;
+          }
+          return -((hi * 0x100000000) + lo) <= other;
+        }
+        return ((hi * 0x100000000) + (lo >>> 0)) <= other;
+      }
+      var other_hi = other.hi;
+      if (hi < 0 && (other_hi >= 0 || other instanceof BoxedUint64)) return true;
+      if (hi === other_hi) {
+        return lo <= other.lo;
+      }
+      return hi < other_hi;
     },
   });
   
@@ -672,8 +744,29 @@ define(function() {
       if (other instanceof BoxedInt64 && other.hi < 0) return false;
       return hi === other.hi && lo === other.lo;
     },
-    neq64: function(other) {
-      return !this.eq64(other);
+    lt64: function(other) {
+      var hi = this.hi >>> 0, lo = this.lo >>> 0;
+      if (typeof other === 'number' || typeof other === 'boolean') {
+        return (other >= 0) && ((hi * 0x100000000 + lo) < other);
+      }
+      var other_hi = other.hi;
+      if (other instanceof BoxedInt64 && other_hi < 0) return false;
+      if (hi === other_hi) {
+        return lo < other.lo;
+      }
+      return hi < other_hi;
+    },
+    lte64: function(other) {
+      var hi = this.hi >>> 0, lo = this.lo >>> 0;
+      if (typeof other === 'number' || typeof other === 'boolean') {
+        return (other >= 0) && ((hi * 0x100000000 + lo) <= other);
+      }
+      var other_hi = other.hi;
+      if (other instanceof BoxedInt64 && other_hi < 0) return false;
+      if (hi === other_hi) {
+        return lo <= other.lo;
+      }
+      return hi < other_hi;
     },
   });
   
@@ -795,6 +888,22 @@ define(function() {
     neq64: function(other) {
       if (typeof other !== 'number' && typeof other !== 'boolean') return !other.eq64(this);
       return this !== +other;
+    },
+    lt64: function(other) {
+      if (typeof other !== 'number' && typeof other !== 'boolean') return !other.lte64(this);
+      return this < other;
+    },
+    lte64: function(other) {
+      if (typeof other !== 'number' && typeof other !== 'boolean') return !other.lt64(this);
+      return this <= other;
+    },
+    gt64: function(other) {
+      if (typeof other !== 'number' && typeof other !== 'boolean') return other.lt64(this);
+      return this > other;
+    },
+    gte64: function(other) {
+      if (typeof other !== 'number' && typeof other !== 'boolean') return other.lte64(this);
+      return this >= other;
     },
   });
   Object.defineProperties(Number.prototype, {
@@ -965,6 +1074,22 @@ define(function() {
     neq64: function(other) {
       if (typeof other !== 'number' && typeof other !== 'boolean') return !other.eq64(this);
       return +this !== +other;
+    },
+    lt64: function(other) {
+      if (typeof other !== 'number' && typeof other !== 'boolean') return !other.lte64(this);
+      return this < other;
+    },
+    lte64: function(other) {
+      if (typeof other !== 'number' && typeof other !== 'boolean') return !other.lt64(this);
+      return this <= other;
+    },
+    gt64: function(other) {
+      if (typeof other !== 'number' && typeof other !== 'boolean') return other.lt64(this);
+      return this > other;
+    },
+    gte64: function(other) {
+      if (typeof other !== 'number' && typeof other !== 'boolean') return other.lte64(this);
+      return this >= other;
     },
   });
   Object.defineProperties(Boolean.prototype, {
