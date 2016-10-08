@@ -161,6 +161,11 @@ define(function() {
     u64_rshift: function(count) {
       return this.value.u64_rshift(count);
     },
+    eq64: function(other) {
+      if (other instanceof Boxed) other = other.value;
+      if (typeof other === 'number' || typeof other === 'boolean') return +this.value === +other;
+      return other.eq64(this);
+    },
   };
   Object.defineProperties(Boxed.prototype, {
     normalized: {get: retValue},
@@ -548,6 +553,27 @@ define(function() {
     asFloat32: {get:retFloat32},
   });
   
+  Object.assign(BoxedInt64.prototype, {
+    eq64: function(other) {
+      var hi = this.hi, lo = this.lo;
+      if (typeof other === 'number' || typeof other === 'boolean') {
+        if (hi < 0) {
+          if (lo === 0) {
+            hi = -hi;
+          }
+          else {
+            hi = ~hi;
+            lo = lo >>> 0;
+          }
+          return -other === ((hi * 0x100000000) + lo);
+        }
+        return +other === ((hi * 0x100000000) + (lo >>> 0));
+      }
+      if (other instanceof BoxedUint64 && hi < 0) return false;
+      return hi === other.hi && lo === other.lo;
+    },
+  });
+  
   Object.defineProperties(BoxedInt64.prototype, {
     normalized: {
       get: function() {
@@ -612,6 +638,18 @@ define(function() {
     asUint32: {get:retValue},
     asBoxedUint32: {get:retThis},
     asFloat32: {get:retFloat32},
+  });
+  
+  Object.assign(BoxedUint64.prototype, {
+    eq64: function(other) {
+      var hi = this.hi >>> 0, lo = this.lo >>> 0;
+      if (typeof other === 'number' || typeof other === 'boolean') {
+        if (other < 0) return false;
+        return +other === ((hi * 0x100000000) + lo);
+      }
+      if (other instanceof BoxedInt64 && other.hi < 0) return false;
+      return hi === other.hi && lo === other.lo;
+    },
   });
   
   Object.defineProperties(BoxedUint64.prototype, {
@@ -721,6 +759,10 @@ define(function() {
     },
     u64_rshift: function(count) {
       return this.asBoxedUint64.u64_rshift(count);
+    },
+    eq64: function(other) {
+      if (typeof other !== 'number' && typeof other !== 'boolean') return other.eq64(this);
+      return this === +other;
     },
   });
   Object.defineProperties(Number.prototype, {
