@@ -337,6 +337,36 @@ define(function() {
   BoxedFloat32.prototype.set_bxor = function(value) { return this.value = (this.value ^ value.asInt32).asFloat32; }
   BoxedFloat64.prototype.set_bxor = function(value) { return this.value = this.value ^ value.asInt32; }
   
+  BoxedBoolean.prototype.set_lshift = function(count) { return this.value = !!(this.value << count.asUint8); }
+  BoxedInt8.prototype.set_lshift = function(count) { return this.value = (this.value << count.asUint8) << 24 >> 24; }
+  BoxedInt16.prototype.set_lshift = function(count) { return this.value = (this.value << count.asUint8) << 16 >> 16; }
+  BoxedInt32.prototype.set_lshift = function(count) { return this.value = (this.value << count.asUint8); }
+  BoxedUint8.prototype.set_lshift = function(count) { return this.value = (this.value << count.asUint8) & 0xff; }
+  BoxedUint16.prototype.set_lshift = function(count) { return this.value = (this.value << count.asUint8) & 0xffff; }
+  BoxedUint32.prototype.set_lshift = function(count) { return this.value = (this.value << count.asUint8) >>> 0; }
+  BoxedFloat32.prototype.set_lshift = function(count) { return this.value = (this.value << count.asUint8).asFloat32; }
+  BoxedFloat64.prototype.set_lshift = function(count) { return this.value = (this.value << count.asUint8); }
+  
+  BoxedBoolean.prototype.set_rshift = function(count) { return this.value = !!(this.value >>> count.asUint8); }
+  BoxedInt8.prototype.set_rshift = function(count) { return this.value = (this.value >>> count.asUint8) << 24 >> 24; }
+  BoxedInt16.prototype.set_rshift = function(count) { return this.value = (this.value >>> count.asUint8) << 16 >> 16; }
+  BoxedInt32.prototype.set_rshift = function(count) { return this.value = (this.value >>> count.asUint8) | 0; }
+  BoxedUint8.prototype.set_rshift = function(count) { return this.value = (this.value >>> count.asUint8); }
+  BoxedUint16.prototype.set_rshift = function(count) { return this.value = (this.value >>> count.asUint8); }
+  BoxedUint32.prototype.set_rshift = function(count) { return this.value = (this.value >>> count.asUint8); }
+  BoxedFloat32.prototype.set_rshift = function(count) { return this.value = (this.value >>> count.asUint8).asFloat32; }
+  BoxedFloat64.prototype.set_rshift = function(count) { return this.value = (this.value >>> count.asUint8); }
+  
+  BoxedBoolean.prototype.set_arshift = function(count) { return this.value = !!(this.value >> count.asUint8); }
+  BoxedInt8.prototype.set_arshift = function(count) { return this.value = (this.value >> count.asUint8); }
+  BoxedInt16.prototype.set_arshift = function(count) { return this.value = (this.value >> count.asUint8); }
+  BoxedInt32.prototype.set_arshift = function(count) { return this.value = (this.value >> count.asUint8); }
+  BoxedUint8.prototype.set_arshift = function(count) { return this.value = (this.value << 24 >> 24 >> count.asUint8) & 0xff; }
+  BoxedUint16.prototype.set_arshift = function(count) { return this.value = (this.value << 16 >> 16 >> count.asUint8) & 0xffff; }
+  BoxedUint32.prototype.set_arshift = function(count) { return this.value = (this.value >> count.asUint8) >>> 0; }
+  BoxedFloat32.prototype.set_arshift = function(count) { return this.value = (this.value >> count.asUint8).asFloat32; }
+  BoxedFloat64.prototype.set_arshift = function(count) { return this.value = (this.value >> count.asUint8); }
+  
   function Boxed64() {
   }
   Boxed64.prototype = {
@@ -398,6 +428,45 @@ define(function() {
       this.hi ^= value.hi;
       this.lo ^= value.lo;
       return this.normalized;
+    },
+    set_lshift: function(count) {
+      var hi = this.hi, lo = this.lo;
+      if (count >= 32) {
+        hi = lo;
+        lo = 0;
+        count -= 32;
+      }
+      hi <<= count;
+      hi |= (lo >> (32 - count)) & ((1 << count) - 1);
+      lo <<= count;
+      this.hi = hi;
+      this.lo = lo;
+    },
+    set_rshift: function(count) {
+      var hi = this.hi, lo = this.lo;
+      if (count >= 32) {
+        lo = hi;
+        hi = 0;
+        count -= 32;
+      }
+      lo >>>= count;
+      lo |= (hi & ((1 << count) - 1)) << (32 - count);
+      hi >>>= count;
+      this.hi = hi;
+      this.lo = lo;
+    },
+    set_arshift: function(count) {
+      var hi = this.hi, lo = this.lo;
+      if (count >= 32) {
+        lo = hi;
+        hi = (hi < 0) ? -1 : 0;
+        count -= 32;
+      }
+      lo >>= count;
+      lo |= (hi & ((1 << count) - 1)) << (32 - count);
+      hi >>= count;
+      this.hi = hi;
+      this.lo = lo;
     },
     get asBoolean() { return !!(this.lo || this.hi); },
     get asInt8() { return this.lo << 24 >> 24; },
@@ -501,52 +570,16 @@ define(function() {
       return new BoxedUint64(this.hi | other.hi, this.lo | other.lo).normalized;
     },
     i64_lshift: function(count) {
-      var hi = this.hi, lo = this.lo;
-      while (count >= 32) {
-        hi = lo;
-        lo = 0;
-        count -= 32;
-      }
-      hi <<= count;
-      hi |= (lo >> (32 - count)) & ((1 << count) - 1);
-      lo <<= count;
-      return new BoxedInt64(hi, lo).normalized;
+      return new BoxedInt64(this.hi, this.lo).set_lshift(count);
     },
     u64_lshift: function(count) {
-      var hi = this.hi, lo = this.lo;
-      while (count >= 32) {
-        hi = lo;
-        lo = 0;
-        count -= 32;
-      }
-      hi <<= count;
-      hi |= (lo >> (32 - count)) & ((1 << count) - 1);
-      lo <<= count;
-      return new BoxedUint64(hi, lo).normalized;
+      return new BoxedUint64(this.hi, this.lo).set_lshift(count);
     },
     i64_arshift: function(count) {
-      var hi = this.hi, lo = this.lo;
-      while (count >= 32) {
-        lo = hi;
-        hi = (hi < 0) ? -1 : 0;
-        count -= 32;
-      }
-      lo >>= count;
-      lo |= (hi & ((1 << count) - 1)) << (32 - count);
-      hi >>= count;
-      return new BoxedInt64(hi, lo).normalized;
+      return new BoxedInt64(this.hi, this.lo).set_arshift(count).normalized;
     },
     u64_rshift: function(count) {
-      var hi = this.hi, lo = this.lo;
-      while (count >= 32) {
-        lo = hi;
-        hi = 0;
-        count -= 32;
-      }
-      lo >>>= count;
-      lo |= (hi & ((1 << count) - 1)) << (32 - count);
-      hi >>>= count;
-      return new BoxedUint64(hi | 0, lo).normalized;
+      return new BoxedUint64(this.hi, this.lo).set_rshift(count).normalized;
     },
     neq64: function(other) {
       return !this.eq64(other);
@@ -1007,6 +1040,9 @@ define(function() {
     set_bor: badSet,
     set_band: badSet,
     set_bxor: badSet,
+    set_lshift: badSet,
+    set_rshift: badSet,
+    set_arshift: badSet,
     i64_negate: function() {
       return -this;
     },
@@ -1233,6 +1269,9 @@ define(function() {
     set_bor: badSet,
     set_band: badSet,
     set_bxor: badSet,
+    set_lshift: badSet,
+    set_rshift: badSet,
+    set_arshift: badSet,
     i64_negate: function() {
       return -this;
     },
