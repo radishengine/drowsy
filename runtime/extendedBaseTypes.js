@@ -136,8 +136,8 @@ define(function() {
         return -((hi * 0x100000000) + lo);
       }
       else if (v >= 0x80000000) {
-        var hi = ~(v / 0x10000000), lo = ~v >>> 0;
-        return (hi * 0x10000000) + lo;
+        var hi = ~(v / 0x100000000), lo = ~v >>> 0;
+        return (hi * 0x100000000) + lo;
       }
       return ~v;
     },
@@ -583,8 +583,8 @@ define(function() {
         return -((hi * 0x100000000) + lo);
       }
       else if (v >= 0x80000000) {
-        var hi = ~(v / 0x10000000), lo = ~v >>> 0;
-        return (hi * 0x10000000) + lo;
+        var hi = ~(v / 0x100000000), lo = ~v >>> 0;
+        return (hi * 0x100000000) + lo;
       }
       return ~v;
     },
