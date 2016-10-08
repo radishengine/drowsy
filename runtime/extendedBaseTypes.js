@@ -129,40 +129,40 @@ define(function() {
       return -this.value;
     },
     i64_bnot: function() {
-      return this.value.i64_bnot();
+      return this.asBoxedInt64.i64_bnot();
     },
     u64_bnot: function() {
       return this.value.u64_bnot();
     },
     i64_bxor: function(other) {
-      return this.value.i64_bxor(other);
+      return this.asBoxedInt64.i64_bxor(other);
     },
     u64_bxor: function(other) {
-      return this.value.u64_bxor(other);
+      return this.asBoxedUint64.u64_bxor(other);
     },
     i64_band: function(other) {
-      return this.value.i64_band(other);
+      return this.asBoxedInt64.i64_band(other);
     },
     u64_band: function(other) {
-      return this.value.u64_band(other);
+      return this.asBoxedUint64.u64_band(other);
     },
     i64_bor: function(other) {
-      return this.value.i64_bor(other);
+      return this.asBoxedInt64.i64_bor(other);
     },
     u64_bor: function(other) {
-      return this.value.u64_bor(other);
+      return this.asBoxedUint64.u64_bor(other);
     },
     i64_lshift: function(count) {
-      return this.value.i64_lshift(count);
+      return this.asBoxedInt64.i64_lshift(count);
     },
     u64_lshift: function(count) {
-      return this.value.u64_lshift(count);
+      return this.asBoxedUint64.u64_lshift(count);
     },
     i64_arshift: function(count) {
-      return this.value.i64_arshift(count);
+      return this.asBoxedInt64.i64_arshift(count);
     },
     u64_rshift: function(count) {
-      return this.value.u64_rshift(count);
+      return this.asBoxedUint64.u64_rshift(count);
     },
     eq64: function(other) {
       if (other instanceof Boxed) other = other.value;
