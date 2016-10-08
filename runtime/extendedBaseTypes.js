@@ -986,7 +986,7 @@ define(function() {
     },
     asBoxedUint64: {
       get: function() {
-        return new BoxedUint64(0, this);
+        return new BoxedUint64(0, +this);
       },
     },
     asBoxedFloat32: {
