@@ -250,6 +250,16 @@ define(function() {
   BoxedFloat32.prototype.set = function(value) { return this.value = value.asFloat32; }
   BoxedFloat64.prototype.set = function(value) { return this.value = value.asFloat64; }
   
+  BoxedBoolean.prototype.set_add = function(value) { return this.value = !!(this.value + value.asBoolean); }
+  BoxedInt8.prototype.set_add = function(value) { return this.value = (this.value + value.asInt8) << 24 >> 24; }
+  BoxedInt16.prototype.set_add = function(value) { return this.value = (this.value + value.asInt16) << 16 >> 16; }
+  BoxedInt32.prototype.set_add = function(value) { return this.value = (this.value + value.asInt32) | 0; }
+  BoxedUint8.prototype.set_add = function(value) { return this.value = (this.value + value.asUint8) & 0xff; }
+  BoxedUint16.prototype.set_add = function(value) { return this.value = (this.value + value.asUint16) & 0xffff; }
+  BoxedUint32.prototype.set_add = function(value) { return this.value = (this.value + value.asUint32) >>> 0; }
+  BoxedFloat32.prototype.set_add = function(value) { return this.value = (this.value + value.asFloat64).asFloat32; }
+  BoxedFloat64.prototype.set_add = function(value) { return this.value = this.value + value.asFloat64; }
+  
   function Boxed64() {
   }
   Boxed64.prototype = {
@@ -277,6 +287,18 @@ define(function() {
         this.hi = value.hi;
         this.lo = value.lo;
       }
+      return this;
+    },
+    set_add: function(value) {
+      value = value.asBoxedInt64;
+      var lo = (this.lo >>> 0) + (value.lo >>> 0);
+      if (lo < 0x100000000) {
+        this.hi = (this.hi + value.hi) | 0;
+      }
+      else {
+        this.hi = (this.hi + value.hi + 1) | 0;
+      }
+      this.lo = lo | 0;
       return this;
     },
     get asBoolean() { return !!(this.lo || this.hi); },
@@ -864,6 +886,7 @@ define(function() {
   
   Object.assign(Number.prototype, {
     set: badSet,
+    set_add: badSet,
     i64_negate: function() {
       return -this;
     },
@@ -1067,6 +1090,7 @@ define(function() {
   
   Object.assign(Boolean.prototype, {
     set: badSet,
+    set_add: badSet,
     i64_negate: function() {
       return -this;
     },
