@@ -562,7 +562,7 @@ define(function() {
       get: function() {
         var hi = this.hi;
         if (hi < 0 || hi >= 0x200000) return this;
-        return (hi * 0x100000000) + this.lo;
+        return (hi * 0x100000000) + this.lo >>> 0;
       },
     },
     asUint64: {
