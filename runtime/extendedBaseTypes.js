@@ -62,6 +62,7 @@ define(function() {
   }
   function retBoxedFloat32(){ return new BoxedFloat32(this.value); }
   function retBoxedFloat64(){ return new BoxedFloat64(this.value); }
+  function badSet(){ throw new Error('cannot set unboxed value'); }
   
   var HASH_INT8 = 0x1b3432b0;
   var HASH_INT16 = 0xf1a9036;
@@ -221,15 +222,15 @@ define(function() {
     asBoxedFloat64: {get: retBoxedFloat64},
   });
   
-  function BoxedBoolean(value) { this.value = !!value; }
-  function BoxedInt8(value) { this.value = value << 24 >> 24; }
-  function BoxedUint8(value) { this.value = value & 0xff; }
-  function BoxedInt16(value) { this.value = value << 16 >> 16; }
-  function BoxedUint16(value) { this.value = value & 0xffff; }
-  function BoxedInt32(value) { this.value = value | 0; }
-  function BoxedUint32(value) { this.value = value >>> 0; }
-  function BoxedFloat32(value) { tempFloat32[0] = value; this.value = tempFloat32[0]; }
-  function BoxedFloat64(value) { this.value = +value; }
+  function BoxedBoolean(value) { this.value = value.asBoolean; }
+  function BoxedInt8(value) { this.value = value.asInt8; }
+  function BoxedInt16(value) { this.value = value.asInt16; }
+  function BoxedInt32(value) { this.value = value.asInt32; }
+  function BoxedUint8(value) { this.value = value.asUint8; }
+  function BoxedUint16(value) { this.value = value.asUint16; }
+  function BoxedUint32(value) { this.value = value.asUint32; }
+  function BoxedFloat32(value) { this.value = value.asFloat32; }
+  function BoxedFloat64(value) { this.value = value.asFloat64; }
   
   [BoxedBoolean,
     BoxedInt8, BoxedInt16, BoxedInt32,
@@ -239,9 +240,45 @@ define(function() {
     T.prototype = new Boxed;
   });
   
+  BoxedBoolean.prototype.set = function(value) { this.value = value.asBoolean; }
+  BoxedInt8.prototype.set = function(value) { this.value = value.asInt8; }
+  BoxedInt16.prototype.set = function(value) { this.value = value.asInt16; }
+  BoxedInt32.prototype.set = function(value) { this.value = value.asInt32; }
+  BoxedUint8.prototype.set = function(value) { this.value = value.asUint8; }
+  BoxedUint16.prototype.set = function(value) { this.value = value.asUint16; }
+  BoxedUint32.prototype.set = function(value) { this.value = value.asUint32; }
+  BoxedFloat32.prototype.set = function(value) { this.value = value.asFloat32; }
+  BoxedFloat64.prototype.set = function(value) { this.value = value.asFloat64; }
+  
   function Boxed64() {
   }
   Boxed64.prototype = {
+    set: function(value) {
+      if (typeof value === 'number' || typeof value === 'boolean') {
+        if (value < 0) {
+          var negated = -value;
+          var hi = (negated / 0x100000000) | 0, lo = negated | 0;
+          if (lo === 0) {
+            this.hi = -hi;
+            this.lo = 0;
+          }
+          else {
+            this.hi = ~hi;
+            this.lo = -lo;
+          }
+        }
+        else {
+          this.hi = (value / 0x100000000) | 0;
+          this.lo = value | 0;
+        }
+        return value;
+      }
+      else {
+        this.hi = value.hi;
+        this.lo = value.lo;
+      }
+      return this;
+    },
     get asBoolean() { return !!(this.lo || this.hi); },
     get asInt8() { return this.lo << 24 >> 24; },
     get asInt16() { return this.lo << 16 >> 16; },
@@ -826,6 +863,7 @@ define(function() {
   });
   
   Object.assign(Number.prototype, {
+    set: badSet,
     i64_negate: function() {
       return -this;
     },
@@ -1028,6 +1066,7 @@ define(function() {
   });
   
   Object.assign(Boolean.prototype, {
+    set: badSet,
     i64_negate: function() {
       return -this;
     },
