@@ -131,6 +131,27 @@ define(function() {
     i64_bnot: function() {
       return this.value.i64_bnot();
     },
+    u64_bnot: function() {
+      return this.value.u64_bnot();
+    },
+    i64_bxor: function(other) {
+      return this.value.i64_bxor(other);
+    },
+    u64_bxor: function(other) {
+      return this.value.u64_bxor(other);
+    },
+    i64_band: function(other) {
+      return this.value.i64_band(other);
+    },
+    u64_band: function(other) {
+      return this.value.u64_band(other);
+    },
+    i64_bor: function(other) {
+      return this.value.i64_bor(other);
+    },
+    u64_bor: function(other) {
+      return this.value.u64_bor(other);
+    },
   };
   Object.defineProperties(Boxed.prototype, {
     normalized: {get: retValue},
@@ -244,6 +265,30 @@ define(function() {
         return (hi * 0x100000000) + (lo >>> 0);
       }
       return new BoxedUint64(hi, lo);
+    },
+    i64_bxor: function(other) {
+      other = other.asBoxedInt64;
+      return new BoxedInt64(this.hi ^ other.hi, this.lo ^ other.lo).normalized;
+    },
+    u64_bxor: function(other) {
+      other = other.asBoxedUint64;
+      return new BoxedUint64(this.hi ^ other.hi, this.lo ^ other.lo).normalized;
+    },
+    i64_band: function(other) {
+      other = other.asBoxedInt64;
+      return new BoxedInt64(this.hi & other.hi, this.lo & other.lo).normalized;
+    },
+    u64_band: function(other) {
+      other = other.asBoxedUint64;
+      return new BoxedUint64(this.hi & other.hi, this.lo & other.lo).normalized;
+    },
+    i64_bor: function(other) {
+      other = other.asBoxedInt64;
+      return new BoxedInt64(this.hi | other.hi, this.lo | other.lo).normalized;
+    },
+    u64_bor: function(other) {
+      other = other.asBoxedUint64;
+      return new BoxedUint64(this.hi | other.hi, this.lo | other.lo).normalized;
     },
   };
   
@@ -593,6 +638,24 @@ define(function() {
         return -((hi * 0x100000000) + lo);
       }
       return new BoxedUint64(~(v / 0x100000000), ~v);
+    },
+    i64_bxor: function(other) {
+      return this.asBoxedInt64.i64_bxor(other);
+    },
+    u64_bxor: function(other) {
+      return this.asBoxedUint64.u64_bxor(other);
+    },
+    i64_band: function(other) {
+      return this.asBoxedInt64.i64_band(other);
+    },
+    u64_band: function(other) {
+      return this.asBoxedUint64.u64_band(other);
+    },
+    i64_bor: function(other) {
+      return this.asBoxedInt64.i64_bor(other);
+    },
+    u64_bor: function(other) {
+      return this.asBoxedUint64.u64_bor(other);
     },
   });
   Object.defineProperties(Number.prototype, {
