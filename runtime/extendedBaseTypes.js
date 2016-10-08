@@ -129,17 +129,7 @@ define(function() {
       return -this.value;
     },
     i64_bnot: function() {
-      var v = Math.floor(this.value);
-      if (v < -0x80000000) {
-        v = -v;
-        var hi = ~(v / 0x100000000), lo = ~v >>> 0;
-        return -((hi * 0x100000000) + lo);
-      }
-      else if (v >= 0x80000000) {
-        var hi = ~(v / 0x100000000), lo = ~v >>> 0;
-        return (hi * 0x100000000) + lo;
-      }
-      return ~v;
+      return this.value.i64_bnot();
     },
   };
   Object.defineProperties(Boxed.prototype, {
@@ -247,6 +237,13 @@ define(function() {
         return (hi * 0x100000000) + lo;
       }
       return new BoxedInt64(hi, lo);
+    },
+    u64_bnot: function() {
+      var hi = ~this.hi, lo = ~this.lo;
+      if (hi >= 0 && hi < 0x200000) {
+        return (hi * 0x100000000) + (lo >>> 0);
+      }
+      return new BoxedUint64(hi, lo);
     },
   };
   
@@ -587,6 +584,15 @@ define(function() {
         return (hi * 0x100000000) + lo;
       }
       return ~v;
+    },
+    u64_bnot: function() {
+      var v = Math.floor(this);
+      if (v < 0) {
+        v = -v;
+        var hi = ~(v / 0x100000000) >>> 0, lo = ~v >>> 0;
+        return -((hi * 0x100000000) + lo);
+      }
+      return new BoxedUint64(~(v / 0x100000000), ~v);
     },
   });
   Object.defineProperties(Number.prototype, {
