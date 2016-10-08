@@ -307,6 +307,36 @@ define(function() {
   BoxedFloat32.prototype.set_sub = function(value) { return this.value = (this.value - value.asFloat64).asFloat32; }
   BoxedFloat64.prototype.set_sub = function(value) { return this.value = this.value - value.asFloat64; }
   
+  BoxedBoolean.prototype.set_bor = function(value) { return this.value = this.value || value.asBoolean; }
+  BoxedInt8.prototype.set_bor = function(value) { return this.value = this.value | value.asInt8; }
+  BoxedInt16.prototype.set_bor = function(value) { return this.value = this.value | value.asInt16; }
+  BoxedInt32.prototype.set_bor = function(value) { return this.value = this.value | value.asInt32; }
+  BoxedUint8.prototype.set_bor = function(value) { return this.value = this.value | value.asUint8; }
+  BoxedUint16.prototype.set_bor = function(value) { return this.value = this.value | value.asUint16; }
+  BoxedUint32.prototype.set_bor = function(value) { return this.value = (this.value | value.asInt32) >>> 0; }
+  BoxedFloat32.prototype.set_bor = function(value) { return this.value = (this.value | value.asInt32).asFloat32; }
+  BoxedFloat64.prototype.set_bor = function(value) { return this.value = this.value | value.asInt32; }
+    
+  BoxedBoolean.prototype.set_band = function(value) { return this.value = this.value && value.asBoolean; }
+  BoxedInt8.prototype.set_band = function(value) { return this.value = this.value & value.asInt8; }
+  BoxedInt16.prototype.set_band = function(value) { return this.value = this.value & value.asInt16; }
+  BoxedInt32.prototype.set_band = function(value) { return this.value = this.value & value.asInt32; }
+  BoxedUint8.prototype.set_band = function(value) { return this.value = this.value & value.asUint8; }
+  BoxedUint16.prototype.set_band = function(value) { return this.value = this.value & value.asUint16; }
+  BoxedUint32.prototype.set_band = function(value) { return this.value = (this.value & value.asInt32) >>> 0; }
+  BoxedFloat32.prototype.set_band = function(value) { return this.value = (this.value & value.asInt32).asFloat32; }
+  BoxedFloat64.prototype.set_band = function(value) { return this.value = this.value & value.asInt32; }
+  
+  BoxedBoolean.prototype.set_bxor = function(value) { return this.value = !!(this.value ^ value.asBoolean); }
+  BoxedInt8.prototype.set_bxor = function(value) { return this.value = this.value ^ value.asInt8; }
+  BoxedInt16.prototype.set_bxor = function(value) { return this.value = this.value ^ value.asInt16; }
+  BoxedInt32.prototype.set_bxor = function(value) { return this.value = this.value ^ value.asInt32; }
+  BoxedUint8.prototype.set_bxor = function(value) { return this.value = this.value ^ value.asUint8; }
+  BoxedUint16.prototype.set_bxor = function(value) { return this.value = this.value ^ value.asUint16; }
+  BoxedUint32.prototype.set_bxor = function(value) { return this.value = (this.value ^ value.asInt32) >>> 0; }
+  BoxedFloat32.prototype.set_bxor = function(value) { return this.value = (this.value ^ value.asInt32).asFloat32; }
+  BoxedFloat64.prototype.set_bxor = function(value) { return this.value = this.value ^ value.asInt32; }
+  
   function Boxed64() {
   }
   Boxed64.prototype = {
@@ -350,6 +380,24 @@ define(function() {
     },
     set_sub: function(value) {
       return this.set_add(value.i64_negate());
+    },
+    set_bor: function(value) {
+      value = value.asBoxedInt64;
+      this.hi |= value.hi;
+      this.lo |= value.lo;
+      return this.normalized;
+    },
+    set_band: function(value) {
+      value = value.asBoxedInt64;
+      this.hi &= value.hi;
+      this.lo &= value.lo;
+      return this.normalized;
+    },
+    set_bxor: function(value) {
+      value = value.asBoxedInt64;
+      this.hi ^= value.hi;
+      this.lo ^= value.lo;
+      return this.normalized;
     },
     get asBoolean() { return !!(this.lo || this.hi); },
     get asInt8() { return this.lo << 24 >> 24; },
@@ -956,6 +1004,9 @@ define(function() {
     set: badSet,
     set_add: badSet,
     set_sub: badSet,
+    set_bor: badSet,
+    set_band: badSet,
+    set_bxor: badSet,
     i64_negate: function() {
       return -this;
     },
@@ -1179,6 +1230,9 @@ define(function() {
     set: badSet,
     set_add: badSet,
     set_sub: badSet,
+    set_bor: badSet,
+    set_band: badSet,
+    set_bxor: badSet,
     i64_negate: function() {
       return -this;
     },
