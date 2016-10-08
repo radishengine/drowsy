@@ -1,4 +1,10 @@
 define(function() {
+  
+  // The advice is, never add to standard object prototypes. Why is that?
+  // Well, it's because some other code somewhere might also want to add to it too.
+  // No fair. Why does that OTHER code get to have all the fun?
+  
+  // (Let's get this proof-of-concept working first. If you want, we can worry about being a good neighbor later.)
 
   'use strict';
   
