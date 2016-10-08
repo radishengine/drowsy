@@ -894,7 +894,7 @@ define(function() {
       return ~this;
     },
     u64_bnot: function() {
-      return ~this;
+      return new BoxedUint64(-1, -1 - this);
     },
     i64_bxor: function(other) {
       return this.asBoxedInt64.i64_bxor(other);
