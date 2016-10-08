@@ -1470,4 +1470,184 @@ define(function() {
   Number.BoxedFloat64 = BoxedFloat64;
   Number.Boxed = BoxedFloat64;
   
+  var inArrayProperties = {
+    value: {
+      get: function() {
+        return this.array[this.index];
+      },
+      set: function(value) {
+        this.array[this.index] = value;
+      },
+    },
+  };
+  [BoxedInt8, BoxedInt16, BoxedInt32, BoxedUint8, BoxedUint16, BoxedUint32, BoxedFloat32, BoxedFloat64]
+  .forEach(function(T) {
+    T.InArray = function(array, index) {
+      this.array = array;
+      this.index = index;
+    };
+    T.InArray.prototype = Object.defineProperties(new T(0), inArrayProperties);
+  });
+    
+  var v1Prop = {
+    get: function() {
+      return this.array[this.index << 1];
+    },
+    set: function(value) {
+      this.array[this.index << 1] = value;
+    },
+  };
+  
+  var v2Prop = {
+    get: function() {
+      return this.array[1 + this.index << 1];
+    },
+    set: function(value) {
+      this.array[1 + this.index << 1] = value;
+    },
+  };
+  
+  var littleEndianArrays = (new Uint8Array(new Int16Array([1]).buffer)[0]) === 1;
+  
+  var inArrayProperties64 = littleEndianArrays ? {lo:v1Prop, hi:v2Prop} : {hi:v1Prop, lo:v2Prop};
+  
+  [BoxedInt64, BoxedUint64]
+  .forEach(function(T) {
+    T.InArray = function(array, index) {
+      this.array = array;
+      this.index = index;
+    };
+    T.InArray.prototype = Object.defineProperties(new T(0, 0), inArrayProperties64);
+  });
+  
+  BoxedInt8.InDataView = function(dataView, byteOffset) {
+    this.dataView = dataView;
+    this.byteOffset = byteOffset;
+  };
+  BoxedInt8.InDataView.prototype = Object.defineProperties(new BoxedInt8(0), {
+    value: {
+      get: function() { return this.dataView.getInt8(this.byteOffset); },
+      set: function(value) { this.dataView.setInt8(this.byteOffset, value); },
+    },
+  });
+  
+  BoxedUint8.InDataView = function(dataView, byteOffset) {
+    this.dataView = dataView;
+    this.byteOffset = byteOffset;
+  };
+  BoxedUint8.InDataView.prototype = Object.defineProperties(new BoxedUint8(0), {
+    value: {
+      get: function() { return this.dataView.getUint8(this.byteOffset); },
+      set: function(value) { this.dataView.setUint8(this.byteOffset, value); },
+    },
+  });
+  
+  BoxedInt16.InDataView = function(dataView, byteOffset, littleEndian) {
+    this.dataView = dataView;
+    this.byteOffset = byteOffset;
+    this.littleEndian = littleEndian;
+  };
+  BoxedInt16.InDataView.prototype = Object.defineProperties(new BoxedInt16(0), {
+    value: {
+      get: function() { return this.dataView.getInt16(this.byteOffset, this.littleEndian); },
+      set: function(value) { this.dataView.setInt16(this.byteOffset, value, this.littleEndian); },
+    },
+  });
+  
+  BoxedUint16.InDataView = function(dataView, byteOffset, littleEndian) {
+    this.dataView = dataView;
+    this.byteOffset = byteOffset;
+    this.littleEndian = littleEndian;
+  };
+  BoxedUint16.InDataView.prototype = Object.defineProperties(new BoxedUint16(0), {
+    value: {
+      get: function() { return this.dataView.getUint16(this.byteOffset, this.littleEndian); },
+      set: function(value) { this.dataView.setUint16(this.byteOffset, value, this.littleEndian); },
+    },
+  });
+  
+  BoxedInt32.InDataView = function(dataView, byteOffset, littleEndian) {
+    this.dataView = dataView;
+    this.byteOffset = byteOffset;
+    this.littleEndian = littleEndian;
+  };
+  BoxedInt32.InDataView.prototype = Object.defineProperties(new BoxedInt32(0), {
+    value: {
+      get: function() { return this.dataView.getInt32(this.byteOffset, this.littleEndian); },
+      set: function(value) { this.dataView.setInt32(this.byteOffset, value, this.littleEndian); },
+    },
+  });
+  
+  BoxedUint32.InDataView = function(dataView, byteOffset, littleEndian) {
+    this.dataView = dataView;
+    this.byteOffset = byteOffset;
+    this.littleEndian = littleEndian;
+  };
+  BoxedUint32.InDataView.prototype = Object.defineProperties(new BoxedUint32(0), {
+    value: {
+      get: function() { return this.dataView.getUint32(this.byteOffset, this.littleEndian); },
+      set: function(value) { this.dataView.setUint32(this.byteOffset, value, this.littleEndian); },
+    },
+  });
+  
+  BoxedFloat32.InDataView = function(dataView, byteOffset, littleEndian) {
+    this.dataView = dataView;
+    this.byteOffset = byteOffset;
+    this.littleEndian = littleEndian;
+  };
+  BoxedFloat32.InDataView.prototype = Object.defineProperties(new BoxedFloat32(0), {
+    value: {
+      get: function() { return this.dataView.getFloat32(this.byteOffset, this.littleEndian); },
+      set: function(value) { this.dataView.setFloat32(this.byteOffset, value, this.littleEndian); },
+    },
+  });
+  
+  BoxedFloat64.InDataView = function(dataView, byteOffset, littleEndian) {
+    this.dataView = dataView;
+    this.byteOffset = byteOffset;
+    this.littleEndian = littleEndian;
+  };
+  BoxedFloat64.InDataView.prototype = Object.defineProperties(new BoxedFloat64(0), {
+    value: {
+      get: function() { return this.dataView.getFloat64(this.byteOffset, this.littleEndian); },
+      set: function(value) { this.dataView.setFloat64(this.byteOffset, value, this.littleEndian); },
+    },
+  });
+  
+  var littleEndianProps64 = {
+    lo: {
+      get: function() { return this.dataView.getInt32(this.byteOffset, true); },
+      set: function(value) { this.dataView.setInt32(this.byteOffset, value, true); },
+    },
+    hi: {
+      get: function() { return this.dataView.getInt32(this.byteOffset + 4, true); },
+      set: function(value) { this.dataView.setInt32(this.byteOffset + 4, value, true); },
+    },
+  };
+  
+  var bigEndianProps64 = {
+    hi: {
+      get: function() { return this.dataView.getInt32(this.byteOffset, false); },
+      set: function(value) { this.dataView.setInt32(this.byteOffset, value, false); },
+    },
+    lo: {
+      get: function() { return this.dataView.getInt32(this.byteOffset + 4, false); },
+      set: function(value) { this.dataView.setInt32(this.byteOffset + 4, value, false); },
+    },
+  };
+  
+  BoxedInt64.InDataView = function(dataView, byteOffset, littleEndian) {
+    this.dataView = dataView;
+    this.byteOffset = byteOffset;
+    Object.defineProperties(this, littleEndian ? littleEndianProps64 : bigEndianProps64);
+  };
+  BoxedInt64.InDataView.prototype = new BoxedInt64(0);
+  
+  BoxedUint64.InDataView = function(dataView, byteOffset, littleEndian) {
+    this.dataView = dataView;
+    this.byteOffset = byteOffset;
+    Object.defineProperties(this, littleEndian ? littleEndianProps64 : bigEndianProps64);
+  };
+  BoxedUint64.InDataView.prototype = new BoxedUint64(0);
+  
 });
