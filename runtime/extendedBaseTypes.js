@@ -886,6 +886,117 @@ define(function() {
     },
   });
   
+  Object.assign(Boolean.prototype, {
+    i64_negate: function() {
+      return -this;
+    },
+    i64_bnot: function() {
+      return ~this;
+    },
+    u64_bnot: function() {
+      return ~this;
+    },
+    i64_bxor: function(other) {
+      return this.asBoxedInt64.i64_bxor(other);
+    },
+    u64_bxor: function(other) {
+      return this.asBoxedUint64.u64_bxor(other);
+    },
+    i64_band: function(other) {
+      return this.asBoxedInt64.i64_band(other);
+    },
+    u64_band: function(other) {
+      return this.asBoxedUint64.u64_band(other);
+    },
+    i64_bor: function(other) {
+      return this.asBoxedInt64.i64_bor(other);
+    },
+    u64_bor: function(other) {
+      return this.asBoxedUint64.u64_bor(other);
+    },
+    i64_lshift: function(count) {
+      return this.asBoxedInt64.i64_lshift(count);
+    },
+    i64_arshift: function(count) {
+      return this.asBoxedInt64.i64_arshift(count);
+    },
+    u64_rshift: function(count) {
+      return this.asBoxedUint64.u64_rshift(count);
+    },
+    eq64: function(other) {
+      if (typeof other !== 'number' && typeof other !== 'boolean') return other.eq64(this);
+      return +this === +other;
+    },
+  });
+  Object.defineProperties(Boolean.prototype, {
+    normalized: {get: retThis},
+    asBoolean: {get: retThis},
+    asInt8: {
+      get: function() { return +this; },
+    },
+    asInt16: {
+      get: function() { return +this; },
+    },
+    asInt32: {
+      get: function() { return +this; },
+    },
+    asInt64: {
+      get: function() { return +this; },
+    },
+    asUint8: {
+      get: function() { return +this; }
+    },
+    asUint16: {
+      get: function() { return +this; }
+    },
+    asUint32: {
+      get: function() { return +this; }
+    },
+    asUint64: {
+      get: function() { return +this; }
+    },
+    asFloat32:{
+      get: function() { return +this; }
+    },
+    asFloat64: {
+      get: function() { return +this; }
+    },
+    asBoxedInt8: {
+      get: function() { return new BoxedInt8(this); }
+    },
+    asBoxedInt16: {
+      get: function() { return new BoxedInt16(this); }
+    },
+    asBoxedInt32: {
+      get: function() { return new BoxedInt32(this); }
+    },
+    asBoxedInt64: {
+      get: function() {
+        return new BoxedInt64(0, +this);
+      },
+    },
+    asBoxedUint8: {
+      get: function(){ return new BoxedUint8(this); }
+    },
+    asBoxedUint16: {
+      get: function() { return new BoxedUint16(this); }
+    },
+    asBoxedUint32: {
+      get: function() { return new BoxedUint32(this); }
+    },
+    asBoxedUint64: {
+      get: function() {
+        return new BoxedUint64(0, this);
+      },
+    },
+    asBoxedFloat32: {
+      get: function() { return new BoxedFloat32(this); }
+    },
+    asBoxedFloat64: {
+      get: function() { return new BoxedFloat64(this); }
+    },
+  });
+  
   Boolean.Boxed = BoxedBoolean;
   Number.BoxedInt8 = BoxedInt8;
   Number.BoxedInt16 = BoxedInt16;
