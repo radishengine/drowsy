@@ -433,7 +433,7 @@ define(function() {
         b = new BoxedInt64(this.hi, this.lo);
       }
       this.hi = this.lo = 0;
-      while (b.lo !== 0 && b.hi !== 0) {
+      while (b.lo !== 0 || b.hi !== 0) {
         if (b.lo & 1) this.set_add(a);
         a.set_lshift(1);
         b.set_rshift(1);
