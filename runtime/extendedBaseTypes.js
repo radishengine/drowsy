@@ -64,6 +64,17 @@ define(function() {
   function retBoxedFloat64(){ return new BoxedFloat64(this.value); }
   function badSet(){ throw new Error('cannot set unboxed value'); }
   
+  function imul32(a, b) {
+    if (a < b) return imul32(b, a);
+    var result = 0;
+    while (b !== 0) {
+      if (b & 1) result = (result + a) | 0;
+      a <<= 1;
+      b >>= 1;
+    }
+    return result;
+  }
+  
   var HASH_INT8 = 0x1b3432b0;
   var HASH_INT16 = 0xf1a9036;
   var HASH_INT32 = 0x6832d134;
@@ -214,6 +225,12 @@ define(function() {
       subtraction = subtraction.i64_negate();
       if (typeof subtraction === 'number') return this.value + subtraction;
       return subtraction.u64_add(this);
+    },
+    i32_mul: function(factor) {
+      return imul32(this.asInt32, factor.asInt32);
+    },
+    u32_mul: function(factor) {
+      return imul32(this.asInt32, factor.asInt32) >>> 0;
     },
   };
   Object.defineProperties(Boxed.prototype, {
@@ -503,6 +520,12 @@ define(function() {
     },
     u64_sub: function(subtraction) {
       return new BoxedUint64(this.hi, this.lo).set_add(subtraction.i64_negate()).normalized;
+    },
+    i32_mul: function(factor) {
+      return imul32(this.lo, factor.asInt32);
+    },
+    u32_mul: function(factor) {
+      return imul32(this.lo, factor.asInt32) >>> 0;
     },
   };
   
@@ -1000,6 +1023,12 @@ define(function() {
     u64_sub: function(subtraction) {
       return this.asBoxedUint64.set_add(subtraction.i64_negate()).normalized;
     },
+    i32_mul: function(factor) {
+      return imul32(this.asInt32, factor.asInt32);
+    },
+    u32_mul: function(factor) {
+      return imul32(this.asInt32, factor.asInt32) >>> 0;
+    },
     eq64: function(other) {
       if (typeof other !== 'number' && typeof other !== 'boolean') return other.eq64(this);
       return this === +other;
@@ -1200,6 +1229,9 @@ define(function() {
     },
     u64_sub: function(subtraction) {
       return this.asBoxedUint64.set_add(subtraction.i64_negate()).normalized;
+    },
+    i32_mul: function(factor) {
+      return imul32(this.asInt32, factor.asInt32);
     },
     eq64: function(other) {
       if (typeof other !== 'number' && typeof other !== 'boolean') return other.eq64(this);
