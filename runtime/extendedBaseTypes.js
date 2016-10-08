@@ -214,7 +214,7 @@ define(function() {
   function Boxed64() {
   }
   Boxed64.prototype = {
-    get asBoolean() { return this.lo && this.hi; },
+    get asBoolean() { return !!(this.lo && this.hi); },
     get asInt8() { return this.lo << 24 >> 24; },
     get asInt16() { return this.lo << 16 >> 16; },
     get asInt32() { return this.lo; },
