@@ -240,15 +240,15 @@ define(function() {
     T.prototype = new Boxed;
   });
   
-  BoxedBoolean.prototype.set = function(value) { this.value = value.asBoolean; }
-  BoxedInt8.prototype.set = function(value) { this.value = value.asInt8; }
-  BoxedInt16.prototype.set = function(value) { this.value = value.asInt16; }
-  BoxedInt32.prototype.set = function(value) { this.value = value.asInt32; }
-  BoxedUint8.prototype.set = function(value) { this.value = value.asUint8; }
-  BoxedUint16.prototype.set = function(value) { this.value = value.asUint16; }
-  BoxedUint32.prototype.set = function(value) { this.value = value.asUint32; }
-  BoxedFloat32.prototype.set = function(value) { this.value = value.asFloat32; }
-  BoxedFloat64.prototype.set = function(value) { this.value = value.asFloat64; }
+  BoxedBoolean.prototype.set = function(value) { return this.value = value.asBoolean; }
+  BoxedInt8.prototype.set = function(value) { return this.value = value.asInt8; }
+  BoxedInt16.prototype.set = function(value) { return this.value = value.asInt16; }
+  BoxedInt32.prototype.set = function(value) { return this.value = value.asInt32; }
+  BoxedUint8.prototype.set = function(value) { return this.value = value.asUint8; }
+  BoxedUint16.prototype.set = function(value) { return this.value = value.asUint16; }
+  BoxedUint32.prototype.set = function(value) { return this.value = value.asUint32; }
+  BoxedFloat32.prototype.set = function(value) { return this.value = value.asFloat32; }
+  BoxedFloat64.prototype.set = function(value) { return this.value = value.asFloat64; }
   
   function Boxed64() {
   }
