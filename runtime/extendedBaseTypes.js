@@ -496,17 +496,16 @@ define(function() {
       get: function() {
         var hi = this.hi;
         if (hi < 0) {
-          var negativeHi = -hi;
+          var negativeHi, negativeLo = this.lo;
+          if (negativeLo === 0) {
+            negativeHi = -hi;
+          }
+          else {
+            negativeHi = ~hi;
+            negativeLo = -negativeLo >>> 0;
+          }
           if (negativeHi < 0x200000) {
-            var negativeLo = this.lo;
-            if (negativeLo === 0) {
-              negativeHi = -negativeHi;
-            }
-            else {
-              negativeHi = ~negativeHi;
-              negativeLo = -negativeLo >>> 0;
-            }
-            return -((negativeHi * 0x100000000) + (negativeLo >>> 0));
+            return -((negativeHi * 0x100000000) + negativeLo);
           }
         }
         else if (hi < 0x200000) {
