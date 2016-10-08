@@ -563,7 +563,7 @@ define(function() {
           }
           else {
             hi = ~hi;
-            lo = lo >>> 0;
+            lo = -lo >>> 0;
           }
           return -other === ((hi * 0x100000000) + lo);
         }
