@@ -152,6 +152,15 @@ define(function() {
     u64_bor: function(other) {
       return this.value.u64_bor(other);
     },
+    i64_lshift: function(count) {
+      return this.value.i64_lshift(count);
+    },
+    i64_arshift: function(count) {
+      return this.value.i64_arshift(count);
+    },
+    u64_rshift: function(count) {
+      return this.value.u64_rshift(count);
+    },
   };
   Object.defineProperties(Boxed.prototype, {
     normalized: {get: retValue},
@@ -289,6 +298,34 @@ define(function() {
     u64_bor: function(other) {
       other = other.asBoxedUint64;
       return new BoxedUint64(this.hi | other.hi, this.lo | other.lo).normalized;
+    },
+    i64_lshift: function(count) {
+      var hi = this.hi, lo = this.lo;
+      hi <<= count;
+      hi |= (lo >> (32 - count)) & ((1 << count) - 1);
+      lo <<= count;
+      return new BoxedInt64(hi, lo).normalized;
+    },
+    u64_lshift: function(count) {
+      var hi = this.hi, lo = this.lo;
+      hi <<= count;
+      hi |= (lo >> (32 - count)) & ((1 << count) - 1);
+      lo <<= count;
+      return new BoxedUint64(hi, lo).normalized;
+    },
+    i64_arshift: function(count) {
+      var hi = this.hi, lo = this.lo;
+      lo >>= count;
+      lo |= (hi & ((1 << count) - 1)) << (32 - count);
+      hi >>= count;
+      return new BoxedInt64(hi, lo).normalized;
+    },
+    u64_rshift: function(count) {
+      var hi = this.hi, lo = this.lo;
+      lo >>>= count;
+      lo |= (hi & ((1 << count) - 1)) << (32 - count);
+      hi >>>= count;
+      return new BoxedUint64(hi | 0, lo).normalized;
     },
   };
   
@@ -655,6 +692,15 @@ define(function() {
     },
     u64_bor: function(other) {
       return this.asBoxedUint64.u64_bor(other);
+    },
+    i64_lshift: function(count) {
+      return this.asBoxedInt64.i64_lshift(count);
+    },
+    i64_arshift: function(count) {
+      return this.asBoxedInt64.i64_arshift(count);
+    },
+    u64_rshift: function(count) {
+      return this.asBoxedUint64.u64_rshift(count);
     },
   });
   Object.defineProperties(Number.prototype, {
