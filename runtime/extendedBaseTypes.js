@@ -290,11 +290,22 @@ define(function() {
     },
     i64_band: function(other) {
       other = other.asBoxedInt64;
-      return new BoxedInt64(this.hi & other.hi, this.lo & other.lo).normalized;
+      var hi = this.hi & other.hi, lo = this.lo & other.lo;
+      if (hi === 0) {
+        return lo >>> 0;
+      }
+      else if (hi === -1) {
+        return (lo < 0) ? lo : ~lo;
+      }
+      return new BoxedInt64(hi, lo).normalized;
     },
     u64_band: function(other) {
       other = other.asBoxedUint64;
-      return new BoxedUint64(this.hi & other.hi, this.lo & other.lo).normalized;
+      var hi = this.hi & other.hi, lo = this.lo & other.lo;
+      if (hi === 0) {
+        return lo >>> 0;
+      }
+      return new BoxedUint64(hi, lo).normalized;
     },
     i64_bor: function(other) {
       other = other.asBoxedInt64;
