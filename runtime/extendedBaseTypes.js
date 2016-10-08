@@ -169,6 +169,11 @@ define(function() {
       if (typeof other === 'number' || typeof other === 'boolean') return +this.value === +other;
       return other.eq64(this);
     },
+    neq64: function(other) {
+      if (other instanceof Boxed) other = other.value;
+      if (typeof other === 'number' || typeof other === 'boolean') return +this.value !== +other;
+      return !other.eq64(this);
+    },
   };
   Object.defineProperties(Boxed.prototype, {
     normalized: {get: retValue},
@@ -586,6 +591,9 @@ define(function() {
       if (other instanceof BoxedUint64 && hi < 0) return false;
       return hi === other.hi && lo === other.lo;
     },
+    neq64: function(other) {
+      return !this.eq64(other);
+    },
   });
   
   Object.defineProperties(BoxedInt64.prototype, {
@@ -663,6 +671,9 @@ define(function() {
       }
       if (other instanceof BoxedInt64 && other.hi < 0) return false;
       return hi === other.hi && lo === other.lo;
+    },
+    neq64: function(other) {
+      return !this.eq64(other);
     },
   });
   
@@ -780,6 +791,10 @@ define(function() {
     eq64: function(other) {
       if (typeof other !== 'number' && typeof other !== 'boolean') return other.eq64(this);
       return this === +other;
+    },
+    neq64: function(other) {
+      if (typeof other !== 'number' && typeof other !== 'boolean') return !other.eq64(this);
+      return this !== +other;
     },
   });
   Object.defineProperties(Number.prototype, {
@@ -946,6 +961,10 @@ define(function() {
     eq64: function(other) {
       if (typeof other !== 'number' && typeof other !== 'boolean') return other.eq64(this);
       return +this === +other;
+    },
+    neq64: function(other) {
+      if (typeof other !== 'number' && typeof other !== 'boolean') return !other.eq64(this);
+      return +this !== +other;
     },
   });
   Object.defineProperties(Boolean.prototype, {
