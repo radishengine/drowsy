@@ -195,6 +195,16 @@ define(function() {
       if (typeof other === 'number' || typeof other === 'boolean') return this.value >= other;
       return other.lt64(this);
     },
+    i64_add: function(other) {
+      if (other instanceof Boxed) other = other.value;
+      if (typeof other === 'number' || typeof other === 'boolean') return this.value + other;
+      return other.i64_add(this);
+    },
+    u64_add: function(other) {
+      if (other instanceof Boxed) other = other.value;
+      if (typeof other === 'number' || typeof other === 'boolean') return (this.value + other).asUint64;
+      return other.u64_add(this);
+    },
   };
   Object.defineProperties(Boxed.prototype, {
     normalized: {get: retValue},
@@ -458,6 +468,12 @@ define(function() {
     },
     gte64: function(other) {
       return !this.lt64(other);
+    },
+    i64_add: function(other) {
+      return new BoxedInt64(this.hi, this.lo).set_add(other);
+    },
+    u64_add: function(other) {
+      return new BoxedUint64(this.hi, this.lo).set_add(other);
     },
   };
   
@@ -942,6 +958,12 @@ define(function() {
     u64_rshift: function(count) {
       return this.asBoxedUint64.u64_rshift(count);
     },
+    i64_add: function(other) {
+      return this.asBoxedInt64.set_add(other).normalized;
+    },
+    u64_add: function(other) {
+      return this.asBoxedUint64.set_add(other).normalized;
+    },
     eq64: function(other) {
       if (typeof other !== 'number' && typeof other !== 'boolean') return other.eq64(this);
       return this === +other;
@@ -1129,6 +1151,12 @@ define(function() {
     },
     u64_rshift: function(count) {
       return this.asBoxedUint64.u64_rshift(count);
+    },
+    i64_add: function(other) {
+      return this.asBoxedInt64.set_add(other).normalized;
+    },
+    u64_add: function(other) {
+      return this.asBoxedUint64.set_add(other).normalized;
     },
     eq64: function(other) {
       if (typeof other !== 'number' && typeof other !== 'boolean') return other.eq64(this);
