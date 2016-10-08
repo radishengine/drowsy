@@ -307,6 +307,16 @@ define(function() {
   BoxedFloat32.prototype.set_sub = function(value) { return this.value = (this.value - value.asFloat64).asFloat32; }
   BoxedFloat64.prototype.set_sub = function(value) { return this.value = this.value - value.asFloat64; }
   
+  BoxedBoolean.prototype.set_mul = function(value) { return this.value = !!(this.value * value.asBoolean); }
+  BoxedInt8.prototype.set_mul = function(value) { return this.value = (this.value * value.asInt8) << 24 >> 24; }
+  BoxedInt16.prototype.set_mul = function(value) { return this.value = (this.value * value.asInt16) << 16 >> 16; }
+  BoxedInt32.prototype.set_mul = function(value) { return this.value = imul32(this.value, value.asInt32); }
+  BoxedUint8.prototype.set_mul = function(value) { return this.value = (this.value * value.asUint8) & 0xff; }
+  BoxedUint16.prototype.set_mul = function(value) { return this.value = (this.value * value.asUint16) & 0xffff; }
+  BoxedUint32.prototype.set_mul = function(value) { return this.value = imul32(this.value, value.asInt32) >>> 0; }
+  BoxedFloat32.prototype.set_mul = function(value) { return this.value = (this.value * value.asFloat64).asFloat32; }
+  BoxedFloat64.prototype.set_mul = function(value) { return this.value = this.value * value.asFloat64; }
+  
   BoxedBoolean.prototype.set_bor = function(value) { return this.value = this.value || value.asBoolean; }
   BoxedInt8.prototype.set_bor = function(value) { return this.value = this.value | value.asInt8; }
   BoxedInt16.prototype.set_bor = function(value) { return this.value = this.value | value.asInt16; }
@@ -411,6 +421,25 @@ define(function() {
     set_sub: function(value) {
       return this.set_add(value.i64_negate());
     },
+    set_mul: function(factor) {
+      var a, b;
+      if (!(factor instanceof Boxed64)) = factor.asBoxedInt64;
+      if (this.gt64(factor)) {
+        a = new BoxedInt64(this.hi, this.lo);
+        b = new BoxedInt64(factor.hi, factor.lo);
+      }
+      else {
+        a = new BoxedInt64(factor.hi, factor.lo);
+        b = new BoxedInt64(this.hi, this.lo);
+      }
+      this.hi = this.lo = 0;
+      while (b.lo !== 0 && b.hi !== 0) {
+        if (b.lo & 1) this.set_add(a);
+        a.set_lshift(1);
+        b.set_rshift(1);
+      }
+      return this;
+    },
     set_bor: function(value) {
       value = value.asBoxedInt64;
       this.hi |= value.hi;
@@ -431,6 +460,7 @@ define(function() {
     },
     set_lshift: function(count) {
       var hi = this.hi, lo = this.lo;
+      count = count.asUint8;
       if (count >= 32) {
         hi = lo;
         lo = 0;
@@ -445,6 +475,7 @@ define(function() {
     },
     set_rshift: function(count) {
       var hi = this.hi, lo = this.lo;
+      count = count.asUint8;
       if (count >= 32) {
         lo = hi;
         hi = 0;
@@ -459,6 +490,7 @@ define(function() {
     },
     set_arshift: function(count) {
       var hi = this.hi, lo = this.lo;
+      count = count.asUint8;
       if (count >= 32) {
         lo = hi;
         hi = (hi < 0) ? -1 : 0;
@@ -1040,6 +1072,7 @@ define(function() {
     set: badSet,
     set_add: badSet,
     set_sub: badSet,
+    set_mul: badSet,
     set_bor: badSet,
     set_band: badSet,
     set_bxor: badSet,
@@ -1269,6 +1302,7 @@ define(function() {
     set: badSet,
     set_add: badSet,
     set_sub: badSet,
+    set_mul: badSet,
     set_bor: badSet,
     set_band: badSet,
     set_bxor: badSet,
