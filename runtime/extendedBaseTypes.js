@@ -423,7 +423,7 @@ define(function() {
     },
     set_mul: function(factor) {
       var a, b;
-      if (!(factor instanceof Boxed64)) = factor.asBoxedInt64;
+      if (!(factor instanceof Boxed64)) factor = factor.asBoxedInt64;
       if (this.gt64(factor)) {
         a = new BoxedInt64(this.hi, this.lo);
         b = new BoxedInt64(factor.hi, factor.lo);
