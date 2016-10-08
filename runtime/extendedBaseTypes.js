@@ -441,6 +441,7 @@ define(function() {
       lo <<= count;
       this.hi = hi;
       this.lo = lo;
+      return this;
     },
     set_rshift: function(count) {
       var hi = this.hi, lo = this.lo;
@@ -454,6 +455,7 @@ define(function() {
       hi >>>= count;
       this.hi = hi;
       this.lo = lo;
+      return this;
     },
     set_arshift: function(count) {
       var hi = this.hi, lo = this.lo;
@@ -467,6 +469,7 @@ define(function() {
       hi >>= count;
       this.hi = hi;
       this.lo = lo;
+      return this;
     },
     get asBoolean() { return !!(this.lo || this.hi); },
     get asInt8() { return this.lo << 24 >> 24; },
