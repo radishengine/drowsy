@@ -867,7 +867,6 @@ define(function() {
     }    
 
     function multiplyDigitArrayByNumber(digits, num) {
-      if (num === 0) return [];
       var result = [];
       do {
         if (num & 1) result = addDigitArrays(result, digits);
