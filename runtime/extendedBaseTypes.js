@@ -896,7 +896,7 @@ define(function() {
     else if ((radix & (radix-1)) === 0) {
       // radix is a power of 2
       if (hi === 0) return lo.toString(radix);
-      return hi.toString(radix) + (zeroX31 + lo.toString(radix)).slice(1 << (6 - Math.log2(radix)));
+      return hi.toString(radix) + (zeroX31 + lo.toString(radix)).slice(-(1 << (6 - Math.log2(radix))));
     }
     if (hi < 0x200000) return ((hi * 0x100000000) + lo).toString(radix);
     return uint64ToDecimalString(hi, lo, radix);
@@ -924,7 +924,7 @@ define(function() {
     else if ((radix & (radix-1)) === 0) {
       // radix is a power of 2
       if (hi === 0) return negative + lo.toString(radix);
-      return negative + hi.toString(radix) + (zeroX31 + lo.toString(radix)).slice(1 << (6 - Math.log2(radix)));
+      return negative + hi.toString(radix) + (zeroX31 + lo.toString(radix)).slice(-(1 << (6 - Math.log2(radix))));
     }
     if (hi < 0x200000) return negative + ((hi * 0x100000000) + lo).toString(radix);
     return negative + uint64ToDecimalString(hi, lo, radix);
