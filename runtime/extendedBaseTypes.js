@@ -886,7 +886,11 @@ define(function() {
       }
       power = multiplyDigitArrayByNumber(power, fromBase);
     }
-    return outArray.join('');
+    var str = '';
+    for (var i = outArray.length - 1; i >= 0; i++) {
+      str += outArray[i];
+    }
+    return str;
   }
   
   BoxedUint64.prototype.toString = function() {
