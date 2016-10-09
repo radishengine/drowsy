@@ -1867,7 +1867,7 @@ define(function() {
       }
     }
     else if (typeof parsed[4] === 'string') {
-      var bin = parsed[3];
+      var bin = parsed[4];
       lo = parseInt(bin.slice(-32), 2) | 0;
       if (bin.length < 32) {
         hi = 0;
