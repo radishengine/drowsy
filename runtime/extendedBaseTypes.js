@@ -836,7 +836,7 @@ define(function() {
       hi & 0xffff,
       (hi >>> 16) & 0xffff];
     
-    var fromBase = 65536;
+    var fromBase = 0x10000;
     
     // ** code below:
     // ** based on code by Dan Vanderkam <http://www.danvk.org/hex2dec.html>
