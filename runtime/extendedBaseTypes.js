@@ -232,6 +232,18 @@ define(function() {
     u32_mul: function(factor) {
       return imul32(this.asInt32, factor.asInt32) >>> 0;
     },
+    i64_div: function(divisor) {
+      return this.asBoxedInt64.i64_div(divisor);
+    },
+    u64_div: function(divisor) {
+      return this.asBoxedInt64.u64_div(divisor);
+    },
+    i64_mod: function(divisor) {
+      return this.asBoxedInt64.i64_mod(divisor);
+    },
+    u64_mod: function(divisor) {
+      return this.asBoxedInt64.u64_mod(divisor);
+    },
   };
   Object.defineProperties(Boxed.prototype, {
     normalized: {get: retValue},
@@ -316,6 +328,26 @@ define(function() {
   BoxedUint32.prototype.set_mul = function(value) { return this.value = imul32(this.value, value.asInt32) >>> 0; }
   BoxedFloat32.prototype.set_mul = function(value) { return this.value = (this.value * value.asFloat64).asFloat32; }
   BoxedFloat64.prototype.set_mul = function(value) { return this.value = this.value * value.asFloat64; }
+  
+  BoxedBoolean.prototype.set_div = function(value) { return this.value = !!(this.value / value.asBoolean); }
+  BoxedInt8.prototype.set_div = function(value) { return this.value = (this.value / value.asInt32) << 24 >> 24; }
+  BoxedInt16.prototype.set_div = function(value) { return this.value = (this.value / value.asInt32) << 16 >> 16; }
+  BoxedInt32.prototype.set_div = function(value) { return this.value = (this.value / value.asInt32) | 0; }
+  BoxedUint8.prototype.set_div = function(value) { return this.value = (this.value / value.asUint32) & 0xff; }
+  BoxedUint16.prototype.set_div = function(value) { return this.value = (this.value / value.asUint32) & 0xffff; }
+  BoxedUint32.prototype.set_div = function(value) { return this.value = (this.value / value.asUint32) >>> 0; }
+  BoxedFloat32.prototype.set_div = function(value) { return this.value = (this.value / value.asFloat64).asFloat32; }
+  BoxedFloat64.prototype.set_div = function(value) { return this.value = this.value / value.asFloat64; }
+  
+  BoxedBoolean.prototype.set_mod = function(value) { return this.value = !!(this.value % value.asBoolean); }
+  BoxedInt8.prototype.set_mod = function(value) { return this.value = this.value % value.asInt8; }
+  BoxedInt16.prototype.set_mod = function(value) { return this.value = this.value % value.asInt16; }
+  BoxedInt32.prototype.set_mod = function(value) { return this.value = this.value % value.asInt32; }
+  BoxedUint8.prototype.set_mod = function(value) { return this.value = this.value % value.asUint8; }
+  BoxedUint16.prototype.set_mod = function(value) { return this.value = this.value % value.asUint16; }
+  BoxedUint32.prototype.set_mod = function(value) { return this.value = this.value % value.asUint32; }
+  BoxedFloat32.prototype.set_mod = function(value) { return this.value = (this.value % value.asFloat64).asFloat32; }
+  BoxedFloat64.prototype.set_mod = function(value) { return this.value = this.value % value.asFloat64; }
   
   BoxedBoolean.prototype.set_bor = function(value) { return this.value = this.value || value.asBoolean; }
   BoxedInt8.prototype.set_bor = function(value) { return this.value = this.value | value.asInt8; }
@@ -652,6 +684,91 @@ define(function() {
   .forEach(function(T) {
     T.prototype = new Boxed64;
   });
+  
+  function udivmod64(dividend, divisor, returnMod) {
+    if (divisor.eq64(0)) throw new Error('division by zero');
+    var remain = dividend, scaled_divisor = divisor;
+    var result = 0, multiple = 1;
+    while (scaled_divisor.lt64(dividend)) {
+      scaled_divisor = scaled_divisor.u64_lshift(1);
+      multiple = multiple.u64_lshift(1);
+    }
+    do {
+      if (remain.gte(scaled_divisor)) {
+        remain = remain.u64_sub(scaled_divisor);
+        result = result.u64_add(multiple);
+      }
+      scaled_divisor = scaled_divisor.u64_rshift(1);
+      multiple = multiple.u64_rshift(1);
+    } while (multiple.neq64(0));
+    return returnMod ? remain : result;
+  }
+  
+  function idivmod64(dividend, divisor, returnMod) {
+    var sign = false;
+    var dividend = this;
+    if (dividend.hi < 0) {
+      sign = !sign;
+      dividend = dividend.i64_negate();
+    }
+    if (divisor.lt64(0)) {
+      sign = !sign;
+      divisor = divisor.i64_negate();
+    }
+    var result = udivmod64(dividend, divisor, returnMod);
+    return sign ? result.i64_negate() : result;
+  }
+  
+  BoxedInt64.prototype.i64_div = function(divisor) {
+    return idivmod64(this, divisor, false);
+  };
+  
+  BoxedInt64.prototype.u64_div = function(divisor) {
+    return udivmod64(this, divisor, false);
+  };
+  
+  BoxedInt64.prototype.i64_mod = function(divisor) {
+    return idivmod64(this, divisor, true);
+  };
+  
+  BoxedInt64.prototype.u64_mod = function(divisor) {
+    return udivmod64(this, divisor, true);
+  };
+  
+  BoxedInt64.prototype.set_div = function(divisor) {
+    return this.set(idivmod64(this, divisor, false));
+  };
+  
+  BoxedUint64.prototype.set_div = function(divisor) {
+    return this.set(udivmod64(this, divisor, false));
+  };
+  
+  BoxedInt64.prototype.set_mod = function(divisor) {
+    return this.set(idivmod64(this, divisor, true));
+  };
+  
+  BoxedUint64.prototype.set_mod = function(divisor) {
+    return this.set(udivmod64(this, divisor, true));
+  };
+  
+  BoxedInt64.prototype.set_mod = function(divisor) {
+    var sign = false;
+    var dividend = this;
+    if (dividend.hi < 0) {
+      sign = !sign;
+      dividend = dividend.i64_negate();
+    }
+    if (divisor.lt64(0)) {
+      sign = !sign;
+      divisor = divisor.i64_negate();
+    }
+    var result = udivmod64(dividend, divisor, true);
+    return this.set(sign ? result.i64_negate() : result);
+  };
+  
+  BoxedUint64.prototype.set_div = function(divisor) {
+    return udivmod64(this, divisor, false);
+  };
   
   Object.defineProperty(BoxedBoolean.prototype, HASH_PROP, {
     get: function() {
@@ -1073,6 +1190,8 @@ define(function() {
     set_add: badSet,
     set_sub: badSet,
     set_mul: badSet,
+    set_div: badSet,
+    set_mod: badSet,
     set_bor: badSet,
     set_band: badSet,
     set_bxor: badSet,
@@ -1151,6 +1270,18 @@ define(function() {
     },
     u32_mul: function(factor) {
       return imul32(this.asInt32, factor.asInt32) >>> 0;
+    },
+    i64_div: function(divisor) {
+      return this.asBoxedInt64.i64_div(divisor);
+    },
+    u64_div: function(divisor) {
+      return this.asBoxedUint64.u64_div(divisor);
+    },
+    i64_mod: function(divisor) {
+      return this.asBoxedInt64.i64_mod(divisor);
+    },
+    u64_mod: function(divisor) {
+      return this.asBoxedUint64.u64_mod(divisor);
     },
     eq64: function(other) {
       if (typeof other !== 'number' && typeof other !== 'boolean') return other.eq64(this);
@@ -1303,6 +1434,8 @@ define(function() {
     set_add: badSet,
     set_sub: badSet,
     set_mul: badSet,
+    set_div: badSet,
+    set_mod: badSet,
     set_bor: badSet,
     set_band: badSet,
     set_bxor: badSet,
@@ -1362,6 +1495,18 @@ define(function() {
     },
     i32_mul: function(factor) {
       return imul32(this.asInt32, factor.asInt32);
+    },
+    i64_div: function(divisor) {
+      return this.asBoxedInt64.i64_div(divisor);
+    },
+    u64_div: function(divisor) {
+      return this.asBoxedUint64.u64_div(divisor);
+    },
+    i64_mod: function(divisor) {
+      return this.asBoxedInt64.i64_mod(divisor);
+    },
+    u64_mod: function(divisor) {
+      return this.asBoxedUint64.u64_mod(divisor);
     },
     eq64: function(other) {
       if (typeof other !== 'number' && typeof other !== 'boolean') return other.eq64(this);
