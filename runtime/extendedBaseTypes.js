@@ -850,7 +850,6 @@ define(function() {
         x[i] = zi % 10;
         carry = (zi / 10) | 0;
       }
-      return z;
     }    
 
     function multiplyDigitArrayByNumber(digits, num) {
