@@ -850,7 +850,15 @@ define(function() {
         x[i] = zi % 10;
         carry = (zi / 10) | 0;
       }
-    }    
+    }
+    
+    function doubleDigitArray(x) {
+      for (var i = 0, carry = 0, i_max = x.length; i < i_max || (carry !== 0); i++) {
+        var zi = carry + (x[i] << 1);
+        x[i] = zi % 10;
+        carry = (zi / 10) | 0;
+      }
+    }
 
     function multiplyDigitArrayByNumber(digits, num) {
       if (num === 1) return digits;
@@ -860,7 +868,7 @@ define(function() {
         if (num & 1) addDigitArrays(result, digits);
         num >>>= 1;
         if (num === 0) return result;
-        addDigitArrays(digits, digits);
+        doubleDigitArray(digits);
       } while (true);
     }
     
