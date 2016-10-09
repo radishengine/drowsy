@@ -173,7 +173,9 @@ define(function() {
   function Boxed() {
   }
   Boxed.prototype = {
-    toString: retString,
+    toString: function(radix) {
+      return this.value.toString(radix);
+    },
     toJSON: function() {
       return this.value;
     },
