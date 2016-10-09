@@ -694,7 +694,7 @@ define(function() {
       multiple = multiple.u64_lshift(1);
     }
     do {
-      if (remain.gte(scaled_divisor)) {
+      if (remain.gte64(scaled_divisor)) {
         remain = remain.u64_sub(scaled_divisor);
         result = result.u64_add(multiple);
       }
@@ -708,11 +708,11 @@ define(function() {
     var sign = false;
     if (dividend.lt64(0)) {
       sign = !sign;
-      dividend = dividend.i64_negate();
+      dividend = dividend.i64_negate().asUint64;
     }
     if (divisor.lt64(0)) {
       sign = !sign;
-      divisor = divisor.i64_negate();
+      divisor = divisor.i64_negate().asUint64;
     }
     var result = udivmod64(dividend, divisor, returnMod);
     return sign ? result.i64_negate() : result;
