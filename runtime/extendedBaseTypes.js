@@ -1914,7 +1914,7 @@ define(function() {
         lo = -lo;
       }
     }
-    return unsigned ? new BoxedUint64(hi, lo) : new BoxedInt64(hi, lo);
+    return (unsigned ? new BoxedUint64(hi, lo) : new BoxedInt64(hi, lo)).normalized;
   }
   
   Object.defineProperty(String.prototype, 'asInt64', {
