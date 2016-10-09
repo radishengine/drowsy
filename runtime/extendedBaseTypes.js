@@ -706,7 +706,7 @@ define(function() {
   
   function idivmod64(dividend, divisor, returnMod) {
     var sign = false;
-    if (dividend.hi < 0) {
+    if (dividend.lt64(0)) {
       sign = !sign;
       dividend = dividend.i64_negate();
     }
