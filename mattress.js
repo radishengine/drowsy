@@ -2056,7 +2056,7 @@ define(function() {
       return false;
     },
     keys: function() {
-      var keys = Object.keys(this.stringHashed.keys);
+      var keys = Object.keys(this.stringHashed);
       var hashes = Object.keys(this.intHashed);
       for (var i = 0; i < hashes.length; i++) {
         var collisions = this.intHashed[hashes[i]];
