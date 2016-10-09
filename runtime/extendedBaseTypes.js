@@ -873,7 +873,7 @@ define(function() {
         if (num & 1) result = addDigitArrays(result, digits);
         num >>>= 1;
         if (num === 0) return result;
-        power = addDigitArrays(digits, digits);
+        digits = addDigitArrays(digits, digits);
       } while (true);
     }
     
