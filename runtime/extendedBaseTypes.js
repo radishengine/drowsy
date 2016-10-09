@@ -1856,7 +1856,7 @@ define(function() {
     var parsed = str.match(/^(\-)?(0x([a-fA-F0-9]+)|0b([01]+)|(\d+))$/);
     if (!parsed) throw new Error('invalid integer literal');
     var hi, lo;
-    if (parsed[3] !== null) {
+    if (typeof parsed[3] === 'string') {
       var hex = parsed[3];
       lo = parseInt(hex.slice(-8), 16) | 0;
       if (hex.length < 8) {
@@ -1866,7 +1866,7 @@ define(function() {
         hi = parseInt(hex.slice(0, -8), 16) | 0;
       }
     }
-    else if (parsed[4] !== null) {
+    else if (typeof parsed[4] === 'string') {
       var bin = parsed[3];
       lo = parseInt(hex.slice(-32), 2) | 0;
       if (bin.length < 32) {
