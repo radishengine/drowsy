@@ -124,7 +124,6 @@ define(function() {
   var HASH_TRUE = 0xbd5fdc92;
   var HASH_FALSE = 0xe84aa32;
   var HASH_NULL = 0x531173fb;
-  var HASH_NOT_EXTENSIBLE = 0xf6f94db6;
   
   var HASH_PROP = Object.HASH_PROP = Symbol('hash');
   
@@ -139,7 +138,7 @@ define(function() {
   
   Object.defineProperty(Object.prototype, HASH_PROP, {
     get: function() {
-      if (!Object.isExtensible(this)) return HASH_NOT_EXTENSIBLE;
+      if (!Object.isExtensible(this)) return (''+this)[HASH_PROP];
       var hash = (Math.random() * 0xffffffff) | 0;
       Object.defineProperty(this, HASH_PROP, {value:hash});
       return hash;
