@@ -75,6 +75,41 @@ define(function() {
     return result;
   }
   
+  function udivmod64(dividend, divisor, returnMod) {
+    // based on code from the Bit Mathematics Cookbook by Joel Yliluoma
+    // <http://bisqwit.iki.fi/story/howto/bitmath/>
+    if (divisor.eq64(0)) throw new Error('division by zero');
+    var remain = dividend, scaled_divisor = divisor;
+    var result = 0, multiple = 1;
+    while (scaled_divisor.lt64(dividend)) {
+      scaled_divisor = scaled_divisor.u64_lshift(1);
+      multiple = multiple.u64_lshift(1);
+    }
+    do {
+      if (remain.gte64(scaled_divisor)) {
+        remain = remain.u64_sub(scaled_divisor);
+        result = result.u64_add(multiple);
+      }
+      scaled_divisor = scaled_divisor.u64_rshift(1);
+      multiple = multiple.u64_rshift(1);
+    } while (multiple.neq64(0));
+    return returnMod ? remain : result;
+  }
+  
+  function idivmod64(dividend, divisor, returnMod) {
+    var sign = false;
+    if (dividend.lt64(0)) {
+      sign = !sign;
+      dividend = dividend.i64_negate().asUint64;
+    }
+    if (divisor.lt64(0)) {
+      sign = !sign;
+      divisor = divisor.i64_negate().asUint64;
+    }
+    var result = udivmod64(dividend, divisor, returnMod);
+    return sign ? result.i64_negate() : result;
+  }
+  
   var HASH_INT8 = 0x1b3432b0;
   var HASH_INT16 = 0xf1a9036;
   var HASH_INT32 = 0x6832d134;
@@ -684,39 +719,6 @@ define(function() {
   .forEach(function(T) {
     T.prototype = new Boxed64;
   });
-  
-  function udivmod64(dividend, divisor, returnMod) {
-    if (divisor.eq64(0)) throw new Error('division by zero');
-    var remain = dividend, scaled_divisor = divisor;
-    var result = 0, multiple = 1;
-    while (scaled_divisor.lt64(dividend)) {
-      scaled_divisor = scaled_divisor.u64_lshift(1);
-      multiple = multiple.u64_lshift(1);
-    }
-    do {
-      if (remain.gte64(scaled_divisor)) {
-        remain = remain.u64_sub(scaled_divisor);
-        result = result.u64_add(multiple);
-      }
-      scaled_divisor = scaled_divisor.u64_rshift(1);
-      multiple = multiple.u64_rshift(1);
-    } while (multiple.neq64(0));
-    return returnMod ? remain : result;
-  }
-  
-  function idivmod64(dividend, divisor, returnMod) {
-    var sign = false;
-    if (dividend.lt64(0)) {
-      sign = !sign;
-      dividend = dividend.i64_negate().asUint64;
-    }
-    if (divisor.lt64(0)) {
-      sign = !sign;
-      divisor = divisor.i64_negate().asUint64;
-    }
-    var result = udivmod64(dividend, divisor, returnMod);
-    return sign ? result.i64_negate() : result;
-  }
   
   BoxedInt64.prototype.i64_div = function(divisor) {
     return idivmod64(this, divisor, false);
