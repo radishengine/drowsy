@@ -1903,7 +1903,7 @@ define(function() {
           value.lo = -value.lo;
         }
       }
-      return value.normalized;
+      return value;
     }
     if (parsed[1]) {
       if (lo === 0) {
@@ -1914,18 +1914,30 @@ define(function() {
         lo = -lo;
       }
     }
-    return (unsigned ? new BoxedUint64(hi, lo) : new BoxedInt64(hi, lo)).normalized;
+    return unsigned ? new BoxedUint64(hi, lo) : new BoxedInt64(hi, lo);
   }
   
-  Object.defineProperty(String.prototype, 'asInt64', {
+  Object.defineProperty(String.prototype, 'asBoxedInt64', {
     get: function() {
       return parse64(this, false);
     },
   });
   
-  Object.defineProperty(String.prototype, 'asUint64', {
+  Object.defineProperty(String.prototype, 'asBoxedUint64', {
     get: function() {
       return parse64(this, true);
+    },
+  });
+  
+  Object.defineProperty(String.prototype, 'asInt64', {
+    get: function() {
+      return parse64(this, false).normalized;
+    },
+  });
+  
+  Object.defineProperty(String.prototype, 'asUint64', {
+    get: function() {
+      return parse64(this, true).normalized;
     },
   });
   
