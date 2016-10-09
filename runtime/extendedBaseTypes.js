@@ -1881,15 +1881,15 @@ define(function() {
       var dec = parsed[5];
       value.lo = parseInt(dec.slice(-9)); // 9: maximum number of decimal digits stored in a 32-bit integer
       if (dec.length > 9) {
-        // I think it's OK to keep the multiplier as a double
+        // I think it's OK to keep the multiplier/multiplied digit as a double
         // even when it's outside of 53-bit range, the loss of precision
         // doesn't affect the integer value of a power of 10 that's less than Math.pow(2, 64)
+        // (please let me know if I'm wrong on this...)
         var multiplier = 10000000000;
-        var temp_digit = new BoxedUint64(0);
         for (var i = dec.length-10; i >= 0; i--) {
           var digit = dec.charCodeAt(i) - 48;
           if (digit !== 0) {
-            value.set_add(temp_digit.set(digit).set_mul(multiplier));
+            value.set_add(digit * multiplier);
           }
           multiplier *= 10;
         }
