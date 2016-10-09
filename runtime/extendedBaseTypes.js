@@ -1877,7 +1877,7 @@ define(function() {
       }
     }
     else {
-      var value = unsigned ? new BoxedUint64(0, 0) : BoxedInt64(0, 0);
+      var value = unsigned ? new BoxedUint64(0, 0) : new BoxedInt64(0, 0);
       var dec = parsed[5];
       value.lo = parseInt(dec.slice(-9)); // 9: maximum number of decimal digits stored in a 32-bit integer
       if (dec.length > 9) {
