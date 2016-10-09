@@ -2010,9 +2010,9 @@ define(function() {
         if (!hasOwnProperty.call(this.stringHashed, k)) {
           return defaultValue;
         }
-        return this.stringHashed[v];
+        return this.stringHashed[k];
       }
-      var h = Object.getHashCode(v);
+      var h = Object.getHashCode(k);
       var collisions = this.intHashed[h];
       if (!collisions) return defaultValue;
       for (var i = 0; i < collisions.length; i++) {
@@ -2027,10 +2027,10 @@ define(function() {
         if (!hasOwnProperty.call(this.stringHashed, k)) {
           return false;
         }
-        delete this.stringHashed[v];
+        delete this.stringHashed[k];
         return true;
       }
-      var h = Object.getHashCode(v);
+      var h = Object.getHashCode(k);
       var collisions = this.intHashed[h];
       if (!collisions) return false;
       for (var i = 0; i < collisions.length; i++) {
