@@ -1417,6 +1417,9 @@ define(function() {
     asFloat64: {
       get: function() { return this; }
     },
+    asBoxedBoolean: {
+      get: function() { return new BoxedBoolean(this); }
+    },
     asBoxedInt8: {
       get: function() { return new BoxedInt8(this); }
     },
@@ -1625,6 +1628,9 @@ define(function() {
     },
     asFloat64: {
       get: function() { return +this; }
+    },
+    asBoxedBoolean: {
+      get: function() { return new BoxedBoolean(this); }
     },
     asBoxedInt8: {
       get: function() { return new BoxedInt8(this); }
