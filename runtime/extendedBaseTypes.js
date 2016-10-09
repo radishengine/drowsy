@@ -577,6 +577,7 @@ define(function() {
     get asUint8() { return this.lo & 0xff; },
     get asUint16() { return this.lo & 0xffff; },
     get asUint32() { return this.lo >>> 0; },
+    get asFloat32() { return this.asFloat64.asFloat32; },
     get asBoxedBoolean() { return new BoxedBoolean(this.lo && this.hi); },
     get asBoxedInt8() { return new BoxedInt8(this.lo); },
     get asBoxedInt16() { return new BoxedInt16(this.lo); },
@@ -584,6 +585,8 @@ define(function() {
     get asBoxedUint8() { return new BoxedUint8(this.lo); },
     get asBoxedUint16() { return new BoxedUint16(this.lo); },
     get asBoxedUint32() { return new BoxedUint32(this.lo); },
+    get asBoxedFloat32() { return new BoxedFloat32(this.asFloat64); },
+    get asBoxedFloat64() { return new BoxedFloat64(this.asFloat64); },
     i64_negate: function() {
       var hi = this.hi, lo = this.lo;
       if (hi < 0) {
@@ -718,6 +721,35 @@ define(function() {
   [BoxedInt64, BoxedUint64]
   .forEach(function(T) {
     T.prototype = new Boxed64;
+  });
+  
+  Object.defineProperty(BoxedInt64.prototype, 'asFloat64', {
+    get: function() {
+      var hi = this.hi, lo = this.lo;
+      var sign;
+      if (hi < 0) {
+        sign = -1;
+        if (lo === 0) {
+          hi = -hi;
+        }
+        else {
+          hi = ~hi;
+          lo = -lo >>> 0;
+        }
+      }
+      else {
+        sign = +1;
+        lo >>>= 0;
+      }
+      return sign * ((hi * 0x100000000) + lo);
+    },
+  });
+  
+  Object.defineProperty(BoxedUint64.prototype, 'asFloat64', {
+    get: function() {
+      var hi = this.hi >>> 0, lo = this.lo >>> 0;
+      return ((hi * 0x100000000) + lo);
+    },
   });
   
   BoxedInt64.prototype.i64_div = function(divisor) {
