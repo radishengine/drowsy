@@ -831,24 +831,12 @@ define(function() {
   
   function uint64ToDecimalString(hi, lo) {
     var digits = [
-      lo & 0xf,
-      (lo >>> 4) & 0xf,
-      (lo >>> 8) & 0xf,
-      (lo >>> 12) & 0xf,
-      (lo >>> 16) & 0xf,
-      (lo >>> 20) & 0xf,
-      (lo >>> 24) & 0xf,
-      (lo >>> 28) & 0xf,
-      hi & 0xf,
-      (hi >>> 4) & 0xf,
-      (hi >>> 8) & 0xf,
-      (hi >>> 12) & 0xf,
-      (hi >>> 16) & 0xf,
-      (hi >>> 20) & 0xf,
-      (hi >>> 24) & 0xf,
-      (hi >>> 28) & 0xf];
+      lo & 0xffff,
+      (lo >>> 16) & 0xffff,
+      hi & 0xffff,
+      (hi >>> 16) & 0xffff];
     
-    var fromBase = 16;
+    var fromBase = 65536;
     
     // ** code below:
     // ** based on code by Dan Vanderkam <http://www.danvk.org/hex2dec.html>
