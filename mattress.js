@@ -1994,7 +1994,7 @@ define(function() {
       var h = Object.getHashCode(k);
       var collisions = this.intHashed[h];
       if (!collisions) {
-        this.intHashed[h] = [v];
+        this.intHashed[h] = [[k,v]];
         return;
       }
       for (var i = 0; i < collisions.length; i++) {
