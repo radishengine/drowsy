@@ -1987,7 +1987,7 @@ define(function() {
     },
     testEquality: Object.is,
     set: function(k, v) {
-      if (type(k) === 'string') {
+      if (typeof k === 'string') {
         this.stringHashed[k] = v;
         return;
       }
@@ -2006,7 +2006,7 @@ define(function() {
       collisions.push([k,v]);
     },
     get: function(k, defaultValue) {
-      if (type(k) === 'string') {
+      if (typeof k === 'string') {
         if (!hasOwnProperty.call(this.stringHashed, k)) {
           return defaultValue;
         }
@@ -2023,7 +2023,7 @@ define(function() {
       return defaultValue;
     },
     remove: function(k) {
-      if (type(k) === 'string') {
+      if (typeof k === 'string') {
         if (!hasOwnProperty.call(this.stringHashed, k)) {
           return false;
         }
@@ -2042,7 +2042,7 @@ define(function() {
       return false;      
     },
     contains: function(k) {
-      if (type(k) === 'string') {
+      if (typeof k === 'string') {
         return hasOwnProperty.call(this.stringHashed, k);
       }
       var h = Object.getHashCode(k);
