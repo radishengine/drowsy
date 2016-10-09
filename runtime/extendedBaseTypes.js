@@ -845,22 +845,23 @@ define(function() {
     // Adds two arrays for base 10, returning the result.
     // This turns out to be the only "primitive" operation we need.
     function addDigitArrays(x, y) {
-      var z = [];
       for (var i = 0, carry = 0, i_max = Math.max(x.length, y.length); i < i_max || (carry !== 0); i++) {
         var zi = carry + (x[i] || 0) + (y[i] || 0);
-        z.push(zi % 10);
-        carry = Math.floor(zi / 10);
+        x[i] = zi % 10;
+        carry = (zi / 10) | 0;
       }
       return z;
     }    
 
     function multiplyDigitArrayByNumber(digits, num) {
+      if (num === 1) return digits;
+      digits = digits.slice();
       var result = [];
       do {
-        if (num & 1) result = addDigitArrays(result, digits);
+        if (num & 1) addDigitArrays(result, digits);
         num >>>= 1;
         if (num === 0) return result;
-        digits = addDigitArrays(digits, digits);
+        addDigitArrays(digits, digits);
       } while (true);
     }
     
@@ -869,7 +870,7 @@ define(function() {
     for (var i = 0; i < digits.length; i++) {
       // invariant: at this point, fromBase^i = power
       if (digits[i] !== 0) {
-        outArray = addDigitArrays(outArray, multiplyDigitArrayByNumber(power, digits[i]));
+        addDigitArrays(outArray, multiplyDigitArrayByNumber(power, digits[i]));
       }
       power = multiplyDigitArrayByNumber(power, fromBase);
     }
