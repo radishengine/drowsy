@@ -1885,7 +1885,7 @@ define(function() {
         // even when it's outside of 53-bit range, the loss of precision
         // doesn't affect the integer value of a power of 10 that's less than Math.pow(2, 64)
         // (please let me know if I'm wrong on this...)
-        var multiplier = 10000000000;
+        var multiplier = 1000000000;
         for (var i = dec.length-10; i >= 0; i--) {
           var digit = dec.charCodeAt(i) - 48;
           if (digit !== 0) {
