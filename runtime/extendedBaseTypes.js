@@ -829,7 +829,32 @@ define(function() {
     },
   });
   
+  var zero_x31 = '0000000000000000000000000000000';
+  
   function uint64ToDecimalString(hi, lo, radix) {
+    if (isNaN(radix)) radix = 10;
+    else if ((radix & (radix-1)) === 0) {
+      // radix is a power of 2
+      var padSize;
+      switch (radix) {
+        case 2: padSize = 32; break;
+        case 4: padSize = 16; break;
+        case 8:
+          padSize = 11;
+          lo += (hi & 3) * 0x100000000;
+          hi >>>= 2;
+          break;
+        case 16: padSize = 8; break;
+        case 32:
+          padSize = 7;
+          lo += (hi & 3) * 0x100000000;
+          hi >>>= 2;
+          break;
+        default: throw new RangeError('toString() radix argument must be between 2 and 36');
+      }
+      if (hi === 0) return lo.toString(radix);
+      return hi.toString(radix) + (zero_x31 + lo.toString(radix)).slice(-padSize);
+    }
     var digits = [
       lo & 0xffff,
       (lo >>> 16) & 0xffff,
@@ -888,16 +913,8 @@ define(function() {
     return str;
   }
   
-  var zeroX31 = '0000000000000000000000000000000';
-  
   BoxedUint64.prototype.toString = function(radix) {
     var hi = this.hi >>> 0, lo = this.lo >>> 0;
-    if (isNaN(radix)) radix = 10;
-    else if ((radix & (radix-1)) === 0) {
-      // radix is a power of 2
-      if (hi === 0) return lo.toString(radix);
-      return hi.toString(radix) + (zeroX31 + lo.toString(radix)).slice(-(1 << (7 - Math.log2(radix))));
-    }
     if (hi < 0x200000) return ((hi * 0x100000000) + lo).toString(radix);
     return uint64ToDecimalString(hi, lo, radix);
   };
@@ -919,12 +936,6 @@ define(function() {
     else {
       lo = this.lo >>> 0;
       negative = '';
-    }
-    if (isNaN(radix)) radix = 10;
-    else if ((radix & (radix-1)) === 0) {
-      // radix is a power of 2
-      if (hi === 0) return negative + lo.toString(radix);
-      return negative + hi.toString(radix) + (zeroX31 + lo.toString(radix)).slice(-(1 << (7 - Math.log2(radix))));
     }
     if (hi < 0x200000) return negative + ((hi * 0x100000000) + lo).toString(radix);
     return negative + uint64ToDecimalString(hi, lo, radix);
