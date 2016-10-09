@@ -1970,4 +1970,106 @@ define(function() {
     },
   });
   
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
+  
+  function HashTable() {
+  }
+  HashTable.prototype = {
+    get stringHashed() {
+      var obj = {};
+      Object.defineProperty(this, 'stringHashed', {value:obj});
+      return obj;
+    },
+    get intHashed() {
+      var obj = {};
+      Object.defineProperty(this, 'intHashed', {value:obj});
+      return obj;
+    },
+    testEquality: Object.is,
+    set: function(k, v) {
+      if (type(k) === 'string') {
+        this.stringHashed[k] = v;
+        return;
+      }
+      var h = Object.getHashCode(k);
+      var collisions = this.intHashed[h];
+      if (!collisions) {
+        this.intHashed[h] = [v];
+        return;
+      }
+      for (var i = 0; i < collisions.length; i++) {
+        if (this.testEquality(k, collisions[i][0])) {
+          collisions[i][1] = v;
+          return;
+        }
+      }
+      collisions.push([k,v]);
+    },
+    get: function(k, defaultValue) {
+      if (type(k) === 'string') {
+        if (!hasOwnProperty.call(this.stringHashed, k)) {
+          return defaultValue;
+        }
+        return this.stringHashed[v];
+      }
+      var h = Object.getHashCode(v);
+      var collisions = this.intHashed[h];
+      if (!collisions) return defaultValue;
+      for (var i = 0; i < collisions.length; i++) {
+        if (this.testEquality(k, collisions[i][0])) {
+          return collisions[i][1];
+        }
+      }
+      return defaultValue;
+    },
+    remove: function(k) {
+      if (type(k) === 'string') {
+        if (!hasOwnProperty.call(this.stringHashed, k)) {
+          return false;
+        }
+        delete this.stringHashed[v];
+        return true;
+      }
+      var h = Object.getHashCode(v);
+      var collisions = this.intHashed[h];
+      if (!collisions) return false;
+      for (var i = 0; i < collisions.length; i++) {
+        if (this.testEquality(k, collisions[i][0])) {
+          collisions.splice(i, 1);
+          return true;
+        }
+      }
+      return false;      
+    },
+    contains: function(k) {
+      if (type(k) === 'string') {
+        return hasOwnProperty.call(this.stringHashed, k);
+      }
+      var h = Object.getHashCode(k);
+      var collisions = this.intHashed[h];
+      if (!collisions) return false;
+      for (var i = 0; i < collisions.length; i++) {
+        if (this.testEquality(k, collisions[i][0])) {
+          return true;
+        }
+      }
+      return false;
+    },
+    keys: function() {
+      var keys = Object.keys(this.stringHashed.keys);
+      var hashes = Object.keys(this.intHashed);
+      for (var i = 0; i < hashes.length; i++) {
+        var collisions = this.intHashed[hashes[i]];
+        for (var j = 0; j < collisions.length; j++) {
+          keys.push(collisions[j][0]);
+        }
+      }
+      return keys;
+    },
+  }
+  
+  return {
+    HashTable: HashTable,
+  };
+  
 });
