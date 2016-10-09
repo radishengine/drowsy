@@ -842,7 +842,7 @@ define(function() {
       hi & 0xf,
       (hi >>> 4) & 0xf,
       (hi >>> 8) & 0xf,
-      (lo >>> 12) & 0xf,
+      (hi >>> 12) & 0xf,
       (hi >>> 16) & 0xf,
       (hi >>> 20) & 0xf,
       (hi >>> 24) & 0xf,
