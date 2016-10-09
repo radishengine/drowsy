@@ -1853,7 +1853,7 @@ define(function() {
   BoxedUint64.InDataView.prototype = new BoxedUint64(0);
   
   function parse64(str, unsigned) {
-    var parsed = this.match(/^(\-)?(0x([a-fA-F0-9]+)|0b([01]+)|(\d+))$/);
+    var parsed = str.match(/^(\-)?(0x([a-fA-F0-9]+)|0b([01]+)|(\d+))$/);
     if (!parsed) throw new Error('invalid integer literal');
     var hi, lo;
     if (parsed[3] !== null) {
@@ -1913,9 +1913,6 @@ define(function() {
         hi = ~hi;
         lo = -lo;
       }
-    }
-    if (hi >= 0 || !unsigned) {
-      
     }
     return unsigned ? new BoxedUint64(hi, lo) : new BoxedInt64(hi, lo);
   }
