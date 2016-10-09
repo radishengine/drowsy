@@ -1863,7 +1863,7 @@ define(function() {
         hi = 0;
       }
       else {
-        hi = parseInt(hex.slice(0, -8), 16) | 0;
+        hi = parseInt(hex.slice(0, -8).slice(-8), 16) | 0;
       }
     }
     else if (typeof parsed[4] === 'string') {
