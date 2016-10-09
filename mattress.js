@@ -132,6 +132,10 @@ define(function() {
     return v[HASH_PROP];
   };
   
+  Object.defineHashCode = function(obj, hashCode) {
+    return Object.defineProperty(obj, HASH_PROP, {value:hashCode|0});
+  };
+  
   Object.defineHashingFunction = function(obj, func) {
     return Object.defineProperty(obj, HASH_PROP, {get:func});
   };
