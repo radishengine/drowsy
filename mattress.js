@@ -448,6 +448,9 @@ define(function() {
   }
   Boxed64.prototype = {
     set: function(value) {
+      if (typeof value === 'string') {
+        return parse64(this, value);
+      }
       if (typeof value === 'number' || typeof value === 'boolean') {
         if (value < 0) {
           var negated = -value;
@@ -1852,34 +1855,33 @@ define(function() {
   };
   BoxedUint64.InDataView.prototype = new BoxedUint64(0);
   
-  function parse64(str, unsigned) {
+  function parse64(value, str) {
     var parsed = str.match(/^([\+\-])?(0x([a-fA-F0-9]+)|0b([01]+)|(\d+))$/);
     if (!parsed) throw new Error('invalid integer literal');
-    var hi, lo;
     if (typeof parsed[3] === 'string') {
       var hex = parsed[3];
-      lo = parseInt(hex.slice(-8), 16) | 0;
+      value.lo = parseInt(hex.slice(-8), 16) | 0;
       if (hex.length < 8) {
-        hi = 0;
+        value.hi = 0;
       }
       else {
-        hi = parseInt(hex.slice(0, -8).slice(-8), 16) | 0;
+        value.hi = parseInt(hex.slice(0, -8).slice(-8), 16) | 0;
       }
     }
     else if (typeof parsed[4] === 'string') {
       var bin = parsed[4];
-      lo = parseInt(bin.slice(-32), 2) | 0;
+      value.lo = parseInt(bin.slice(-32), 2) | 0;
       if (bin.length < 32) {
-        hi = 0;
+        value.hi = 0;
       }
       else {
-        hi = parseInt(bin.slice(0, -32).slice(-32), 2) | 0;
+        value.hi = parseInt(bin.slice(0, -32).slice(-32), 2) | 0;
       }
     }
     else {
-      var value = unsigned ? new BoxedUint64(0, 0) : new BoxedInt64(0, 0);
       var dec = parsed[5];
       value.lo = parseInt(dec.slice(-9)); // 9: maximum number of decimal digits stored in a 32-bit integer
+      value.hi = 0;
       if (dec.length > 9) {
         // I think it's OK to keep the multiplier/multiplied digit as a double
         // even when it's outside of 53-bit range, the loss of precision
@@ -1894,50 +1896,40 @@ define(function() {
           multiplier *= 10;
         }
       }
-      if (parsed[1] === '-') {
-        if (value.lo === 0) {
-          value.hi = -value.hi;
-        }
-        else {
-          value.hi = ~value.hi;
-          value.lo = -value.lo;
-        }
-      }
-      return value;
     }
-    if (parsed[1]) {
-      if (lo === 0) {
-        hi = -hi;
+    if (parsed[1] === '-') {
+      if (value.lo === 0) {
+        value.hi = -value.hi;
       }
       else {
-        hi = ~hi;
-        lo = -lo;
+        value.hi = ~value.hi;
+        value.lo = -value.lo;
       }
     }
-    return unsigned ? new BoxedUint64(hi, lo) : new BoxedInt64(hi, lo);
+    return value;
   }
   
   Object.defineProperty(String.prototype, 'asBoxedInt64', {
     get: function() {
-      return parse64(this, false);
+      return parse64(new BoxedInt64(0, 0), this);
     },
   });
   
   Object.defineProperty(String.prototype, 'asBoxedUint64', {
     get: function() {
-      return parse64(this, true);
+      return parse64(new BoxedUint64(0, 0), this);
     },
   });
   
   Object.defineProperty(String.prototype, 'asInt64', {
     get: function() {
-      return parse64(this, false).normalized;
+      return parse64(new BoxedInt64(0, 0), this).normalized;
     },
   });
   
   Object.defineProperty(String.prototype, 'asUint64', {
     get: function() {
-      return parse64(this, true).normalized;
+      return parse64(new BoxedUint64(0, 0), this).normalized;
     },
   });
   
