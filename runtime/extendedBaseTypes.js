@@ -887,7 +887,7 @@ define(function() {
       power = multiplyDigitArrayByNumber(power, fromBase);
     }
     var str = '';
-    for (var i = outArray.length - 1; i >= 0; i++) {
+    for (var i = outArray.length - 1; i >= 0; i--) {
       str += outArray[i];
     }
     return str;
