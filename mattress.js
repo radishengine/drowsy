@@ -123,7 +123,7 @@ define(function() {
   var HASH_STRING = 0x6053b7f7;
   var HASH_TRUE = 0xbd5fdc92;
   var HASH_FALSE = 0xe84aa32;
-  var HASH_NULL = 0x531173fb;
+  var HASH_NULL = 0;
   
   var HASH_PROP = Object.HASH_PROP = Symbol('hash');
   
