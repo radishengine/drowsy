@@ -172,6 +172,9 @@ define(function() {
   }
   Boxed.prototype = {
     toString: retString,
+    toJSON: function() {
+      return this.value;
+    },
     i64_negate: function() {
       return -this.value;
     },
@@ -866,7 +869,7 @@ define(function() {
   
   var zero_x31 = '0000000000000000000000000000000';
   
-  function uint64ToDecimalString(hi, lo, radix) {
+  function uint64ToString(hi, lo, radix) {
     if (isNaN(radix)) radix = 10;
     else if ((radix & (radix-1)) === 0) {
       // radix is a power of 2
@@ -951,7 +954,7 @@ define(function() {
   BoxedUint64.prototype.toString = function(radix) {
     var hi = this.hi >>> 0, lo = this.lo >>> 0;
     if (hi < 0x200000) return ((hi * 0x100000000) + lo).toString(radix);
-    return uint64ToDecimalString(hi, lo, radix);
+    return uint64ToString(hi, lo, radix);
   };
   
   BoxedInt64.prototype.toString = function(radix) {
@@ -973,7 +976,33 @@ define(function() {
       negative = '';
     }
     if (hi < 0x200000) return negative + ((hi * 0x100000000) + lo).toString(radix);
-    return negative + uint64ToDecimalString(hi, lo, radix);
+    return negative + uint64ToString(hi, lo, radix);
+  };
+  
+  BoxedUint64.prototype.toJSON = function() {
+    var v = this.normalized;
+    if (typeof v === 'number') return v;
+    return '0x' + v.toString(16);
+  };
+  
+  BoxedInt64.prototype.toJSON = function() {
+    var hi = this.hi | 0, lo;
+    var negative = hi < 0;
+    if (negative) {
+      lo = this.lo | 0;
+      if (lo === 0) {
+        hi = -hi;
+      }
+      else {
+        hi = ~hi;
+        lo = -lo >>> 0;
+      }
+    }
+    else {
+      lo = this.lo >>> 0;
+    }
+    if (hi < 0x200000) return (negative ? -1 : 1) * ((hi * 0x100000000) + lo);
+    return (negative ? '-0x' : '0x') + uint64ToString(hi, lo, 16);
   };
   
   Object.defineProperties(BoxedBoolean.prototype, {
