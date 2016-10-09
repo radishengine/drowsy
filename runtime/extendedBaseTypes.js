@@ -1852,4 +1852,84 @@ define(function() {
   };
   BoxedUint64.InDataView.prototype = new BoxedUint64(0);
   
+  function parse64(str, unsigned) {
+    var parsed = this.match(/^(\-)?(0x([a-fA-F0-9]+)|0b([01]+)|(\d+))$/);
+    if (!parsed) throw new Error('invalid integer literal');
+    var hi, lo;
+    if (parsed[3] !== null) {
+      var hex = parsed[3];
+      lo = parseInt(hex.slice(-8), 16) | 0;
+      if (hex.length < 8) {
+        hi = 0;
+      }
+      else {
+        hi = parseInt(hex.slice(0, -8), 16) | 0;
+      }
+    }
+    else if (parsed[4] !== null) {
+      var bin = parsed[3];
+      lo = parseInt(hex.slice(-32), 2) | 0;
+      if (bin.length < 32) {
+        hi = 0;
+      }
+      else {
+        hi = parseInt(hex.slice(0, -32), 2) | 0;
+      }
+    }
+    else {
+      var value = unsigned ? new BoxedUint64(0, 0) : BoxedInt64(0, 0);
+      var dec = parsed[5];
+      value.lo = parseInt(dec.slice(-9)); // 9: maximum number of decimal digits stored in a 32-bit integer
+      if (dec.length > 9) {
+        // I think it's OK to keep the multiplier as a double
+        // even when it's outside of 53-bit range, the loss of precision
+        // doesn't affect the integer value of a power of 10 that's less than Math.pow(2, 64)
+        var multiplier = 10000000000;
+        var temp_digit = new BoxedUint64(0);
+        for (var i = dec.length-10; i >= 0; i--) {
+          var digit = dec.charCodeAt(i) - 48;
+          if (digit !== 0) {
+            value.set_add(temp_digit.set(digit).set_mul(multiplier));
+          }
+          multiplier *= 10;
+        }
+      }
+      if (parsed[1]) {
+        if (value.lo === 0) {
+          value.hi = -value.hi;
+        }
+        else {
+          value.hi = ~value.hi;
+          value.lo = -value.lo;
+        }
+      }
+      return value.normalized;
+    }
+    if (parsed[1]) {
+      if (lo === 0) {
+        hi = -hi;
+      }
+      else {
+        hi = ~hi;
+        lo = -lo;
+      }
+    }
+    if (hi >= 0 || !unsigned) {
+      
+    }
+    return unsigned ? new BoxedUint64(hi, lo) : new BoxedInt64(hi, lo);
+  }
+  
+  Object.defineProperty(String.prototype, 'asInt64', {
+    get: function() {
+      return parse64(this, false);
+    },
+  });
+  
+  Object.defineProperty(String.prototype, 'asUint64', {
+    get: function() {
+      return parse64(this, true);
+    },
+  });
+  
 });
