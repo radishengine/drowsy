@@ -1868,12 +1868,12 @@ define(function() {
     }
     else if (typeof parsed[4] === 'string') {
       var bin = parsed[3];
-      lo = parseInt(hex.slice(-32), 2) | 0;
+      lo = parseInt(bin.slice(-32), 2) | 0;
       if (bin.length < 32) {
         hi = 0;
       }
       else {
-        hi = parseInt(hex.slice(0, -32), 2) | 0;
+        hi = parseInt(bin.slice(0, -32).slice(-32), 2) | 0;
       }
     }
     else {
