@@ -829,7 +829,7 @@ define(function() {
     },
   });
   
-  function uint64ToDecimalString(hi, lo) {
+  function uint64ToDecimalString(hi, lo, radix) {
     var digits = [
       lo & 0xffff,
       (lo >>> 16) & 0xffff,
@@ -847,16 +847,16 @@ define(function() {
     function addDigitArrays(x, y) {
       for (var i = 0, carry = 0, i_max = Math.max(x.length, y.length); i < i_max || (carry !== 0); i++) {
         var zi = carry + (x[i] || 0) + (y[i] || 0);
-        x[i] = zi % 10;
-        carry = (zi / 10) | 0;
+        x[i] = zi % radix;
+        carry = (zi / radix) | 0;
       }
     }
     
     function doubleDigitArray(x) {
       for (var i = 0, carry = 0, i_max = x.length; i < i_max || (carry !== 0); i++) {
         var zi = carry + (x[i] << 1);
-        x[i] = zi % 10;
-        carry = (zi / 10) | 0;
+        x[i] = zi % radix;
+        carry = (zi / radix) | 0;
       }
     }
 
@@ -883,18 +883,25 @@ define(function() {
     }
     var str = '';
     for (var i = outArray.length - 1; i >= 0; i--) {
-      str += outArray[i];
+      str += parseInt(outArray[i], radix);
     }
     return str;
   }
   
-  BoxedUint64.prototype.toString = function() {
+  var zeroX31 = '0000000000000000000000000000000';
+  
+  BoxedUint64.prototype.toString = function(radix) {
     var hi = this.hi >>> 0, lo = this.lo >>> 0;
-    if (hi < 0x200000) return ((hi * 0x100000000) + lo).toString();
-    return uint64ToDecimalString(hi, lo);
+    if (isNaN(radix)) radix = 10;
+    else if ((radix & (radix-1)) === 0) {
+      // radix is a power of 2
+      return hi.toString(radix) + (zeroX31 + lo.toString(radix)).slice(-32/radix);
+    }
+    if (hi < 0x200000) return ((hi * 0x100000000) + lo).toString(radix);
+    return uint64ToDecimalString(hi, lo, radix);
   };
   
-  BoxedInt64.prototype.toString = function() {
+  BoxedInt64.prototype.toString = function(radix) {
     var hi = this.hi | 0, lo;
     var negative = hi < 0;
     if (negative) {
@@ -912,8 +919,13 @@ define(function() {
       lo = this.lo >>> 0;
       negative = '';
     }
-    if (hi < 0x200000) return negative + ((hi * 0x100000000) + lo).toString();
-    return negative + uint64ToDecimalString(hi, lo);
+    if (isNaN(radix)) radix = 10;
+    else if ((radix & (radix-1)) === 0) {
+      // radix is a power of 2
+      return negative + hi.toString(radix) + (zeroX31 + lo.toString(radix)).slice(-32/radix);
+    }
+    if (hi < 0x200000) return negative + ((hi * 0x100000000) + lo).toString(radix);
+    return negative + uint64ToDecimalString(hi, lo, radix);
   };
   
   Object.defineProperties(BoxedBoolean.prototype, {
