@@ -4,8 +4,8 @@ define(function() {
   
   var rx_escape = '\\\\(?:u(?:\\{[^\\}]+\\}|....)?|x..|c.|[^cux])';
   var rx_set = '\\[(?:[^\\\\\\]]+|' + rx_escape + ')+\\]';
-  var rx_singleton = rx_escape + '|' + rx_set + '|[^\\\\\\[\\]\\(\\)\\{\\}\\*\\?\\+\\$\\^\\|]';
-  var rx_special = '\\((?:\\?[=!:])?|\\)|[\\*\\+\\?]\\??|\\{[^\\}]*\\}|\\$|\\^|\\|';
+  var rx_singleton = rx_escape + '|' + rx_set + '|[^\\\\\\[\\]\\(\\)\\{\\}\\*\\?\\+\\$\\^\\|\\.]+|\\.';
+  var rx_special = '\\((?:\\?[=!:])?|\\)|[\\*\\+\\?]\\??|\\{[^\\}]*\\}|\\$|\\^|\\||\\.';
   
   var rx = new RegExp('(' + rx_singleton + ')|(' + rx_special + ')', 'g');
   
@@ -18,6 +18,14 @@ define(function() {
     var nextIndex = 0;
     var context = [':'];
     var contextStack = [];
+    function popSingleton() {
+      var last = context.pop();
+      if (typeof last === 'string' && last.length > 1) {
+        context.push(last.slice(0, -1));
+        return last.slice(-1);
+      }
+      return last;
+    }
     for (var match = rx.exec(source); match; match = rx.exec(source)) {
       if (match.index > nextIndex) {
         throw new Error('invalid pattern: ' + source);
@@ -26,7 +34,18 @@ define(function() {
       if (typeof match[1] === 'string') {
         // character set or block of literal character
         var ch = match[1];
-        context.push(ch);
+        switch(ch[0]) {
+          case '\\':
+          case '.':
+            context.push([ch]);
+            break;
+          case '[':
+            context.push(['[', ch.slice(1,-2)]);
+            break;
+          default:
+            context.push(ch);
+            break;
+        }
       }
       else {
         // special character (grouping, repeat, etc.)
@@ -44,14 +63,14 @@ define(function() {
           case '*':
           case '?':
           case '+':
-            context.push([special, context.pop()]);
+            context.push([special, popSingleton()]);
             break;
           case '{':
             var range = special.match(/^\{\s*(\d+)?\s*(,\s*(\d+)?)?\s*\}$/);
             if (!range) throw new Error('invalid pattern: ' + source);
             var min = +range[1] || 0;
             var max = (typeof range[2] === 'string') ? +(range[3] || Infinity) : min;
-            context.push(['{', min, max, context.pop()]);
+            context.push(['{', min, max, popSingleton()]);
             break;
           case '|':
             if (contextStack.length > 0 && contextStack[contextStack.length-1][0] === '|') {
