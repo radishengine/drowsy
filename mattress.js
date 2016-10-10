@@ -127,9 +127,9 @@ define(function() {
   var HASH_FALSE = 0xe84aa32;
   var HASH_NULL = 0;
   
-  var HASH_PROP = Object.HASH_PROP = Symbol('hash');
+  var HASH_PROP = mattress.HASH_PROP = Symbol('hash');
   
-  Object.getHashCode = function(v) {
+  mattress.getHashCode = function(v) {
     if (v === null || typeof v === 'undefined') return HASH_NULL;
     return v[HASH_PROP];
   };
