@@ -40,7 +40,7 @@ define(function() {
             context.push([ch]);
             break;
           case '[':
-            context.push(['[', ch.slice(1,-2)]);
+            context.push(['[', ch.slice(1, -1)]);
             break;
           default:
             context.push(ch);
