@@ -8,6 +8,8 @@ define(function() {
 
   'use strict';
   
+  var mattress = {};
+  
   var tempBuffer = new ArrayBuffer(8);
   var tempFloat32 = new Float32Array(tempBuffer);
   var tempFloat64 = new Float64Array(tempBuffer);
@@ -2070,8 +2072,8 @@ define(function() {
     },
   }
   
-  return {
-    HashTable: HashTable,
-  };
+  mattress.HashTable = HashTable;
+  
+  return mattress;
   
 });
