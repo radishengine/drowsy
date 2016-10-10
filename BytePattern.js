@@ -20,6 +20,7 @@ define(function() {
       if (match.index > nextIndex) {
         throw new Error('invalid pattern: ' + source);
       }
+      nextIndex = rx.lastIndex:
       if (typeof match[1] === 'string') {
         // character set or block of literal characters
         var ch = match[1];
