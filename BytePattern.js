@@ -26,6 +26,7 @@ define(function() {
       }
       return last;
     }
+    var groupCount = 0;
     for (var match = rx.exec(source); match; match = rx.exec(source)) {
       if (match.index > nextIndex) {
         throw new Error('invalid pattern: ' + source);
@@ -53,7 +54,13 @@ define(function() {
         switch (special[0]) {
           case '(':
             contextStack.push(context);
-            var newContext = [special[2] || special];
+            var newContext;
+            if (special === '(') {
+              newContext = ['(' ++groupCount];
+            }
+            else {
+              newContext = [special[2]]; // ':' '=' '!'
+            }
             context.push(newContext);
             context = newContext;
             break;
@@ -100,6 +107,7 @@ define(function() {
     }
     while (context.length === 2 && context[0] === ':') context = context[1];
     this.tree = context;
+    this.groupCount = groupCount;
   }
   
   return BytePattern;
