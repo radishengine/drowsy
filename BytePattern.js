@@ -110,16 +110,6 @@ define(function() {
     this.groupCount = groupCount;
   }
   
-  BytePattern.from = function(source) {
-    if (typeof source === 'string') return new BytePattern(source);
-    if (source instanceof RegExp) {
-      if ('bytePattern' in source) return source.bytePattern;
-      if (!Object.isExtensible(source)) return new BytePattern(source);
-      return source.bytePattern = new BytePattern(source);
-    }
-    throw new Error('cannot create byte pattern from ' + source);
-  };
-  
   return BytePattern;
 
 });
