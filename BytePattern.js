@@ -31,7 +31,6 @@ define(function() {
       else {
         // special character (grouping, repeat, etc.)
         var special = match[2];
-        console.log('special', special);
         switch (special[0]) {
           case '(':
             contextStack.push(context);
