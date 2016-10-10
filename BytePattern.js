@@ -47,7 +47,7 @@ define(function() {
             context.push([special, context.pop()]);
             break;
           case '{':
-            var range = special.match(/^\{\s*(\d+)\s*(,\s*(\d+))?\s*\}$/);
+            var range = special.match(/^\{\s*(\d+)\s*(,\s*(\d+)?)?\s*\}$/);
             if (!range) throw new Error('invalid pattern: ' + source);
             var min = +range[1];
             var max = (typeof range[2] === 'string') ? +(range[3] || Infinity) : min;
