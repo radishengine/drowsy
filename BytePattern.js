@@ -16,6 +16,8 @@ define(function() {
     }
     rx.lastIndex = 0;
     var nextIndex = 0;
+    var context = [':'];
+    var contextStack = [];
     for (var match = rx.exec(source); match; match = rx.exec(source)) {
       if (match.index > nextIndex) {
         throw new Error('invalid pattern: ' + source);
@@ -24,17 +26,52 @@ define(function() {
       if (typeof match[1] === 'string') {
         // character set or block of literal character
         var ch = match[1];
-        console.log('ch', ch);
+        context.push(ch);
       }
       else {
         // special character (grouping, repeat, etc.)
         var special = match[2];
         console.log('special', special);
+        switch (special[0]) {
+          case '(':
+            contextStack.push(context);
+            var newContext = [special];
+            context.push(newContext);
+            context = newContext;
+            break;
+          case ')':
+            context = contextStack.pop();
+            break;
+          case '*':
+          case '?':
+          case '+':
+            context.push([special, context.pop()]);
+            break;
+          case '{':
+            var range = special.match(/^\{\s*(\d+)\s*(,\s*(\d+))?\s*\}$/);
+            if (!range) throw new Error('invalid pattern: ' + source);
+            var min = +range[1];
+            var max = (typeof range[2] === 'string') ? +(range[3] || Infinity) : min;
+            context.push(['{', min, max, context.pop()]);
+            break;
+          case '|':
+            if (contextStack.length > 0 && contextStack[contextStack.length-1][0] === '|') {
+              contextStack[contextStack.length-1].push(context = [':']);
+            }
+            else {
+              var newContext = context.splice(0, context.length, '|');
+              context[1] = newContext;
+              contextStack.push(context);
+              context = newContext;
+            }
+            break;
+        }
       }
     }
     if (nextIndex < source.length) {
       throw new Error('invalid pattern: ' + source);
     }
+    this.tree = context;
   }
   
   return BytePattern;
