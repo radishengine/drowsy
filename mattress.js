@@ -112,66 +112,59 @@ define(function() {
     return sign ? result.i64_negate() : result;
   }
   
-  var HASH_INT8 = 0x1b3432b0;
-  var HASH_INT16 = 0xf1a9036;
-  var HASH_INT32 = 0x6832d134;
-  var HASH_INT64 = 0x8c34e6f5;
-  var HASH_UINT8 = 0xafb416c3;
-  var HASH_UINT16 = 0x47f22696;
-  var HASH_UINT32 = 0x3f0a2256;
-  var HASH_UINT64 = 0xa74ee61b;
-  var HASH_FLOAT32 = 0x91f9ae85;
-  var HASH_FLOAT64 = 0xd320c4e;
-  var HASH_STRING = 0x6053b7f7;
-  var HASH_TRUE = 0xbd5fdc92;
-  var HASH_FALSE = 0xe84aa32;
-  var HASH_NULL = 0;
+  function hashString(str) {
+    var i_max = str.length;
+    var hash = 0x6053b7f7 ^ i_max;
+    var i_step = Math.max(1, (32 / i_max) | 0);
+    for (var i = 0; i < i_max; i += i_step) {
+      hash = (hash >>> 3) | ((hash & 7) << 29);
+      hash ^= str.charCodeAt(i);
+    }
+    return hash;
+  }
+  mattress.hashString = hashString;
   
   var HASH_PROP = mattress.HASH_PROP = Symbol('hash');
   
-  mattress.getHashCode = function(v) {
-    if (v === null || typeof v === 'undefined') return HASH_NULL;
-    return v[HASH_PROP];
-  };
+  var hashStore = new WeakMap();
   
-  Object.defineProperty(Object.prototype, HASH_PROP, {
-    get: function() {
-      if (!Object.isExtensible(this)) return (''+this)[HASH_PROP];
-      var hash = (Math.random() * 0xffffffff) | 0;
-      Object.defineProperty(this, HASH_PROP, {value:hash});
-      return hash;
-    },
-    configurable: true,
-  });
+  function hashValue(v) {
+    switch (typeof v) {
+      case 'undefined': return 0;
+      case 'object':
+        if (v === null) return 0;
+        if (HASH_PROP in v) return v[HASH_PROP];
+        var hash = hashStore.get(v);
+        if (typeof hash === 'undefined') {
+          hashStore.set(v, hash = (Math.random() * 0xffffffff) | 0);
+        }
+        return hash;
+      default: return hashString('' + v);
+    }
+  }
+  mattress.hashValue = hashValue;
   
-  Object.defineProperty(String.prototype, HASH_PROP, {
-    get: function() {
-      var i_max = this.length;
-      var hash = HASH_STRING ^ i_max;
-      var i_step = Math.max(1, i_max >>> 5);
-      for (var i = 0; i < i_max; i += i_step) {
-        hash = (hash >>> 3) | ((hash & 7) << 29);
-        hash ^= this.charCodeAt(i);
-      }
-      return hash;
-    },
-  });
-  
-  Object.defineProperty(Number.prototype, HASH_PROP, {
-    get: function() {
-      tempFloat64[0] = this;
-      var hash = HASH_FLOAT64 ^ tempInt32[0];
-      hash = (hash >>> 16) | (hash << 16);
-      return hash ^ tempInt32[1];
-    },
-  });
-  
-  Object.defineProperty(Boolean.prototype, HASH_PROP, {
-    get: function() {
-      return this ? HASH_TRUE : HASH_FALSE;
-    },
-  });
-  
+  function hashSequence(array, hash) {
+    if (isNaN(hash)) hash = 0x86b27112;
+    for (var i = 0; i < array.length; i++) {
+      hash = ((hash << 31) | (hash >>> 1)) ^ hashValue(array[i]);
+    }
+    return hash;
+  }
+  mattress.hashSequence = hashSequence;
+    
+  // quirk: if the same value appears an odd number of times,
+  //  it's the same as appearing once. if it appears an even
+  //  number of times, it's the same as never appearing at all.
+  function hashSet(array, hash) {
+    if (isNaN(hash)) hash = 0xe11e7fc3;
+    for (var i = 0; i < array.length; i++) {
+      hash ^= hashValue(array[i]);
+    }
+    return hash;
+  }
+  mattress.hashSet = hashSet;
+    
   function Boxed() {
   }
   Boxed.prototype = {
@@ -814,64 +807,6 @@ define(function() {
   BoxedUint64.prototype.set_div = function(divisor) {
     return udivmod64(this, divisor, false);
   };
-  
-  Object.defineProperty(BoxedBoolean.prototype, HASH_PROP, {
-    get: function() {
-      return this.value ? HASH_TRUE : HASH_FALSE;
-    },
-  });
-  
-  Object.defineProperty(BoxedInt8.prototype, HASH_PROP, {
-    get: function() {
-      var v = this.value & 0xff;
-      return (v | (v << 8) | (v << 16) | (v << 24)) ^ HASH_INT8;
-    },
-  });
-  
-  Object.defineProperty(BoxedUint8.prototype, HASH_PROP, {
-    get: function() {
-      var v = this.value;
-      return (v | (v << 8) | (v << 16) | (v << 24)) ^ HASH_UINT8;
-    },
-  });
-  
-  Object.defineProperty(BoxedInt16.prototype, HASH_PROP, {
-    get: function() {
-      var v = this.value & 0xffff;
-      return (v | (v << 16)) ^ HASH_INT16;
-    },
-  });
-  
-  Object.defineProperty(BoxedUint16.prototype, HASH_PROP, {
-    get: function() {
-      var v = this.value;
-      return (v | (v << 16)) ^ HASH_UINT16;
-    },
-  });
-  
-  Object.defineProperty(BoxedInt32.prototype, HASH_PROP, {
-    get: function() {
-      return this.value ^ HASH_INT32;
-    },
-  });
-  
-  Object.defineProperty(BoxedUint32.prototype, HASH_PROP, {
-    get: function() {
-      return this.value ^ HASH_UINT32;
-    },
-  });
-  
-  Object.defineProperty(BoxedInt64.prototype, HASH_PROP, {
-    get: function() {
-      return this.hi ^ this.lo ^ HASH_INT64;
-    },
-  });
-  
-  Object.defineProperty(BoxedUint64.prototype, HASH_PROP, {
-    get: function() {
-      return this.hi ^ this.lo ^ HASH_UINT64;
-    },
-  });
   
   var zero_x31 = '0000000000000000000000000000000';
   
