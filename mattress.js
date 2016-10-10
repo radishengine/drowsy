@@ -144,26 +144,28 @@ define(function() {
   }
   mattress.hashValue = hashValue;
   
-  function hashSequence(array, hash) {
+  function hashList(array, inAnyOrder, hash) {
+    if (typeof inAnyOrder === 'number' && arguments.length === 2) {
+      hash = inAnyOrder;
+      inAnyOrder = false;
+    }
     if (isNaN(hash)) hash = 0x86b27112;
-    for (var i = 0; i < array.length; i++) {
-      hash = ((hash << 31) | (hash >>> 1)) ^ hashValue(array[i]);
+    if (inAnyOrder) {
+      // quirk: if the same value appears an odd number of times,
+      //  it's the same as appearing once. if it appears an even
+      //  number of times, it's the same as never appearing at all.
+      for (var i = 0; i < array.length; i++) {
+        hash ^= hashValue(array[i]);
+      }
+    }
+    else {
+      for (var i = 0; i < array.length; i++) {
+        hash = ((hash << 31) | (hash >>> 1)) ^ hashValue(array[i]);
+      }
     }
     return hash;
   }
-  mattress.hashSequence = hashSequence;
-    
-  // quirk: if the same value appears an odd number of times,
-  //  it's the same as appearing once. if it appears an even
-  //  number of times, it's the same as never appearing at all.
-  function hashSet(array, hash) {
-    if (isNaN(hash)) hash = 0xe11e7fc3;
-    for (var i = 0; i < array.length; i++) {
-      hash ^= hashValue(array[i]);
-    }
-    return hash;
-  }
-  mattress.hashSet = hashSet;
+  mattress.hashList = hashList;
     
   function Boxed() {
   }
