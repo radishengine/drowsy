@@ -34,7 +34,7 @@ define(function() {
         switch (special[0]) {
           case '(':
             contextStack.push(context);
-            var newContext = [special];
+            var newContext = [special[2] || special];
             context.push(newContext);
             context = newContext;
             break;
