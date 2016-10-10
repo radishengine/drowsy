@@ -76,6 +76,10 @@ define(function() {
     }
     return result;
   }
+  mattress.i32_mul = imul32;
+  mattress.u32_mul = function(a, b) {
+    return imul32(a, b) >>> 0;
+  };
   
   function udivmod64(dividend, divisor, returnMod) {
     // based on code from the Bit Mathematics Cookbook by Joel Yliluoma
