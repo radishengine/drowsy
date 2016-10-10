@@ -24,6 +24,7 @@ define(function() {
       if (typeof match[1] === 'string') {
         // character set or block of literal characters
         var ch = match[1];
+        console.log('ch', ch;
       }
       else {
         // special character (grouping, repeat, etc.)
