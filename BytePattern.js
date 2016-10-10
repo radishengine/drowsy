@@ -56,7 +56,7 @@ define(function() {
             contextStack.push(context);
             var newContext;
             if (special === '(') {
-              newContext = ['(' ++groupCount];
+              newContext = ['(', ++groupCount];
             }
             else {
               newContext = [special[2]]; // ':' '=' '!'
