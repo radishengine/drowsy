@@ -56,6 +56,8 @@ define(['typeServices/dispatch'], function(dispatch) {
     },
   };
   
+  Volume.normalizedPathSeparator = '/';
+  Volume.normalizedPathPartPattern = /^(?:[^\-_\.!~\*'\(\)]+|%[0-9a-fA-F]{2})+$/;
   Volume.normalizedPathPattern = /^(?:[^\-_\.!~\*'\(\)]+|%[0-9a-fA-F]{2})+(?:\/(?:[^\-_\.!~\*'\(\)]+|%[0-9a-fA-F]{2})+)*$/;
   
   Volume.SubVolume = SubVolume;
