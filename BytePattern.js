@@ -70,7 +70,7 @@ define(function() {
     if (nextIndex < source.length) {
       throw new Error('invalid pattern: ' + source);
     }
-    if (context.length === 2 && context[0] === ':') context = context[1];
+    while (context.length === 2 && context[0] === ':') context = context[1];
     this.tree = context;
   }
   
