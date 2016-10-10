@@ -4,7 +4,7 @@ define(function() {
   
   var rx_escape = '\\\\(?:u(?:\\{[^\\}]+\\}|....)?|x..|c.|[^cux])';
   var rx_set = '\\[(?:[^\\\\\\]]+|' + rx_escape + ')+\\]';
-  var rx_singleton = rx_escape + '|' + rx_set + '|[^\\\\\\[\\]\\(\\)\\{\\}\\*\\?\\+\\$\\^\\|]+';
+  var rx_singleton = rx_escape + '|' + rx_set + '|[^\\\\\\[\\]\\(\\)\\{\\}\\*\\?\\+\\$\\^\\|]';
   var rx_special = '\\((?:\\?[=!:])?|\\)|\\*|\\+|\\{[^\\}]*\\}|\\$|\\^|\\|';
   
   var rx = new RegExp('(' + rx_singleton + ')|(' + rx_special + ')', 'g');
@@ -22,7 +22,7 @@ define(function() {
       }
       nextIndex = rx.lastIndex;
       if (typeof match[1] === 'string') {
-        // character set or block of literal characters
+        // character set or block of literal character
         var ch = match[1];
         console.log('ch', ch);
       }
