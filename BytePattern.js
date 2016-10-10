@@ -7,7 +7,7 @@ define(function() {
   var rx_singleton = rx_escape + '|' + rx_set + '|[^\\\\\\[\\]\\(\\)\\{\\}\\*\\?\\+\\$\\^\\|]+';
   var rx_special = '\\((?:\?[=!:])?|\\)|\\*|\\+|\\{[^\\}]*\\}|\\$|\\^';
   
-  var rx = new RegExp('(' + rx_singleton + ')|(' + rx_hot + ')', 'g');
+  var rx = new RegExp('(' + rx_singleton + ')|(' + rx_special + ')', 'g');
   
   function BytePattern(source) {
     if (regexp instanceof RegExp) source = source.source;
