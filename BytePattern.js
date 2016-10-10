@@ -10,7 +10,7 @@ define(function() {
   var rx = new RegExp('(' + rx_singleton + ')|(' + rx_special + ')', 'g');
   
   function BytePattern(source) {
-    if (regexp instanceof RegExp) source = source.source;
+    if (source instanceof RegExp) source = source.source;
     else if (typeof source !== 'string') {
       throw new TypeError('source must be string or RegExp');
     }
