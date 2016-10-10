@@ -5,7 +5,7 @@ define(function() {
   var rx_escape = '\\\\(?:u(?:\\{[^\\}]+\\}|....)?|x..|c.|[^cux])';
   var rx_set = '\\[(?:[^\\\\\\]]+|' + rx_escape + ')+\\]';
   var rx_singleton = rx_escape + '|' + rx_set + '|[^\\\\\\[\\]\\(\\)\\{\\}\\*\\?\\+\\$\\^\\|\\.]+|\\.';
-  var rx_special = '\\((?:\\?[=!:])?|\\)|[\\*\\+\\?]\\??|\\{[^\\}]*\\}|\\$|\\^|\\||\\.';
+  var rx_special = '\\((?:\\?[=!:])?|\\)|\\*|\\+|\\?|\\{[^\\}]*\\}|\\$|\\^|\\||\\.';
   
   var rx = new RegExp('(' + rx_singleton + ')|(' + rx_special + ')', 'g');
   
@@ -61,16 +61,25 @@ define(function() {
             context = contextStack.pop();
             break;
           case '*':
-          case '?':
+            context.push(['{', 0, Infinity, false, popSingleton()]);
+            break;
           case '+':
-            context.push([special, popSingleton()]);
+            context.push(['{', 1, Infinity, false, popSingleton()]);
+            break;
+          case '?':
+            if (typeof context[context.length-1] === 'object' && context[context.length-1][0] === '{') {
+              context[context.length-1][3] = true;
+            }
+            else {
+              context.push(['{', 0, 1, false, popSingleton()]);
+            }
             break;
           case '{':
             var range = special.match(/^\{\s*(\d+)?\s*(,\s*(\d+)?)?\s*\}$/);
             if (!range) throw new Error('invalid pattern: ' + source);
             var min = +range[1] || 0;
             var max = (typeof range[2] === 'string') ? +(range[3] || Infinity) : min;
-            context.push(['{', min, max, popSingleton()]);
+            context.push(['{', min, max, false, popSingleton()]);
             break;
           case '|':
             if (contextStack.length > 0 && contextStack[contextStack.length-1][0] === '|') {
