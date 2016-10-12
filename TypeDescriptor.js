@@ -105,7 +105,7 @@ define(function() {
     },
     toString: function() {
       var name = this.name, parameters = encodeTypeParameters(this.parameters);
-      return parameters ? (name + '; ' + parameters) + name;
+      return parameters ? (name + '; ' + parameters) : name;
     },
     test: function(other, withNoOtherParameters) {
       if (other.category !== this.category) return false;
