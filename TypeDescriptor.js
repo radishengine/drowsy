@@ -534,6 +534,56 @@ define(function() {
       if (value instanceof TypeFilter) return 'filter';
       return false;
     },
+    fromJSON: function(json) {
+      if (typeof json === 'string') {
+        if (/^\s*\{/.test(json)) {
+          json = JSON.parse(json);
+        }
+        else {
+          return new TypeDescriptor(json);
+        }
+      }
+      if (typeof json !== 'object' || json === null) return null;
+      function fromObject(v) {
+        var keys = Object.keys(v);
+        if (keys.length !== 1) throw new Error('not a valid JSON-encoded type filter');
+        var key = keys[0];
+        var value = v[key];
+        switch (key) {
+          case 'any':
+            if (value === true) return matchAny;
+            if (value === false) return matchNone;
+            if (!Array.isArray(value)) {
+              throw new Error('not a valid JSON-encoded type filter');
+            }
+            return new OrList(Object.freeze(value.map(fromValue)));
+          case 'all':
+            if (!Array.isArray(value)) {
+              throw new Error('not a valid JSON-encoded type filter');
+            }
+            return new AndList(Object.freeze(value.map(fromValue)));
+          case 'count':
+            if (!Array.isArray(value) || value.length !== 2 || typeof value[0] !== 'number') {
+              throw new Error('not a valid JSON-encoded type filter');
+            }
+            return new CountedMatch(fromValue(value[0]), value[1]);
+          case 'not':
+            return fromValue(value).inverted();
+          default:
+            throw new Error('not a valid JSON-encoded type filter');
+        }
+      }
+      function fromValue(v) {
+        if (typeof v === 'string') {
+          return new TypeDescriptor(v);
+        }
+        if (typeof v !== 'object' || v === null) {
+          throw new Error('not a valid JSON-encoded type filter');
+        }
+        return fromObject(v);
+      }
+      return fromObject(json);
+    },
   });
  
 });
