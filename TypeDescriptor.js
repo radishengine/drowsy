@@ -458,17 +458,17 @@ define(function() {
         var parameterName = keys[i];
         var parameterPattern = parameterPatterns[parameterName];
         if (parameterPattern === true) {
-          andList.push(new ParameterPattern(parameterName, ANYSTRING));
+          andList.push(new ParameterMatch(parameterName, ANYSTRING));
         }
         else if (parameterPattern === false) {
-          andList.push(new ParameterPattern(parameterName, ANYSTRING, true));
+          andList.push(new ParameterMatch(parameterName, ANYSTRING, true));
         }
         else if (parameterPattern instanceof RegExp) {
-          andList.push(new ParameterPattern(parameterName, parameterPattern));
+          andList.push(new ParameterMatch(parameterName, parameterPattern));
         }
         else {
           parameterPattern = new RegExp('^' + regexEscape('' + parameterPattern) + '$');
-          andList.push(new ParameterPattern(parameterName, parameterPattern));
+          andList.push(new ParameterMatch(parameterName, parameterPattern));
         }
       }
     }
