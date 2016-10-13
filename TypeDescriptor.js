@@ -114,7 +114,7 @@ define(function() {
         andList.push(new TypeDescriptor(namePattern, stringParameters));
       }
     }
-    else {
+    else if (namePattern !== ANYSTRING) {
       andList.push(new NameMatch(namePattern));
     }
     if (parameterPatterns !== EMPTY) {
