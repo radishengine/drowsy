@@ -473,7 +473,7 @@ define(function() {
       return new ParameterMatch(this.name, this.pattern, !this.isInverted);
     },
     toJSON: function() {
-      var json = {parameter: [this.name, this.pattern.source, this.parameter.flags]};
+      var json = {parameter: [this.name, this.pattern.source, this.pattern.flags]};
       if (this.isInverted) json = {not: json};
       return json;
     },
