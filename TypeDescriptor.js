@@ -133,6 +133,19 @@ define(function() {
       }
       return true;
     },
+    filter: function() {
+      if (arguments.length === 0) return filter(this);
+      return filter(this).filter(filter.apply(null, arguments));
+    },
+    except: function() {
+      return filter(this).except(filter.apply(null, arguments));
+    },
+    or: function() {
+      return filter(this).or(filter.apply(null, arguments));
+    },
+    reset: function() {
+      return filter(this);
+    },
     get willNeverTest() {
       return false;
     },
@@ -288,6 +301,7 @@ define(function() {
   });
   Object.defineProperty(OrList, 'willNeverMatch', {
     get: function() {
+      if (this.list.length === 0) return true;
       for (var i = 0; i < this.list.length; i++) {
         if (!this.list[i].willNeverMatch) return false;
       }
@@ -371,7 +385,32 @@ define(function() {
     },
   });
   
+  var descriptorFilterCache = new WeakMap();
+  
   function filter(namePattern, parameterPatterns) {
+    if (arguments.length === 0) return matchAny;
+    if (namePattern instanceof TypeDescriptor) {
+      var filterChain = [];
+      var i = 0;
+      do {
+        var filter = descriptorFilterCache.get(arguments[i]);
+        if (!filter) {
+          filter = new NameMatch(new RegExp('^' + regexEscape(arguments[i].name) + '$'));
+          var keys = Object.keys(arguments[i].parameters);
+          for (var j = 0; j < keys.length; j++) {
+            var key = keys[j];
+            var value = arguments[i].parameters[key];
+            filter = filter.filter(new ParameterMatch(key, new RegExp('^' + regexEscape(value) + '$'));
+          }
+          descriptorFilterCache.set(arguments[i], filter);
+        }
+        filterChain.push(filter);
+        if (++i >= arguments.length) return new OrList(filterChain);
+        if (!(arguments[i] instanceof TypeDescriptor)) {
+          throw new TypeError('filter(descriptor [, descriptor...]): every argument must be a descriptor object');
+        }
+      } while (true);
+    }
     if (typeof parameterPatterns === 'string') {
       namePattern = namePattern + '/' + parameterPatterns;
       parameterPatterns = arguments[2];
