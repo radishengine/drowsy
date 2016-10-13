@@ -395,17 +395,25 @@ define(function() {
       do {
         var filter = descriptorFilterCache.get(arguments[i]);
         if (!filter) {
-          filter = new NameMatch(new RegExp('^' + regexEscape(arguments[i].name) + '$'));
+          var andList = [new NameMatch(new RegExp('^' + regexEscape(arguments[i].name) + '$'))];
           var keys = Object.keys(arguments[i].parameters);
           for (var j = 0; j < keys.length; j++) {
             var key = keys[j];
             var value = arguments[i].parameters[key];
-            filter = filter.filter(new ParameterMatch(key, new RegExp('^' + regexEscape(value) + '$'));
+            andList.push(new ParameterMatch(key, new RegExp('^' + regexEscape(value) + '$'))))
+          }
+          if (andList.length === 1) {
+            filter = andList[0];
+          }
+          else {
+            filter = new AndList(andList);
           }
           descriptorFilterCache.set(arguments[i], filter);
         }
         filterChain.push(filter);
-        if (++i >= arguments.length) return new OrList(filterChain);
+        if (++i >= arguments.length) {
+          return filterChain.length === 1 ? filterChain[0] : new OrList(filterChain);
+        }
         if (!(arguments[i] instanceof TypeDescriptor)) {
           throw new TypeError('filter(descriptor [, descriptor...]): every argument must be a descriptor object');
         }
