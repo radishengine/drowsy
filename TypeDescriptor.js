@@ -111,29 +111,20 @@ define(function() {
       if (this.parameters === EMPTY) return this.name;
       return [this.name, this.parameters];
     },
-    test: function(other, withNoOtherParameters) {
+    test: function() {
+      var other = TypeDescriptor.apply(null, arguments);
+      if (other === this) return true;
       if (other.category !== this.category) return false;
       if (other.subtype !== this.subtype) return false;
-      if (this.parameters === EMPTY) {
-        if (withNoOtherParameters) {
-          return other.parameters === EMPTY || (Object.keys(other.parameters).length === 0);
-        }
-        return true;
-      }
-      if (other.parameters === EMPTY) {
-        return false;
-      }
-      var keys = Object.freeze(Object.keys(this.parameters));
+      if (this.parameters === EMPTY) return true;
       other = other.parameters;
-      if (withNoOtherParameters) other = Object.assign({}, other);
+      if (other === EMPTY) return false;
+      var keys = Object.freeze(Object.keys(this.parameters));
       for (var i = 0; i < keys.length; i++) {
-        if (this.parameters[keys[i]] !== other[keys[i]]) {
+        var parameterName = keys[i];
+        if (this.parameters[parameterName] !== other[parameterName]) {
           return false;
         }
-        if (withNoOtherParameters) delete other[keys[i]];
-      }
-      if (withNoOtherParameters) {
-        return Object.keys(other).length === 0;
       }
       return true;
     },
@@ -217,16 +208,17 @@ define(function() {
   
   function AndList(list) {
     if (Array.isArray(list)) {
-      var copy = null;
       if (!Object.isFrozen(list)) {
-        copy = list.map(filter);
+        list = Object.freeze(list.map(filter);
       }
       else {
         for (var i = 0; i < list.length; i++) {
+          if (list[i] instanceof TypeFilter || list[i] instanceof TypeDescriptor) {
+            continue;
+          }
+          list = Object.freeze(list.map(filter));
+          break;
         }
-      }
-      if (copy !== null) {
-        list = Object.freeze(copy);
       }
     }
     else {
@@ -278,7 +270,18 @@ define(function() {
   
   function OrList(list) {
     if (Array.isArray(list)) {
-      list = Object.freeze(list.map(filter));
+      if (!Object.isFrozen(list)) {
+        list = Object.freeze(list.map(filter);
+      }
+      else {
+        for (var i = 0; i < list.length; i++) {
+          if (list[i] instanceof TypeFilter || list[i] instanceof TypeDescriptor) {
+            continue;
+          }
+          list = Object.freeze(list.map(filter));
+          break;
+        }
+      }
     }
     else {
       list = Object.freeze(Array.prototype.map.apply(arguments, filter));
