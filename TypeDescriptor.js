@@ -501,7 +501,7 @@ define(function() {
       return TypeFilter.apply(null, arguments).inverted();
     },
     all: matchAny,
-    none, matchNone,
+    none: matchNone,
     count: function(number) {
       return matchAny.count(number);
     },
