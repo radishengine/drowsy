@@ -198,9 +198,7 @@ define(function() {
     inverted: function() { return matchAny; },
     or: function() { return filter.apply(null, arguments); },
     toJSON: function() { return false; },
-    test: function(descriptor) {
-      return false;
-    },
+    test: function() { return false; },
     count: function() { return matchNone; },
   });
   Object.defineProperty(matchAny, 'willNeverMatch', {value:true});
@@ -412,7 +410,8 @@ define(function() {
         }
         filterChain.push(filter);
         if (++i >= arguments.length) {
-          return filterChain.length === 1 ? filterChain[0] : new OrList(filterChain);
+          if (filterChain.length === 1) return filterChain[0];
+          return new OrList(Object.freeze(filterChain));
         }
         if (!(arguments[i] instanceof TypeDescriptor)) {
           throw new TypeError('filter(descriptor [, descriptor...]): every argument must be a descriptor object');
@@ -427,7 +426,7 @@ define(function() {
       parameterPatterns = namePattern;
       namePattern = ANYSTRING;
     }
-    var filter = matchAny;
+    var andList = [];
     if (typeof namePattern === 'string') {
       var nameParts = namePattern.match(/^\s*([^\/]+\/[^\/;]+)(?:\s*;\s*(\S.*)?)?$/);
       if (!nameParts) {
@@ -435,13 +434,15 @@ define(function() {
       }
       if (nameParts[1] !== '*/*') {
         namePattern = new RegExp('^' + nameParts[1].split(/\*/g).map(regexEscape).join('.*') + '$');
-        filter = filter.filter(new NameMatch(namePattern));
+        andList.push(new NameMatch(namePattern)));
       }
       if (typeof nameParts[2] === 'string') {
         var extraParameterPatterns = decodeTypeParameters(nameParts[2]);
         var keys = Object.keys(extraParameterPatterns);
         for (var i = 0; i < keys.length; i++) {
-          filter = filter.filter(new ParameterMatch(
+          var name = keys[i];
+          var pattern = extraParameterPatterns[name];
+          andList.push(new ParameterMatch(name, new RegExp('^' + regexEscape(pattern) + '$')));
         }
       }
     }
@@ -453,21 +454,24 @@ define(function() {
       for (var i = 0; i < keys.length; i++) {
         var parameterName = keys[i];
         var parameterPattern = parameterPatterns[parameterName];
-        if (parameterPattern === false) {
-          filter = filter.except(parameterName, ANYSTRING);
+        if (parameterPattern === true) {
+          andList.push(new ParameterPattern(parameterName, ANYSTRING));
+        }
+        else if (parameterPattern === false) {
+          andList.push(new ParameterPattern(parameterName, ANYSTRING, true));
+        }
+        else if (parameterPattern instanceof RegExp) {
+          andList.push(new ParameterPattern(parameterName, parameterPattern));
         }
         else {
-          if (parameterPattern === true) {
-            parameterPattern = ANYSTRING;
-          }
-          else if (!(parameterPattern instanceof RegExp)) {
-            parameterPattern = new RegExp('^' + escapeRegex('' + parameterPattern) + '$');
-          }
-          filter = filter.filter(parameterName, parameterPattern);
+          parameterPattern = new RegExp('^' + regexEscape('' + parameterPattern) + '$');
+          andList.push(new ParameterPattern(parameterName, parameterPattern));
         }
       }
     }
-    return filter;
+    if (andList.length === 0) return matchAny;
+    if (andList.length === 1) return andList[0];
+    return new AndList(Object.freeze(andList));
   }
   
   TypeDescriptor.Filter = TypeFilter;
@@ -477,6 +481,9 @@ define(function() {
   };
   TypeDescriptor.any = matchAny;
   TypeDescriptor.none = matchNone;
+  TypeDescriptor.count = function(number) {
+    return matchAny.count(number);
+  };
   
   return TypeDescriptor;
  
