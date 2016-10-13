@@ -286,7 +286,7 @@ define(function() {
       }
     }
     else {
-      list = Object.freeze(Array.slice.apply(arguments));
+      list = Object.freeze(Array.prototype.slice.apply(arguments));
     }
     this.list = list;
     Object.freeze(this);
