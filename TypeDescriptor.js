@@ -10,13 +10,13 @@ define(function() {
   }
   
   function encodeTypeString(str) {
-    return str.replace(/[A-Z;=]/g, function(c) {
+    return str.replace(/[A-Z;=\*]/g, function(c) {
       return '%' + ('0' + c.charCodeAt(0).toString(16)).slice(-2);
     })
     .replace(/[^ -~]+/, encodeURIComponent)
     .toLowerCase();
   }
-  decodeTypeString = decodeURIComponent;
+  var decodeTypeString = decodeURIComponent;
   
   function encodeTypeParameters(obj) {
     if (obj === EMPTY) return '';
@@ -44,10 +44,6 @@ define(function() {
   }
   
   function TypeDescriptor(typeName, typeParameters) {
-    if (typeof typeParameters === 'string') {
-      typeName = typeName + '/' + typeParameters;
-      typeParameters = arguments[2];
-    }
     var nameParts = typeName.match(/^\s*([a-z0-9_\-\.]+)\/([a-z0-9_\-\.]+)\s*(?:;(.*))?$/);
     if (!nameParts) {
       throw new TypeError('Type name must take the form: category/subtype');
@@ -101,11 +97,15 @@ define(function() {
   });
   TypeDescriptor.prototype = {
     get name() {
-      return this.category + '/' + this.subType;
+      return this.category + '/' + this.subtype;
     },
     toString: function() {
       var name = this.name, parameters = encodeTypeParameters(this.parameters);
       return parameters ? (name + '; ' + parameters) : name;
+    },
+    toJSON: function() {
+      if (this.parameters === EMPTY) return this.name;
+      return [this.name, this.parameters];
     },
     test: function(other, withNoOtherParameters) {
       if (other.category !== this.category) return false;
@@ -133,6 +133,9 @@ define(function() {
       }
       return true;
     },
+    get willNeverTest() {
+      return false;
+    },
   };
   
   var matchAny, matchNone;
@@ -158,9 +161,12 @@ define(function() {
     reset: function() {
       return this;
     },
+    get willNeverTest() {
+      return false;
+    },
   };
   
-  matchAny = Object.freeze(Object.assign(new TypeFilter, {
+  matchAny = Object.assign(new TypeFilter, {
     filter: function() { return filter.apply(null, arguments); },
     except: function() { return filter.apply(null, arguments).inverted(); },
     inverted: function() { return matchNone; },
@@ -169,9 +175,11 @@ define(function() {
     test: function(descriptor) {
       return true;
     },
-  }));
+  });
+  Object.defineProperty(matchAny, 'willNeverMatch', {value:false});
+  Object.freeze(matchAny);
   
-  matchNone = Object.freeze(Object.assign(new TypeFilter, {
+  matchNone = Object.assign(new TypeFilter, {
     filter: function() { return matchNone; },
     except: function() { return matchNone; },
     inverted: function() { return matchAny; },
@@ -180,7 +188,10 @@ define(function() {
     test: function(descriptor) {
       return false;
     },
-  }));
+    count: function() { return matchNone; },
+  });
+  Object.defineProperty(matchAny, 'willNeverMatch', {value:true});
+  Object.freeze(matchNone);
   
   function AndList(list) {
     if (Array.isArray(list)) {
@@ -197,6 +208,9 @@ define(function() {
       var filter = filter.apply(null, arguments);
       if (filter === none) return none;
       if (filter === all) return this;
+      if (filter instanceof AndList) {
+        return new AndList(this.list.concat(filter.list));
+      }
       return new AndList(this.list.concat(filter));
     },
     inverted: function() {
@@ -207,19 +221,26 @@ define(function() {
     reset: function() {
       var newList, resetElement;
       for (var i = 0; i < this.list.length; i++) {
-        if (this.list[i] !== (resetElement = this.list[i].reset()) {
+        if (this.list[i] !== (resetElement = this.list[i].reset())) {
           newList = newList || this.list.slice();
           newList[i] = resetElement;
         }
       }
-      if (newList) return new AndList(newList);
-      return this;
+      return newList ? new AndList(newList) : this;
     },
     test: function(descriptor) {
       for (var i = 0; i < this.list.length; i++) {
         if (!this.list[i].test(descriptor)) return false;
       }
       return true;
+    },
+  });
+  Object.defineProperty(AndList, 'willNeverMatch', {
+    get: function() {
+      for (var i = 0; i < this.list.length; i++) {
+        if (this.list[i].willNeverMatch) return true;
+      }
+      return false;
     },
   });
   
@@ -238,6 +259,9 @@ define(function() {
       var filter = filter.apply(null, arguments);
       if (filter === all) return all;
       if (filter === none) return this;
+      if (filter instanceof OrList) {
+        return new OrList(this.list.concat(filter.list));
+      }
       return new OrList(this.list.concat(filter));
     },
     inverted: function() {
@@ -248,19 +272,26 @@ define(function() {
     reset: function() {
       var newList, resetElement;
       for (var i = 0; i < this.list.length; i++) {
-        if (this.list[i] !== (resetElement = this.list[i].reset()) {
+        if (this.list[i] !== (resetElement = this.list[i].reset())) {
           newList = newList || this.list.slice();
           newList[i] = resetElement;
         }
       }
-      if (newList) return new OrList(newList);
-      return this;
+      return newList ? new OrList(newList) : this;
     },
     test: function(descriptor) {
       for (var i = 0; i < this.list.length; i++) {
         if (this.list[i].test(descriptor)) return true;
       }
       return false;
+    },
+  });
+  Object.defineProperty(OrList, 'willNeverMatch', {
+    get: function() {
+      for (var i = 0; i < this.list.length; i++) {
+        if (!this.list[i].willNeverMatch) return false;
+      }
+      return true;
     },
   });
   
@@ -308,6 +339,35 @@ define(function() {
     },
     inverted: function() {
       return new ParameterMatch(this.name, this.pattern, !this.isInverted);
+    },
+  });
+  
+  function CountedMatch(filter, count, invert) {
+    Object.defineProperties(this, {
+      filter: {value:filter},
+      startCount: {value:count},
+      isInverted: {value:!!invert},
+    });
+    this.filter = filter;
+    this.count = this.startCount = count;
+  }
+  CountedMatch.prototype = Object.assign(new TypeFilter, {
+    test: function() {
+      if (this.count < 1) return false;
+      var result = this.filter.test.apply(this.filter, arguments);
+      if (result) this.count--;
+      return this.isInverted ? result : !result;
+    },
+    reset: function() {
+      return new CountedMatch(this.filter, this.startCount, this.isInverted);
+    },
+    inverted: function() {
+      return new CountedMatch(this.filter, this.startCount, !this.isInverted);
+    },
+  });
+  Object.defineProperty(CountedMatch, 'willNeverMatch', {
+    get: function() {
+      return this.count < 1 || this.filter.willNeverMatch;
     },
   });
   
