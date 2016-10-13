@@ -175,7 +175,7 @@ define(function() {
     },
     count: function(number) {
       if (number < 1) return matchNone;
-      return new CountedMatch(number, this);
+      return new CountedMatch(this, number);
     },
   };
   
@@ -581,7 +581,7 @@ define(function() {
             if (!Array.isArray(value) || value.length !== 2 || typeof value[0] !== 'number') {
               throw new Error('not a valid JSON-encoded type filter');
             }
-            return new CountedMatch(fromValue(value[0]), value[1]);
+            return new CountedMatch(fromValue(value[1]), value[0]);
           case 'not':
             return fromValue(value).inverted();
           case 'name':
