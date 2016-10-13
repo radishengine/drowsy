@@ -146,7 +146,7 @@ define(function() {
     reset: function() {
       return filter(this);
     },
-    get willNeverTest() {
+    get willNeverMatch() {
       return false;
     },
   };
@@ -174,9 +174,7 @@ define(function() {
     reset: function() {
       return this;
     },
-    get willNeverTest() {
-      return false;
-    },
+    willNeverMatch: false,
   };
   
   matchAny = Object.assign(new TypeFilter, {
