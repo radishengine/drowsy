@@ -323,6 +323,9 @@ define(function() {
       }
       return true;
     },
+    toJSON: function() {
+      return {all: this.list};
+    },
   });
   Object.defineProperty(AndList, 'willNeverMatch', {
     get: function() {
@@ -377,6 +380,9 @@ define(function() {
       }
       return false;
     },
+    toJSON: function() {
+      return {any: this.list};
+    },
   });
   Object.defineProperty(OrList, 'willNeverMatch', {
     get: function() {
@@ -404,6 +410,9 @@ define(function() {
       if (innerReset === this.filter) return this;
       return new Not(innerReset);
     },
+    toJSON: function() {
+      return {not: this.filter};
+    },
   });
   Object.defineProperty(Not, 'willNeverMatch', {
     get: function() {
@@ -429,6 +438,11 @@ define(function() {
     },
     inverted: function() {
       return new NameMatch(this.pattern, !this.isInverted);
+    },
+    toJSON: function() {
+      var json = {name: this.pattern.source};
+      if (this.isInverted) json = {not: json};
+      return json;
     },
   });
   
@@ -458,6 +472,11 @@ define(function() {
     inverted: function() {
       return new ParameterMatch(this.name, this.pattern, !this.isInverted);
     },
+    toJSON: function() {
+      var json = {parameter: [this.name, this.pattern.source]};
+      if (this.isInverted) json = {not: json};
+      return json;
+    },
   });
   
   function CountedMatch(filter, count, invert) {
@@ -473,8 +492,8 @@ define(function() {
     test: function() {
       if (this.count < 1) return this.isInverted;
       var result = this.filter.test.apply(this.filter, arguments);
-      if (this.isInverted) result = !result;
       if (result) this.count--;
+      if (this.isInverted) result = !result;
       return result;
     },
     reset: function() {
@@ -482,6 +501,11 @@ define(function() {
     },
     inverted: function() {
       return new CountedMatch(this.filter, this.startCount, !this.isInverted);
+    },
+    toJSON: function() {
+      var json = {count:[this.startCount, this.filter]};
+      if (this.isInverted) json = {not: json};
+      return json;
     },
   });
   Object.defineProperty(CountedMatch, 'willNeverMatch', {
