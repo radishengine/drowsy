@@ -440,10 +440,11 @@ define(function() {
       return new NameMatch(this.pattern, !this.isInverted);
     },
     toJSON: function() {
-      var json = {name: [this.pattern.source]};
-      if (this.pattern.flags) {
-        json.name.push(this.pattern.flags);
-      }
+      var json = {
+        name: this.pattern.flags
+          ? [this.pattern.source, this.pattern.flags]
+          : this.pattern.source,
+      };
       if (this.isInverted) json = {not: json};
       return json;
     },
@@ -576,12 +577,15 @@ define(function() {
           case 'not':
             return fromValue(value).inverted();
           case 'name':
-            if (!Array.isArray(value) || value.length !== 2 || typeof value[0] !== 'string') {
+            if (typeof value === 'string') {
+              return new NameMatch(new RegExp(value));
+            }
+            else if (!Array.isArray(value) || value.length !== 2 || typeof value[0] !== 'string') {
               throw new Error('not a valid JSON-encoded type filter');
             }
             return new NameMatch(new RegExp(value[0], value[1]));
           case 'parameter':
-            if (!Array.isArray(value) || value.length !== 3 || typeof value[0] !== 'string' || typeof value[1] !== 'string') {
+            if (!Array.isArray(value) || value.length < 2 || typeof value[0] !== 'string' || typeof value[1] !== 'string') {
               throw new Error('not a valid JSON-encoded type filter');
             }
             return new ParameterMatch(value[0], new RegExp(value[1], value[2]));
