@@ -264,7 +264,7 @@ define(function() {
     except: function() { return TypeFilter.apply(null, arguments).inverted(); },
     inverted: function() { return matchNone; },
     or: function() { return this; },
-    toJSON: function() { return true; },
+    toJSON: function() { return {any: true}; },
     test: function() { return true; },
   }));
   
@@ -273,7 +273,7 @@ define(function() {
     except: function() { return matchNone; },
     inverted: function() { return matchAny; },
     or: function() { return TypeFilter.apply(null, arguments); },
-    toJSON: function() { return false; },
+    toJSON: function() { return {any: false}; },
     test: function() { return false; },
     count: function() { return matchNone; },
     willNeverMatch: true,
