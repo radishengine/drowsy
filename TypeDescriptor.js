@@ -519,7 +519,7 @@ define(function() {
     decodeString: decodeTypeString,
     encodeParameters: encodeTypeParameters,
     decodeParameters: decodeTypeParameters,
-    filter: TypeFilter,
+    filter: TypeFilter.bind(null),
     Filter: TypeFilter,
     except: function() {
       return TypeFilter.apply(null, arguments).inverted();
