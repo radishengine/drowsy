@@ -434,7 +434,7 @@ define(function() {
       }
       if (nameParts[1] !== '*/*') {
         namePattern = new RegExp('^' + nameParts[1].split(/\*/g).map(regexEscape).join('.*') + '$');
-        andList.push(new NameMatch(namePattern)));
+        andList.push(new NameMatch(namePattern));
       }
       if (typeof nameParts[2] === 'string') {
         var extraParameterPatterns = decodeTypeParameters(nameParts[2]);
