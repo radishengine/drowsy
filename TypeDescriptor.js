@@ -173,6 +173,10 @@ define(function() {
     toString: function() {
       return JSON.stringify(this);
     },
+    count: function(number) {
+      if (number < 1) return matchNone;
+      return new CountedMatch(number, this);
+    },
   };
   
   function TypeDescriptor(typeName, typeParameters) {
@@ -513,6 +517,10 @@ define(function() {
       var json = {count:[this.startCount, this.filter]};
       if (this.isInverted) json = {not: json};
       return json;
+    },
+    count: function(number) {
+      if (number < 1) return matchNone;
+      return new CountedMatch(this.filter, number * this.startCount, this.isInverted);
     },
   });
   Object.defineProperty(CountedMatch, 'willNeverMatch', {
