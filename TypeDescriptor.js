@@ -569,6 +569,16 @@ define(function() {
             return new CountedMatch(fromValue(value[0]), value[1]);
           case 'not':
             return fromValue(value).inverted();
+          case 'name':
+            if (!Array.isArray(value) || value.length !== 2 || typeof value[0] !== 'string') {
+              throw new Error('not a valid JSON-encoded type filter');
+            }
+            return new NameMatch(new RegExp(value[0], value[1]));
+          case 'parameter':
+            if (!Array.isArray(value) || value.length !== 3 || typeof value[0] !== 'string' || typeof value[1] !== 'string') {
+              throw new Error('not a valid JSON-encoded type filter');
+            }
+            return new ParameterMatch(value[0], new RegExp(value[1], value[2]));
           default:
             throw new Error('not a valid JSON-encoded type filter');
         }
