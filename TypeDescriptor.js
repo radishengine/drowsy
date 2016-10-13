@@ -496,7 +496,7 @@ define(function() {
       startCount: {value:count},
       isInverted: {value:!!invert},
     });
-    this.count = this.startCount = count;
+    this.count = count;
     Object.seal(this);
   }
   CountedMatch.prototype = Object.assign(new TypeFilter, {
