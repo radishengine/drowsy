@@ -146,9 +146,7 @@ define(function() {
     reset: function() {
       return filter(this);
     },
-    get willNeverMatch() {
-      return false;
-    },
+    willNeverMatch: false,
   };
   
   var matchAny, matchNone;
@@ -177,7 +175,7 @@ define(function() {
     willNeverMatch: false,
   };
   
-  matchAny = Object.assign(new TypeFilter, {
+  matchAny = Object.freeze(Object.assign(new TypeFilter, {
     filter: function() { return filter.apply(null, arguments); },
     except: function() { return filter.apply(null, arguments).inverted(); },
     inverted: function() { return matchNone; },
@@ -186,11 +184,9 @@ define(function() {
     test: function(descriptor) {
       return true;
     },
-  });
-  Object.defineProperty(matchAny, 'willNeverMatch', {value:false});
-  Object.freeze(matchAny);
+  }));
   
-  matchNone = Object.assign(new TypeFilter, {
+  matchNone = Object.freeze(Object.assign(new TypeFilter, {
     filter: function() { return matchNone; },
     except: function() { return matchNone; },
     inverted: function() { return matchAny; },
@@ -198,13 +194,22 @@ define(function() {
     toJSON: function() { return false; },
     test: function() { return false; },
     count: function() { return matchNone; },
-  });
-  Object.defineProperty(matchAny, 'willNeverMatch', {value:true});
-  Object.freeze(matchNone);
+    willNeverMatch: true,
+  }));
   
   function AndList(list) {
     if (Array.isArray(list)) {
-      list = Object.freeze(list.map(filter));
+      var copy = null;
+      if (!Object.isFrozen(list)) {
+        copy = list.map(filter);
+      }
+      else {
+        for (var i = 0; i < list.length; i++) {
+        }
+      }
+      if (copy !== null) {
+        list = Object.freeze(copy);
+      }
     }
     else {
       list = Object.freeze(Array.prototype.map.apply(arguments, filter));
