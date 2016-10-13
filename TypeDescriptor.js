@@ -440,7 +440,10 @@ define(function() {
       return new NameMatch(this.pattern, !this.isInverted);
     },
     toJSON: function() {
-      var json = {name: [this.pattern.source, this.pattern.flags]};
+      var json = {name: [this.pattern.source]};
+      if (this.pattern.flags) {
+        json.name.push(this.pattern.flags);
+      }
       if (this.isInverted) json = {not: json};
       return json;
     },
@@ -473,7 +476,10 @@ define(function() {
       return new ParameterMatch(this.name, this.pattern, !this.isInverted);
     },
     toJSON: function() {
-      var json = {parameter: [this.name, this.pattern.source, this.pattern.flags]};
+      var json = {parameter: [this.name, this.pattern.source]};
+      if (this.pattern.flags) {
+        json.parameter.push(this.pattern.flags);
+      }
       if (this.isInverted) json = {not: json};
       return json;
     },
