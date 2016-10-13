@@ -400,7 +400,7 @@ define(function() {
           for (var j = 0; j < keys.length; j++) {
             var key = keys[j];
             var value = arguments[i].parameters[key];
-            andList.push(new ParameterMatch(key, new RegExp('^' + regexEscape(value) + '$'))))
+            andList.push(new ParameterMatch(key, new RegExp('^' + regexEscape(value) + '$')));
           }
           if (andList.length === 1) {
             filter = andList[0];
