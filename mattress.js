@@ -849,7 +849,7 @@ define(function() {
       // it looks like only in decimal are the final digits zeroed out by default
       hi53 = hi53.toPrecision(20);
       var decimalPoint = hi53.lastIndexOf('.');
-      if (decimalPoint !== 0) {
+      if (decimalPoint !== -1) {
         hi53 = hi53.slice(0, decimalPoint);
       }
     }
