@@ -846,10 +846,10 @@ define(function() {
     if (radix === 10) {
       // it looks like only in decimal are the final digits zeroed out by default
       // so we use toPrecision with the total number of decimal digits
-      hi53 = hi53.toPrecision(Math.log10(hi53) + 1);
+      hi53 = hi53.toPrecision(Math.log10(hi53)).split('');
     }
     else {
-      hi53 = hi53.toString(radix);
+      hi53 = hi53.toString(radix).split('');
     }
     for (var i = lo11.length - 1, j = hi53.length - 1, carry = 0; i >= 0; i--, j--) {
       var c = parseInt(lo11[i], radix) + parseInt(hi53[j], radix) + carry;
