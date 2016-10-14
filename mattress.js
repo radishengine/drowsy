@@ -840,62 +840,14 @@ define(function() {
       if (hi === 0) return lo.toString(radix);
       return hi.toString(radix) + (zero_x31 + lo.toString(radix)).slice(-padSize);
     }
-    var digits = [
-      lo & 0xffff,
-      (lo >>> 16) & 0xffff,
-      hi & 0xffff,
-      (hi >>> 16) & 0xffff];
-    
-    var fromBase = 0x10000;
-    
-    // ** code below:
-    // ** based on code by Dan Vanderkam <http://www.danvk.org/hex2dec.html>
-    // ** (Apache License 2.0)
-    
-    // Adds two arrays for base 10, returning the result.
-    // This turns out to be the only "primitive" operation we need.
-    function addDigitArrays(x, y) {
-      for (var i = 0, carry = 0, i_max = Math.max(x.length, y.length); i < i_max || (carry !== 0); i++) {
-        var zi = carry + (x[i] || 0) + (y[i] || 0);
-        x[i] = zi % radix;
-        carry = (zi / radix) | 0;
-      }
-    }
-    
-    function doubleDigitArray(x) {
-      for (var i = 0, carry = 0, i_max = x.length; i < i_max || (carry !== 0); i++) {
-        var zi = carry + (x[i] << 1);
-        x[i] = zi % radix;
-        carry = (zi / radix) | 0;
-      }
-    }
-
-    function multiplyDigitArrayByNumber(digits, num) {
-      if (num === 1) return digits;
-      digits = digits.slice();
-      var result = [];
-      do {
-        if (num & 1) addDigitArrays(result, digits);
-        num >>>= 1;
-        if (num === 0) return result;
-        doubleDigitArray(digits);
-      } while (true);
-    }
-    
-    var outArray = [];
-    var power = [1];
-    for (var i = 0; i < digits.length; i++) {
-      // invariant: at this point, fromBase^i = power
-      if (digits[i] !== 0) {
-        addDigitArrays(outArray, multiplyDigitArrayByNumber(power, digits[i]));
-      }
-      power = multiplyDigitArrayByNumber(power, fromBase);
-    }
-    var str = '';
-    for (var i = outArray.length - 1; i >= 0; i--) {
-      str += parseInt(outArray[i], radix);
-    }
-    return str;
+		var hi53 = (hi * 0x100000000 + (lo & 0x7800)).toString(radix).split('');
+		var lo11 = (lo & 0x7ff).toString(radix);
+		for (var i = lo11.length - 1, j = hi53.length - 1, carry = 0; i >= 0; ) {
+			var c = parseInt(lo11[i--], radix) + parseInt(hi53[j--], radix) + carry;
+			hi53[j] = (c % radix).toString(radix);
+			carry = (c / radix) | 0;
+		}
+		return carry ? carry.toString(radix) + hi53.join() : hi53.join();
   }
   
   BoxedUint64.prototype.toString = function(radix) {
