@@ -843,11 +843,11 @@ define(function() {
     var hi53 = (hi * 0x100000000 + (lo & 0x7800)).toString(radix).split('');
     var lo11 = (lo & 0x7ff).toString(radix);
     for (var i = lo11.length - 1, j = hi53.length - 1, carry = 0; i >= 0 || (carry && j >= 0); i--, j--) {
-      var c = parseInt(lo11[i], radix) + parseInt(hi53[j], radix) + carry;
+      var c = parseInt(lo11[i] || '0', radix) + parseInt(hi53[j], radix) + carry;
       hi53[j] = (c % radix).toString(radix);
       carry = (c / radix) | 0;
     }
-    return carry ? carry.toString(radix) + hi53.join() : hi53.join();
+    return carry ? carry.toString(radix) + hi53.join('') : hi53.join('');
   }
   
   BoxedUint64.prototype.toString = function(radix) {
