@@ -840,22 +840,26 @@ define(function() {
       if (hi === 0) return lo.toString(radix);
       return hi.toString(radix) + (zero_x31 + lo.toString(radix)).slice(-padSize);
     }
-    var hi53 = (hi * 0x100000000 + ((lo & ~0x7ff) >>> 0)).toString(radix).split('');
-    var lo11 = (lo & 0x7ff).toString(radix);
-    for (var i = lo11.length - 1, j = hi53.length - 1, carry = 0; i >= 0 || (carry && j >= 0); i--, j--) {
-      var c = parseInt(lo11[i] || '0', radix) + parseInt(hi53[j], radix) + carry;
-      hi53[j] = (c % radix).toString(radix);
+    var lo16 = lo & 0xffff;
+    var hi48 = (hi * 0x100000000 + (lo - lo16)).toString(radix).split('');
+    lo16 = lo16.toString(radix);
+    for (var i = lo16.length - 1, j = hi48.length - 1, carry = 0; i >= 0; i--, j--) {
+      var c = parseInt(lo16[i] || '0', radix) + parseInt(hi48[j], radix) + carry;
+      hi48[j] = (c % radix).toString(radix);
       carry = (c / radix) | 0;
     }
     if (carry) {
       for (; j >= 0; j--) {
-        var c = parseInt(hi53[j], radix) + carry;
-        hi53[j] = (c % radix).toString(radix);
+        var c = parseInt(hi48[j], radix) + carry;
+        hi48[j] = (c % radix).toString(radix);
         carry = (c / radix) | 0;
+        if (!carry) {
+          return hi48.join('');
+        }
       }
-      return carry ? carry.toString(radix) + hi53.join('') : hi53.join('');
+      return carry.toString(radix) + hi48.join('');
     }
-    return hi53.join('');
+    return hi48.join('');
   }
   
   BoxedUint64.prototype.toString = function(radix) {
