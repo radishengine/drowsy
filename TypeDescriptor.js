@@ -179,6 +179,8 @@ define(function() {
     },
   };
   
+  var DEFAULT_TYPE;
+  
   function TypeDescriptor(typeName, typeParameters) {
     if (!this) {
       if (typeName instanceof TypeDescriptor) {
@@ -187,8 +189,12 @@ define(function() {
       if (typeof typeName === 'object' && Array.isArray(typeName)) {
         return TypeDescriptor.apply(null, typeName);
       }
+      if (!typeName && !typeParameters) {
+        return DEFAULT_TYPE;
+      }
       return new TypeDescriptor(typeName, typeParameters);
     }
+    if (!typeName) typeName = DEFAULT_TYPE.typeName;
     var nameParts = typeName.match(/^\s*([a-z0-9_\-\.]+)\/([a-z0-9_\-\.]+)\s*(?:;(.*))?$/);
     if (!nameParts) {
       throw new TypeError('Type name must take the form: category/subtype');
@@ -265,6 +271,8 @@ define(function() {
       return this.category + '/' + this.subtype;
     },
   });
+  
+  DEFAULT_TYPE = new TypeDescriptor('application/octet-stream');
   
   matchAny = Object.freeze(Object.assign(new TypeFilter, {
     filter: function() { return TypeFilter.apply(null, arguments); },
@@ -552,6 +560,7 @@ define(function() {
       if (value instanceof TypeFilter) return 'filter';
       return false;
     },
+    default: DEFAULT_TYPE,
     fromJSON: function(json) {
       if (typeof json === 'string') {
         if (/^\s*\{/.test(json)) {
