@@ -855,11 +855,8 @@ define(function() {
     }
     if (radix === 10) {
       // it looks like only in decimal are the final digits zeroed out by default
-      hi53 = hi53.toPrecision(20);
-      var decimalPoint = hi53.lastIndexOf('.');
-      if (decimalPoint !== -1) {
-        hi53 = hi53.slice(0, decimalPoint);
-      }
+      hi53 = hi53.toPrecision(21);
+      hi53 = hi53.slice(0, hi53.lastIndexOf('.'));
     }
     else {
       hi53 = hi53.toString(radix);
