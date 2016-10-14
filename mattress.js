@@ -840,6 +840,14 @@ define(function() {
       if (hi === 0) return lo.toString(radix);
       return hi.toString(radix) + (zero_x31 + lo.toString(radix)).slice(-padSize);
     }
+    else {
+      if (radix < 2 || radix > 36) {
+        throw new RangeError('toString() radix argument must be between 2 and 36');
+      }
+      // one of the weird radices
+      // let's support them anyway
+      radix = radix | 0;
+    }
     var lo11 = lo & 0x7ff;
     var hi53 = (hi * 0x100000000 + (lo - lo11));
     if (hi53 === 0) {
