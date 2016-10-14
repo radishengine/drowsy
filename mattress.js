@@ -840,26 +840,34 @@ define(function() {
       if (hi === 0) return lo.toString(radix);
       return hi.toString(radix) + (zero_x31 + lo.toString(radix)).slice(-padSize);
     }
-    var lo16 = lo & 0xffff;
-    var hi48 = (hi * 0x100000000 + (lo - lo16)).toString(radix).split('');
-    lo16 = lo16.toString(radix);
-    for (var i = lo16.length - 1, j = hi48.length - 1, carry = 0; i >= 0; i--, j--) {
-      var c = parseInt(lo16[i], radix) + parseInt(hi48[j], radix) + carry;
-      hi48[j] = (c % radix).toString(radix);
+    var lo11 = lo & 0x7ff;
+    var hi53 = (hi * 0x100000000 + (lo - lo11));
+    lo11 = lo11.toString(radix);
+    if (radix === 10) {
+      // it looks like only in decimal are the final digits zeroed out by default
+      // so we use toPrecision with the total number of decimal digits
+      hi53 = hi53.toPrecision(Math.log10(hi53) + 1);
+    }
+    else {
+      hi53 = hi53.toString(radix);
+    }
+    for (var i = lo11.length - 1, j = hi53.length - 1, carry = 0; i >= 0; i--, j--) {
+      var c = parseInt(lo11[i], radix) + parseInt(hi53[j], radix) + carry;
+      hi53[j] = (c % radix).toString(radix);
       carry = (c / radix) | 0;
     }
     if (carry) {
       for (; j >= 0; j--) {
-        var c = parseInt(hi48[j], radix) + carry;
-        hi48[j] = (c % radix).toString(radix);
+        var c = parseInt(hi53[j], radix) + carry;
+        hi53[j] = (c % radix).toString(radix);
         carry = (c / radix) | 0;
         if (!carry) {
-          return hi48.join('');
+          return hi53.join('');
         }
       }
-      return carry.toString(radix) + hi48.join('');
+      return carry.toString(radix) + hi53.join('');
     }
-    return hi48.join('');
+    return hi53.join('');
   }
   
   BoxedUint64.prototype.toString = function(radix) {
