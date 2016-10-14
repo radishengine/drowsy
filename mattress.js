@@ -844,7 +844,7 @@ define(function() {
       if (radix < 2 || radix > 36) {
         throw new RangeError('toString() radix argument must be between 2 and 36');
       }
-      // one of the weird radices
+      // one of the weird radices, huh?
       // let's support them anyway
       radix = radix | 0;
     }
