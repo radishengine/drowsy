@@ -184,6 +184,9 @@ define(function() {
       if (typeName instanceof TypeDescriptor) {
         return typeName;
       }
+      if (typeof typeName === 'object' && Array.isArray(typeName)) {
+        return TypeDescriptor.apply(null, typeName);
+      }
       return new TypeDescriptor(typeName, typeParameters);
     }
     var nameParts = typeName.match(/^\s*([a-z0-9_\-\.]+)\/([a-z0-9_\-\.]+)\s*(?:;(.*))?$/);
