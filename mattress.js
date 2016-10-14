@@ -840,14 +840,14 @@ define(function() {
       if (hi === 0) return lo.toString(radix);
       return hi.toString(radix) + (zero_x31 + lo.toString(radix)).slice(-padSize);
     }
-		var hi53 = (hi * 0x100000000 + (lo & 0x7800)).toString(radix).split('');
-		var lo11 = (lo & 0x7ff).toString(radix);
-		for (var i = lo11.length - 1, j = hi53.length - 1, carry = 0; i >= 0; ) {
-			var c = parseInt(lo11[i--], radix) + parseInt(hi53[j--], radix) + carry;
-			hi53[j] = (c % radix).toString(radix);
-			carry = (c / radix) | 0;
-		}
-		return carry ? carry.toString(radix) + hi53.join() : hi53.join();
+    var hi53 = (hi * 0x100000000 + (lo & 0x7800)).toString(radix).split('');
+    var lo11 = (lo & 0x7ff).toString(radix);
+    for (var i = lo11.length - 1, j = hi53.length - 1, carry = 0; i >= 0; ) {
+      var c = parseInt(lo11[i--], radix) + parseInt(hi53[j--], radix) + carry;
+      hi53[j] = (c % radix).toString(radix);
+      carry = (c / radix) | 0;
+    }
+    return carry ? carry.toString(radix) + hi53.join() : hi53.join();
   }
   
   BoxedUint64.prototype.toString = function(radix) {
