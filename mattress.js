@@ -847,7 +847,15 @@ define(function() {
       hi53[j] = (c % radix).toString(radix);
       carry = (c / radix) | 0;
     }
-    return carry ? carry.toString(radix) + hi53.join('') : hi53.join('');
+    if (carry) {
+      for (; j >= 0; j--) {
+        var c = parseInt(hi53[j], radix) + carry;
+        hi53[j] = (c % radix).toString(radix);
+        carry = (c / radix) | 0;
+      }
+      return carry ? carry.toString(radix) + hi53.join('') : hi53.join('');
+    }
+    return hi53.join('');
   }
   
   BoxedUint64.prototype.toString = function(radix) {
