@@ -844,7 +844,7 @@ define(function() {
     var hi48 = (hi * 0x100000000 + (lo - lo16)).toString(radix).split('');
     lo16 = lo16.toString(radix);
     for (var i = lo16.length - 1, j = hi48.length - 1, carry = 0; i >= 0; i--, j--) {
-      var c = parseInt(lo16[i] || '0', radix) + parseInt(hi48[j], radix) + carry;
+      var c = parseInt(lo16[i], radix) + parseInt(hi48[j], radix) + carry;
       hi48[j] = (c % radix).toString(radix);
       carry = (c / radix) | 0;
     }
