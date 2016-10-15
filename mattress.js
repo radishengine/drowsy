@@ -114,12 +114,31 @@ define(function() {
     get asUint8() { return this.lo32 & 0xff; },
     get asUint16() { return this.lo32 & 0xffff; },
     get asUint32() { return this.lo32 >>> 0; },
-    get asFloat64() { return this.hi32 * 0x100000000 + this.lo32; },
+    get asFloat64() {
+      var hi = this.hi32, lo = this.lo32, sign;
+      if (hi < 0) {
+        sign = -1;
+        if (lo === 0) {
+          hi = -hi;
+        }
+        else {
+          hi = ~hi;
+          lo = -lo;
+        }
+      }
+      else {
+        sign = +1;
+      }
+      return sign * (hi * 0x100000000 + lo);
+    },
     get asInt64() {
       return (this.hi32 < 0x80000000) ? this : new Boxed64(this.hi32 | 0, this.lo32);
     },
     get asUint64() {
       return (this.hi32 >= 0) ? this : new Boxed64(this.hi32 >>> 0, this.lo32);
+    },
+    get precisionError() {
+      return (this.lo32 & 0x7ff) - (this.asFloat64 & 0x7ff);
     },
     toString: function(radix) {
       var hi = this.hi32, lo = this.lo32, sign;
@@ -242,6 +261,12 @@ define(function() {
       }
       return new Boxed64(hi, lo);
     },
+    i64_bnot: function() {
+      return new Boxed64(~this.hi32, ~this.lo32);
+    },
+    u64_bnot: function() {
+      return new Boxed64(~this.hi32 >>> 0, ~this.lo32);
+    },
   };
   
   Object.defineProperties(Number.prototype, {
@@ -284,6 +309,36 @@ define(function() {
         }
         return Boxed64(this);
       }
+    },
+  });
+  Object.assign(Number.prototype, {
+    i64_negate: function() {
+      return (-this).asInt64;
+    },
+    u64_negate: function() {
+      return (-this).asUint64;
+    },
+    i64_bnot: function() {
+      if (this < 0x100000000 && this > -0x100000000) {
+        return ~this;
+      }
+      return Boxed64(-1 - this);
+    },
+    u64_bnot: function() {
+      if (this >= 0) {
+        var hi = (this / 0x100000000), lo = this >>> 0;
+        if (lo === 0) {
+          hi = -hi >>> 0;
+        }
+        else {
+          hi = ~hi >>> 0;
+          lo = -lo >>> 0;
+        }
+        if (hi > 0x200000) {
+          return new Boxed64(hi, lo);
+        }
+      }
+      return Boxed64(-1 - this);
     },
   });
   
