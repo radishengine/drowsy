@@ -212,7 +212,13 @@ define(function() {
       if (this.lo32 === 0) {
         return new Boxed64(-this.hi32, 0);
       }
-      return new Boxed64(~this.hi32, -this.lo32);
+      return new Boxed64(~this.hi32, -this.lo32 >>> 0);
+    },
+    u64_negate: function() {
+      if (this.lo32 === 0) {
+        return new Boxed64(-this.hi32 >>> 0, 0);
+      }
+      return new Boxed64(~this.hi32 >>> 0, -this.lo32 >>> 0);
     },
   };
   
