@@ -241,16 +241,18 @@ define(function() {
     asInt64: {
       get: function() { return Boxed64(this); },
     },
-    asUint64: function() {
-      if (this < 0) {
-        var v = -this;
-        var lo = v >>> 0, hi = v / 0x100000000;
-        if (lo === 0) {
-          return new Boxed64(-hi >>> 0, lo);
+    asUint64: {
+      get: function() {
+        if (this < 0) {
+          var v = -this;
+          var lo = v >>> 0, hi = v / 0x100000000;
+          if (lo === 0) {
+            return new Boxed64(-hi >>> 0, lo);
+          }
+          return new Boxed64(~hi >>> 0, -lo >>> 0);
         }
-        return new Boxed64(~hi >>> 0, -lo >>> 0);
+        return Boxed64(this);
       }
-      return Boxed64(this);
     },
   });
   
