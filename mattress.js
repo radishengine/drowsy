@@ -211,10 +211,10 @@ define(function() {
     i64_negate: function() {
       var hi, lo = this.lo32;
       if (lo === 0) {
-        hi = -hi;
+        hi = -this.hi32;
       }
       else {
-        hi = ~hi;
+        hi = ~this.hi32;
         lo = -lo >>> 0;
       }
       // if this object is unsigned, the result
@@ -228,10 +228,10 @@ define(function() {
     u64_negate: function() {
       var hi, lo = this.lo32;
       if (lo === 0) {
-        hi = -hi >>> 0;
+        hi = -this.hi32 >>> 0;
       }
       else {
-        hi = ~hi >>> 0;
+        hi = ~this.hi32 >>> 0;
         lo = -lo >>> 0;
       }
       // if this object is unsigned, the result
