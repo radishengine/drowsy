@@ -392,6 +392,43 @@ define(function() {
       }
       return this;
     },
+    inc: function(value) {
+      if (typeof value === 'string') {
+        value = Boxed64(value);
+      }
+      var hi, lo;
+      if (typeof value === 'number') {
+        if (value < 0) {
+          value = -value;
+          lo = value >>> 0;
+          hi = (value / 0x10000000) >>> 0;
+          if (lo === 0) {
+            hi = -hi >>> 0;
+          }
+          else {
+            hi = ~hi >>> 0;
+            lo = -lo >>> 0;
+          }
+        }
+        else {
+          lo = value >>> 0;
+          hi = (value / 0x100000000) >>> 0;
+        }
+      }
+      else {
+        hi = value.hi32;
+        lo = value.lo32;
+      }
+      lo += this.lo32;
+      this.lo32 = lo >>> 0;
+      if (lo >= 0x100000000) {
+        this.hi32 = (this.hi32 + hi + 1) >>> 0;
+      }
+      else if (hi !== 0) {
+        this.hi32 = (this.hi32 + hi) >>> 0;
+      }
+      return this;
+    },
   });
   mattress.Uint64 = Uint64;
   
@@ -430,6 +467,43 @@ define(function() {
       else {
         this.hi32 = value.hi32 | 0;
         this.lo32 = value.lo32 >>> 0;
+      }
+      return this;
+    },
+    inc: function(value) {
+      if (typeof value === 'string') {
+        value = Boxed64(value);
+      }
+      var hi, lo;
+      if (typeof value === 'number') {
+        if (value < 0) {
+          value = -value;
+          lo = value >>> 0;
+          hi = (value / 0x10000000) >>> 0;
+          if (lo === 0) {
+            hi = -hi >>> 0;
+          }
+          else {
+            hi = ~hi >>> 0;
+            lo = -lo >>> 0;
+          }
+        }
+        else {
+          lo = value >>> 0;
+          hi = (value / 0x100000000) >>> 0;
+        }
+      }
+      else {
+        hi = value.hi32 >>> 0;
+        lo = value.lo32 >>> 0;
+      }
+      lo += this.lo32;
+      this.lo32 = lo >>> 0;
+      if (lo >= 0x100000000) {
+        this.hi32 = ((this.hi32 >>> 0) + hi + 1) | 0;
+      }
+      else if (hi !== 0) {
+        this.hi32 = ((this.hi32 >>> 0) + hi) | 0;
       }
       return this;
     },
