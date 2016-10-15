@@ -11,7 +11,8 @@ define(function() {
   var mattress = {};
   
   const NUM_PATTERN = /^(?:0x([0-9a-fA-F]+)|0b([01]+)|(0|[1-9][0-9]*))$/;
-  const ZERO_X31 = '0000000000000000000000000000000'; // thirty-one lovely zeros, guaranteed
+  const ZERO_X11 = new Array(11 + 1).join('0');
+  const ZERO_X64 = new Array(64 + 1).join('0'); // 64 zeros ought to be enough for anybody
 
   function Boxed64(hi32, lo32) {
     if (!this) {
@@ -52,28 +53,36 @@ define(function() {
               radix = 10;
             }
           }
-          var naive = parseInt(literal, radix);
-          if (naive <= Number.MAX_SAFE_INTEGER || isNaN(naive)) {
+          if (literal.length < 11 || (radix <= 10 && literal.length < 16)) {
+            // decimal MAX_SAFE_INTEGER is 16 digits
+            // base-36 MAX_SAFE_INTEGER is 11 digits
+            return sign * parseInt(literal, radix);
+          }
+          // at this stage, they are not really 32-bit lo and hi.
+          // lo = "last 11 digits only", hi = "last 11 digits set to zero"
+          // hi should be guaranteed to lose no precision, though!
+          // why not? well, at most a 64-bit integer will lose the last
+          // 11 bits of precision.
+          // so at base 2, 11 bits is 11 digits. and at any higher base,
+          // it will be less (for example, last 4 digits in decimal).
+          lo32 = parseInt(literal.slice(-11), radix);
+          hi32 = parseInt(literal.slice(0, -11) + ZERO_X11, radix);
+          // maybe the actual number is pretty big but still within threshold,
+          // like a 16-digit decimal that is <= MAX_SAFE_INTEGER
+          var naive = hi32 + lo32;
+          if (naive <= Number.MAX_SAFE_INTEGER) {
             return sign * naive;
           }
-          hi32 = (naive / 0x100000000) >>> 0;
-          lo32 = naive >>> 0;
-          if (radix === 10) {
-            lo32 += literal.slice(-4) - (lo32 % 10000);
-          }
-          else if (radix === 16) {
-            lo32 += parseInt(literal.slice(-3), 16) - (lo32 & 0xfff);
-          }
-          else {
-            lo32 += parseInt(literal.slice(-11), radix) - parseInt(lo32.toString(radix).slice(-11), radix);
-          }
+          // now convert lo and hi to their actual values
+          lo32 |= hi32;
+          hi32 = hi32 / 0x100000000;
           if (sign === -1) {
             if (lo32 === 0) {
-              return new Boxed64(-hi32, 0);
+              return new Boxed64(-(hi32 | 0), 0);
             }
-            return new Boxed64(~hi32, -lo32 >>> 0);
+            return new Boxed64(~hi32, -lo32);
           }
-          return new Boxed64(hi32, lo32);
+          return new Boxed64(hi32 | 0, lo32);
         case 'number':
           if (arguments[0] > Number.MAX_SAFE_INTEGER) {
             return new Boxed64(
@@ -156,7 +165,7 @@ define(function() {
         sign = '';
       }
       if (isNaN(radix)) radix = 10;
-      else if ((radix & (radix-1)) === 0) {
+      else if (radix & (radix-1) === 0) {
         // radix is a power of 2
         var padSize;
         switch (radix) {
