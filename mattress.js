@@ -175,7 +175,9 @@ define(function() {
             break;
           default: throw new RangeError('toString() radix argument must be between 2 and 36');
         }
-        if (hi === 0) return lo.toString(radix);
+        if (hi === 0) {
+          return sign + lo.toString(radix);
+        }
         return sign + hi.toString(radix) + (ZERO_X31 + lo.toString(radix)).slice(-padSize);
       }
       else {
@@ -189,7 +191,7 @@ define(function() {
       var lo11 = lo & 0x7ff;
       var hi53 = (hi * 0x100000000 + (lo - lo11));
       if (hi53 === 0) {
-        return lo11.toString(radix);
+        return sign + lo11.toString(radix);
       }
       if (radix === 10) {
         // it looks like only in decimal are the final digits zeroed out by default
@@ -199,7 +201,9 @@ define(function() {
       else {
         hi53 = hi53.toString(radix);
       }
-      if (lo11 === 0) return hi53;
+      if (lo11 === 0) {
+        return sign + hi53;
+      }
       lo11 = lo11.toString(radix);
       hi53 = hi53.split('');
       for (var i = lo11.length - 1, j = hi53.length - 1, carry = 0; i >= 0; i--, j--) {
@@ -213,7 +217,7 @@ define(function() {
           hi53[j] = (c % radix).toString(radix);
           carry = (c / radix) | 0;
           if (!carry) {
-            return hi53.join('');
+            return sign + hi53.join('');
           }
         }
         return sign + carry.toString(radix) + hi53.join('');
