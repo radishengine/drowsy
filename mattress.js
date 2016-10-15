@@ -216,6 +216,44 @@ define(function() {
     },
   };
   
+  Object.defineProperties(Number.prototype, {
+    asInt8: {
+      get: function() { return this << 24 >> 24; }
+    },
+    asInt16: {
+      get: function() { return this << 16 >> 16; }
+    },
+    asInt32: {
+      get: function() { return this | 0; }
+    },
+    asUint8: {
+      get: function() { return this & 0xff; }
+    },
+    asUint16: {
+      get: function() { return this & 0xffff; }
+    },
+    asUint32: {
+      get: function() { return this >>> 0; }
+    },
+    asFloat64: {
+      get: function() { return this; }
+    },
+    asInt64: {
+      get: function() { return Boxed64(this); },
+    },
+    asUint64: function() {
+      if (this < 0) {
+        var v = -this;
+        var lo = v >>> 0, hi = v / 0x100000000;
+        if (lo === 0) {
+          return new Boxed64(-hi >>> 0, lo);
+        }
+        return new Boxed64(~hi >>> 0, -lo >>> 0);
+      }
+      return Boxed64(this);
+    },
+  });
+  
   mattress.Boxed64 = Boxed64;
   mattress.i64 = Boxed64.bind(null);
   mattress.u64 = function() {
