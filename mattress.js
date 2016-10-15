@@ -92,9 +92,9 @@ define(function() {
             if (lo32 === 0) {
               return new Boxed64(-(hi32 | 0), 0);
             }
-            return new Boxed64(~hi32, -lo32);
+            return new Boxed64(~hi32, -lo32 >>> 0);
           }
-          return new Boxed64(hi32 >>> 0, lo32);
+          return new Boxed64(hi32 >>> 0, lo32 >>> 0);
         case 'number':
           if (arguments[0] > Number.MAX_SAFE_INTEGER) {
             return new Boxed64(
