@@ -325,18 +325,12 @@ define(function() {
       return Boxed64(-1 - this);
     },
     u64_bnot: function() {
-      if (this >= 0) {
-        var hi = (this / 0x100000000), lo = this >>> 0;
-        if (lo === 0) {
-          hi = -hi >>> 0;
+      if (this >= 1) {
+        var hi = ~(this / 0x100000000) >>> 0, lo = ~this;
+        if (hi < 0x200000) {
+          return (hi * 0x100000000) + lo >>> 0;
         }
-        else {
-          hi = ~hi >>> 0;
-          lo = -lo >>> 0;
-        }
-        if (hi > 0x200000) {
-          return new Boxed64(hi, lo);
-        }
+        return new Boxed64(hi, lo);
       }
       return Boxed64(-1 - this);
     },
