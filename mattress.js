@@ -12,7 +12,7 @@ define(function() {
   
   const NUM_PATTERN = /^(?:0x([0-9a-fA-F]+)|0b([01]+)|(0|[1-9][0-9]*))$/;
   const ZERO_X11 = new Array(11 + 1).join('0');
-  const ZERO_X64 = new Array(64 + 1).join('0'); // 64 zeros ought to be enough for anybody
+  const ZERO_X31 = new Array(31 + 1).join('0'); // 31 zeros ought to be enough for anybody
 
   function Boxed64(hi32, lo32) {
     if (!this) {
