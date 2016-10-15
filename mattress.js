@@ -319,20 +319,18 @@ define(function() {
       return (-this).asUint64;
     },
     i64_bnot: function() {
-      if (this < 0x100000000 && this > -0x100000000) {
-        return ~this;
+      if (this === Number.MAX_SAFE_INTEGER) {
+        // (-1 - this) would cross the unsafe threshold
+        return new Boxed64(-0x200000, 0);
       }
-      return Boxed64(-1 - this);
+      return (-1 - this).asInt64;
     },
     u64_bnot: function() {
-      if (this >= 1) {
-        var hi = ~(this / 0x100000000) >>> 0, lo = ~this;
-        if (hi < 0x200000) {
-          return (hi * 0x100000000) + lo >>> 0;
-        }
-        return new Boxed64(hi, lo);
+      if (this === Number.MAX_SAFE_INTEGER) {
+        // (-1 - this) would cross the unsafe threshold
+        return new Boxed64(-0x200000 >>> 0, 0);
       }
-      return Boxed64(-1 - this);
+      return (-1 - this).asUint64;
     },
   });
   
