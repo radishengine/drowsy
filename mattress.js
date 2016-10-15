@@ -362,6 +362,53 @@ define(function() {
     return Boxed64.apply(null, arguments).asUint64;
   };
   
+  mattress.i32 = {
+    mul: function(a, b) {
+      a = a.asInt32;
+      b = b.asInt32;
+      if (isNaN(a) || isNaN(b)) {
+        return NaN;
+      }
+      var sign = 1;
+      if (a < 0) {
+        a = -a;
+        sign = -sign;
+      }
+      if (b < 0) {
+        b = -b;
+        sign = -sign;
+      }
+      if (b < a) {
+        var temp = b;
+        b = a;
+        a = temp;
+      }
+      if (b <= 0x4000000 || a <= 0x200000) {
+        return (sign * a * b) | 0;
+      }
+      return (sign * ((a << 26) + (a * (b & 0x3ffffff)))) | 0;
+    },
+  };
+  
+  mattress.u32 = {
+    mul: function(a, b) {
+      a = a.asUint32;
+      b = b.asUint32;
+      if (isNaN(a) || isNaN(b)) {
+        return NaN;
+      }
+      if (b < a) {
+        var temp = b;
+        b = a;
+        a = temp;
+      }
+      if (b <= 0x4000000 || a <= 0x200000) {
+        return (a * b) >>> 0;
+      }
+      return (((a << 26) + (a * (b & 0x3ffffff)))) >>> 0;
+    },
+  };
+  
   return mattress;
   
   /*
