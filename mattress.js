@@ -368,9 +368,8 @@ define(function() {
         if (value >= -0x80000000 && value < 0x100000000) {
           this.lo32 = value >>> 0;
           this.hi32 = value >= 0 ? 0 : -1 >>> 0;
-          return;
         }
-        if (value < 0) {
+        else if (value < 0) {
           value = -value;
           var lo = value >>> 0, hi = (value / 0x100000000) >>> 0;
           if (lo === 0) {
@@ -381,14 +380,17 @@ define(function() {
             this.hi32 = ~hi >>> 0;
             this.lo32 = -lo >>> 0;
           }
-          return;
         }
-        this.lo32 = value >>> 0;
-        this.hi32 = (value / 0x100000000) >>> 0;
-        return;
+        else {
+          this.lo32 = value >>> 0;
+          this.hi32 = (value / 0x100000000) >>> 0;
+        }
       }
-      this.hi32 = value.hi32 >>> 0;
-      this.lo32 = value.lo32 >>> 0;
+      else {
+        this.hi32 = value.hi32 >>> 0;
+        this.lo32 = value.lo32 >>> 0;
+      }
+      return this;
     },
   });
   mattress.Uint64 = Uint64;
@@ -408,7 +410,7 @@ define(function() {
           this.hi32 = value >= 0 ? 0 : -1;
           return;
         }
-        if (value < 0) {
+        else if (value < 0) {
           value = -value;
           var lo = value >>> 0, hi = (value / 0x100000000) >>> 0;
           if (lo === 0) {
@@ -419,14 +421,17 @@ define(function() {
             this.hi32 = ~hi;
             this.lo32 = -lo >>> 0;
           }
-          return;
         }
-        this.lo32 = value >>> 0;
-        this.hi32 = (value / 0x100000000) | 0;
-        return;
+        else {
+          this.lo32 = value >>> 0;
+          this.hi32 = (value / 0x100000000) | 0;
+        }
       }
-      this.hi32 = value.hi32 | 0;
-      this.lo32 = value.lo32 >>> 0;
+      else {
+        this.hi32 = value.hi32 | 0;
+        this.lo32 = value.lo32 >>> 0;
+      }
+      return this;
     },
   });
   mattress.Int64 = Int64;
