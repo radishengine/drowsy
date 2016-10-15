@@ -209,10 +209,21 @@ define(function() {
       return '0x' + value;
     },
     i64_negate: function() {
-      if (this.lo32 === 0) {
-        return new Boxed64(-this.hi32, 0);
+      var hi, lo = this.lo32;
+      if (lo === 0) {
+        hi = -hi;
       }
-      return new Boxed64(~this.hi32, -this.lo32 >>> 0);
+      else {
+        hi = ~hi;
+        lo = -lo >>> 0;
+      }
+      // if this object is unsigned, the result
+      // of negating it might have put it in
+      // safe int range
+      if (hi > 0 && hi < 0x200000) {
+        return (hi * 0x100000000) + lo;
+      }
+      return new Boxed64(hi, lo);
     },
     u64_negate: function() {
       if (this.lo32 === 0) {
