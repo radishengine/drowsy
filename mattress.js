@@ -220,7 +220,7 @@ define(function() {
       // if this object is unsigned, the result
       // of negating it might have put it in
       // safe int range
-      if (hi > 0 && hi < 0x200000) {
+      if (hi >= 0 && hi < 0x200000) {
         return (hi * 0x100000000) + lo;
       }
       return new Boxed64(hi, lo);
@@ -237,7 +237,7 @@ define(function() {
       // if this object is unsigned, the result
       // of negating it might have put it in
       // safe int range
-      if (hi > 0 && hi < 0x200000) {
+      if (hi >= 0 && hi < 0x200000) {
         return (hi * 0x100000000) + lo;
       }
       return new Boxed64(hi, lo);
