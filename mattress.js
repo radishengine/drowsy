@@ -58,31 +58,43 @@ define(function() {
             // base-36 MAX_SAFE_INTEGER is 11 digits
             return sign * parseInt(literal, radix);
           }
-          // at this stage, they are not really 32-bit lo and hi.
-          // lo = "last 11 digits only", hi = "last 11 digits set to zero"
-          // hi should be guaranteed to lose no precision, though!
-          // why not? well, at most a 64-bit integer will lose the last
-          // 11 bits of precision.
-          // so at base 2, 11 bits is 11 digits. and at any higher base,
-          // it will be less (for example, last 4 digits in decimal).
-          lo32 = parseInt(literal.slice(-11), radix);
-          hi32 = parseInt(literal.slice(0, -11) + ZERO_X11, radix);
-          // maybe the actual number is pretty big but still within threshold,
-          // like a 16-digit decimal that is <= MAX_SAFE_INTEGER
+          // split the literal into the "high" digits and the "low" digits,
+          // where the "low" digits are guaranteed to cover no less than 11 bits
+          // and no more than 32
+          if (radix === 2) {
+            lo32 = literal.slice(-11);
+            hi32 = literal.slice(-64, -11) + '00000000000';
+          }
+          else if (radix <= 10) {
+            lo32 = literal.slice(-8);
+            hi32 = literal.slice(-20, -8) + '00000000';
+          }
+          else {
+            lo32 = literal.slice(-4);
+            hi32 = literal.slice(-19, -4) + '0000';
+          }
+          lo32 = parseInt(lo32, radix);
+          hi32 = parseInt(hi32, radix);
+          // (lo32 + hi32) is the full value
+          // hi32 should have no loss of precision, because the
+          // lowest 11 bits are guaranteed to be zero
+          
+          // try adding the values naively
           var naive = hi32 + lo32;
+          // if the total is within safe integer range, we can use it
           if (naive <= Number.MAX_SAFE_INTEGER) {
             return sign * naive;
           }
-          // now convert lo and hi to their actual values
+          // otherwise, get 32-bit values for lo32 and hi32
           lo32 |= hi32;
-          hi32 = hi32 / 0x100000000;
+          hi32 = (hi32 / 0x100000000) >>> 0;
           if (sign === -1) {
             if (lo32 === 0) {
               return new Boxed64(-(hi32 | 0), 0);
             }
             return new Boxed64(~hi32, -lo32);
           }
-          return new Boxed64(hi32 | 0, lo32);
+          return new Boxed64(hi32 >>> 0, lo32);
         case 'number':
           if (arguments[0] > Number.MAX_SAFE_INTEGER) {
             return new Boxed64(
