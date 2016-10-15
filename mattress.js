@@ -13,7 +13,7 @@ define(function() {
   const NUM_PATTERN = /^(?:0x([0-9a-fA-F]+)|0b([01]+)|(0|[1-9][0-9]*))$/;
   const ZERO_X11 = new Array(11 + 1).join('0');
   const ZERO_X31 = new Array(31 + 1).join('0'); // 31 zeros ought to be enough for anybody
-
+  
   function Boxed64(hi32, lo32) {
     if (!this) {
       switch (typeof arguments[0]) {
@@ -58,36 +58,32 @@ define(function() {
             // base-36 MAX_SAFE_INTEGER is 11 digits
             return sign * parseInt(literal, radix);
           }
-          // split the literal into the "high" digits and the "low" digits,
-          // where the "low" digits are guaranteed to cover no less than 11 bits
-          // and no more than 32
-          if (radix === 2) {
-            lo32 = literal.slice(-11);
-            hi32 = literal.slice(-64, -11) + '00000000000';
+          var buffer = new ArrayBuffer(8);
+          var bytes = new Uint8Array(buffer);
+          var dv = new DataView(buffer);
+          for (var i = literal.length-1, power = 1; i >= 0; i--, power *= radix) {
+            var c = power * parseInt(literal[i], radix);
+            if (c !== 0) {
+              var b = 0;
+              do {
+                if (c & 1) {
+                  for (var byte_i = b >> 3, carry = (1 << (b & 7)); byte_i < 8; byte_i++) {
+                    carry += bytes[byte_i];
+                    bytes[byte_i] = carry;
+                    carry >>>= 8;
+                    if (carry === 0) break;
+                  }
+                }
+                c >>= 1;
+                b++;
+              } while (c !== 0);
+            }
           }
-          else if (radix <= 10) {
-            lo32 = literal.slice(-8);
-            hi32 = literal.slice(-20, -8) + '00000000';
+          var lo32 = dv.getUint32(0, true);
+          var hi32 = dv.getUint32(4, true);
+          if (hi32 < 0x200000) {
+            return sign * (hi32 * 0x100000000 + lo32);
           }
-          else {
-            lo32 = literal.slice(-4);
-            hi32 = literal.slice(-19, -4) + '0000';
-          }
-          lo32 = parseInt(lo32, radix);
-          hi32 = parseInt(hi32, radix);
-          // (lo32 + hi32) is the full value
-          // hi32 should have no loss of precision, because the
-          // lowest 11 bits are guaranteed to be zero
-          
-          // try adding the values naively
-          var naive = hi32 + lo32;
-          // if the total is within safe integer range, we can use it
-          if (naive <= Number.MAX_SAFE_INTEGER) {
-            return sign * naive;
-          }
-          // otherwise, get 32-bit values for lo32 and hi32
-          lo32 |= hi32;
-          hi32 = (hi32 / 0x100000000) >>> 0;
           if (sign === -1) {
             if (lo32 === 0) {
               return new Boxed64(-(hi32 | 0), 0);
