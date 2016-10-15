@@ -10,7 +10,7 @@ define(function() {
   
   var mattress = {};
   
-  const NUM_PATTERN = /^0x([0-9a-fA-F])|0b([01]+)|(0|[1-9][0-9]*)$/;
+  const NUM_PATTERN = /^(?:0x([0-9a-fA-F]+)|0b([01]+)|(0|[1-9][0-9]*))$/;
   const ZERO_X31 = '0000000000000000000000000000000'; // thirty-one lovely zeros, guaranteed
 
   function Boxed64(hi32, lo32) {
