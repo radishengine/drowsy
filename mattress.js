@@ -122,7 +122,7 @@ define(function() {
       return (this.hi32 >= 0) ? this : new Boxed64(this.hi32 >>> 0, this.lo32);
     },
     toString: function(radix) {
-      var hi = this.hi, lo = this.lo, sign;
+      var hi = this.hi32, lo = this.lo32, sign;
       if (hi < 0) {
         if (lo === 0) {
           hi = -hi;
