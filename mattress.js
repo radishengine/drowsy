@@ -10,6 +10,214 @@ define(function() {
   
   var mattress = {};
   
+  const NUM_PATTERN = /^0x([0-9a-fA-F])|0b([01]+)|(0|[1-9][0-9]*)$/;
+  const ZERO_X31 = '0000000000000000000000000000000'; // thirty-one lovely zeros, guaranteed
+
+  function Boxed64(hi32, lo32) {
+    if (!this) {
+      switch (typeof arguments[0]) {
+        case 'string':
+          var literal = arguments[0];
+          var sign = literal.slice(0, 1);
+          if (sign === '-') {
+            literal = literal.slice(1);
+            sign = -1;
+          }
+          else {
+            if (sign === '+') {
+              literal = literal.slice(1);
+            }
+            sign = 1;
+          }
+          var radix;
+          if (arguments.length === 2) {
+            radix = arguments[1] | 0;
+            if (radix < 2 || radix > 36 || isNaN(radix)) {
+              return NaN;
+            }
+          }
+          else {
+            var num = hi32.match(NUM_PATTERN);
+            if (!num) return NaN;
+            if (typeof num[1] === 'string') {
+              literal = num[1];
+              radix = 16;
+            }
+            else if (typeof num[2] === 'string') {
+              literal = num[2];
+              radix = 2;
+            }
+            else {
+              literal = num[3];
+              radix = 10;
+            }
+          }
+          var naive = parseInt(literal, radix);
+          if (naive <= Number.MAX_SAFE_INTEGER || isNaN(naive)) {
+            return sign * naive;
+          }
+          hi32 = (naive / 0x100000000) >>> 0;
+          lo32 = naive >>> 0;
+          if (radix === 10) {
+            lo32 += literal.slice(-4) - (lo32 % 10000);
+          }
+          else if (radix === 16) {
+            lo32 += parseInt(literal.slice(-3), 16) - (lo32 & 0xfff);
+          }
+          else {
+            lo32 += parseInt(literal.slice(-11), radix) - parseInt(lo32.toString(radix).slice(-11), radix);
+          }
+          if (sign === -1) {
+            if (lo32 === 0) {
+              return new Boxed64(-hi32, 0);
+            }
+            return new Boxed64(~hi32, -lo32 >>> 0);
+          }
+          return new Boxed64(hi32, lo32);
+        case 'number':
+          if (arguments[0] > Number.MAX_SAFE_INTEGER) {
+            return new Boxed64(
+              (arguments[0] / 0x100000000) >>> 0,
+              arguments[0] >>> 0);
+          }
+          if (arguments[0] < Number.MIN_SAFE_INTEGER) {
+            arguments[0] = -arguments[0];
+            var hi = (arguments[0] / 0x100000000) >>> 0;
+            var lo = arguments[0] >>> 0;
+            if (lo === 0) {
+              return new Boxed64(-hi, 0);
+            }
+            return new Boxed(~hi, -lo >>> 0);
+          }
+          return arguments[0];
+        case 'boolean':
+          return +arguments[0];
+        case 'object':
+          if (arguments[0] instanceof Boxed64) {
+            if (!Object.isFrozen(arguments[0])) {
+              return new Boxed64(arguments[0].hi32, arguments[0].lo32);
+            }
+            return arguments[0];
+          }
+          return NaN;
+      }
+      return NaN;
+    }
+    this.hi32 = hi32;
+    this.lo32 = lo32;
+    Object.freeze(this);
+  }
+  Boxed64.prototype = {
+    get asInt8() { return this.lo32 << 24 >> 24; },
+    get asInt16() { return this.lo32 << 16 >> 16; },
+    get asInt32() { return this.lo32; },
+    get asUint8() { return this.lo32 & 0xff; },
+    get asUint16() { return this.lo32 & 0xffff; },
+    get asUint32() { return this.lo32 >>> 0; },
+    get asFloat64() { return this.hi32 * 0x100000000 + this.lo32; },
+    get asInt64() {
+      return (this.hi32 < 0x80000000) ? this : new Boxed64(this.hi32 | 0, this.lo32);
+    },
+    get asUint64() {
+      return (this.hi32 >= 0) ? this : new Boxed64(this.hi32 >>> 0, this.lo32);
+    },
+    toString: function(radix) {
+      var hi = this.hi, lo = this.lo, sign;
+      if (hi < 0) {
+        if (lo === 0) {
+          hi = -hi;
+        }
+        else {
+          hi = ~hi;
+          lo = -lo >>> 0;
+        }
+        sign = '-';
+      }
+      else {
+        sign = '';
+      }
+      if (isNaN(radix)) radix = 10;
+      else if ((radix & (radix-1)) === 0) {
+        // radix is a power of 2
+        var padSize;
+        switch (radix) {
+          case 2: padSize = 32; break;
+          case 4: padSize = 16; break;
+          case 8:
+            padSize = 11;
+            lo += (hi & 3) * 0x100000000;
+            hi >>>= 2;
+            break;
+          case 16: padSize = 8; break;
+          case 32:
+            padSize = 7;
+            lo += (hi & 3) * 0x100000000;
+            hi >>>= 2;
+            break;
+          default: throw new RangeError('toString() radix argument must be between 2 and 36');
+        }
+        if (hi === 0) return lo.toString(radix);
+        return sign + hi.toString(radix) + (ZERO_X31 + lo.toString(radix)).slice(-padSize);
+      }
+      else {
+        if (radix < 2 || radix > 36) {
+          throw new RangeError('toString() radix argument must be between 2 and 36');
+        }
+        // one of the weird radices, huh?
+        // let's support them anyway
+        radix = radix | 0;
+      }
+      var lo11 = lo & 0x7ff;
+      var hi53 = (hi * 0x100000000 + (lo - lo11));
+      if (hi53 === 0) {
+        return lo11.toString(radix);
+      }
+      if (radix === 10) {
+        // it looks like only in decimal are the final digits zeroed out by default
+        hi53 = hi53.toPrecision(21);
+        hi53 = hi53.slice(0, hi53.lastIndexOf('.'));
+      }
+      else {
+        hi53 = hi53.toString(radix);
+      }
+      if (lo11 === 0) return hi53;
+      lo11 = lo11.toString(radix);
+      hi53 = hi53.split('');
+      for (var i = lo11.length - 1, j = hi53.length - 1, carry = 0; i >= 0; i--, j--) {
+        var c = parseInt(lo11[i], radix) + parseInt(hi53[j], radix) + carry;
+        hi53[j] = (c % radix).toString(radix);
+        carry = (c / radix) | 0;
+      }
+      if (carry) {
+        for (; j >= 0; j--) {
+          var c = parseInt(hi53[j], radix) + carry;
+          hi53[j] = (c % radix).toString(radix);
+          carry = (c / radix) | 0;
+          if (!carry) {
+            return hi53.join('');
+          }
+        }
+        return sign + carry.toString(radix) + hi53.join('');
+      }
+      return sign + hi53.join('');
+    },
+    toJSON: function() {
+      var value = this.toString();
+      if (value.slice(0, 1) === '-') {
+        return '-0x' + value.slice(1);
+      }
+      return '0x' + value;
+    },
+    i64_negate: function() {
+      if (this.lo32 === 0) {
+        return new Boxed64(-this.hi32, 0);
+      }
+      return new Boxed64(~this.hi32, -this.lo32);
+    },
+  };
+  
+  return mattress;
+  
   var tempBuffer = new ArrayBuffer(8);
   var tempFloat32 = new Float32Array(tempBuffer);
   var tempFloat64 = new Float64Array(tempBuffer);
