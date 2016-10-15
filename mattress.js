@@ -216,6 +216,12 @@ define(function() {
     },
   };
   
+  mattress.Boxed64 = Boxed64;
+  mattress.i64 = Boxed64.bind(null);
+  mattress.u64 = function() {
+    return Boxed64.apply(null, arguments).asUint64;
+  };
+  
   return mattress;
   
   var tempBuffer = new ArrayBuffer(8);
