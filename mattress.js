@@ -158,9 +158,6 @@ define(function() {
     get asUint64() {
       return (this.hi32 >= 0) ? this : new Boxed64(this.hi32 >>> 0, this.lo32);
     },
-    get precisionError() {
-      return (this.lo32 & 0x7ff) - (this.asFloat64 & 0x7ff);
-    },
     toString: function(radix) {
       var hi = this.hi32, lo = this.lo32, sign;
       if (hi < 0) {
