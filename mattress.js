@@ -251,6 +251,9 @@ define(function() {
           }
           return new Boxed64(~hi >>> 0, -lo >>> 0);
         }
+        if (this <= Number.MAX_SAFE_INTEGER) {
+          return Math.floor(this);
+        }
         return Boxed64(this);
       }
     },
