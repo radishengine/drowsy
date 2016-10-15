@@ -224,6 +224,8 @@ define(function() {
   
   return mattress;
   
+  /*
+  
   var tempBuffer = new ArrayBuffer(8);
   var tempFloat32 = new Float32Array(tempBuffer);
   var tempFloat64 = new Float64Array(tempBuffer);
@@ -2215,5 +2217,7 @@ define(function() {
   mattress.HashTable = HashTable;
   
   return mattress;
+  
+  */
   
 });
