@@ -120,6 +120,9 @@ define(function() {
       }
       return NaN;
     }
+    if (arguments.length === 0) {
+      return;
+    }
     this.hi32 = hi32;
     this.lo32 = lo32;
     Object.freeze(this);
@@ -351,6 +354,82 @@ define(function() {
       return (-1 - this).asUint64;
     },
   });
+  
+  function Uint64(hi32, lo32) {
+    this.hi32 = hi32;
+    this.lo32 = lo32;
+  }
+  Uint64.prototype = Object.assign(new Boxed64, {
+    set: function(value) {
+      if (typeof value === 'string') {
+        value = Boxed64(value);
+      }
+      if (typeof value === 'number') {
+        if (value >= -0x80000000 && value < 0x100000000) {
+          this.lo32 = value >>> 0;
+          this.hi32 = value >= 0 ? 0 : -1 >>> 0;
+          return;
+        }
+        if (value < 0) {
+          value = -value;
+          var lo = value >>> 0, hi = (value / 0x100000000) >>> 0;
+          if (lo === 0) {
+            this.hi32 = -hi >>> 0;
+            this.lo32 = 0;
+          }
+          else {
+            this.hi32 = ~hi >>> 0;
+            this.lo32 = -lo >>> 0;
+          }
+          return;
+        }
+        this.lo32 = value >>> 0;
+        this.hi32 = (value / 0x100000000) >>> 0;
+        return;
+      }
+      this.hi32 = value.hi32 >>> 0;
+      this.lo32 = value.lo32 >>> 0;
+    },
+  });
+  mattress.Uint64 = Uint64;
+  
+  function Int64(hi32, lo32) {
+    this.hi32 = hi32;
+    this.lo32 = lo32;
+  }
+  Int64.prototype = Object.assign(new Boxed64, {
+    set: function(value) {
+      if (typeof value === 'string') {
+        value = Boxed64(value);
+      }
+      if (typeof value === 'number') {
+        if (value >= -0x80000000 && value < 0x100000000) {
+          this.lo32 = value >>> 0;
+          this.hi32 = value >= 0 ? 0 : -1;
+          return;
+        }
+        if (value < 0) {
+          value = -value;
+          var lo = value >>> 0, hi = (value / 0x100000000) >>> 0;
+          if (lo === 0) {
+            this.hi32 = -hi;
+            this.lo32 = 0;
+          }
+          else {
+            this.hi32 = ~hi;
+            this.lo32 = -lo >>> 0;
+          }
+          return;
+        }
+        this.lo32 = value >>> 0;
+        this.hi32 = (value / 0x100000000) | 0;
+        return;
+      }
+      this.hi32 = value.hi32 | 0;
+      this.lo32 = value.lo32 >>> 0;
+    },
+  });
+  mattress.Int64 = Int64;
   
   mattress.Boxed64 = Boxed64;
   mattress.i64 = Boxed64.bind(null);
