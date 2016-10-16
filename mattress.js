@@ -69,7 +69,7 @@ define(function() {
     return value;
   }
   
-  function equals64(a, b, tempResult64a, tempResult64b) {
+  function equal64(a, b, tempResult64a, tempResult64b) {
     a = normalize64(a, tempResult64a);
     b = normalize64(b, tempResult64b);
     if (a === b) return true;
@@ -79,7 +79,7 @@ define(function() {
     return a.hi32 === b.hi32 && a.lo32 === b.lo32;
   }
   
-  function lessThan64(a, b, tempResult64a, tempResult64b) {
+  function less64(a, b, tempResult64a, tempResult64b) {
     a = normalize64(a, tempResult64a);
     b = normalize64(b, tempResult64b);
     if (a === b) return false;
