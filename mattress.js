@@ -1,16 +1,123 @@
 define(function() {
   
+  'use strict';
+  
+  const INT_LITERAL_PATTERN = /^(?:0x0*([0-9a-fA-F]+?)|0b0*([01]+?)|0*([0-9]+?))$/;
+  
+  function multiply64(hi1, lo1, hi2, lo2, result64, resultUnsigned, TResult) {
+  }
+  
+  function parse64(digits, radix, result64, resultUnsigned, TResult) {
+    var sign = digits.slice(0, 1);
+    if (sign === '-') {
+      digits = digits.slice(1);
+      sign = -1;
+    }
+    else {
+      if (sign === '+') {
+        digits = digits.slice(1);
+      }
+      sign = +1;
+    }
+    if (isNaN(radix)) {
+      var literal = digits.match(INT_LITERAL_PATTERN);
+      if (!literal) return NaN;
+      if (typeof literal[1] === 'string') {
+        digits = literal[1];
+        radix = 16;
+      }
+      else if (typeof literal[2] === 'string') {
+        digits = literal[2];
+        radix = 2;
+      }
+      else {
+        digits = literal[3];
+        radix = 10;
+      }
+    }
+    else {
+      radix |= 0;
+      if (radix < 2 || radix > 36) {
+        return NaN;
+      }
+    }
+    if (digits.length < 11
+    || (radix <= 16 && digits.length < 14)
+    || (radix <= 10 && digits.length < 16)) {
+      // if the literal is short enough that we can tell
+      // the value is less than Number.MAX_SAFE_INTEGER
+      return sign * parseInt(digits, radix);
+    }
+    function ret64(hi32, lo32) {
+      if (hi32 < 0x200000) {
+        return sign * ((hi32 * 0x100000000) + lo32);
+      }
+      if (sign === -1) {
+        if (lo32 === 0) {
+          hi32 = -hi32;
+        }
+        else {
+          hi32 = ~hi32;
+          lo32 = -lo32 >>> 0;
+        }
+        if (resultUnsigned) {
+          hi32 >>>= 0;
+        }
+      }
+      if (result64) {
+        result64.hi32 = hi32;
+        result64.lo32 = lo32;
+        return result64;
+      }
+      return new TResult(hi32, lo32);
+    }
+    switch (radix) {
+      case 2:
+        return ret64(
+          parseInt(digits.slice(-64, -32) || '0', 2),
+          parseInt(digits.slice(-32), 2));
+      case 4:
+        return ret64(
+          parseInt(digits.slice(-32, -16) || '0', 4),
+          parseInt(digits.slice(-16), 4));
+      case 8:
+        // digit -11 is 6 bits hi, 2 bits lo
+        var hi = parseInt(digits.slice(-22, -10) || '0', 8);
+        hi = (hi / 4) >>> 0;
+        var lo = parseInt(digits.slice(-11), 8) >>> 0;
+        return ret64(hi, lo);
+      case 16:
+        return ret64(
+          parseInt(digits.slice(-8, -4) || '0', 16),
+          parseInt(digits.slice(-4), 16));
+      case 32:
+        // digit -7 is 30 bits hi, 2 bits lo
+        var hi = parseInt(digits.slice(-13, -6) || '0', 32);
+        hi = (hi / 4) >>> 0;
+        var lo = parseInt(digits.slice(-7), 32) >>> 0;
+        return ret64(hi, lo);
+      case 10:
+        if (literal <= Number.SAFE_MAX_INTEGER) {
+          return sign * literal;
+        }
+        break;
+      default:
+        var naive = parseInt(literal, radix);
+        if (naive <= Number.SAFE_MAX_INTEGER) {
+          return sign * naive;
+        }
+        break;
+    }
+  }
+  
   // The advice is, never add to standard object prototypes. Why is that?
   // Well, it's because some other code somewhere might also want to add to it too.
   // No fair. Why does that OTHER code get to have all the fun?
   
   // (Let's get this proof-of-concept working first. If you want, we can worry about being a good neighbor later.)
 
-  'use strict';
-  
   var mattress = {};
   
-  const INT_LITERAL_PATTERN = /^(?:0x([0-9a-fA-F]+)|0b([01]+)|(0|[1-9][0-9]*))$/;
   const ZERO_X31 = new Array(31 + 1).join('0'); // 31 zeros ought to be enough for anybody
   
   function Boxed64(hi32, lo32) {
@@ -52,9 +159,11 @@ define(function() {
               radix = 10;
             }
           }
-          if (literal.length < 11 || (radix <= 10 && literal.length < 16)) {
-            // decimal MAX_SAFE_INTEGER is 16 digits
-            // base-36 MAX_SAFE_INTEGER is 11 digits
+          if (literal.length < 11
+          || (radix <= 16 && literal.length < 14)
+          || (radix <= 10 && literal.length < 16)) {
+            // if the literal is short enough that we can tell
+            // the value is less than Number.MAX_SAFE_INTEGER
             return sign * parseInt(literal, radix);
           }
           var result = (sign < 0) ? new Int64Var() : new Uint64Var();
