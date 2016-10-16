@@ -45,17 +45,7 @@ define(function() {
       lo32 = -value.lo32 >>> 0;
       return -((value.hi32 * 0x100000000) + value.lo32);
     }
-    if (tempHiLo) {
-      if (tempHiLo !== value) {
-        tempHiLo.hi32 = value.hi32;
-        tempHiLo.lo32 = value.lo32;
-      }
-      return tempHiLo;
-    }
-    if (THiLo) {
-      return new THiLo(hi32, lo32);
-    }
-    return {hi32:hi32, lo32:lo32};
+    return value;
   }
   
   function unsigned64_n(value, tempHiLo, THiLo) {
