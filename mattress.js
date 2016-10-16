@@ -857,6 +857,8 @@ define(function() {
     literal64: literal64,
   };
   
+  /*
+  
   // The advice is, never add to standard object prototypes. Why is that?
   // Well, it's because some other code somewhere might also want to add to it too.
   // No fair. Why does that OTHER code get to have all the fun?
@@ -1567,8 +1569,6 @@ define(function() {
   };
   
   return mattress;
-  
-  /*
   
   var tempBuffer = new ArrayBuffer(8);
   var tempFloat32 = new Float32Array(tempBuffer);
