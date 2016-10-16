@@ -834,8 +834,99 @@ define(function() {
     return parse64_n(literal[4], 10, sign, tempHiLo, THiLo);
   }
   
+  const ZERO_X31 = new Array(31 + 1).join('0');
+  
+  function toString64(value, radix) {
+    if (typeof value === 'number') {
+      return value.toString(radix);
+    }
+    var hi = value.hi32, lo = value.lo32, sign;
+    if (hi < 0) {
+      if (lo === 0) {
+        hi = -hi;
+      }
+      else {
+        hi = ~hi;
+        lo = -lo >>> 0;
+      }
+      sign = '-';
+    }
+    else {
+      sign = '';
+    }
+    if (isNaN(radix)) radix = 10;
+    else if (radix & (radix-1) === 0) {
+      // radix is a power of 2
+      var padSize;
+      switch (radix) {
+        case 2: padSize = 32; break;
+        case 4: padSize = 16; break;
+        case 8:
+          padSize = 11;
+          lo += (hi & 3) * 0x100000000;
+          hi >>>= 2;
+          break;
+        case 16: padSize = 8; break;
+        case 32:
+          padSize = 7;
+          lo += (hi & 3) * 0x100000000;
+          hi >>>= 2;
+          break;
+        default: throw new RangeError('toString() radix argument must be between 2 and 36');
+      }
+      if (hi === 0) {
+        return sign + lo.toString(radix);
+      }
+      return sign + hi.toString(radix) + (ZERO_X31 + lo.toString(radix)).slice(-padSize);
+    }
+    else {
+      if (radix < 2 || radix > 36) {
+        throw new RangeError('toString() radix argument must be between 2 and 36');
+      }
+      // one of the weird radices, huh?
+      // let's support them anyway
+      radix = radix | 0;
+    }
+    var lo11 = lo & 0x7ff;
+    var hi53 = (hi * 0x100000000 + (lo - lo11));
+    if (hi53 === 0) {
+      return sign + lo11.toString(radix);
+    }
+    if (radix === 10) {
+      // it looks like only in decimal are the final digits zeroed out by default
+      hi53 = hi53.toPrecision(21);
+      hi53 = hi53.slice(0, hi53.lastIndexOf('.'));
+    }
+    else {
+      hi53 = hi53.toString(radix);
+    }
+    if (lo11 === 0) {
+      return sign + hi53;
+    }
+    lo11 = lo11.toString(radix);
+    hi53 = hi53.split('');
+    for (var i = lo11.length - 1, j = hi53.length - 1, carry = 0; i >= 0; i--, j--) {
+      var c = parseInt(lo11[i], radix) + parseInt(hi53[j], radix) + carry;
+      hi53[j] = (c % radix).toString(radix);
+      carry = (c / radix) | 0;
+    }
+    if (carry) {
+      for (; j >= 0; j--) {
+        var c = parseInt(hi53[j], radix) + carry;
+        hi53[j] = (c % radix).toString(radix);
+        carry = (c / radix) | 0;
+        if (!carry) {
+          return sign + hi53.join('');
+        }
+      }
+      return sign + carry.toString(radix) + hi53.join('');
+    }
+    return sign + hi53.join('');
+  }
+  
   return {
     literal64: literal64,
+    toString64: toString64,
   };
   
   /*
