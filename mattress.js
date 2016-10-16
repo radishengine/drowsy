@@ -604,7 +604,8 @@ define(function() {
   
   // 53 means it must be represented as a JavaScript Number, not a HiLo
   function multiplyUnsignedSmallBig53_n(a, b, tempHiLo, THiLo) {
-    if (b < 0x200000 || a < 0x4000000) {
+    var naive = a * b;
+    if (naive < MAX_SAFE) {
       return a * b;
     }
     return addUnsigned64_n(
