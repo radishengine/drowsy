@@ -46,8 +46,10 @@ define(function() {
       return -((value.hi32 * 0x100000000) + value.lo32);
     }
     if (tempHiLo) {
-      tempHiLo.hi32 = hi32;
-      tempHiLo.lo32 = lo32;
+      if (tempHiLo !== value) {
+        tempHiLo.hi32 = value.hi32;
+        tempHiLo.lo32 = value.lo32;
+      }
       return tempHiLo;
     }
     if (THiLo) {
