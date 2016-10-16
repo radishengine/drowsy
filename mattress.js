@@ -56,8 +56,7 @@ define(function() {
     return {hi32:hi32, lo32:lo32};
   }
   
-  function unsigned64(value, tempHiLo, THiLo) {
-    value = normalize64(value, tempHiLo, THiLo);
+  function unsigned64_n(value, tempHiLo, THiLo) {
     var hi32, lo32;
     if (typeof value === 'number') {
       if (value >= 0) {
@@ -91,7 +90,11 @@ define(function() {
     return {hi32:hi32, lo32:lo32};
   }
   
-  function signed64(value, tempHiLo, THiLo) {
+  function unsigned64(value, tempHiLo, THiLo) {
+    return unsigned64_n(normalize64(value, tempHiLo, THiLo), tempHiLo, THiLo);
+  }
+  
+  function signed64_n(value, tempHiLo, THiLo) {
     value = normalize64(value, tempHiLo, THiLo);
     if (typeof value === 'number' || value.hi32 < 0x80000000) {
       return value;
@@ -108,9 +111,11 @@ define(function() {
     return {hi32:hi32, lo32:lo32};
   }
   
-  function equal64(a, b, tempHiLoA, tempHiLoB) {
-    a = normalize64(a, tempHiLoA);
-    b = normalize64(b, tempHiLoB);
+  function signed64(value, tempHiLo, THiLo) {
+    return signed64_n(normalize64(value, tempHiLo, THiLo), tempHiLo, THiLo);
+  }
+  
+  function equal64_n(a, b) {
     if (a === b) return true;
     if (typeof a === 'number' || typeof b === 'number') {
       return false;
@@ -118,9 +123,11 @@ define(function() {
     return a.hi32 === b.hi32 && a.lo32 === b.lo32;
   }
   
-  function less64(a, b, tempHiLoA, tempHiLoB) {
-    a = normalize64(a, tempHiLoA);
-    b = normalize64(b, tempHiLoB);
+  function equal64(a, b, tempHiLoA, tempHiLoB) {
+    return equal64_n(normalize64(a, tempHiLoA), normalize64(b, tempHiLoB));
+  }
+  
+  function less64_n(a, b) {
     if (a === b) return false;
     if (typeof a === 'number') {
       if (typeof b === 'number') {
@@ -143,9 +150,11 @@ define(function() {
     return a.lo32 < b.lo32;
   }
   
-  function lessOrEqual64(a, b, tempHiLoA, tempHiLoB) {
-    a = normalize64(a, tempHiLoA);
-    b = normalize64(b, tempHiLoB);
+  function less64(a, b, tempHiLoA, tempHiLoB) {
+    return less64_n(normalize64(a, tempHiLoA), normalize64(b, tempHiLoB));
+  }
+  
+  function lessOrEqual64_n(a, b) {
     if (a === b) return true;
     if (typeof a === 'number') {
       if (typeof b === 'number') {
@@ -168,8 +177,11 @@ define(function() {
     return a.lo32 <= b.lo32;
   }
   
-  function negate64(value, tempHiLo, THiLo) {
-    value = normalize64(value, tempHiLo, THiLo);
+  function lessOrEqual64(a, b, tempHiLoA, tempHiLoB) {
+    return lessOrEqual64_n(normalize64(a, tempHiLoA), normalize64(b, tempHiLoB));
+  }
+  
+  function negate64_n(value, tempHiLo, THiLo) {
     if (typeof value === 'number') {
       return -value;
     }
@@ -194,8 +206,11 @@ define(function() {
     return normalize64(tempHiLo, tempHiLo, THiLo);
   }
   
-  function bitNot64(value, tempHiLo, THiLo) {
-    value = normalize64(value, tempHiLo, THiLo);
+  function negate64(value, tempHiLo, THiLo) {
+    return negate64_n(normalize64(value, tempHiLo, THiLo), tempHiLo, THiLo);
+  }
+  
+  function bitNot64_n(value, tempHiLo, THiLo) {
     if (typeof value === 'number') {
       // (-1 - MAX_SAFE) < MIN_SAFE
       if (value === MAX_SAFE) {
@@ -223,9 +238,11 @@ define(function() {
     return normalize64(tempHiLo, tempHiLo, THiLo);
   }
   
-  function bitOr64(a, b, tempHiLoA, tempHiLoB, THiLo) {
-    a = normalize64(a, tempHiLoA, THiLo);
-    b = normalize64(b, tempHiLoB, THiLo);
+  function bitNot64(value, tempHiLo, THiLo) {
+    return bitNot64_n(normalize64(value, tempHiLo, THiLo), tempHiLo, THiLo);
+  }
+  
+  function bitOr64_n(a, b, tempHiLo, THiLo) {
     var hi32, lo32;
     if (typeof a === 'number') {
       if (typeof b === 'number') {
@@ -235,12 +252,10 @@ define(function() {
           }
           return (a | b) >>> 0;
         }
-        a = unsigned64(a, tempHiLoA, THiLo);
-        b = unsigned64(b, tempHiLoB, THiLo);
-        if (typeof a === 'number' && typeof b === 'number') {
+        if (a >= 0 && b >= 0) {
           return ((a | b) >>> 0) + ((a / 0x100000000) | (b / 0x100000000)) * 0x100000000;
         }
-        return bitOr64(a, b, tempHiLoA, tempHiLoB, THiLo);
+        return bitOr64_n(unsigned64_n(a), unsigned64_n(b), tempHiLo, THiLo);
       }
       if (a === 0) return b;
       hi32 = (a / 0x100000000) | b.hi32;
@@ -255,22 +270,24 @@ define(function() {
       hi32 = a.hi32 | b.hi32;
       lo32 = (a.lo32 | b.lo32) >>> 0;
     }
-    if (tempHiLoA) {
-      tempHiLoA.hi32 = hi32;
-      tempHiLoA.lo32 = lo32;
+    if (tempHiLo) {
+      tempHiLo.hi32 = hi32;
+      tempHiLo.lo32 = lo32;
     }
     else if (THiLo) {
-      tempHiLoA = new THiLo(hi32, lo32);
+      tempHiLo = new THiLo(hi32, lo32);
     }
     else {
-      tempHiLoA = {hi32:hi32, lo32:lo32};
+      tempHiLo = {hi32:hi32, lo32:lo32};
     }
-    return normalize64(tempHiLoA, tempHiLoB, THiLo);
+    return normalize64(tempHiLo, tempHiLo, THiLo);
   }
   
-  function bitAnd64(a, b, tempHiLoA, tempHiLoB, THiLo) {
-    a = normalize64(a, tempHiLoA, THiLo);
-    b = normalize64(b, tempHiLoB, THiLo);
+  function bitOr64(a, b, tempHiLoA, tempHiLoB, THiLo) {
+    return bitOr64_n(normalize64(a, tempHiLoA, THiLo), normalize64(b, tempHiLoB, THiLo), tempHiLoA, THiLo);
+  }
+  
+  function bitAnd64_n(a, b, tempHiLo, THiLo) {
     var hi32, lo32;
     // since the factors were normalized as unsigned,
     // a and b will only be numbers if they are >= 0
@@ -282,12 +299,10 @@ define(function() {
           }
           return (a & b) >>> 0;
         }
-        a = unsigned64(a, tempHiLoA, THiLo);
-        b = unsigned64(b, tempHiLoB, THiLo);
-        if (typeof a === 'number' && typeof b === 'number') {
+        if (a >= 0 && b >= 0) {
           return ((a & b) >>> 0) + ((a / 0x100000000) & (b / 0x100000000)) * 0x100000000;
         }
-        return bitAnd64(a, b, tempHiLoA, tempHiLoB, THiLo);
+        return bitAnd64_n(unsigned64_n(a), unsigned64_n(b), tempHiLo, THiLo);
       }
       if (a === 0) return 0;
       hi32 = (a / 0x100000000) & b.hi32;
@@ -302,22 +317,24 @@ define(function() {
       hi32 = a.hi32 & b.hi32;
       lo32 = (a.lo32 & b.lo32) >>> 0;
     }
-    if (tempHiLoA) {
-      tempHiLoA.hi32 = hi32;
-      tempHiLoA.lo32 = lo32;
+    if (tempHiLo) {
+      tempHiLo.hi32 = hi32;
+      tempHiLo.lo32 = lo32;
     }
     else if (THiLo) {
-      tempHiLoA = new THiLo(hi32, lo32);
+      tempHiLo = new THiLo(hi32, lo32);
     }
     else {
-      tempHiLoA = {hi32:hi32, lo32:lo32};
+      tempHiLo = {hi32:hi32, lo32:lo32};
     }
-    return normalize64(tempHiLoA, tempHiLoB, THiLo);
+    return normalize64(tempHiLo, tempHiLo, THiLo);
   }
   
-  function bitXor64(a, b, tempHiLoA, tempHiLoB, THiLo) {
-    a = normalize64(a, tempHiLoA, THiLo);
-    b = normalize64(b, tempHiLoB, THiLo);
+  function bitAnd64(a, b, tempHiLoA, tempHiLoB, THiLo) {
+    return bitAnd64_n(normalize64(a, tempHiLoA, THiLo), normalize64(b, tempHiLoB, THiLo), tempHiLoA, THiLo);
+  }
+  
+  function bitXor64_n(a, b, tempHiLo, THiLo) {
     var hi32, lo32;
     if (typeof a === 'number') {
       if (typeof b === 'number') {
@@ -327,12 +344,10 @@ define(function() {
           }
           return (a ^ b) >>> 0;
         }
-        a = unsigned64(a, tempHiLoA, THiLo);
-        b = unsigned64(b, tempHiLoB, THiLo);
-        if (typeof a === 'number' && typeof b === 'number') {
+        if (a >= 0 && b >= 0) {
           return ((a ^ b) >>> 0) + ((a / 0x100000000) ^ (b / 0x100000000)) * 0x100000000;
         }
-        return bitXor64(a, b, tempHiLoA, tempHiLoB, THiLo);
+        return bitXor64_n(unsigned64_n(a), unsigned64_n(b), tempHiLo, THiLo);
       }
       if (a === 0) return b;
       hi32 = (a / 0x100000000) ^ b.hi32;
@@ -347,20 +362,21 @@ define(function() {
       hi32 = a.hi32 ^ b.hi32;
       lo32 = (a.lo32 ^ b.lo32) >>> 0;
     }
-    if (tempHiLoA) {
-      tempHiLoA.hi32 = hi32;
-      tempHiLoA.lo32 = lo32;
+    if (tempHiLo) {
+      tempHiLo.hi32 = hi32;
+      tempHiLo.lo32 = lo32;
     }
     else {
-      tempHiLoA = {hi32:hi32, lo32:lo32};
+      tempHiLo = {hi32:hi32, lo32:lo32};
     }
-    return normalize64(tempHiLoA, tempHiLoA, THiLo);
+    return normalize64(tempHiLo, tempHiLo, THiLo);
   }
   
-  function leftShift64(value, shift, tempHiLoA, tempHiLoB, THiLo) {
-    value = normalize64(value, tempHiLoA, THiLo);
-    if (value === 0) return 0;
-    shift = normalize64(shift, tempHiLoB, THiLo);
+  function bitXor64(a, b, tempHiLoA, tempHiLoB, THiLo) {
+    return bitXor64_n(normalize64(a, tempHiLoA, THiLo), normalize64(b, tempHiLoB, THiLo), tempHiLoA, THiLo);
+  } 
+  
+  function leftShift64_n(value, shift, tempHiLo, THiLo) {
     if (typeof shift !== 'number') {
       shift = shift.lo32;
     }
@@ -408,22 +424,27 @@ define(function() {
       hi32 = (hi32 << shift) | (lo32 >>> (32 - shift));
       lo32 = (lo32 << shift) >>> 0;
     }
-    if (tempHiLoA) {
-      tempHiLoA.hi32 = hi32;
-      tempHiLoA.lo32 = lo32;
+    if (tempHiLo) {
+      tempHiLo.hi32 = hi32;
+      tempHiLo.lo32 = lo32;
     }
     else if (THiLo) {
-      tempHiLoA = new THiLo(hi32, lo32);
+      tempHiLo = new THiLo(hi32, lo32);
     }
     else {
-      tempHiLoA = {hi32:hi32, lo32:lo32};
+      tempHiLo = {hi32:hi32, lo32:lo32};
     }
-    return normalize64(tempHiLoA, tempHiLoA, THiLo);
+    return normalize64(tempHiLo, tempHiLo, THiLo);
   }
   
-  const INT_LITERAL_PATTERN = /^(?:0x0*([0-9a-fA-F]+?)|0b0*([01]+?)|0*([0-9]+?))$/;
+  function leftShift64(value, shift, tempHiLoA, tempHiLoB, THiLo) {
+    value = normalize64(value, tempHiLoA, THiLo);
+    if (value === 0) return 0;
+    shift = normalize64(shift, tempHiLoB, THiLo);
+    return leftShift64_n(value, shift, tempHiLoA, THiLo);
+  }
   
-  function parse64(digits, radix, result64, resultUnsigned, TResult) {
+  function parse64(digits, radix, tempHiLo, THiLo) {
     var sign = digits.slice(0, 1);
     if (sign === '-') {
       digits = digits.slice(1);
@@ -436,20 +457,7 @@ define(function() {
       sign = +1;
     }
     if (isNaN(radix)) {
-      var literal = digits.match(INT_LITERAL_PATTERN);
-      if (!literal) return NaN;
-      if (typeof literal[1] === 'string') {
-        digits = literal[1];
-        radix = 16;
-      }
-      else if (typeof literal[2] === 'string') {
-        digits = literal[2];
-        radix = 2;
-      }
-      else {
-        digits = literal[3];
-        radix = 10;
-      }
+      radix = 10;
     }
     else {
       radix |= 0;
@@ -476,16 +484,16 @@ define(function() {
           hi32 = ~hi32;
           lo32 = -lo32 >>> 0;
         }
-        if (resultUnsigned) {
-          hi32 >>>= 0;
-        }
       }
-      if (result64) {
-        result64.hi32 = hi32;
-        result64.lo32 = lo32;
-        return result64;
+      if (tempHiLo) {
+        tempHiLo.hi32 = hi32;
+        tempHiLo.lo32 = lo32;
+        return tempHiLo;
       }
-      return new TResult(hi32, lo32);
+      if (THiLo) {
+        return new THiLo(hi32, lo32);
+      }
+      return {hi32:hi32, lo32:lo32};
     }
     switch (radix) {
       case 2:
@@ -513,33 +521,55 @@ define(function() {
         var lo = parseInt(digits.slice(-7), 32) >>> 0;
         return ret64(hi, lo);
       case 10:
-        if (digits.length === 16 && digits <= Number.SAFE_MAX_INTEGER) {
+        if (digits.length === 16 && digits <= MAX_SAFE) {
           return sign * digits;
         }
         break;
       default:
         var naive = parseInt(literal, radix);
-        if (naive <= Number.SAFE_MAX_INTEGER) {
+        if (naive <= MAX_SAFE) {
           return sign * naive;
         }
         break;
     }
-    var power = Object.seal({hi32:0, lo32:1}), temp = Object.seal({hi32:0, lo32:0});
-    result64 = result64 || (TResult ? new TResult : {});
-    result64.hi32 = result64.lo32 = 0;
-    for (var i = literal.length-1; i >= 0; i--) {
-      var digit = literal[i];
-      if (digit !== '0') continue; {
-        result.inc(temp.set_mul(power, parseInt(digit, radix)));
+    var powerHiLo = Object.seal({hi32:0, lo32:0});
+    var digitHiLo = Object.seal({hi32:0, lo32:0});
+    var power = 1;
+    if (tempHiLo) {
+      tempHiLo.hi32 = tempHiLo.lo32 = 0;
+    }
+    else if (THiLo) {
+      tempHiLo = new THiLo(0, 0);
+    }
+    else {
+      tempHiLo = {hi32:0, lo32: 0};
+    }
+    for (var i = digits.length-1; i >= 0; i--) {
+      var digit = digits[i];
+      if (digit !== '0') {
+        add64(tempHiLo, multiply64_n(power, parseInt(digit, radix), digitHiLo), tempHiLo);
       }
-      multiply64(
-        /* multiply power... */ power,
-        /* ... by radix */ radix,
-        /* store the result in power, unsigned */ power, true);
+      power = multiply64_n(power, radix, powerHiLo);
     }
     if (sign < 0) {
-      result.set_negate();
+      negate64(tempHiLo, tempHiLo);
     }
+    return tempHiLo;
+  }
+  
+  const LITERAL_PATTERN = /^([-+]?)(?:0x0*([0-9a-fA-F]+?)|0b0*([01]+?)|0*([0-9]+?))$/;
+  
+  function literal64(literal, tempHiLo, THiLo) {
+    literal = literal.match(LITERAL_PATTERN);
+    if (!literal) return NaN;
+    var prefix = literal[1];
+    if (typeof literal[2] === 'string') {
+      return parse64(prefix + literal[2], 16, tempHiLo, THiLo);
+    }
+    if (typeof literal[3] === 'string') {
+      return parse64(prefix + literal[3], 2, tempHiLo, THiLo);
+    }
+    return parse64(prefix + literal[4], 10, tempHiLo, THiLo);
   }
   
   // The advice is, never add to standard object prototypes. Why is that?
