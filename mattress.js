@@ -632,15 +632,14 @@ define(function() {
         }
         break;
       default:
-        var naive = parseInt(literal, radix);
+        var naive = parseInt(digits, radix);
         if (naive <= MAX_SAFE) {
           return sign * naive;
         }
         break;
     }
     var powerHiLo = Object.seal({hi32:0, lo32:0});
-    var digitHiLo = Object.seal({hi32:0, lo32:0});
-    var power = 1;
+    var digitToPowerHiLo = Object.seal({hi32:0, lo32:0});
     if (tempHiLo) {
       tempHiLo.hi32 = tempHiLo.lo32 = 0;
     }
@@ -650,17 +649,18 @@ define(function() {
     else {
       tempHiLo = {hi32:0, lo32: 0};
     }
+    var power = 1, total = 0;
     for (var i = digits.length-1; i >= 0; i--) {
       var digit = digits[i];
       if (digit !== '0') {
-        add64(tempHiLo, multiply64_n(power, parseInt(digit, radix), digitHiLo), tempHiLo);
+        total = add64_n(total, multiply64_n(power, parseInt(digit, radix), digitToPowerHiLo), tempHiLo);
       }
       power = multiply64_n(power, radix, powerHiLo);
     }
     if (sign < 0) {
-      negate64(tempHiLo, tempHiLo);
+      total = negate64_n(total, tempHiLo);
     }
-    return tempHiLo;
+    return total;
   }
   
   const LITERAL_PATTERN = /^([-+]?)(?:0x0*([0-9a-fA-F]+?)|0b0*([01]+?)|0*([0-9]+?))$/;
