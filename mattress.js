@@ -293,8 +293,7 @@ define(function() {
   }
   
   function leftShift64(value, shift, tempResult64a, tempResult64b, resultUnsigned, TResult64) {
-    // normalize value as unsigned, shift as signed
-    value = normalize64(value, tempResult64a, true);
+    value = normalize64(value, tempResult64a, false);
     if (value === 0) return 0;
     shift = normalize64(shift, tempResult64b, false);
     if (typeof shift !== 'number') {
@@ -304,14 +303,33 @@ define(function() {
     if (shift === 0) return value;
     var hi32, lo32;
     if (typeof value === 'number') {
-      if (shift < 53) {
-        var naive = value * Math.pow(2, shift);
-        if (naive >= Number.MIN_SAFE_INTEGER && naive <= Number.MAX_SAFE_INTEGER) {
-          return naive;
+      if (value < 0) {
+        if (shift < 53) {
+          var naive = value * Math.pow(2, shift);
+          if (naive >= Number.MIN_SAFE_INTEGER) {
+            return naive;
+          }
+        }
+        value = -value;
+        lo32 = value >>> 0;
+        if (lo32 === 0) {
+          hi32 = -(value / 0x100000000);
+        }
+        else {
+          hi32 = ~(value / 0x100000000);
+          lo32 = -lo32 >>> 0;
         }
       }
-      hi32 = (value / 0x100000000) >>> 0;
-      lo32 = value >>> 0;
+      else {
+        if (shift < 53) {
+          var naive = value * Math.pow(2, shift);
+          if (naive <= Number.MAX_SAFE_INTEGER) {
+            return naive;
+          }
+        }
+        hi32 = (value / 0x100000000) >>> 0;
+        lo32 = value >>> 0;
+      }
     }
     else {
       hi32 = value.hi32;
