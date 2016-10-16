@@ -550,27 +550,7 @@ define(function() {
     return rightShiftArithmetic64_n(value, shift, tempHiLoA, THiLo);
   }
   
-  function parse64(digits, radix, tempHiLo, THiLo) {
-    var sign = digits.slice(0, 1);
-    if (sign === '-') {
-      digits = digits.slice(1);
-      sign = -1;
-    }
-    else {
-      if (sign === '+') {
-        digits = digits.slice(1);
-      }
-      sign = +1;
-    }
-    if (isNaN(radix)) {
-      radix = 10;
-    }
-    else {
-      radix |= 0;
-      if (radix < 2 || radix > 36) {
-        return NaN;
-      }
-    }
+  function parse64_n(digits, radix, sign, tempHiLo, THiLo) {
     if (digits.length < 11
     || (radix <= 16 && digits.length < 14)
     || (radix <= 10 && digits.length < 16)) {
@@ -663,19 +643,43 @@ define(function() {
     return total;
   }
   
+  function parse64(digits, radix, tempHiLo, THiLo) {
+    if (isNaN(radix)) {
+      radix = 10;
+    }
+    else {
+      radix |= 0;
+      if (radix < 2 || radix > 36) {
+        return NaN;
+      }
+    }
+    var sign = digits.slice(0, 1);
+    if (sign === '-') {
+      digits = digits.slice(1);
+      sign = -1;
+    }
+    else {
+      if (sign === '+') {
+        digits = digits.slice(1);
+      }
+      sign = +1;
+    }
+    return parse64_n(digits, radix, sign, tempHiLo, THiLo);
+  }
+  
   const LITERAL_PATTERN = /^([-+]?)(?:0x0*([0-9a-fA-F]+?)|0b0*([01]+?)|0*([0-9]+?))$/;
   
   function literal64(literal, tempHiLo, THiLo) {
     literal = literal.match(LITERAL_PATTERN);
     if (!literal) return NaN;
-    var prefix = literal[1];
+    var sign = literal[1] === '-' ? -1 : +1;
     if (typeof literal[2] === 'string') {
-      return parse64(prefix + literal[2], 16, tempHiLo, THiLo);
+      return parse64_n(literal[2], 16, sign, tempHiLo, THiLo);
     }
     if (typeof literal[3] === 'string') {
-      return parse64(prefix + literal[3], 2, tempHiLo, THiLo);
+      return parse64_n(literal[3], 2, sign, tempHiLo, THiLo);
     }
-    return parse64(prefix + literal[4], 10, tempHiLo, THiLo);
+    return parse64_n(literal[4], 10, sign, tempHiLo, THiLo);
   }
   
   // The advice is, never add to standard object prototypes. Why is that?
