@@ -95,7 +95,6 @@ define(function() {
   }
   
   function signed64_n(value, tempHiLo, THiLo) {
-    value = normalize64(value, tempHiLo, THiLo);
     if (typeof value === 'number' || value.hi32 < 0x80000000) {
       return value;
     }
@@ -214,7 +213,7 @@ define(function() {
     if (typeof value === 'number') {
       // (-1 - MAX_SAFE) < MIN_SAFE
       if (value === MAX_SAFE) {
-        var hi32 = ~0x200000, lo32 = -1;
+        var hi32 = -0x200000, lo32 = 0;
         if (tempHiLo) {
           tempHiLo.hi32 = hi32;
           tempHiLo.lo32 = lo32;
