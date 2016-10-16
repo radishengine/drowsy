@@ -2,10 +2,84 @@ define(function() {
   
   'use strict';
   
-  const INT_LITERAL_PATTERN = /^(?:0x0*([0-9a-fA-F]+?)|0b0*([01]+?)|0*([0-9]+?))$/;
+  // LOW-LEVEL 64-BIT INTEGER HANDLING /////////////////////////////////////////////
   
-  function multiply64(hi1, lo1, hi2, lo2, result64, resultUnsigned, TResult) {
+  function normalize64(value, result64, resultUnsigned, TResult) {
+    function retHiLo(hi32, lo32) {
+      if (result64) {
+        result64.hi32 = hi32;
+        result64.lo32 = lo32;
+        return result64;
+      }
+      if (TResult) {
+        return new TResult(hi32, lo32);
+      }
+      return {hi32:hi32, lo32:lo32};
+    }
+    if (typeof value === 'number') {
+      if (resultUnsigned) {
+        if (value < 0) {
+          value = -value;
+          var lo32 = value >>> 0, hi32 = (value / 0x100000000);
+          if (lo32 === 0) {
+            return retHiLo(-hi32 >>> 0, 0);
+          }
+          return retHiLo(~hi32 >>> 0, -lo32 >>> 0);
+        }
+        if (value <= Number.MAX_SAFE_INTEGER) {
+          return Math.floor(value);
+        }
+        return retHiLo((value / 0x100000000) >>> 0, value >>> 0);
+      }
+      if (value < 0) {
+        if (value >= Number.MIN_SAFE_INTEGER) {
+          return Math.floor(value);
+        }
+        value = -value;
+        var lo32 = value >>> 0, hi32 = (value / 0x100000000);
+        if (lo32 === 0) {
+          return retHiLo(-hi32 | 0, 0);
+        }
+        return retHiLo(~hi32, -lo32 >>> 0);
+      }
+      return retHiLo((value / 0x1000000) >>> 0, value >>> 0);
+    }
+    if (resultUnsigned) {
+      if (value.hi32 < 0) {
+        return retHiLo(value.hi32 >>> 0, value.lo32 >>> 0);
+      }
+      if (value.hi32 < 0x200000) {
+        return (value.hi32 * 0x100000000) + value.lo32;
+      }
+      return value;
+    }
+    if (value.hi32 < 0x200000) {
+      if (value.hi32 < 0) {
+        if (value.hi32 <= -0x200000) {
+          return value;
+        }
+        if (value.lo32 === 0) {
+          return value.hi32 * 0x100000000;
+        }
+        var hi32 = ~value.hi32, lo32 = -value.lo32 >>> 0;
+        return -((hi32 * 0x100000000) + value.lo32);
+      }
+      return (value.hi32 * 0x100000000) + value.lo32;
+    }
+    return value;
   }
+  
+  function negate64(value, result64, resultUnsigned, TResult) {
+    if (typeof value === 'number') {
+      if (value < 
+    }
+  }
+  
+  function multiply64(factor1, factor2, result64, resultUnsigned, TResult) {
+    
+  }
+  
+  const INT_LITERAL_PATTERN = /^(?:0x0*([0-9a-fA-F]+?)|0b0*([01]+?)|0*([0-9]+?))$/;
   
   function parse64(digits, radix, result64, resultUnsigned, TResult) {
     var sign = digits.slice(0, 1);
@@ -97,8 +171,8 @@ define(function() {
         var lo = parseInt(digits.slice(-7), 32) >>> 0;
         return ret64(hi, lo);
       case 10:
-        if (literal <= Number.SAFE_MAX_INTEGER) {
-          return sign * literal;
+        if (digits.length === 16 && digits <= Number.SAFE_MAX_INTEGER) {
+          return sign * digits;
         }
         break;
       default:
@@ -107,6 +181,22 @@ define(function() {
           return sign * naive;
         }
         break;
+    }
+    var power = Object.seal({hi32:0, lo32:1}), temp = Object.seal({hi32:0, lo32:0});
+    result64 = result64 || (TResult ? new TResult : {});
+    result64.hi32 = result64.lo32 = 0;
+    for (var i = literal.length-1; i >= 0; i--) {
+      var digit = literal[i];
+      if (digit !== '0') continue; {
+        result.inc(temp.set_mul(power, parseInt(digit, radix)));
+      }
+      multiply64(
+        /* multiply power... */ power,
+        /* ... by radix */ radix,
+        /* store the result in power, unsigned */ power, true);
+    }
+    if (sign < 0) {
+      result.set_negate();
     }
   }
   
