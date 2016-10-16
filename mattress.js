@@ -376,11 +376,6 @@ define(function() {
   }
   
   function leftShift64_n(value, shift, tempHiLo, THiLo) {
-    if (typeof shift !== 'number') {
-      shift = shift.lo32;
-    }
-    shift &= 63;
-    if (shift === 0) return value;
     var hi32, lo32;
     if (typeof value === 'number') {
       if (value < 0) {
@@ -440,15 +435,15 @@ define(function() {
     value = normalize64(value, tempHiLoA, THiLo);
     if (value === 0) return 0;
     shift = normalize64(shift, tempHiLoB, THiLo);
-    return leftShift64_n(value, shift, tempHiLoA, THiLo);
-  }
-  
-  function rightShiftLogical64_n(value, shift, tempHiLo, THiLo) {
     if (typeof shift !== 'number') {
       shift = shift.lo32;
     }
     shift &= 63;
-    if (shift === 0) return unsigned64_n(value);
+    if (shift === 0) return value;
+    return leftShift64_n(value, shift, tempHiLoA, THiLo);
+  }
+  
+  function rightShiftLogical64_n(value, shift, tempHiLo, THiLo) {
     var hi32, lo32;
     if (typeof value === 'number') {
       if (value >= 0) {
@@ -493,7 +488,66 @@ define(function() {
     value = normalize64(value, tempHiLoA, THiLo);
     if (value === 0) return 0;
     shift = normalize64(shift, tempHiLoB, THiLo);
+    if (typeof shift !== 'number') {
+      shift = shift.lo32;
+    }
+    shift &= 63;
+    if (shift === 0) return unsigned64_n(value);
     return rightShiftLogical64_n(value, shift, tempHiLoA, THiLo);
+  }
+  
+  function rightShiftArithmetic64_n(value, shift, tempHiLo, THiLo) {
+    if (shift === 0) return unsigned64_n(value);
+    var hi32, lo32;
+    if (typeof value === 'number') {
+      if (value >= 0) {
+        return Math.floor(value / Math.pow(2, shift));
+      }
+      value = -value;
+      lo32 = value >>> 0;
+      if (lo32 === 0) {
+        hi32 = -(value / 0x100000000) | 0;
+      }
+      else {
+        hi32 = ~(value / 0x100000000);
+        lo32 = -lo32 >>> 0;
+      }
+    }
+    else {
+      hi32 = value.hi32 | 0;
+      lo32 = value.lo32;
+    }
+    if (shift >= 32) {
+      lo32 = hi32 >> (shift - 32);
+      hi32 = lo32 < 0 ? -1 : 0;
+      lo32 >>>= 0;
+    }
+    else {
+      lo32 = ((lo32 >> shift) | (hi32 << (32 - shift))) >>> 0;
+      hi32 >>= shift;
+    }
+    if (tempHiLo) {
+      tempHiLo.hi32 = hi32;
+      tempHiLo.lo32 = lo32;
+    }
+    else if (THiLo) {
+      tempHiLo = new THiLo(hi32, lo32);
+    }
+    else {
+      tempHiLo = {hi32:hi32, lo32:lo32};
+    }
+    return normalize64(tempHiLo, tempHiLo, THiLo);
+  }
+  
+  function rightShiftArithmetic64(value, shift, tempHiLoA, tempHiLoB, THiLo) {
+    value = normalize64(value, tempHiLoA, THiLo);
+    if (value === 0) return 0;
+    shift = normalize64(shift, tempHiLoB, THiLo);
+    if (typeof shift !== 'number') {
+      shift = shift.lo32;
+    }
+    shift &= 63;
+    return rightShiftArithmetic64_n(value, shift, tempHiLoA, THiLo);
   }
   
   function parse64(digits, radix, tempHiLo, THiLo) {
