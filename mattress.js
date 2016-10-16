@@ -292,6 +292,49 @@ define(function() {
     return normalize64(tempResult64a, tempResult64a, resultUnsigned, TResult64);
   }
   
+  function leftShift64(value, shift, tempResult64a, tempResult64b, resultUnsigned, TResult64) {
+    // normalize value as unsigned, shift as signed
+    value = normalize64(value, tempResult64a, true);
+    if (value === 0) return 0;
+    shift = normalize64(shift, tempResult64b, false);
+    if (typeof shift !== 'number') {
+      shift = shift.lo32;
+    }
+    shift &= 63;
+    if (shift === 0) return value;
+    var hi32, lo32;
+    if (typeof value === 'number') {
+      if (shift < 53) {
+        var naive = value * Math.pow(2, shift);
+        if (naive >= Number.MIN_SAFE_INTEGER && naive <= Number.MAX_SAFE_INTEGER) {
+          return naive;
+        }
+      }
+      hi32 = (value / 0x100000000) >>> 0;
+      lo32 = value >>> 0;
+    }
+    else {
+      hi32 = value.hi32;
+      lo32 = value.lo32;
+    }
+    if (shift >= 32) {
+      hi32 = lo32 << (shift - 32);
+      lo32 = 0;
+    }
+    else {
+      hi32 = (hi32 << shift) | (lo32 >>> (32 - shift));
+      lo32 = (lo32 << shift) >>> 0;
+    }
+    if (tempResult64a) {
+      tempResult64a.hi32 = hi32;
+      tempResult64a.lo32 = lo32;
+    }
+    else {
+      tempResult64a = {hi32:hi32, lo32:lo32};
+    }
+    return normalize64(tempResult64a, tempResult64a, resultUnsigned, TResult64);
+  }
+  
   const INT_LITERAL_PATTERN = /^(?:0x0*([0-9a-fA-F]+?)|0b0*([01]+?)|0*([0-9]+?))$/;
   
   function parse64(digits, radix, result64, resultUnsigned, TResult) {
