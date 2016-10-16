@@ -58,39 +58,17 @@ define(function() {
             // base-36 MAX_SAFE_INTEGER is 11 digits
             return sign * parseInt(literal, radix);
           }
-          var buffer = new ArrayBuffer(8);
-          var bytes = new Uint8Array(buffer);
-          var dv = new DataView(buffer);
-          for (var i = literal.length-1, power = 1; i >= 0; i--, power *= radix) {
-            var c = power * parseInt(literal[i], radix);
-            if (c !== 0) {
-              var b = 0;
-              do {
-                if (c & 1) {
-                  for (var byte_i = b >> 3, carry = (1 << (b & 7)); byte_i < 8; byte_i++) {
-                    carry += bytes[byte_i];
-                    bytes[byte_i] = carry;
-                    carry >>>= 8;
-                    if (carry === 0) break;
-                  }
-                }
-                c >>= 1;
-                b++;
-              } while (c !== 0);
-            }
+          var result = (sign < 0) ? new Int64Var() : new Uint64Var();
+          var temp = new Uint64Var();
+          for (var i = literal.length-1, power = 1; i >= 0; i--, power = power.u64_mul(radix)) {
+            var digit = parseInt(literal[i], radix);
+            if (digit === 0) continue;
+            result.inc(temp.set(power).set_mul(digit));
           }
-          var lo32 = dv.getUint32(0, true);
-          var hi32 = dv.getUint32(4, true);
-          if (hi32 < 0x200000) {
-            return sign * (hi32 * 0x100000000 + lo32);
+          if (sign < 0) {
+            result.set_negate();
           }
-          if (sign === -1) {
-            if (lo32 === 0) {
-              return new Boxed64(-(hi32 | 0), 0);
-            }
-            return new Boxed64(~hi32, -lo32 >>> 0);
-          }
-          return new Boxed64(hi32 >>> 0, lo32 >>> 0);
+          return Object.freeze(result);
         case 'number':
           if (arguments[0] > Number.MAX_SAFE_INTEGER) {
             return new Boxed64(
@@ -128,6 +106,8 @@ define(function() {
     Object.freeze(this);
   }
   Boxed64.prototype = {
+    hi32: 0,
+    lo32: 0,
     get asInt8() { return this.lo32 << 24 >> 24; },
     get asInt16() { return this.lo32 << 16 >> 16; },
     get asInt32() { return this.lo32; },
@@ -355,11 +335,12 @@ define(function() {
     },
   });
   
-  function Uint64(hi32, lo32) {
+  function Uint64Var(hi32, lo32) {
+    if (arguments.length === 0) return;
     this.hi32 = hi32;
     this.lo32 = lo32;
   }
-  Uint64.prototype = Object.assign(new Boxed64, {
+  Uint64Var.prototype = Object.assign(new Boxed64, {
     set: function(value) {
       if (typeof value === 'string') {
         value = Boxed64(value);
@@ -429,14 +410,114 @@ define(function() {
       }
       return this;
     },
+    set_negate: function() {
+      if (this.lo32 === 0) {
+        this.hi32 = -this.hi32 >>> 0;
+        return;
+      }
+      this.hi32 = ~this.hi32 >>> 0;
+      this.lo32 = -this.lo32 >>> 0;
+      return this;
+    },
+    set_mul: function(factor) {
+      if (typeof factor === 'string') {
+        factor = Boxed64(factor);
+      }
+      var f_hi, f_lo;
+      if (typeof factor === 'number') {
+        if (factor < 0) {
+          factor = -factor;
+          f_lo = factor >>> 0;
+          if (f_lo === 0) {
+            f_hi = -(factor / 0x100000000) >>> 0;
+          }
+          else {
+            f_hi = ~(factor / 0x100000000) >>> 0;
+            f_lo = -f_lo >>> 0;
+          }
+        }
+        else {
+          f_hi = (factor / 0x100000000) >>> 0;
+          f_lo = factor >>> 0;
+        }
+      }
+      else {
+        f_hi = factor.hi32 >>> 0;
+        f_lo = factor.lo32 >>> 0;
+      }
+      var lo = this.lo32, hi = this.hi32;
+      if (f_lo < lo) {
+        var temp = lo;
+        lo = f_lo;
+        f_lo = temp;
+      }
+      
+      var temp_l, temp_s;
+      
+      if (lo < f_lo) {
+        temp_l = f_lo;
+        temp_s = lo;
+      }
+      else {
+        temp_l = lo;
+        temp_s = f_lo;
+      }
+      
+      if (temp_l <= 0x4000000 || temp_s <= 0x200000) {
+        var result = temp_l * temp_s;
+        this.lo32 = result >>> 0;
+        hi = (hi + ((result / 0x100000000) >>> 0)) >>> 0;
+      }
+      else {
+        var mul = temp_s * (temp_l & 0x3ffffff);
+        hi = (hi + (temp_s >>> 8)) >>> 0;
+        hi = (hi + ((mul / 0x100000000) >>> 0)) >>> 0;
+        this.lo32 = ( (temp_s << 26) + (mul >>> 0) ) >>> 0;
+      }
+      
+      if (hi < f_lo) {
+        temp_l = f_lo;
+        temp_s = hi;
+      }
+      else {
+        temp_l = hi;
+        temp_s = f_lo;
+      }
+      
+      if (temp_l <= 0x4000000 || temp_s <= 0x200000) {
+        hi = (temp_l * temp_s) >>> 0;
+      }
+      else {
+        hi = ( (temp_s << 26) + ((temp_s * (temp_l & 0x3ffffff)) >>> 0) ) >>> 0;
+      }
+      
+      if (lo < f_hi) {
+        temp_l = f_hi;
+        temp_s = lo;
+      }
+      else {
+        temp_l = lo;
+        temp_s = f_hi;
+      }
+      
+      if (temp_l <= 0x4000000 || temp_s <= 0x200000) {
+        this.hi32 = (hi + (temp_l * temp_s)) >>> 0;
+      }
+      else {
+        this.hi32 = (hi + ( (temp_s << 26) + ((temp_s * (temp_l & 0x3ffffff)) >>> 0) )) >>> 0;
+      }
+      
+      return this;
+    },
   });
   mattress.Uint64 = Uint64;
   
-  function Int64(hi32, lo32) {
+  function Int64Var(hi32, lo32) {
+    if (arguments.length === 0) return;
     this.hi32 = hi32;
     this.lo32 = lo32;
   }
-  Int64.prototype = Object.assign(new Boxed64, {
+  Int64Var.prototype = Object.assign(new Boxed64, {
     set: function(value) {
       if (typeof value === 'string') {
         value = Boxed64(value);
@@ -505,6 +586,15 @@ define(function() {
       else if (hi !== 0) {
         this.hi32 = ((this.hi32 >>> 0) + hi) | 0;
       }
+      return this;
+    },
+    set_negate: function() {
+      if (this.lo32 === 0) {
+        this.hi32 = -this.hi32 | 0;
+        return this;
+      }
+      this.hi32 = ~this.hi32 | 0;
+      this.lo32 = -this.lo32 >>> 0;
       return this;
     },
   });
