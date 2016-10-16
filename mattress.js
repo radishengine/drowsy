@@ -607,7 +607,7 @@ define(function() {
     if (b < 0x200000 || a < 0x4000000) {
       return a * b;
     }
-    return add64_n(
+    return addUnsigned64_n(
       a * (b & 0x3ffffff),
       leftShift64_n(a, 26, tempHiLo, THiLo),
       tempHiLo,
@@ -670,7 +670,7 @@ define(function() {
     
     var result = multiplyUnsignedSmallBig53_n(lo32A, lo32B, tempHiLoA, THiLo);
     
-    result = add64_n(
+    result = addUnsigned64_n(
       result,
       leftShift64_n(
         multiplyUnsignedSmallBig53_n(lo32B, hi32A, tempHiLoB, THiLo),
@@ -680,7 +680,7 @@ define(function() {
       tempHiLoA,
       THiLo);
     
-    result = add64_n(
+    result = addUnsigned64_n(
       result,
       leftShift64_n(
         multiplyUnsignedSmallBig53_n(lo32A, hi32B, tempHiLoB, THiLo),
