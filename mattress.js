@@ -696,17 +696,17 @@ define(function() {
   function multiply64(a, b, tempHiLoA, tempHiLoB, THiLo) {
     var sign = +1;
     a = normalize64(a, tempHiLoA);
-    if (less64(a, 0)) {
+    if (less64_n(a, 0)) {
       a = negate64(a, tempHiLoA);
       sign = -sign;
     }
     b = normalize64(b, tempHiLoB);
-    if (less64(b, 0)) {
+    if (less64_n(b, 0)) {
       b = negate64(b, tempHiLoB);
       sign = -sign;
     }
     var result;
-    if (less64(b, a)) {
+    if (less64_n(b, a)) {
       result = multiplyUnsignedSmallBig64_n(b, a, tempHiLoA, tempHiLoB, THiLo);
     }
     else {
