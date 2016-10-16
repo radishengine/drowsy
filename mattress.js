@@ -124,10 +124,7 @@ define(function() {
       if (typeof b === 'number') {
         return a < b;
       }
-      if (a < 0) {
-        return b.hi32 >= 0;
-      }
-      return b.hi32 < 0;
+      return b.hi32 >= 0;
     }
     if (typeof b === 'number') {
       return a.hi32 < 0;
