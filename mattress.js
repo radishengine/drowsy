@@ -257,6 +257,41 @@ define(function() {
     return normalize64(tempResult64a, tempResult64a, resultUnsigned, TResult64);
   }
   
+  function bitXor64(a, b, tempResult64a, tempResult64b, resultUnsigned, TResult64) {
+    // normalize the factors as unsigned
+    a = normalize64(a, tempResult64a, true);
+    b = normalize64(b, tempResult64b, true);
+    var hi32, lo32;
+    // since the factors were normalized as unsigned,
+    // a and b will only be numbers if they are >= 0
+    if (typeof a === 'number') {
+      if (typeof b === 'number') {
+        if (a < 0x100000000 && b < 0x100000000) {
+          return (a ^ b) >>> 0;
+        }
+        return ((a ^ b) >>> 0) + ((a / 0x100000000) ^ (b / 0x100000000)) * 0x100000000;
+      }
+      hi32 = (a / 0x100000000) ^ b.hi32;
+      lo32 = (a ^ b.lo32) >>> 0;
+    }
+    else if (typeof b === 'number') {
+      hi32 = a.hi32 ^ (b / 0x100000000);
+      lo32 = (a.hi32 ^ b) >>> 0;
+    }
+    else {
+      hi32 = a.hi32 ^ b.hi32;
+      lo32 = (a.lo32 ^ b.lo32) >>> 0;
+    }
+    if (tempResult64a) {
+      tempResult64a.hi32 = hi32;
+      tempResult64a.lo32 = lo32;
+    }
+    else {
+      tempResult64a = {hi32:hi32, lo32:lo32};
+    }
+    return normalize64(tempResult64a, tempResult64a, resultUnsigned, TResult64);
+  }
+  
   const INT_LITERAL_PATTERN = /^(?:0x0*([0-9a-fA-F]+?)|0b0*([01]+?)|0*([0-9]+?))$/;
   
   function parse64(digits, radix, result64, resultUnsigned, TResult) {
