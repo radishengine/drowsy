@@ -663,25 +663,29 @@ define(function() {
     
     var tempHiLoC = Object.seal({hi32:0, lo32:0});
     
-    result = addUnsigned64_n(
-      result,
-      leftShift64_n(
-        multiplyUnsignedSmallBig64_n(lo32B, hi32A, tempHiLoB, tempHiLoC, THiLo),
-        32,
+    if (hi32A !== 0) {
+      result = addUnsigned64_n(
+        result,
+        leftShift64_n(
+          multiplyUnsignedSmallBig64_n(lo32B, hi32A, tempHiLoB, tempHiLoC, THiLo),
+          32,
+          tempHiLoA,
+          THiLo),
         tempHiLoA,
-        THiLo),
-      tempHiLoA,
-      THiLo);
+        THiLo);
+    }
     
-    result = addUnsigned64_n(
-      result,
-      leftShift64_n(
-        multiplyUnsignedSmallBig64_n(lo32A, hi32B, tempHiLoB, tempHiLoC, THiLo),
-        32,
+    if (hi32B !== 0) {
+      result = addUnsigned64_n(
+        result,
+        leftShift64_n(
+          multiplyUnsignedSmallBig64_n(lo32A, hi32B, tempHiLoB, tempHiLoC, THiLo),
+          32,
+          tempHiLoA,
+          THiLo),
         tempHiLoA,
-        THiLo),
-      tempHiLoA,
-      THiLo);
+        THiLo);
+    }
     
     return result;
   }
