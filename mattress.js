@@ -4,15 +4,15 @@ define(function() {
   
   // LOW-LEVEL 64-BIT INTEGER HANDLING /////////////////////////////////////////////
   
-  function normalize64(value, result64, resultUnsigned, TResult) {
+  function normalize64(value, tempResult64, resultUnsigned, TResult64) {
     function retHiLo(hi32, lo32) {
-      if (result64) {
-        result64.hi32 = hi32;
-        result64.lo32 = lo32;
-        return result64;
+      if (tempResult64) {
+        tempResult64.hi32 = hi32;
+        tempResult64.lo32 = lo32;
+        return tempResult64;
       }
-      if (TResult) {
-        return new TResult(hi32, lo32);
+      if (TResult64) {
+        return new TResult64(hi32, lo32);
       }
       return {hi32:hi32, lo32:lo32};
     }
@@ -69,14 +69,64 @@ define(function() {
     return value;
   }
   
-  function negate64(value, result64, resultUnsigned, TResult) {
-    if (typeof value === 'number') {
-      if (value < 
+  function equals64(a, b, tempResult64a, tempResult64b) {
+    a = normalize64(a, tempResult64a);
+    b = normalize64(b, tempResult64b);
+    if (a === b) return true;
+    if (typeof a === 'number' || typeof b === 'number') {
+      return false;
     }
+    return a.hi32 === b.hi32 && a.lo32 === b.lo32;
   }
   
-  function multiply64(factor1, factor2, result64, resultUnsigned, TResult) {
-    
+  function lessThan64(a, b, tempResult64a, tempResult64b) {
+    a = normalize64(a, tempResult64a);
+    b = normalize64(b, tempResult64b);
+    if (a === b) return false;
+    if (typeof a === 'number') {
+      if (typeof b === 'number') {
+        return a < b;
+      }
+      if (a < 0) {
+        return b.hi32 >= 0;
+      }
+      return b.hi32 < 0;
+    }
+    if (typeof b === 'number') {
+      if (b < 0) {
+        return a.hi32 < 0;
+      }
+      return a.hi32 >= 0;
+    }
+    var hi_diff = a.hi32 - b.hi32;
+    if (hi_diff < 0) return true;
+    if (hi_diff > 0) return false;
+    return a.lo32 < b.lo32;
+  }
+  
+  function lessOrEqual64(a, b, tempResult64a, tempResult64b) {
+    a = normalize64(a, tempResult64a);
+    b = normalize64(b, tempResult64b);
+    if (a === b) return true;
+    if (typeof a === 'number') {
+      if (typeof b === 'number') {
+        return a <= b;
+      }
+      if (a < 0) {
+        return b.hi32 >= 0;
+      }
+      return b.hi32 < 0;
+    }
+    if (typeof b === 'number') {
+      if (b < 0) {
+        return a.hi32 < 0;
+      }
+      return a.hi32 >= 0;
+    }
+    var hi_diff = a.hi32 - b.hi32;
+    if (hi_diff < 0) return true;
+    if (hi_diff > 0) return false;
+    return a.lo32 <= b.lo32;
   }
   
   const INT_LITERAL_PATTERN = /^(?:0x0*([0-9a-fA-F]+?)|0b0*([01]+?)|0*([0-9]+?))$/;
