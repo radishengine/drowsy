@@ -550,6 +550,58 @@ define(function() {
     return rightShiftArithmetic64_n(value, shift, tempHiLoA, THiLo);
   }
   
+  function addUnsigned64_n(a, b, tempHiLo, THiLo) {
+    var hi32, lo32;
+    if (b === 0) return a;
+    if (typeof a === 'number') {
+      if (typeof b === 'number') {
+        var naive = a + b;
+        if (naive <= MAX_SAFE) {
+          return naive;
+        }
+      }
+      if (a === 0) return b;
+      hi32 = (a / 0x100000000) >>> 0;
+      lo32 = a >>> 0;
+    }
+    else {
+      hi32 = a.hi32 >>> 0;
+      lo32 = a.lo32;
+    }
+    var hi32B;
+    if (typeof b === 'number') {
+      lo32 = lo32 + (b >>> 0);
+      hi32B = (b / 0x100000000) >>> 0;
+    }
+    else {
+      lo32 = lo32 + b.lo32;
+      hi32B = b.hi32 >>> 0;
+    }
+    if (lo32 > 0x100000000) {
+      lo32 >>>= 0;
+      hi32 = (1 + hi32 + hi32B) >>> 0;
+    }
+    else {
+      hi32 = (hi32 + hi32B) >>> 0;
+    }
+    if (tempHiLo) {
+      tempHiLo.hi32 = hi32;
+      tempHiLo.lo32 = lo32;
+      return tempHiLo;
+    }
+    if (THiLo) {
+      return new THiLo(hi32, lo32);
+    }
+    return {hi32:hi32, lo32:lo32};
+  }
+  
+  function add64(a, b, tempHiLoA, tempHiLoB, THiLo) {
+    a = unsigned64(a, tempHiLoA);
+    b = unsigned64(b, tempHiLoB);
+    var result = addUnsigned64_n(a, b, tempHiLoA, THiLo);
+    return signed64(result, tempHiLoA, THiLo);
+  }
+  
   // 53 means it must be represented as a JavaScript Number, not a HiLo
   function multiplyUnsignedSmallBig53_n(a, b, tempHiLo, THiLo) {
     if (b < 0x200000 || a < 0x4000000) {
@@ -749,9 +801,9 @@ define(function() {
     for (var i = digits.length-1; i >= 0; i--) {
       var digit = digits[i];
       if (digit !== '0') {
-        total = add64_n(total, multiply64_n(power, parseInt(digit, radix), digitToPowerHiLo), tempHiLo);
+        total = addUnsigned64_n(total, multiply64(power, parseInt(digit, radix), digitToPowerHiLo), tempHiLo);
       }
-      power = multiply64_n(power, radix, powerHiLo);
+      power = multiply64(power, radix, powerHiLo);
     }
     if (sign < 0) {
       total = negate64_n(total, tempHiLo);
@@ -800,6 +852,10 @@ define(function() {
     }
     return parse64_n(literal[4], 10, sign, tempHiLo, THiLo);
   }
+  
+  return {
+    literal64: literal64,
+  };
   
   // The advice is, never add to standard object prototypes. Why is that?
   // Well, it's because some other code somewhere might also want to add to it too.
