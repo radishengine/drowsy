@@ -91,6 +91,23 @@ define(function() {
     return {hi32:hi32, lo32:lo32};
   }
   
+  function signed64(value, tempHiLo, THiLo) {
+    value = normalize64(value, tempHiLo, THiLo);
+    if (typeof value === 'number' || value.hi32 < 0x80000000) {
+      return value;
+    }
+    var hi32 = value.hi32 | 0, lo32 = value.lo32;
+    if (tempHiLo) {
+      tempHiLo.hi32 = hi32;
+      tempHiLo.lo32 = lo32;
+      return tempHiLo;
+    }
+    if (THiLo) {
+      return new THiLo(hi32, lo32);
+    }
+    return {hi32:hi32, lo32:lo32};
+  }
+  
   function equal64(a, b, tempHiLoA, tempHiLoB) {
     a = normalize64(a, tempHiLoA);
     b = normalize64(b, tempHiLoB);
