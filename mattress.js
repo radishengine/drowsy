@@ -446,11 +446,6 @@ define(function() {
         f_lo = factor.lo32 >>> 0;
       }
       var lo = this.lo32, hi = this.hi32;
-      if (f_lo < lo) {
-        var temp = lo;
-        lo = f_lo;
-        f_lo = temp;
-      }
       
       var temp_l, temp_s;
       
