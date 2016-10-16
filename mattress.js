@@ -550,6 +550,122 @@ define(function() {
     return rightShiftArithmetic64_n(value, shift, tempHiLoA, THiLo);
   }
   
+  // 53 means it must be represented as a JavaScript Number, not a HiLo
+  function multiplyUnsignedSmallBig53_n(a, b, tempHiLo, THiLo) {
+    if (b < 0x200000 || a < 0x4000000) {
+      return a * b;
+    }
+    return add64_n(
+      a * (b & 0x3ffffff),
+      leftShift64_n(a, 26, tempHiLo, THiLo),
+      tempHiLo,
+      THiLo);
+  }
+  
+  function multiplyUnsignedSmallBig64_n(a, b, tempHiLoA, tempHiLoB, THiLo) {
+    var hi32A, lo32A;
+    if (typeof a === 'number') {
+      if (typeof b === 'number') {
+        return multiplyUnsignedSmallBig53_n(a, b, tempHiLoA, THiLo);
+      }
+      if (a === 0) return 0;
+      if (a === 1) return b;
+      hi32A = (a / 0x100000000) >>> 0;
+      lo32A = a >>> 0;
+    }
+    else {
+      hi32A = a.hi32;
+      lo32A = a.lo32;
+    }
+    var hi32B, lo32B;
+    if (typeof b === 'number') {
+      // we don't need to handle 0 and 1 cases because
+      // a <= b, so the 'a' case should already have handled it
+      hi32B = (b / 0x100000000) >>> 0;
+      lo32B = b >>> 0;
+    }
+    else {
+      hi32B = b.hi32;
+      lo32B = b.lo32;
+    }
+    
+    // make sure lo32A <= lo32B
+    if (lo32B < lo32A) {
+      var temp = lo32A;
+      lo32A = lo32B;
+      lo32B = temp;
+      
+      temp = hi32A;
+      hi32A = hi32B;
+      hi32B = temp;
+    }
+    
+    if (lo32B === 0) {
+      // both lo32s are zero, which means we are multiplying
+      // at least 0x100000000 by 0x100000000, which means the
+      // result will be out of 64-bit range
+      return 0;
+    }
+    
+    if (lo32A === 0) {
+      // (lo32A * lo32B) and (lo32A * hi32B) factors cancel out, leaving one
+      return leftShift64_n(
+        multiplyUnsignedSmallBig53_n(lo32B, hi32A, tempHiLoA, THiLo),
+        32,
+        tempHiLoA,
+        THiLo);
+    }
+    
+    var result = multiplyUnsignedSmallBig53_n(lo32A, lo32B, tempHiLoA, THiLo);
+    
+    result = add64_n(
+      result,
+      leftShift64_n(
+        multiplyUnsignedSmallBig53_n(lo32B, hi32A, tempHiLoB, THiLo),
+        32,
+        tempHiLoA,
+        THiLo),
+      tempHiLoA,
+      THiLo);
+    
+    result = add64_n(
+      result,
+      leftShift64_n(
+        multiplyUnsignedSmallBig53_n(lo32A, hi32B, tempHiLoB, THiLo),
+        32,
+        tempHiLoA,
+        THiLo),
+      tempHiLoA,
+      THiLo);
+    
+    return result;
+  }
+  
+  function multiply64(a, b, tempHiLoA, tempHiLoB, THiLo) {
+    var sign = +1;
+    a = normalize64(a, tempHiLoA);
+    if (less64(a, 0)) {
+      a = negate64(a, tempHiLoA);
+      sign = -sign;
+    }
+    b = normalize64(b, tempHiLoB);
+    if (less64(b, 0)) {
+      b = negate64(b, tempHiLoB);
+      sign = -sign;
+    }
+    var result;
+    if (less64(b, a)) {
+      result = multiplyUnsignedSmallBig64_n(b, a, tempHiLoA, tempHiLoB, THiLo);
+    }
+    else {
+      result = multiplyUnsignedSmallBig64_n(a, b, tempHiLoA, tempHiLoB, THiLo);
+    }
+    if (sign === -1) {
+      return negate64(result, tempHiLoA);
+    }
+    return result;
+  }
+  
   function parse64_n(digits, radix, sign, tempHiLo, THiLo) {
     if (digits.length < 11
     || (radix <= 16 && digits.length < 14)
@@ -670,6 +786,9 @@ define(function() {
   const LITERAL_PATTERN = /^([-+]?)(?:0x0*([0-9a-fA-F]+?)|0b0*([01]+?)|0*([0-9]+?))$/;
   
   function literal64(literal, tempHiLo, THiLo) {
+    if (typeof literal === 'number') {
+      return normalize64(literal, tempHiLo, THiLo);
+    }
     literal = literal.match(LITERAL_PATTERN);
     if (!literal) return NaN;
     var sign = literal[1] === '-' ? -1 : +1;
