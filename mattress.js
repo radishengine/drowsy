@@ -602,24 +602,14 @@ define(function() {
     return signed64(result, tempHiLoA, THiLo);
   }
   
-  // 53 means it must be represented as a JavaScript Number, not a HiLo
-  function multiplyUnsignedSmallBig53_n(a, b, tempHiLo, THiLo) {
-    var naive = a * b;
-    if (naive < MAX_SAFE) {
-      return a * b;
-    }
-    return addUnsigned64_n(
-      a * (b & 0x3ffffff),
-      leftShift64_n(a, 26, tempHiLo, THiLo),
-      tempHiLo,
-      THiLo);
-  }
-  
   function multiplyUnsignedSmallBig64_n(a, b, tempHiLoA, tempHiLoB, THiLo) {
     var hi32A, lo32A;
     if (typeof a === 'number') {
       if (typeof b === 'number') {
-        return multiplyUnsignedSmallBig53_n(a, b, tempHiLoA, THiLo);
+        var naive = a * b;
+        if (naive < MAX_SAFE) {
+          return a * b;
+        }
       }
       if (a === 0) return 0;
       if (a === 1) return b;
@@ -663,18 +653,20 @@ define(function() {
     if (lo32A === 0) {
       // (lo32A * lo32B) and (lo32A * hi32B) factors cancel out, leaving one
       return leftShift64_n(
-        multiplyUnsignedSmallBig53_n(lo32B, hi32A, tempHiLoA, THiLo),
+        multiplyUnsignedSmallBig64_n(lo32B, hi32A, tempHiLoA, tempHiLoB, THiLo),
         32,
         tempHiLoA,
         THiLo);
     }
     
-    var result = multiplyUnsignedSmallBig53_n(lo32A, lo32B, tempHiLoA, THiLo);
+    var result = multiplyUnsignedSmallBig64_n(lo32A, lo32B, tempHiLoA, tempHiLoB, THiLo);
+    
+    var tempHiLoC = Object.seal({hi32:0, lo32:0});
     
     result = addUnsigned64_n(
       result,
       leftShift64_n(
-        multiplyUnsignedSmallBig53_n(lo32B, hi32A, tempHiLoB, THiLo),
+        multiplyUnsignedSmallBig64_n(lo32B, hi32A, tempHiLoB, tempHiLoC, THiLo),
         32,
         tempHiLoA,
         THiLo),
@@ -684,7 +676,7 @@ define(function() {
     result = addUnsigned64_n(
       result,
       leftShift64_n(
-        multiplyUnsignedSmallBig53_n(lo32A, hi32B, tempHiLoB, THiLo),
+        multiplyUnsignedSmallBig64_n(lo32A, hi32B, tempHiLoB, tempHiLoC, THiLo),
         32,
         tempHiLoA,
         THiLo),
