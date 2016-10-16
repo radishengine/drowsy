@@ -510,7 +510,7 @@ define(function() {
       return this;
     },
   });
-  mattress.Uint64 = Uint64;
+  mattress.Uint64Var = Uint64Var;
   
   function Int64Var(hi32, lo32) {
     if (arguments.length === 0) return;
@@ -598,7 +598,7 @@ define(function() {
       return this;
     },
   });
-  mattress.Int64 = Int64;
+  mattress.Int64Var = Int64Var;
   
   mattress.Boxed64 = Boxed64;
   mattress.i64 = Boxed64.bind(null);
