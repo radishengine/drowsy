@@ -130,10 +130,7 @@ define(function() {
       return b.hi32 < 0;
     }
     if (typeof b === 'number') {
-      if (b < 0) {
-        return a.hi32 < 0;
-      }
-      return a.hi32 >= 0;
+      return a.hi32 < 0;
     }
     var hi_diff = a.hi32 - b.hi32;
     if (hi_diff < 0) return true;
