@@ -129,6 +129,32 @@ define(function() {
     return a.lo32 <= b.lo32;
   }
   
+  function negate64(value, tempResult64, resultUnsigned, TResult64) {
+    value = normalize64(value, tempResult64, resultUnsigned, TResult64);
+    if (typeof value === 'number') {
+      if (resultUnsigned && value >= 0) {
+        return normalize64(-value, tempResult64, true, TResult64);
+      }
+      return -value;
+    }
+    var hi32 = value.hi32, lo32 = value.lo32;
+    if (lo32 === 0) {
+      hi32 = -hi32;
+    }
+    else {
+      hi32 = ~hi32;
+      lo32 = -lo32 >>> 0;
+    }
+    if (tempResult64) {
+      tempResult64.hi32 = hi32;
+      tempResult64.lo32 = lo32;
+    }
+    else {
+      tempResult64 = {hi32:hi32, lo32:lo32};
+    }
+    return normalize64(tempResult64, tempResult64, resultUnsigned, TResult64);
+  }
+  
   const INT_LITERAL_PATTERN = /^(?:0x0*([0-9a-fA-F]+?)|0b0*([01]+?)|0*([0-9]+?))$/;
   
   function parse64(digits, radix, result64, resultUnsigned, TResult) {
