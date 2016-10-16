@@ -10,8 +10,7 @@ define(function() {
   
   var mattress = {};
   
-  const NUM_PATTERN = /^(?:0x([0-9a-fA-F]+)|0b([01]+)|(0|[1-9][0-9]*))$/;
-  const ZERO_X11 = new Array(11 + 1).join('0');
+  const INT_LITERAL_PATTERN = /^(?:0x([0-9a-fA-F]+)|0b([01]+)|(0|[1-9][0-9]*))$/;
   const ZERO_X31 = new Array(31 + 1).join('0'); // 31 zeros ought to be enough for anybody
   
   function Boxed64(hi32, lo32) {
@@ -38,7 +37,7 @@ define(function() {
             }
           }
           else {
-            var num = hi32.match(NUM_PATTERN);
+            var num = hi32.match(INT_LITERAL_PATTERN);
             if (!num) return NaN;
             if (typeof num[1] === 'string') {
               literal = num[1];
@@ -61,9 +60,10 @@ define(function() {
           var result = (sign < 0) ? new Int64Var() : new Uint64Var();
           var temp = new Uint64Var();
           for (var i = literal.length-1, power = 1; i >= 0; i--, power = power.u64_mul(radix)) {
-            var digit = parseInt(literal[i], radix);
-            if (digit === 0) continue;
-            result.inc(temp.set(power).set_mul(digit));
+            var digit = literal[i];
+            if (digit === '0') continue;
+            digit = parseInt(digit, radix);
+            result.inc(temp.set_mul(power, digit));
           }
           if (sign < 0) {
             result.set_negate();
@@ -114,6 +114,7 @@ define(function() {
     get asUint8() { return this.lo32 & 0xff; },
     get asUint16() { return this.lo32 & 0xffff; },
     get asUint32() { return this.lo32 >>> 0; },
+    get asNormalized64() { return this; },
     get asFloat64() {
       var hi = this.hi32, lo = this.lo32, sign;
       if (hi < 0) {
@@ -270,6 +271,14 @@ define(function() {
     },
   };
   
+  Object.defineProperties(String.prototype, {
+    asNormalized64: {
+      get: function() {
+        return Boxed64(this);
+      },
+    },
+  });
+  
   Object.defineProperties(Number.prototype, {
     asInt8: {
       get: function() { return this << 24 >> 24; }
@@ -288,6 +297,14 @@ define(function() {
     },
     asUint32: {
       get: function() { return this >>> 0; }
+    },
+    asNormalized64: {
+      get: function() {
+        if (this > Number.MAX_SAFE_INTEGER || this < Number.MIN_SAFE_INTEGER) {
+          return Boxed64(this);
+        }
+        return Math.floor(this);
+      },
     },
     asFloat64: {
       get: function() { return this; }
@@ -313,10 +330,22 @@ define(function() {
     },
   });
   Object.assign(Number.prototype, {
-    i64_negate: function() {
+    i64_negate: function(result) {
+      if (this >= Number.MIN_SAFE_INTEGER && this <= Number.MAX_SAFE_INTEGER) {
+        return -Math.floor(this);
+      }
+      if (arguments.length === 1) {
+        return result.set_negate(this);
+      }
       return (-this).asInt64;
     },
-    u64_negate: function() {
+    u64_negate: function(result) {
+      if (this >= Number.MIN_SAFE_INTEGER && this < 0) {
+        return -Math.floor(this);
+      }
+      if (arguments.length === 1) {
+        return result.set_negate(this);
+      }
       return (-this).asUint64;
     },
     i64_bnot: function() {
@@ -334,6 +363,81 @@ define(function() {
       return (-1 - this).asUint64;
     },
   });
+  
+  function set_mul64(result, resultUnsigned, hi1, lo1, hi2, lo2, result) {
+    if (hi1 === 0) {
+      if (lo1 === 0) {
+        result.hi32 = result.lo32 = 0;
+        return result;
+      }
+      if (lo1 === 1) {
+        if (resultUnsigned) {
+          hi2 >>>= 0;
+        }
+        result.hi32 = hi2;
+        result.lo32 = lo2;
+        return result;
+      }
+    }
+    var hi = hi1, lo = lo1;
+
+    var temp_l, temp_s;
+
+    if (lo < f_lo) {
+      temp_l = f_lo;
+      temp_s = lo;
+    }
+    else {
+      temp_l = lo;
+      temp_s = f_lo;
+    }
+
+    if (temp_l <= 0x4000000 || temp_s <= 0x200000) {
+      var result = temp_l * temp_s;
+      this.lo32 = result >>> 0;
+      hi = (hi + ((result / 0x100000000) >>> 0)) >>> 0;
+    }
+    else {
+      var mul = temp_s * (temp_l & 0x3ffffff);
+      hi = (hi + (temp_s >>> 8)) >>> 0;
+      hi = (hi + ((mul / 0x100000000) >>> 0)) >>> 0;
+      this.lo32 = ( (temp_s << 26) + (mul >>> 0) ) >>> 0;
+    }
+
+    if (hi < f_lo) {
+      temp_l = f_lo;
+      temp_s = hi;
+    }
+    else {
+      temp_l = hi;
+      temp_s = f_lo;
+    }
+
+    if (temp_l <= 0x4000000 || temp_s <= 0x200000) {
+      hi = (temp_l * temp_s) >>> 0;
+    }
+    else {
+      hi = ( (temp_s << 26) + ((temp_s * (temp_l & 0x3ffffff)) >>> 0) ) >>> 0;
+    }
+
+    if (lo < f_hi) {
+      temp_l = f_hi;
+      temp_s = lo;
+    }
+    else {
+      temp_l = lo;
+      temp_s = f_hi;
+    }
+
+    if (temp_l <= 0x4000000 || temp_s <= 0x200000) {
+      this.hi32 = (hi + (temp_l * temp_s)) >>> 0;
+    }
+    else {
+      this.hi32 = (hi + ( (temp_s << 26) + ((temp_s * (temp_l & 0x3ffffff)) >>> 0) )) >>> 0;
+    }
+
+    return result;
+  }
   
   function Uint64Var(hi32, lo32) {
     if (arguments.length === 0) return;
@@ -419,89 +523,47 @@ define(function() {
       this.lo32 = -this.lo32 >>> 0;
       return this;
     },
-    set_mul: function(factor) {
-      if (typeof factor === 'string') {
-        factor = Boxed64(factor);
+    set_mul: function(factor1, factor2) {
+      if (arguments.length === 1) {
+        factor2 = factor1;
+        factor1 = this;
       }
-      var f_hi, f_lo;
+      if (typeof factor1 === 'string') {
+        factor1 = Boxed64(factor1);
+      }
+      if (typeof factor2 === 'string') {
+        factor2 = Boxed64(factor2);
+      }
+      if (factor1 === 0 || factor2 === 0) {
+        return this.set(0);
+      }
+      if (factor1 === 1) {
+        return this.set(factor2);
+      }
+      if (factor2 === 1) {
+        if (factor1 === this) return this;
+        return this.set(factor1);
+      }
       if (typeof factor === 'number') {
         if (factor < 0) {
           factor = -factor;
-          f_lo = factor >>> 0;
+          var f_lo = factor >>> 0;
           if (f_lo === 0) {
-            f_hi = -(factor / 0x100000000) >>> 0;
+            return set_mul64(this, true, this.hi32, this.lo32, -(factor / 0x100000000) >>> 0, 0);
           }
-          else {
-            f_hi = ~(factor / 0x100000000) >>> 0;
-            f_lo = -f_lo >>> 0;
-          }
+          return set_mul64(this, true, this.hi32, this.lo32, ~(factor / 0x100000000) >>> 0, -f_lo >>> 0);
         }
-        else {
-          f_hi = (factor / 0x100000000) >>> 0;
-          f_lo = factor >>> 0;
-        }
+        return set_mul64(this, true, this.hi32, this.lo32, (factor / 0x100000000) >>> 0, factor >>> 0);
       }
-      else {
-        f_hi = factor.hi32 >>> 0;
-        f_lo = factor.lo32 >>> 0;
+      return set_mul64(this, true, this.hi32, this.lo32, factor.hi32 >>> 0, factor.lo32 >>> 0);
+    },
+  });
+  Object.defineProperties(Uint64Var.prototype, {
+    asNormalized64: function() {
+      if (this.hi32 === 0) return this.lo32;
+      if (this.hi32 < 0x20000) {
+        return (this.hi32 * 0x100000000) + this.lo32;
       }
-      var lo = this.lo32, hi = this.hi32;
-      
-      var temp_l, temp_s;
-      
-      if (lo < f_lo) {
-        temp_l = f_lo;
-        temp_s = lo;
-      }
-      else {
-        temp_l = lo;
-        temp_s = f_lo;
-      }
-      
-      if (temp_l <= 0x4000000 || temp_s <= 0x200000) {
-        var result = temp_l * temp_s;
-        this.lo32 = result >>> 0;
-        hi = (hi + ((result / 0x100000000) >>> 0)) >>> 0;
-      }
-      else {
-        var mul = temp_s * (temp_l & 0x3ffffff);
-        hi = (hi + (temp_s >>> 8)) >>> 0;
-        hi = (hi + ((mul / 0x100000000) >>> 0)) >>> 0;
-        this.lo32 = ( (temp_s << 26) + (mul >>> 0) ) >>> 0;
-      }
-      
-      if (hi < f_lo) {
-        temp_l = f_lo;
-        temp_s = hi;
-      }
-      else {
-        temp_l = hi;
-        temp_s = f_lo;
-      }
-      
-      if (temp_l <= 0x4000000 || temp_s <= 0x200000) {
-        hi = (temp_l * temp_s) >>> 0;
-      }
-      else {
-        hi = ( (temp_s << 26) + ((temp_s * (temp_l & 0x3ffffff)) >>> 0) ) >>> 0;
-      }
-      
-      if (lo < f_hi) {
-        temp_l = f_hi;
-        temp_s = lo;
-      }
-      else {
-        temp_l = lo;
-        temp_s = f_hi;
-      }
-      
-      if (temp_l <= 0x4000000 || temp_s <= 0x200000) {
-        this.hi32 = (hi + (temp_l * temp_s)) >>> 0;
-      }
-      else {
-        this.hi32 = (hi + ( (temp_s << 26) + ((temp_s * (temp_l & 0x3ffffff)) >>> 0) )) >>> 0;
-      }
-      
       return this;
     },
   });
