@@ -766,8 +766,8 @@ define(function() {
         return ret64(hi, lo);
       case 16:
         return ret64(
-          parseInt(digits.slice(-8, -4) || '0', 16),
-          parseInt(digits.slice(-4), 16));
+          parseInt(digits.slice(-16, -8) || '0', 16),
+          parseInt(digits.slice(-8), 16));
       case 32:
         // digit -7 is 30 bits hi, 2 bits lo
         var hi = parseInt(digits.slice(-13, -6) || '0', 32);
