@@ -413,14 +413,12 @@ define(function() {
     if (tempHiLo) {
       tempHiLo.hi32 = hi32;
       tempHiLo.lo32 = lo32;
+      return tempHiLo;
     }
-    else if (THiLo) {
-      tempHiLo = new THiLo(hi32, lo32);
+    if (THiLo) {
+      return new THiLo(hi32, lo32);
     }
-    else {
-      tempHiLo = {hi32:hi32, lo32:lo32};
-    }
-    return normalize64(tempHiLo, tempHiLo, THiLo);
+    return {hi32:hi32, lo32:lo32};
   }
   
   function leftShift64(value, shift, tempHiLoA, tempHiLoB, THiLo) {
