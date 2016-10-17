@@ -101,7 +101,12 @@ define(function() {
               break;
             }
             i++;
-            imports[stepOrBlock[i][1]] = stepOrBlock[i][2] || stepOrBlock[i][1];
+            var importTo = stepOrBlock[i][1];
+            var importString = stepOrBlock[i][2] || stepOrBlock[i][1];
+            if (importTo in imports && imports[importTo] !== importString) {
+              throw new SyntaxError('Multiple conflicting imports for ' + importTo);
+            }
+            imports[importTo] = importString;
           }
           for (var j = 1; j < startScope.length; j++) {
             var scopedName = startScope[j];
@@ -112,8 +117,13 @@ define(function() {
             scopedRef[PARENT_SCOPE] = newScope;
             if (scopedName in imports) {
               scopedRef[IMPORT] = imports[scopedName];
+              delete imports[scopedName];
             }
             newScope[scopedName] = Object.freeze(scopedRef);
+          }
+          var unusedImports = Object.keys(imports);
+          if (unusedImports.length !== 0) {
+            throw new SyntaxError('Attempt to import to undefined scope variables: ' + unusedImports.join(', '));
           }
           scope = Object.freeze(newScope);
           break;
