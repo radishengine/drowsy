@@ -158,12 +158,15 @@ define(function() {
     return toSquipt(v, isTheOnlyReference);
   }
   
-  function SquareTranscriber() {
-    this.steps = [];
+  function SquareTranscriber(output) {
+    this.output = output || [];
   }
   SquareTranscriber.prototype = {
     toJSON: function() {
-      return this.steps;
+      return this.output;
+    },
+    toString: function() {
+      return stringifyStepOrBlock(this.toJSON());
     },
   };
   
