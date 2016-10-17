@@ -5,7 +5,7 @@ define(function() {
   function Terp() {
   }
   
-  var validTerpScripts = new WeakMap();
+  var validSquipts = new WeakMap();
   
   // modified version of JSON.stringify with specialized whitespace rules
   function stringifyStepOrBlock(stepOrBlock, indent) {
@@ -14,7 +14,7 @@ define(function() {
       function stringifyElement(element) {
         if (typeof element === 'object' && element !== null) {
           if (!Array.isArray(element)) {
-            throw new SyntaxError('Non-Array objects are not currently supported in TerpScript');
+            throw new SyntaxError('Non-Array objects are not currently supported in SquareScript');
           }
           return stringifyStepOrBlock(element, indent);
         }
@@ -46,14 +46,14 @@ define(function() {
     return '[\n' + newIndent + stepOrBlock.map(stringifyStep).join(',\n' + newIndent) + '\n' + indent + ']';
   }
   
-  var emptyScript = Object.freeze([]);
-  validTerpScripts.set(emptyScript, true);
+  var emptySquipt = Object.freeze([]);
+  validSquipts.set(emptySquipt, true);
   
   const PARENT_SCOPE = Symbol('scope');
   const SCOPE_DEPTH = Symbol('depth');
   
-  function toTerpScript(stepOrBlock, okToModify, scope) {
-    if (stepOrBlock.length === 0) return emptyScript;
+  function toSquipt(stepOrBlock, okToModify, scope) {
+    if (stepOrBlock.length === 0) return emptySquipt;
     if (stepOrBlock.length === 1 && scope && typeof stepOrBlock[0] === 'string' && stepOrBlock[0] in scope) {
       return scope[stepOrBlock[0]];
     }
@@ -63,13 +63,13 @@ define(function() {
     var scopeDepth = scope ? scope[SCOPE_DEPTH] : -1;
     var usedScope = false;
     for (var i = 0; i < stepOrBlock.length; i++) {
-      if (typeof stepOrBlock[i] !== 'object' || stepOrBlock[i] === null || validTerpScripts.has(stepOrBlock[i])) {
+      if (typeof stepOrBlock[i] !== 'object' || stepOrBlock[i] === null || validSquipts.has(stepOrBlock[i])) {
         continue;
       }
       if (!Array.isArray(stepOrBlock[i], scope)) {
-        throw new SyntaxError('Non-Array objects are not currently supported in TerpScript');
+        throw new SyntaxError('Non-Array objects are not currently supported in SquareScript');
       }
-      stepOrBlock[i] = toTerpScript(stepOrBlock[i], okToModify, scope);
+      stepOrBlock[i] = toSquipt(stepOrBlock[i], okToModify, scope);
       if (PARENT_SCOPE in stepOrBlock[i]) {
         usedScope = true;
       }
@@ -107,49 +107,44 @@ define(function() {
       stepOrBlock[PARENT_SCOPE] = scope;
     }
     else {
-      validTerpScripts.set(stepOrBlock, true);
+      validSquipts.set(stepOrBlock, true);
     }
     return Object.freeze(stepOrBlock);
   }
   
-  function script(v, isTheOnlyReference) {
-    if (validTerpScripts.has(v)) return v;
+  function squipt(v, isTheOnlyReference) {
+    if (validSquipts.has(v)) return v;
     if (typeof v === 'string') {
       v = JSON.parse(v);
       if (!Array.isArray(v)) {
-        throw new SyntaxError('TerpScripts must be contained in an Array');
+        throw new SyntaxError('A SquareScript document must be contained in an Array');
       }
-      return toTerpScript(JSON.parse(v), true);
+      return toSquipt(JSON.parse(v), true);
     }
     if (!Array.isArray(v)) {
       if (typeof v.toJSON !== 'function' || !Array.isArray(v = v.toJSON())) {
-        throw new SyntaxError('TerpScripts must be contained in an Array');
+        throw new SyntaxError('A SquareScript document must be contained in an Array');
       }
-      return toTerpScript(v, true);
+      return toSquipt(v, true);
     }
-    return toTerpScript(v, isTheOnlyReference);
+    return toSquipt(v, isTheOnlyReference);
   }
   
   Object.assign(Terp, {
-    script: Object.assign(script, {
-      stringify: function(script) {
-        if (typeof script === 'string') {
-          script = JSON.parse(script);
-          if (Array.isArray(script)) {
-            return stringifyStepOrBlock(script);
+    squipt: Object.assign(squipt, {
+      stringify: function(source) {
+        if (typeof source === 'string') {
+          source = JSON.parse(source);
+          if (Array.isArray(source)) {
+            return stringifyStepOrBlock(source);
           }
         }
-        else {
-          if (Array.isArray(script)) {
-            return stringifyStepOrBlock(script);
-          }
-          if (typeof script.toJSON === 'function' && Array.isArray(script = script.toJSON())) {
-            return stringifyStepOrBlock(script);
-          }
+        else if (Array.isArray(source) || (typeof source.toJSON === 'function' && Array.isArray(source = source.toJSON()))) {
+          return stringifyStepOrBlock(source);
         }
-        throw new SyntaxError('TerpScript must be an contained in an Array');
+        throw new SyntaxError('A SquareScript document must be an contained in an Array');
       },
-      empty: emptyScript,
+      empty: emptySquipt,
     }),
   });
   
