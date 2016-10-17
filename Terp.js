@@ -23,20 +23,25 @@ define(function() {
       return '[' + stepOrBlock.map(stringifyElement).join(', ') + ']';
     }
     if (stepOrBlock.length === 0) return '[ ]';
-    indent = indent || '';
     if (stepOrBlock.length === 1) {
+      indent = indent || '';
       var single = stringifyStepOrBlock(stepOrBlock[0], indent);
       if (!/\n/.test(single)) {
         return '[ ' + single + ' ]';
       }
       return '[\n' + indent + single + '\n' + indent + ']';
     }
+    if (typeof indent !== 'string') {
+      indent = '';
+      function stringifyStepTop(step) {
+        return stringifyStepOrBlock(step, indent);
+      }
+      return '[\n\n' + stepOrBlock.map(stringifyStepTop).join(',\n') + '\n\n]';
+    }
+    indent = indent || '';
     var newIndent = indent + '  ';
     function stringifyStep(step) {
       return stringifyStepOrBlock(step, newIndent);
-    }
-    if (indent === '') {
-      return '[\n\n' + stepOrBlock.map(stringifyStep).join(',\n') + '\n\n]';
     }
     return '[\n' + newIndent + stepOrBlock.map(stringifyStep).join(',\n' + newIndent) + '\n' + indent + ']';
   }
