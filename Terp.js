@@ -60,7 +60,7 @@ define(function() {
     if (!okToModify) {
       stepOrBlock = stepOrBlock.slice();
     }
-    var scopeDepth = scope ? scope[SCOPE_DEPTH] : 0;
+    var scopeDepth = scope ? scope[SCOPE_DEPTH] : -1;
     var usedScope = false;
     for (var i = 0; i < stepOrBlock.length; i++) {
       if (typeof stepOrBlock[i] !== 'object' || stepOrBlock[i] === null || validTerpScripts.has(stepOrBlock[i])) {
