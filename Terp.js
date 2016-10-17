@@ -46,7 +46,11 @@ define(function() {
     return '[\n' + newIndent + stepOrBlock.map(stringifyStep).join(',\n' + newIndent) + '\n' + indent + ']';
   }
   
+  var emptyScript = Object.freeze([]);
+  validTerpScripts.add(emptyScript, true);
+  
   function toTerpScript(stepOrBlock, okToModify) {
+    if (stepOrBlock.length === 0) return emptyScript;
     if (!okToModify) {
       stepOrBlock = stepOrBlock.slice();
     }
@@ -103,6 +107,7 @@ define(function() {
         }
         throw new SyntaxError('TerpScript must be an contained in an Array');
       },
+      empty: emptyScript,
     }),
   });
   
