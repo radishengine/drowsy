@@ -49,25 +49,67 @@ define(function() {
   var emptyScript = Object.freeze([]);
   validTerpScripts.set(emptyScript, true);
   
-  function toTerpScript(stepOrBlock, okToModify) {
+  const PARENT_SCOPE = Symbol('scope');
+  const SCOPE_DEPTH = Symbol('depth');
+  
+  function toTerpScript(stepOrBlock, okToModify, scope) {
     if (stepOrBlock.length === 0) return emptyScript;
+    if (stepOrBlock.length === 1 && scope && typeof stepOrBlock[0] === 'string' && stepOrBlock[0] in scope) {
+      return scope[stepOrBlock[0]];
+    }
     if (!okToModify) {
       stepOrBlock = stepOrBlock.slice();
     }
+    var scopeDepth = scope ? scope[SCOPE_DEPTH] : 0;
+    var usedScope = false;
     for (var i = 0; i < stepOrBlock.length; i++) {
-      if (typeof stepOrBlock[i] === 'object' && stepOrBlock[i] !== null) {
-        if (validTerpScripts.has(stepOrBlock[i])) {
-          continue;
-        }
-        if (!Array.isArray(stepOrBlock[i])) {
-          throw new SyntaxError('Non-Array objects are not currently supported in TerpScript');
-        }
-        stepOrBlock[i] = toTerpScript(stepOrBlock[i], okToModify);
+      if (typeof stepOrBlock[i] !== 'object' || stepOrBlock[i] === null || validTerpScripts.has(stepOrBlock[i])) {
+        continue;
+      }
+      if (!Array.isArray(stepOrBlock[i], scope)) {
+        throw new SyntaxError('Non-Array objects are not currently supported in TerpScript');
+      }
+      stepOrBlock[i] = toTerpScript(stepOrBlock[i], okToModify, scope);
+      if (PARENT_SCOPE in stepOrBlock[i]) {
+        usedScope = true;
+      }
+      if (typeof stepOrBlock[i][0] !== 'string') continue;
+      switch (stepOrBlock[i][0]) {
+        case '</>':
+          if (!scope || scope[SCOPE_DEPTH] !== scopeDepth + 1) {
+            throw new SyntaxError('End-of-Scope step without corresponding Scope step');
+          }
+          scope = scope[PARENT_SCOPE];
+          break;
+        case '< >':
+          var newScope = scope ? Object.assign({}, scope) : {};
+          if (scope) {
+            newScope[PARENT_SCOPE] = scope;
+            newScope[SCOPE_DEPTH] = scope[SCOPE_DEPTH] + 1;
+          }
+          else {
+            newScope[SCOPE_DEPTH] = 0;
+          }
+          for (var j = 1; j < stepOrBlock[i].length; i++) {
+            var scopedName = stepOrBlock[i][j];
+            if (typeof scopedName !== 'string') {
+              throw new SyntaxError('Scope step parameters must be strings');
+            }
+            var scopedRef = [scopedName];
+            scopedRef[PARENT_SCOPE] = newScope;
+            newScope[scopedName] = Object.freeze(scopedRef);
+          }
+          scope = Object.freeze(newScope);
+          break;
       }
     }
-    Object.freeze(stepOrBlock);
-    validTerpScripts.set(stepOrBlock, true);
-    return stepOrBlock;
+    if (usedScope) {
+      stepOrBlock[PARENT_SCOPE] = scope;
+    }
+    else {
+      validTerpScripts.set(stepOrBlock, true);
+    }
+    return Object.freeze(stepOrBlock);
   }
   
   function script(v, isTheOnlyReference) {
