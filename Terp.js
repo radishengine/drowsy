@@ -158,7 +158,17 @@ define(function() {
     return toSquipt(v, isTheOnlyReference);
   }
   
+  function SquareTranscriber() {
+    this.steps = [];
+  }
+  SquareTranscriber.prototype = {
+    toJSON: function() {
+      return this.steps;
+    },
+  };
+  
   Object.assign(Terp, {
+    SquareTranscriber: SquareTranscriber,
     squipt: Object.assign(squipt, {
       stringify: function(source) {
         if (typeof source === 'string') {
