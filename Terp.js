@@ -23,7 +23,7 @@ define(function() {
       return '[' + stepOrBlock.map(stringifyElement).join(', ') + ']';
     }
     if (stepOrBlock.length === 0) return '[ ]';
-    indent = (indent || '') + '  ';
+    indent = indent || '';
     if (stepOrBlock.length === 1) {
       var single = stringifyStepOrBlock(stepOrBlock[0], indent);
       if (!/\n/.test(single)) {
@@ -31,10 +31,11 @@ define(function() {
       }
       return '[\n' + indent + single + '\n' + indent + ']';
     }
+    var newIndent = indent + '  ';
     function stringifyStep(step) {
-      return stringifyStepOrBlock(step, indent);
+      return stringifyStepOrBlock(step, newIndent);
     }
-    return '[\n' + indent + stepOrBlock.map(stringifyStep).join(',\n' + indent) + '\n' + indent + ']';
+    return '[\n' + newIndent + stepOrBlock.map(stringifyStep).join(',\n' + newIndent) + '\n' + indent + ']';
   }
   
   function toTerpScript(stepOrBlock, okToModify) {
