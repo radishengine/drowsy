@@ -35,6 +35,9 @@ define(function() {
     function stringifyStep(step) {
       return stringifyStepOrBlock(step, newIndent);
     }
+    if (indent === '') {
+      return '[\n\n' + stepOrBlock.map(stringifyStep).join(',\n') + '\n\n]';
+    }
     return '[\n' + newIndent + stepOrBlock.map(stringifyStep).join(',\n' + newIndent) + '\n' + indent + ']';
   }
   
