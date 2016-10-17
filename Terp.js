@@ -90,7 +90,7 @@ define(function() {
           else {
             newScope[SCOPE_DEPTH] = 0;
           }
-          for (var j = 1; j < stepOrBlock[i].length; i++) {
+          for (var j = 1; j < stepOrBlock[i].length; j++) {
             var scopedName = stepOrBlock[i][j];
             if (typeof scopedName !== 'string') {
               throw new SyntaxError('Scope step parameters must be strings');
