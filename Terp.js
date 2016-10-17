@@ -59,7 +59,7 @@ define(function() {
         if (validTerpScripts.has(stepOrBlock[i])) {
           continue;
         }
-        if (!Array.isArray(stepOrBlock(i))) {
+        if (!Array.isArray(stepOrBlock[i])) {
           throw new SyntaxError('Non-Array objects are not currently supported in TerpScript');
         }
         stepOrBlock[i] = toTerpScript(stepOrBlock[i], okToModify);
