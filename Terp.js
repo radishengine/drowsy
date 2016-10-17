@@ -51,6 +51,7 @@ define(function() {
   
   const PARENT_SCOPE = Symbol('scope');
   const SCOPE_DEPTH = Symbol('depth');
+  const IMPORT = Symbol('import');
   
   function toSquipt(stepOrBlock, okToModify, scope) {
     if (stepOrBlock.length === 0) return emptySquipt;
@@ -76,6 +77,9 @@ define(function() {
       if (typeof stepOrBlock[i][0] !== 'string') continue;
       switch (stepOrBlock[i][0]) {
         case '</>':
+          if (stepOrBlock[i].length !== 1) {
+            throw new SyntaxError('End-of-Scope step must have no parameters');
+          }
           if (!scope || scope[SCOPE_DEPTH] !== scopeDepth + 1) {
             throw new SyntaxError('End-of-Scope step without corresponding Scope step');
           }
@@ -90,17 +94,31 @@ define(function() {
           else {
             newScope[SCOPE_DEPTH] = 0;
           }
-          for (var j = 1; j < stepOrBlock[i].length; j++) {
-            var scopedName = stepOrBlock[i][j];
+          var imports = {};
+          var startScope = stepOrBlock[i];
+          while (i+1 < stepOrBlock.length) {
+            if (typeof stepOrBlock[i+1] !== 'object' || stepOrBlock[i+1] === null || stepOrBlock[i+1][0] !== '<^>') {
+              break;
+            }
+            i++;
+            imports[stepOrBlock[i][1]] = stepOrBlock[i][2] || stepOrBlock[i][1];
+          }
+          for (var j = 1; j < startScope.length; j++) {
+            var scopedName = startScope[j];
             if (typeof scopedName !== 'string') {
               throw new SyntaxError('Scope step parameters must be strings');
             }
             var scopedRef = [scopedName];
             scopedRef[PARENT_SCOPE] = newScope;
+            if (scopedName in imports) {
+              scopedRef[IMPORT] = imports[scopedName];
+            }
             newScope[scopedName] = Object.freeze(scopedRef);
           }
           scope = Object.freeze(newScope);
           break;
+        case '<^>':
+          throw new SyntaxError('Import-to-Scope steps must only appear immediately after an Open-Scope step');
       }
     }
     if (usedScope) {
