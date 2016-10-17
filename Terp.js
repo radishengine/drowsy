@@ -47,7 +47,7 @@ define(function() {
   }
   
   var emptyScript = Object.freeze([]);
-  validTerpScripts.add(emptyScript, true);
+  validTerpScripts.set(emptyScript, true);
   
   function toTerpScript(stepOrBlock, okToModify) {
     if (stepOrBlock.length === 0) return emptyScript;
