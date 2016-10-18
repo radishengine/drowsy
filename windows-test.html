@@ -29,6 +29,7 @@
   
   .window-frame .content {
     overflow: auto;
+    clear: right;
   }
   
   .close-button {
@@ -54,8 +55,10 @@
     color: white;
     font-family: sans-serif;
     font-size: 12px;
-    padding: 3px;
     height: 13px;
+  }
+  .window-frame.win95 .title-text {
+    padding: 3px;
   }
   .window-frame.win95 .content {
     background: white;
@@ -85,6 +88,7 @@
   
   .desktop.mac-bw {
     background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AoSDAgUsSmRhgAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAEklEQVQI12P4//8/AwT8//8fACnkBft7DmIIAAAAAElFTkSuQmCC');
+    background-attachment: fixed;
   }
   
   .window-frame.mac-bw {
