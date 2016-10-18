@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+
+<body>
+
+<style type='text/css'>
+  body {
+    background: #aaa;
+  }
+  
+  .window-frame {
+    display: inline-block;
+    background: white;
+    min-height: 200px;
+  }
+  
+  .window-frame.win95 {
+    background: gray;
+    border-top: white;
+    border-left: white;
+    border-right: black;
+    border-bottom: black;
+  }
+  
+  .window-frame.win95 .title-bar {
+    background: #008;
+    color: white;
+    font-family: sans-serif;
+  }
+  .window-frame.win95 .content {
+    background: white;
+    overflow: auto;
+    height: 100%;
+  }
+</style>
+
+<div class='window-frame win95' resizable='resizable'>
+  <button class='close'>X</button>
+  <div class='title-bar'>Title Bar</div>
+  <div class='content'></div>
+</div>
+
+</body>
+</html>
