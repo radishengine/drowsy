@@ -80,6 +80,33 @@
   .window-frame.workbench13 .content {
     background: #05a;
   }
+  
+  .desktop .mac-bw {
+    background: repeating-linear-gradient(
+      to bottom right,
+      white,
+      white 1.4142135623730951px,
+      black 1.4142135623730951px,
+      black 2.8284271247461903px);
+  }
+  
+  .window-frame.mac-bw {
+    border: 1px solid black;
+    box-shadow: 1px 1px 0 0 black;
+  }
+  
+  .window-frame.mac-bw .title-bar {
+    text-align: center;
+  }
+  
+  .window-frame.mac-bw .title-bar {
+    background: repeating-linear-gradient(to bottom, white, white 1px,black 1px,black 2px);
+  }
+  
+  .window-frame.mac-bw .title-text {
+    color: black;
+    background: white;
+  }
 </style>
 
 <div class='desktop win95'>
@@ -92,6 +119,14 @@
   
 <div class='desktop workbench13'>
   <div class='window-frame workbench13'>
+    <button class='close-button'>X</button>
+    <div class='title-bar'><span class='title-text'>Title Bar</span></div>
+    <div class='content'></div>
+  </div>
+</div>
+
+<div class='desktop mac-bw'>
+  <div class='window-frame mac-bw'>
     <button class='close-button'>X</button>
     <div class='title-bar'><span class='title-text'>Title Bar</span></div>
     <div class='content'></div>
