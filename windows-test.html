@@ -27,6 +27,10 @@
     overflow: auto;
   }
   
+  .window-frame .content {
+    overflow: auto;
+  }
+  
   .close-button {
     float: right;
   }
@@ -55,17 +59,41 @@
   }
   .window-frame.win95 .content {
     background: white;
-    overflow: auto;
     margin-top: 3px;
     height: calc(100% - 13px - 5px - 5px);
     box-shadow: -1px -1px 1px 1px white, -1px -1px 1px 1px black;
+  }
+  
+  .desktop.workbench13 {
+    background: #05a;
+  }
+  
+  .window-frame.workbench13 .title-bar {
+    background: repeating-linear-gradient(to bottom, white, white 2px,#05a 2px,#05a 4px);
+  }
+  
+  .window-frame.workbench13 .title-text {
+    color: #05a;
+    background: white;
+  }
+  
+  .window-frame.workbench13 .content {
+    background: #05a;
   }
 </style>
 
 <div class='desktop win95'>
   <div class='window-frame win95'>
     <button class='close-button'>X</button>
-    <div class='title-bar'>Title Bar</div>
+    <div class='title-bar'><span class='title-text'>Title Bar</span></div>
+    <div class='content'></div>
+  </div>
+</div>
+  
+<div class='desktop workbench13'>
+  <div class='window-frame workbench13'>
+    <button class='close-button'>X</button>
+    <div class='title-bar'><span class='title-text'>Title Bar</span></div>
     <div class='content'></div>
   </div>
 </div>
