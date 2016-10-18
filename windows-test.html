@@ -25,6 +25,7 @@
     min-width: 500px;
     resize: both;
     overflow: auto;
+    height: 100%;
   }
   
   .close-button {
@@ -43,12 +44,13 @@
     font-family: sans-serif;
     font-size: 9pt;
     padding: 3px;
+    height: 50px;
   }
   .window-frame.win95 .content {
     background: white;
     overflow: auto;
     margin-top: 3px;
-    height: 100%;
+    height: calc(100% - 50px - 5px - 5px - 5px);
     box-shadow: -1px -1px 1px 1px white, -1px -1px 1px 1px black;
   }
 </style>
