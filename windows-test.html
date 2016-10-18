@@ -32,10 +32,16 @@
     clear: right;
   }
   
-  .close-button {
+  .window-frame .close-button {
     float: right;
   }
   
+  .window-frame .title-bar {
+    vertical-align: middle;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+    
   .window-frame.win95 {
     background: #aaa;
     box-shadow: inset -1px -1px 1px 1px black, inset 1px 1px 1px 1px white;
@@ -103,6 +109,7 @@
     margin-left: 1px;
     margin-right: 1px;
     margin-bottom: 2px;
+    height: 16px;
   }
   
   .window-frame.mac-bw .content {
