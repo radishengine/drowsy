@@ -129,7 +129,42 @@
     box-shadow: -1px 0 0 0 white, 1px 0 0 0 white;
     margin-right: 6px;
   }
+  
+  .desktop.win31 {
+    background: #bbb;
+  }
+  
+  .window-frame.win31 .title-bar {
+    text-align: center;
+    background: #008;
+    color: white;
+    outline: 1px solid black;
+  }
+  
+  .desktop.workbench20 {
+    background: #999;
+  }
+  
+  .window-frame.workbench20 {
+    background: #8af;
+    box-shadow: -1px -1px 0 0 black. 1px 1px 0 0 white;
+  }
+  
+  .window-frame.workbench20 .window-content {
+    background: #999;
+    box-shadow: 1px 1px 0 0 black. -1px -1px 0 0 white;
+  }
 </style>
+  
+<div class='desktop win31'>
+  <div class='window-frame win31'>
+    <div class='title-bar'>
+      <button class='close-button'>X</button>
+      <span class='title-text'>Title Bar</span>
+    </div>
+    <div class='content'></div>
+  </div>
+</div>
 
 <div class='desktop win95'>
   <div class='window-frame win95'>
@@ -143,6 +178,16 @@
   
 <div class='desktop workbench13'>
   <div class='window-frame workbench13'>
+    <div class='title-bar'>
+      <button class='close-button'>X</button>
+      <span class='title-text'>Title Bar</span>
+    </div>
+    <div class='content'></div>
+  </div>
+</div>
+  
+<div class='desktop workbench20'>
+  <div class='window-frame workbench20'>
     <div class='title-bar'>
       <button class='close-button'>X</button>
       <span class='title-text'>Title Bar</span>
