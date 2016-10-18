@@ -10,6 +10,14 @@
     background: #aaa;
   }
   
+  .desktop {
+    padding: 10px;
+  }
+  
+  .desktop.win95 {
+    background: #088;
+  }
+  
   .window-frame {
     display: inline-block;
     background: white;
@@ -22,7 +30,7 @@
   }
   
   .window-frame.win95 {
-    background: #eee;
+    background: #aaa;
     box-shadow: inset -1px -1px 1px 1px black, inset 1px 1px 1px 1px white;
     padding: 5px;
   }
@@ -41,10 +49,12 @@
   }
 </style>
 
-<div class='window-frame win95' resizable='resizable'>
-  <button class='close-button'>X</button>
-  <div class='title-bar'>Title Bar</div>
-  <div class='content'></div>
+<div class='desktop win95'>
+  <div class='window-frame win95' resizable='resizable'>
+    <button class='close-button'>X</button>
+    <div class='title-bar'>Title Bar</div>
+    <div class='content'></div>
+  </div>
 </div>
 
 </body>
