@@ -52,6 +52,7 @@ define(function() {
   const PARENT_SCOPE = Symbol('scope');
   const SCOPE_DEPTH = Symbol('depth');
   const IMPORT = Symbol('import');
+  const SCOPE_CLOSE = Object.freeze(['</>']);
   
   function toSquipt(stepOrBlock, okToModify, scope) {
     if (stepOrBlock.length === 0) return emptySquipt;
@@ -84,6 +85,7 @@ define(function() {
             throw new SyntaxError('End-of-Scope step without corresponding Scope step');
           }
           scope = scope[PARENT_SCOPE];
+          stepOrBlock[i] = SCOPE_CLOSE;
           break;
         case '< >':
           var newScope = scope ? Object.assign({}, scope) : {};
