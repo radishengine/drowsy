@@ -480,7 +480,7 @@ define(function() {
     },
     // unused: 120 bytes (MAX_OBJS_ON_GUI * 4)
     getControlID: function(n) {
-      return this.dv.getInt32(244 + n * 4, true) 0xffff;
+      return this.dv.getInt32(244 + n * 4, true) & 0xffff;
     },
     getControlType: function(n) {
       var v = this.dv.getInt32(244 + n * 4, true) >>> 16;
