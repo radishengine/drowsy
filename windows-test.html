@@ -483,8 +483,8 @@
     do {
       pick = Math.floor(Math.random() * (31 * 32 + 7));
     } while (pick === +el.dataset.lastPick);
-    var x = 2 + (pick % 31) * 18;
-    var y = 2 + Math.floor(pick / 31) * 18;
+    var x = 2 + (pick % 31) * 20;
+    var y = 2 + Math.floor(pick / 31) * 20;
     el.style.backgroundPosition = x + 'px ' + y + 'px';
   }
 </script>
