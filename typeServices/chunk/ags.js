@@ -985,11 +985,11 @@ define(function() {
   }
   FileListV6View.prototype = {
     get fileCount() {
-      return this.dv.getUint16(2, true);
+      return this.dv.getUint16(8, true);
     },
     get fileRecords() {
       var list = new Array(this.fileCount);
-      var nameBase = 17;
+      var nameBase = 23;
       var lengthBase = nameBase + 13 * list.length;
       var flagsBase = lengthBase + list.length * 4;
       var byteOffset = 0;
