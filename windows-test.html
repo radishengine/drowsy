@@ -234,6 +234,15 @@
   
 </filter>
   
+  <filter id="filter-wb20">
+    <feComponentTransfer>
+      <feFuncA type="discrete" tableValues="0, 1"/>
+      <feFuncB type="discrete" tableValues="0, 1"/>
+      <feFuncG type="linear" slope="0"/>
+      <feFuncR type="linear" slope="0"/>
+    </feComponentTransfer>
+  </filter>
+  
 </svg>
   
 <style type='text/css'>
@@ -741,6 +750,10 @@
     <div class='content'></div>
   </div>
 </div>
+  
+<img src='silk_full.png' style='image-rendering: pixelated'>
+  
+<img src='silk_full.png' style='filter: url(#filter-wb20); image-rendering: pixelated'>
 
   <!--
 <img src='silk_full.png' style='image-rendering: pixelated'>
