@@ -526,6 +526,7 @@
   .window-frame.zx-spectrum {
     background: black;
     padding: 2px;
+    padding-top: 0;
   }
   
   .window-frame.zx-spectrum .title-bar {
@@ -535,15 +536,16 @@
       #000000 0px, #000000 24px,
                    #00ffff 24px, #00ffff 46.7px,
                                  #00f000 46.7px, #00f000 69.3px,
-                                                 #00f000 69.3px, #00f000 91.9px,
+                                                 #ffff00 69.3px, #ffff00 91.9px,
                                                                  #f00000 91.9px, #f00000 114.6px,
                                                                                  #000000 114.6px);
   }
   
   .window-frame.zx-spectrum .close-button {
-    background: black;
+    background: transparent;
     color: white;
     border: 0;
+    border-left: 1px solid white;
   }
   
   .window-frame.zx-spectrum .content {
