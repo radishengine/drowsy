@@ -13,6 +13,7 @@
      <feFuncB type="linear" slope="0.5"/>
     </feComponentTransfer>
     <feMorphology in="SourceGraphic" operator="erode" radius="1" result="inner"/>
+    <feComposite in="SourceGraphic" in2="inner" operator="in" result="inner"/>
     <feComposite in="inner" in2="darkened" operator="over" />
     <!--
     <feComponentTransfer>
