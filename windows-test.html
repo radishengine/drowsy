@@ -196,7 +196,20 @@
           -1 0 0.666 0  0
           -2 0     1 1 -1"/>
   
+  <feColorMatrix in="SourceGraphic" type="saturate" values="0"/>
+  <feComponentTransfer result="five-tone">
+    <feFuncR type="discrete" tableValues="0, 0.25, 0.5, 0.75, 1"/>
+  </feComponentTransfer>
+  
+  <feColorMatrix type="matrix" in="five-tone" result="white"
+  values="0 0 0 0  1
+          0 0 0 0  1
+          0 0 0 0  1
+          4 0 0 1 -4"/>
+  
+  <!--
   <feComposite in="orange" in2="blue" operator="over"/>
+  -->
   
 </filter>
   
