@@ -992,15 +992,19 @@ define(function() {
       var nameBase = 17;
       var lengthBase = nameBase + 13 * list.length;
       var flagsBase = lengthBase + list.length * 4;
+      var byteOffset = 0;
       for (var i = 0; i < list.length; i++) {
         var namePos = nameBase + (13 * i);
         var lengthPos = lengthBase + (4 * i);
         var flagsPos = flagsBase + (2 * i);
+        var byteLength = this.dv.getUint32(lengthPos, true);
         list[i] = {
           name: String.fromCharCode.apply(null, this.bytes.subarray(namePos, namePos + 13)).match(/^[^\0]*/)[0],
-          byteLength: this.dv.getUint32(lengthPos, true),
+          byteLength: byteLength,
           flags: this.dv.getUint16(flagsPos, true),
+          byteOffset: byteOffset,
         };
+        byteOffset += byteLength;
       }
       Object.defineProperty(this, 'fileRecords', {value:list});
       return list;
