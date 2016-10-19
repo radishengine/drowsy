@@ -990,14 +990,14 @@ define(function() {
     get fileRecords() {
       var list = new Array(this.fileCount);
       var nameBase = 17;
-      var lengthBase = 17 + 13 * list.length;
+      var lengthBase = nameBase + 13 * list.length;
       var flagsBase = lengthBase + list.length * 4;
       for (var i = 0; i < list.length; i++) {
         var namePos = nameBase + (13 * i);
         var lengthPos = lengthBase + (4 * i);
         var flagsPos = flagsBase + (2 * i);
         list[i] = {
-          name: String.fromCharCode.apply(this.bytes.subarray(namePos, namePos + 13)).match(/^\0*/)[0],
+          name: String.fromCharCode.apply(null, this.bytes.subarray(namePos, namePos + 13)).match(/^\0*/)[0],
           byteLength: this.dv.getUint32(lengthPos, true),
           flags: this.dv.getUint16(flagsPos, true),
         };
