@@ -991,7 +991,7 @@ define(function() {
       var list = new Array(this.fileCount);
       var nameBase = 17;
       var lengthBase = 17 + 13 * list.length;
-      var flagsBase = lengthBase + lengthBase + list.length * 4;
+      var flagsBase = lengthBase + list.length * 4;
       for (var i = 0; i < list.length; i++) {
         var namePos = nameBase + (13 * i);
         var lengthPos = lengthBase + (4 * i);
