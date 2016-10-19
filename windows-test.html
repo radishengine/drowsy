@@ -557,6 +557,15 @@
     background: white;
     
   }
+  
+  .ms-dos.desktop {
+    background: #008;
+  }
+  
+  .ms-dos.window-frame {
+    background: #888;
+    box-shadow: 16px 8px 0 black;
+  }
 </style>
   
 <script>
@@ -639,6 +648,19 @@
 
 <div class='desktop zx-spectrum'>
   <div class='window-frame zx-spectrum'>
+    <div class='title-bar'>
+      <button class='icon-button' onclick="randomIcon(this)" data-last-pick="0">
+        <div class="icon" style="background-position:-442px -482px"></div>
+      </button>
+      <button class='close-button'>X</button>
+      <span class='title-text'>Title Bar</span>
+    </div>
+    <div class='content'></div>
+  </div>
+</div>
+
+<div class='desktop ms-dos'>
+  <div class='window-frame ms-dos'>
     <div class='title-bar'>
       <button class='icon-button' onclick="randomIcon(this)" data-last-pick="0">
         <div class="icon" style="background-position:-442px -482px"></div>
