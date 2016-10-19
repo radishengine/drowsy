@@ -7,12 +7,12 @@
   
 <svg height="0">
   <filter id="pal16">
-    <feComponentTransfer result="darkened">
+    <feComponentTransfer in="SourceGraphic" result="darkened">
      <feFuncR type="linear" slope="0.5"/>
      <feFuncG type="linear" slope="0.5"/>
      <feFuncB type="linear" slope="0.5"/>
     </feComponentTransfer>
-    <feMorphology operator="erode" radius="1" result="inner"/>
+    <feMorphology in="SourceGraphic" operator="erode" radius="1" result="inner"/>
     <feComposite in="darkened" in2="inner" operator="over" />
     <!--
     <feComponentTransfer>
