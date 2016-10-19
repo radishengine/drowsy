@@ -213,9 +213,9 @@
            0 0 0 0 0
           -4 0 0 1 0"/>
   
-  <!--
-  <feComposite in="orange" in2="blue" operator="over"/>
-  -->
+  <feComposite in="orange" in2="blue" operator="over" result="main"/>
+  <feComposite in="white" in2="main" result="main"/>
+  <feComposite in="black" in2="main" result="main"/>
   
 </filter>
   
