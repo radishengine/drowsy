@@ -141,10 +141,16 @@
      0 0 0 1 0 
      0 0 0 1 0" result="white-outline"/>
   
-  <feComposite in="main" in2="white-outline" operator="over" />
+  <feComposite in="main" in2="white-outline" operator="over" result="main" />
   
   <feImage x="0" y="0" width="2" height="2" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AoSDAgUsSmRhgAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAEklEQVQI12P4//8/AwT8//8fACnkBft7DmIIAAAAAElFTkSuQmCC"/>
-  <feTile/>
+  <feTile result="alt-pixels"/>
+  
+  <feColorMatrix in="SourceGraphic" type="matrix"
+  values="1 0 0 0 0
+          0 1 0 0 0
+          0 0 1 0 0
+          0 0 0 1 0"/>
   
 </filter>
 
