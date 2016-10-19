@@ -735,7 +735,7 @@ define(function() {
     this.dv = new DataView(buffer, byteOffset, byteLength);
     this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
-  InventoryWindowView.prototype = Object.defineProperties(new ControlView(voidBuffer, 0, 0), {
+  InventoryWindowView.prototype = Object.defineProperties(new GUIControlView(voidBuffer, 0, 0), {
     forCharacter: {
       get: function() {
         if (this.guiVersion < 109) return -1;
@@ -771,7 +771,7 @@ define(function() {
     this.dv = new DataView(buffer, byteOffset, byteLength);
     this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
-  SliderView.prototype = Object.defineProperties(new ControlView(voidBuffer, 0, 0), {
+  SliderView.prototype = Object.defineProperties(new GUIControlView(voidBuffer, 0, 0), {
     minValue: {
       get: function() {
         return this.dv.getInt32(this.endof_control, true);
@@ -821,7 +821,7 @@ define(function() {
     this.dv = new DataView(buffer, byteOffset, byteLength);
     this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
-  TextBoxView.prototype = Object.defineProperties(new ControlView(voidBuffer, 0, 0), {
+  TextBoxView.prototype = Object.defineProperties(new GUIControlView(voidBuffer, 0, 0), {
     defaultText: {
       get: function() {
         return nullTerminated(this.bytes, this.endof_control, 200);
@@ -858,7 +858,7 @@ define(function() {
     this.dv = new DataView(buffer, byteOffset, byteLength);
     this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
   }
-  ListBoxView.prototype = Object.defineProperties(new ControlView(voidBuffer, 0, 0), {
+  ListBoxView.prototype = Object.defineProperties(new GUIControlView(voidBuffer, 0, 0), {
     itemCount: {
       get: function() {
         return this.dv.getInt32(this.endof_control, true);
@@ -985,7 +985,7 @@ define(function() {
       switch (segment.getTypeParameter('which')) {
         case 'gui-collection': return getVersionedType(GUICollectionView, v);
         case 'gui': return getVersionedType(GUIView, v, gv);
-        case 'control': return getVersionedType(ControlView, v, gv);
+        case 'control': return getVersionedType(GUIControlView, v, gv);
         case 'button': return getVersionedType(ButtonView, v, gv);
         case 'label': return getVersionedType(LabelView, v, gv);
         case 'inventory-window': return getVersionedType(InventoryWindowView, v, gv);
