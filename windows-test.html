@@ -192,8 +192,8 @@
   
   <feColorMatrix type="matrix" in="saturated" result="blue"
   values=" 0 0     0 0  0
-          -1 0 0.20564516129032256 0  0
-          -1 0 0.2712765957446808 0  0
+          -1 0 0.333 0  0
+          -1 0 0.666 0  0
           -2 0     1 1 -1"/>
   
   <feColorMatrix in="flatalpha" type="saturate" values="0"/>
@@ -231,9 +231,6 @@
    <feFuncA type="discrete" tableValues="0, 1"/>
   </feComponentTransfer>
   <feComposite in="main" in2="outline" operator="over" result="main"/>
-  
-  <feComponentTransfer in="blue">
-  </feComponentTransfer>
   
 </filter>
   
