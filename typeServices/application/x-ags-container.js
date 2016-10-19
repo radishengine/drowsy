@@ -2,31 +2,22 @@ define(['../dispatch'], function(dispatch) {
 
   'use strict';
   
-  function split_contents(formatVersion, segment, entries) {
+  function split_contents(formatVersion, segment, entries, offset) {
     switch (formatVersion) {
       default: return Promise.reject('unsupported format version: ' + formatVersion);
       case 6:
-        return segment.getBytes(2, 2).then(function(count) {
+        return segment.getBytes(offset + 8, 2).then(function(count) {
           count = count[0] | (count[1] << 8);
-          var totalSize = 1 /* modifier */
+          var totalSize = 6 /* signature */
+            + 1 /* modifier */
             + 1 /* padding? */
             + 2 /* file count */
             + 13 /* password dooberry */
             + count*13 /* file names */
             + count*4 /* file lengths */
             + count*2 /* flags & ratio */;
-          var fileListSegment = segment.getSegment('chunk/ags; which=file-list-v6', 0, totalSize);
+          var fileListSegment = segment.getSegment('chunk/ags; which=file-list-v6; base=' + (offset + totalSize), offset, totalSize);
           entries.add(fileListSegment);
-          return fileListSegment.getStruct().then(function(fileList) {
-            var offset = totalSize;
-            for (var i = 0; i < fileList.fileRecords.length; i++) {
-              var file = fileList.fileRecords[i];
-              var ext = file.name.match(/[^\.]*$/)[0].toLowerCase();
-              var type = dispatch.byExtension[ext] || 'application/octet-stream';
-              entries.add(segment.getSegment(type, offset, file.byteLength));
-              offset += file.byteLength;
-            }
-          });
         });
       case 10:
       case 11:
@@ -80,15 +71,16 @@ define(['../dispatch'], function(dispatch) {
     }
   }
   
-  function split_prefix(segment, entries) {
-    return segment.getBytes(0, 6).then(function(prefix) {
+  function split_prefix(segment, entries, offset) {
+    return segment.getBytes(offset, 6).then(function(prefix) {
       if (String.fromCharCode(prefix[0], prefix[1], prefix[2], prefix[3]) !== 'CLIB') {
         return Promise.reject('resource package signature not found');
       }
       return split_contents(
         prefix[5],
-        segment.getSegment(segment.typeName + '; body-version=' + prefix[5], 6),
-        entries);
+        segment.getSegment(segment.typeName + '; body-version=' + prefix[5]),
+        entries,
+        offset);
     });
   }
   
@@ -99,25 +91,89 @@ define(['../dispatch'], function(dispatch) {
         return Promise.reject('resource package signature not found');
       }
       var offset = (suffix[0] | (suffix[1] << 8) | (suffix[2] << 16) | (suffix[3] << 24)) >>> 0;
-      return split_prefix(segment.getSegment(segment.typeName + '; mode=prefix', offset), entries);
+      return split_prefix(segment, entries, offset);
     });
   }
   
   function split(segment, entries) {
     var bodyVersion = segment.getTypeParameter('body-version');
-    if (bodyVersion) return split_contents(bodyVersion, segment, entries);
+    if (bodyVersion) return split_contents(bodyVersion, segment, entries, 0);
     
     var mode = segment.getTypeParameter('mode');
-    if (mode === 'prefix') return split_prefix(segment, entries);
+    if (mode === 'prefix') return split_prefix(segment, entries, 0);
     if (mode === 'suffix') return split_suffix(segment, entries);
     
-    return split_prefix(segment, entries).then(null, function() {
+    return split_prefix(segment, entries, 0).then(null, function() {
       return split_suffix(segment, entries);
+    });
+  }
+  
+  function mount(containerSegment, volume) {
+    var promiseChain = Promise.resolve();
+    return containerSegment.split(function(entry) {
+      if (entry.typeName === 'chunk/ags' && chunk.getTypeParameter('which') === 'file-list-v6') {
+        var base = chunk.getTypeParameter('base');
+        if (!base) {
+          throw new Error('base must be set');
+        }
+        base = +base;
+        promiseChain = promiseChain.then(entry.getStruct())
+        .then(function(fileList) {
+          for (var i = 0; i < fileList.fileRecords.length; i++) {
+            var file = fileList.fileRecords[i];
+            var fileType;
+            var ext = file.name.match(/[^\.]*$/)[0].toLowerCase();
+            switch (ext) {
+              case 'crm':
+                fileType = 'application/x-ags-room';
+                break;
+              case 'mid':
+                fileType = 'audio/midi';
+                break;
+              case 'wav':
+                fileType = 'audio/x-wav';
+                break;
+              case 'dta':
+                fileType = 'application/x-ags-game';
+                break;
+              case 'spr':
+                fileType = 'application/x-ags-sprite-pack';
+                break;
+              case 'wfn':
+                fileType = 'application/x-ags-font';
+                break;
+              case 'dat':
+                if (/^aclang.*\.dat$/i.test(file.name)) {
+                  fileType = 'application/x-ags-translation';
+                  break;
+                }
+                else {
+                  console.log('unknown file: ' + file.name);
+                  fileType = 'application/octet-stream';
+                }
+                break;
+              default:
+                fileType = dispatch.byExtension[ext] || 'application/octet-stream';
+                console.log('unknown file: ' + file.name);
+                break;
+            }
+            volume.addFile(containerSegment.getSegment(fileType, file.byteOffset, file.byteLength));
+          }
+        });
+        
+      }
+      else {
+        console.log('unsupported: ' + entry.type);
+      }
+    },
+    function() {
+      return promiseChain;
     });
   }
   
   return {
     split: split,
+    mount: mount,
   };
 
 });
