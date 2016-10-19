@@ -38,7 +38,10 @@ define(function() {
       docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       dsk: 'volume/ambiguous',
       emf: 'image/emf',
-      exe: 'application/x-exe-ambiguous',
+      
+      //exe: 'application/x-exe-ambiguous',
+      exe: 'application/x-ags-container',
+      
       flc: 'video/x-flic',
       fli: 'video/x-flic',
       flv: 'video/x-flv',
