@@ -49,6 +49,10 @@
     height: 18px;
   }
     
+  .window-frame .title-text {
+    line-height: 20px;
+  }
+  
   .window-frame.win95 {
     background: #aaa;
     box-shadow: inset -1px -1px 1px 1px black, inset 1px 1px 1px 1px white;
@@ -145,11 +149,17 @@
     padding: 3px;
     background-color: #ccc;
     background-image: 
-      linear-gradient(to right, transparent, transparent 15px, black 15px, black 16px, transparent 16px),
-      linear-gradient(to left, transparent, transparent 15px, black 15px, black 16px, transparent 16px),
-      linear-gradient(to bottom, transparent, transparent 15px, black 15px, black 16px, transparent 16px),
-      linear-gradient(to top, transparent, transparent 15px, black 15px, black 16px, transparent 16px);
+      linear-gradient(to right, transparent, transparent 21px, black 21px, black 22px, transparent 22px),
+      linear-gradient(to left, transparent, transparent 21px, black 21px, black 22px, transparent 22px),
+      linear-gradient(to bottom, transparent, transparent 21px, black 21px, black 22px, transparent 22px),
+      linear-gradient(to top, transparent, transparent 21px, black 21px, black 22px, transparent 22px);
     outline: 1px solid black;
+  }
+  
+  .window-frame.win31 .close-button {
+    background: #aaa;
+    border: 0;
+    box-shadow: inset -2 -2 0 0 #888, inset 1 1 0 0 #ccc;
   }
   
   .window-frame.win31 .title-bar {
