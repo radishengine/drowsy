@@ -94,11 +94,11 @@ define(['../dispatch'], function(dispatch) {
   
   function split_suffix(segment, entries) {
     return segment.getBytes('suffix', 16).then(function(suffix) {
-      var signature = String.fromCharCode.apply(null, suffix.subarray(0, 12));
+      var signature = String.fromCharCode.apply(null, suffix.subarray(4, 16));
       if (signature !== 'CLIB\x01\x02\x03\x04SIGE') {
         return Promise.reject('resource package signature not found');
       }
-      var offset = (suffix[12] | (suffix[13] << 8) | (suffix[14] << 16) | (suffix[15] << 16)) >>> 0;
+      var offset = (suffix[0] | (suffix[1] << 8) | (suffix[2] << 16) | (suffix[3] << 24)) >>> 0;
       return split_prefix(segment.getSegment(segment.typeName + '; mode=prefix', offset), entries);
     });
   }
