@@ -153,11 +153,12 @@
   </feComponentTransfer>
   
   <feColorMatrix type="matrix" in="three-tone" values="
-     0 0 0 0 1 
-     0 0 0 0 1 
-     0 0 0 0 1 
-     2 0 0 0 0" result="white-pixels"/>
+     0 0 0  0 0 
+     0 0 0  0 0 
+     0 0 0  0 0 
+     2 0 0 -2 0" result="white-pixels"/>
   
+  <!--
   <feColorMatrix type="matrix" in="three-tone" values="
       0 0 0 0 0 
       0 0 0 0 0 
@@ -166,7 +167,6 @@
   
   <feComposite in="three-tone" in2="white-pixels" operator="out" result="gray-pixels"/>
   <feComposite in="gray-pixels" in2="black-pixels" operator="out" result="gray-pixels"/>
-  <!--
   <feComposite in="alt-pixels" in2="gray-pixels" operator="in" result="alt-pixels"/>
   -->
   
