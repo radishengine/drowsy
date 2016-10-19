@@ -182,7 +182,13 @@
       0 1 0 0 0 
       0 0 1 0 0 
       0 0 0 255 -85" />
-  <feColorMatrix type="saturate" values="255"/>
+  <feColorMatrix type="saturate" values="255" result="saturated"/>
+  
+  <feColorMatrix type="matrix" in="saturated" result="orange"
+  values="  1 0   -1 0 0
+            0 0    0 0 0
+          0.5 0 -0.5 0 0
+            0 0    0 1 0"/>
 </filter>
   
 </svg>
