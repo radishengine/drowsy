@@ -21,7 +21,7 @@ define(['../dispatch'], function(dispatch) {
             var offset = totalSize;
             for (var i = 0; i < fileList.fileRecords.length; i++) {
               var file = fileList.fileRecords[i];
-              var ext = file.name.match(/[^\.]*$/)[1].toLowerCase();
+              var ext = file.name.match(/[^\.]*$/)[0].toLowerCase();
               var type = dispatch.byExtension[ext] || 'application/octet-stream';
               entries.add(segment.getSegment(type, offset, file.byteLength));
               offset += file.byteLength;
