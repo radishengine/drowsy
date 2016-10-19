@@ -87,7 +87,7 @@ define(['../dispatch'], function(dispatch) {
       }
       return split_contents(
         prefix[5],
-        segment.getSegment(segment.typeName + '; body-version=' + prefix[5]),
+        segment.getSegment(segment.typeName + '; body-version=' + prefix[5], 6),
         entries);
     });
   }
