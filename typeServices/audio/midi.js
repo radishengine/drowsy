@@ -68,7 +68,7 @@ define(function() {
   HeaderView.byteLength = 8 + 6;
   
   return {
-    bytePattern: /^MThd\x00\x00\x00\x06.{6}MTrk.{4}/;
+    bytePattern: /^MThd\x00\x00\x00\x06.{6}MTrk.{4}/,
   };
 
 });
