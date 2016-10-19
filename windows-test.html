@@ -84,7 +84,7 @@
     1 0 0 0 0
     1 0 0 0 0
     1 0 0 0 0
-    1 0 0 0 0"/>
+    1 0 0 0 0" result="white-pixels"/>
   <!-- dilate -->
   <feMorphology operator="dilate" radius="1"/>
   <!-- 1-bit transparency -->
@@ -99,6 +99,9 @@
     0 0 0 1 0" result="black-outline"/>
   
   <feComposite in="main" in2="black-outline" operator="over" />
+  
+  <feComponentTransfer in="white-pixels">
+  </feComponentTransfer>
   
 </filter>
 
