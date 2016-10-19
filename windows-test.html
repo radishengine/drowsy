@@ -31,6 +31,7 @@
     overflow: auto;
     clear: right;
     height: calc(100% - 27px);
+    background: white;
   }
   
   .window-frame .close-button {
@@ -141,7 +142,7 @@
   }
   
   .window-frame.win31 {
-    padding: 2px;
+    padding: 3px;
     background-color: #ccc;
     background-image: 
       linear-gradient(to right, transparent, transparent 15px, black 15px, black 16px, transparent 16px),
@@ -155,6 +156,13 @@
     text-align: center;
     background: #008;
     color: white;
+    outline: 1px solid black;
+  }
+  
+  .window-frame.win31 .content {
+    background: white;
+    outline: 1px solid black;
+    height: calc(100% - 18px);
   }
   
   .desktop.workbench20 {
