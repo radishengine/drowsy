@@ -518,6 +518,24 @@
     margin: 2px;
     margin-top: 0;
   }
+  
+  .desktop.zx-spectrum {
+    background: #888;
+  }
+  
+  .window-frame.zx-spectrum {
+    background: black;
+    padding: 1px;
+  }
+  
+  .window-frame.zx-spectrum .title-bar {
+    background: black;
+    color: white;
+  }
+  
+  .window-frame.zx-spectrum .content {
+    background: white;
+  }
 </style>
   
 <script>
@@ -597,7 +615,21 @@
     <div class='content'></div>
   </div>
 </div>
-  
+
+<div class='desktop zx-spectrum'>
+  <div class='window-frame zx-spectrum'>
+    <div class='title-bar'>
+      <button class='icon-button' onclick="randomIcon(this)" data-last-pick="0">
+        <div class="icon" style="background-position:-442px -482px"></div>
+      </button>
+      <button class='close-button'>X</button>
+      <span class='title-text'>Title Bar</span>
+    </div>
+    <div class='content'></div>
+  </div>
+</div>
+
+  <!--
 <img src='silk_full.png' style='image-rendering: pixelated'>
   
 <img src='silk_full.png' style='filter: url(#pal16); image-rendering: pixelated'>
@@ -609,8 +641,9 @@
 <div style='background:green'>
 <img src='silk_full.png' style='filter: url(#filter-bw-on-black); image-rendering: pixelated'>
 </div>
-</body>
-  
 <img src='silk_full.png' style='filter: url(#filter-blue-orange); image-rendering: pixelated'>
 <img src='silk_full.png' style='image-rendering: pixelated'>
+-->
+</body>
+  
 </html>
