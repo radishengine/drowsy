@@ -386,7 +386,7 @@ define(function() {
       return this.dv.getInt32(48, true);
     },
     get height() {
-      return Math.max(2, this.dv.getInt32(52, true);
+      return Math.max(2, this.dv.getInt32(52, true));
     },
     get focus() {
       return this.dv.getInt32(56, true);
