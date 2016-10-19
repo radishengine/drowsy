@@ -105,7 +105,7 @@ define(['../dispatch'], function(dispatch) {
   
   function split(segment, entries) {
     var bodyVersion = segment.getTypeParameter('body-version');
-    if (!isNaN(bodyVersion)) return split_contents(bodyVersion, segment, entries);
+    if (bodyVersion) return split_contents(bodyVersion, segment, entries);
     
     var mode = segment.getTypeParameter('mode');
     if (mode === 'prefix') return split_prefix(segment, entries);
