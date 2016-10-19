@@ -103,18 +103,13 @@
 </filter>
   
 <filter id="filter-bw-on-black">
-  <feColorMatrix type="saturate" values="1"/>
   <!-- 1-bit transparency -->
   <feComponentTransfer result="flatalpha">
    <feFuncA type="discrete" tableValues="0, 1"/>
   </feComponentTransfer>
   
   <!-- grayscale -->
-  <feColorMatrix type="matrix" result="gray" values="
-    0.3333 0.3333 0.3333 0 0
-    0.3333 0.3333 0.3333 0 0
-    0.3333 0.3333 0.3333 0 0
-    0 0 0 1 0"/>
+  <feColorMatrix type="saturate" result="gray" values="0"/>
   
   <!-- black & white -->
   <feComponentTransfer result="main">
