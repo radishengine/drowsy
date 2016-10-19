@@ -585,6 +585,33 @@
     font-family: monospace;
     border: 0;
   }
+  
+  .atari-st.desktop {
+    background: #1dde06;
+  }
+  
+  .atari-st.window-frame {
+    background: #d7d7d7;
+    border: 2px solid black;
+    box-shadow: 2px 2px 0 black;
+  }
+  
+  .atari-st.window-frame .title-bar {
+    text-align: center;
+  }
+  
+  .atari-st.window-frame .close-button, .atari-st.window-frame .icon-button {
+    background: black;
+    color: #d7d7d7;
+  }
+  
+  .atari-st.window-frame .icon {
+    filter: url(#filter-bw-on-black);
+  }
+  
+  .atari-st.window-frame .content {
+    background: #d7d7d7;
+  }
 </style>
   
 <script>
@@ -680,6 +707,19 @@
 
 <div class='desktop ms-dos'>
   <div class='window-frame ms-dos'>
+    <div class='title-bar'>
+      <button class='icon-button' onclick="randomIcon(this)" data-last-pick="0">
+        <div class="icon" style="background-position:-442px -482px"></div>
+      </button>
+      <button class='close-button'>X</button>
+      <span class='title-text'>Title Bar</span>
+    </div>
+    <div class='content'></div>
+  </div>
+</div>
+  
+<div class='desktop atari-st'>
+  <div class='window-frame atari-st'>
     <div class='title-bar'>
       <button class='icon-button' onclick="randomIcon(this)" data-last-pick="0">
         <div class="icon" style="background-position:-442px -482px"></div>
