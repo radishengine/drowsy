@@ -979,6 +979,34 @@ define(function() {
     },
   });
   
+  function FileListV6View(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+  }
+  FileListV6View.prototype = {
+    get fileCount() {
+      return this.dv.getUint16(2, true);
+    },
+    get fileRecords() {
+      var list = new Array(this.fileCount);
+      var nameBase = 17;
+      var lengthBase + 17 + 13 * list.length;
+      var flagsBase = lengthBase + lengthBase + list.length * 4;
+      for (var i = 0; i < list.length; i++) {
+        var namePos = nameBase + (13 * i);
+        var lengthPos = lengthBase + (4 * i);
+        var flagsPos = flagsBase + (2 * i);
+        list[i] = {
+          name: String.fromCharCode.apply(this.bytes.subarray(namePos, namePos + 13)).match(/^\0*/)[0],
+          byteLength: this.dv.getUint32(lengthPos, true),
+          flags: this.dv.getUint16(flagsPos, true),
+        };
+      }
+      Object.defineProperty(this, 'fileRecords', {value:list});
+      return list;
+    },
+  };
+  
   return {
     getStructView: function(segment) {
       var v = +segment.getTypeParameter('v'), gv = +segment.getTypeParameter('gv');
