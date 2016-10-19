@@ -16,7 +16,10 @@ define(['../dispatch'], function(dispatch) {
             + count*13 /* file names */
             + count*4 /* file lengths */
             + count*2 /* flags & ratio */;
-          var fileListSegment = segment.getSegment('chunk/ags; which=file-list-v6; base=' + (offset + totalSize), offset, totalSize);
+          var fileListSegment = segment.getSegment(
+            'chunk/ags; which=file-list-v6; base=' + (offset + totalSize),
+            offset,
+            totalSize);
           entries.add(fileListSegment);
         });
       case 10:
