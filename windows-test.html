@@ -154,21 +154,19 @@
   
   <feColorMatrix type="matrix" in="three-tone" values="
      2 0 0 0 0 
-     0 2 0 0 0 
-     0 0 2 0 0 
-     0 0 0 1 0" result="white-pixels"/>
+     2 0 0 0 0 
+     2 0 0 0 0 
+     2 0 0 0 0" result="white-pixels"/>
   
-  <!--
   <feColorMatrix type="matrix" in="three-tone" values="
-     1 0 0 0 0 
-     1 0 0 0 0 
-     1 0 0 0 0 
-     0 0 0 1 0.5" result="black-pixels"/>
+     -2 0 0 0 2 
+     -2 0 0 0 2 
+     -2 0 0 0 2 
+     -2 0 0 0 2" result="black-pixels"/>
   
   <feBlend in="three-tone" in2="white-pixels" operator="out" result="gray-pixels"/>
   <feBlend in="gray-pixels" in2="black-pixels" operator="out" result="gray-pixels"/>
   <feBlend in="alt-pixels" in2="gray-pixels" operator="in" result="alt-pixels"/>
--->
   
 </filter>
   
