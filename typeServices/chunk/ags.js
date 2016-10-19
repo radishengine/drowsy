@@ -364,7 +364,7 @@ define(function() {
     formatVersion: LATEST_FORMAT_VERSION,
     guiVersion: LATEST_GUI_VERSION,
     get vtext() {
-      return nullTerminated(this.bytes, 0, 4));
+      return nullTerminated(this.bytes, 0, 4);
     },
     get scriptName() {
       var name = (this.guiVersion < 103) ? 'GUI' + this.dv.getInt32(116, true) : nullTerminated(this.bytes, 4, 16);
