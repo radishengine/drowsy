@@ -110,14 +110,14 @@ define(['../dispatch'], function(dispatch) {
   
   function mount(containerSegment, volume) {
     var promiseChain = Promise.resolve();
-    return containerSegment.split(function(entry) {
-      if (entry.typeName === 'chunk/ags' && chunk.getTypeParameter('which') === 'file-list-v6') {
+    return containerSegment.split(function(chunk) {
+      if (chunk.typeName === 'chunk/ags' && chunk.getTypeParameter('which') === 'file-list-v6') {
         var base = chunk.getTypeParameter('base');
         if (!base) {
           throw new Error('base must be set');
         }
         base = +base;
-        promiseChain = promiseChain.then(entry.getStruct())
+        promiseChain = promiseChain.then(chunk.getStruct())
         .then(function(fileList) {
           for (var i = 0; i < fileList.fileRecords.length; i++) {
             var file = fileList.fileRecords[i];
@@ -163,7 +163,7 @@ define(['../dispatch'], function(dispatch) {
         
       }
       else {
-        console.log('unsupported: ' + entry.type);
+        console.log('unsupported: ' + chunk.type);
       }
     },
     function() {
