@@ -19,8 +19,8 @@ define(['../dispatch'], function(dispatch) {
           entries.add(fileListSegment);
           return fileListSegment.getStruct().then(function(fileList) {
             var offset = totalSize;
-            for (var i = 0; i < fileList.files.length; i++) {
-              var file = fileList.files[i];
+            for (var i = 0; i < fileList.fileRecords.length; i++) {
+              var file = fileList.fileRecords[i];
               var ext = file.name.match(/[^\.]*$/)[1].toLowerCase();
               var type = dispatch.byExtension[ext] || 'application/octet-stream';
               entries.add(segment.getSegment(type, offset, file.byteLength));
