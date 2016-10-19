@@ -997,7 +997,7 @@ define(function() {
         var lengthPos = lengthBase + (4 * i);
         var flagsPos = flagsBase + (2 * i);
         list[i] = {
-          name: String.fromCharCode.apply(null, this.bytes.subarray(namePos, namePos + 13)).match(/^\0*/)[0],
+          name: String.fromCharCode.apply(null, this.bytes.subarray(namePos, namePos + 13)).match(/^[^\0]*/)[0],
           byteLength: this.dv.getUint32(lengthPos, true),
           flags: this.dv.getUint16(flagsPos, true),
         };
