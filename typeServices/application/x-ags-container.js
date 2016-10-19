@@ -117,7 +117,8 @@ define(['../dispatch'], function(dispatch) {
           throw new Error('base must be set');
         }
         base = +base;
-        promiseChain = promiseChain.then(chunk.getStruct())
+        promiseChain = promiseChain.then(
+        chunk.getStruct()
         .then(function(fileList) {
           for (var i = 0; i < fileList.fileRecords.length; i++) {
             var file = fileList.fileRecords[i];
@@ -159,8 +160,7 @@ define(['../dispatch'], function(dispatch) {
             }
             volume.addFile(containerSegment.getSegment(fileType, file.byteOffset, file.byteLength));
           }
-        });
-        
+        }));
       }
       else {
         console.log('unsupported: ' + chunk.type);
