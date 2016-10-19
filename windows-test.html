@@ -235,11 +235,14 @@
 </filter>
   
   <filter id="filter-wb20">
-    <feComponentTransfer>
+    <feComponentTransfer result="flat-alpha">
       <feFuncA type="discrete" tableValues="0, 1"/>
-      <feFuncB type="discrete" tableValues="0, 1"/>
-      <feFuncG type="linear" slope="0"/>
-      <feFuncR type="linear" slope="0"/>
+    </feComponentTransfer>
+    <feColorMatrix type="saturate" values="0"/>
+    <feComponentTransfer>
+      <feFuncR type="discrete" tableValues="0, 0.666, 1"/>
+      <feFuncG type="discrete" tableValues="0, 0.666, 1"/>
+      <feFuncB type="discrete" tableValues="0, 0.666, 1"/>
     </feComponentTransfer>
   </filter>
   
