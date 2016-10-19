@@ -8,9 +8,9 @@
 <svg height="0">
   <filter id="pal16">
     <feComponentTransfer in="SourceGraphic" result="darkened">
-     <feFuncR type="linear" slope="0.5"/>
-     <feFuncG type="linear" slope="0.5"/>
-     <feFuncB type="linear" slope="0.5"/>
+     <feFuncR type="linear" slope="0.75"/>
+     <feFuncG type="linear" slope="0.75"/>
+     <feFuncB type="linear" slope="0.75"/>
     </feComponentTransfer>
     <feMorphology in="SourceGraphic" operator="erode" radius="1" result="inner"/>
     <feComposite in="SourceGraphic" in2="inner" operator="in" result="inner"/>
