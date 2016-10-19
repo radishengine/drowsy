@@ -167,8 +167,7 @@
   <feComposite in="three-tone" in2="white-pixels" operator="out" result="gray-pixels"/>
   <feComposite in="gray-pixels" in2="black-pixels" operator="out" result="gray-pixels"/>
   
-  <feOffset in="gray-pixels" dx="1" dy="1" result="gray-mask"/>
-  <feComposite in="gray-pixels" in2="gray-mask" operator="in" result="gray-pixels"/>
+  <feMorphology operator="erode" radius="1"/>
   
   <feComposite in="alt-pixels" in2="gray-pixels" operator="in" result="alt-pixels"/>
   
