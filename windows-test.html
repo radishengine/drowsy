@@ -109,7 +109,7 @@
   </feComponentTransfer>
   
   <!-- grayscale -->
-  <feColorMatrix type="matrix" values="
+  <feColorMatrix type="matrix" result="gray" values="
     0.3333 0.3333 0.3333 0 0
     0.3333 0.3333 0.3333 0 0
     0.3333 0.3333 0.3333 0 0
@@ -146,11 +146,11 @@
   <feImage x="0" y="0" width="2" height="2" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AoSDAgUsSmRhgAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAEklEQVQI12P4//8/AwT8//8fACnkBft7DmIIAAAAAElFTkSuQmCC"/>
   <feTile result="alt-pixels"/>
   
-  <feColorMatrix in="SourceGraphic" type="matrix"
-  values="1 0 0 0 0
-          0 1 0 0 0
-          0 0 1 0 0
-          0 0 0 1 0"/>
+  <feComponentTransfer in="gray">
+    <feFuncR type="discrete" tableValues="0, 0.5, 1"/>
+    <feFuncG type="discrete" tableValues="0, 0.5, 1"/>
+    <feFuncB type="discrete" tableValues="0, 0.5, 1"/>
+  </feComponentTransfer>
   
 </filter>
 
