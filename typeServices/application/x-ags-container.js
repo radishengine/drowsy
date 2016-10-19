@@ -74,7 +74,7 @@ define(['../dispatch'], function(dispatch) {
           }
           return doContainers(dv.getUint32(1, true))
           .then(function() {
-            entries.add(segment.getSegment('chunk/ags; which=file-list-v' + formatVersion', 0, pos);
+            entries.add(segment.getSegment('chunk/ags; which=file-list-v' + formatVersion), 0, pos);
           });
         });
     }
