@@ -15,13 +15,11 @@
     <feMorphology in="SourceGraphic" operator="erode" radius="1" result="inner"/>
     <feComposite in="SourceGraphic" in2="inner" operator="in" result="inner"/>
     <feComposite in="inner" in2="darkened" operator="over" />
-    <!--
     <feComponentTransfer>
       <feFuncR type="discrete" tableValues="0, 0.5, 1"/>
       <feFuncG type="discrete" tableValues="0, 0.5, 1"/>
       <feFuncB type="discrete" tableValues="0, 0.5, 1"/>
     </feComponentTransfer>
-    -->
   </filter>
 </svg>
   
