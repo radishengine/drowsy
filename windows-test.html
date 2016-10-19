@@ -485,7 +485,7 @@
     } while (pick === +el.dataset.lastPick);
     var x = 2 + (pick % 31) * 20;
     var y = 2 + Math.floor(pick / 31) * 20;
-    el.style.backgroundPosition = x + 'px ' + y + 'px';
+    el.style.backgroundPosition = '-' + x + 'px -' + y + 'px';
   }
 </script>
   
