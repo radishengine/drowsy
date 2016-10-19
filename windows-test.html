@@ -473,21 +473,21 @@
 </style>
   
 <script>
-  function randomIcon(e) {
+  function randomIcon(el) {
     var pick;
     do {
       pick = Math.floor(Math.random() * (31 * 32 + 7));
-    } while (pick === +e.dataset.lastPick);
+    } while (pick === +el.dataset.lastPick);
     var x = 2 + (pick % 31) * 18;
     var y = 2 + Math.floor(pick / 31) * 18;
-    e.target.style.backgroundPosition = x + 'px ' + y + 'px';
+    el.style.backgroundPosition = x + 'px ' + y + 'px';
   }
 </script>
   
 <div class='desktop win31'>
   <div class='window-frame win31'>
     <div class='title-bar'>
-      <button class='icon-button' onclick="randomIcon" data-last-pick="0"></button>
+      <button class='icon-button' onclick="randomIcon(this)" data-last-pick="0"></button>
       <button class='close-button'>X</button>
       <span class='title-text'>Title Bar</span>
     </div>
@@ -498,7 +498,7 @@
 <div class='desktop win95'>
   <div class='window-frame win95'>
     <div class='title-bar'>
-      <button class='icon-button' onclick="randomIcon" data-last-pick="0"></button>
+      <button class='icon-button' onclick="randomIcon(this)" data-last-pick="0"></button>
       <button class='close-button'>X</button>
       <span class='title-text'>Title Bar</span>
     </div>
@@ -509,7 +509,7 @@
 <div class='desktop workbench13'>
   <div class='window-frame workbench13'>
     <div class='title-bar'>
-      <button class='icon-button' onclick="randomIcon" data-last-pick="0"></button>
+      <button class='icon-button' onclick="randomIcon(this)" data-last-pick="0"></button>
       <button class='close-button'>X</button>
       <span class='title-text'>Title Bar</span>
     </div>
@@ -520,7 +520,7 @@
 <div class='desktop workbench20'>
   <div class='window-frame workbench20'>
     <div class='title-bar'>
-      <button class='icon-button' onclick="randomIcon" data-last-pick="0"></button>
+      <button class='icon-button' onclick="randomIcon(this)" data-last-pick="0"></button>
       <button class='close-button'>X</button>
       <span class='title-text'>Title Bar</span>
     </div>
@@ -531,7 +531,7 @@
 <div class='desktop mac-bw'>
   <div class='window-frame mac-bw'>
     <div class='title-bar'>
-      <button class='icon-button' onclick="randomIcon" data-last-pick="0"></button>
+      <button class='icon-button' onclick="randomIcon(this)" data-last-pick="0"></button>
       <button class='close-button'>X</button>
       <span class='title-text'>Title Bar</span>
     </div>
