@@ -213,8 +213,9 @@
            0 0 0 0 0
           -4 0 0 1 0"/>
   
-  <feFlood flood-color="#0055aa" result="main"/>
+  <feFlood flood-color="#ffffff" result="main"/>
   <feComposite in="main" in2="flatalpha" operator="in" result="main"/>
+  <feComposite in="blue" in2="main" operator="over" result="main"/>
   <feComposite in="orange" in2="main" operator="over" result="main"/>
   <feComposite in="white" in2="main" result="main"/>
   <feComposite in="black" in2="main" result="main"/>
