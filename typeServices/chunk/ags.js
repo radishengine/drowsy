@@ -1011,6 +1011,7 @@ define(function() {
     getStructView: function(segment) {
       var v = +segment.getTypeParameter('v'), gv = +segment.getTypeParameter('gv');
       switch (segment.getTypeParameter('which')) {
+        case 'file-list-v6': return FileListV6View;
         case 'gui-collection': return getVersionedType(GUICollectionView, v);
         case 'gui': return getVersionedType(GUIView, v, gv);
         case 'control': return getVersionedType(GUIControlView, v, gv);
