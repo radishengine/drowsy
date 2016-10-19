@@ -161,7 +161,7 @@ define(['../dispatch'], function(dispatch) {
                 console.log('unknown file: ' + file.name);
                 break;
             }
-            volume.addFile(containerSegment.getSegment(fileType, base + file.byteOffset, file.byteLength));
+            volume.addFile(file.name, containerSegment.getSegment(fileType, base + file.byteOffset, file.byteLength));
           }
         }));
       }
