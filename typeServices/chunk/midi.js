@@ -146,7 +146,7 @@ define(function() {
           continue readTrack;
         case 0x3:
           var channel = lo + 1;
-          steps.push(readControlModeChange(channel, raw[pos++])));
+          steps.push(readControlModeChange(channel, raw[pos++]));
           continue readTrack;
         case 0x4:
           var channel = lo + 1;
