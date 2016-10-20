@@ -136,7 +136,7 @@ define(function() {
           var command = hi === 0x9 ? 'note-on' : 'note-off';
           steps.push([command, channel, note, velocity]);
           continue readTrack;
-        case 0x2;
+        case 0x2:
         case 0x5:
           var channel = lo + 1;
           var note = raw[pos++];
