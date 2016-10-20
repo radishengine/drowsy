@@ -1,18 +1,15 @@
-define(function() {
+define(['../chunk/midi'], function(chunks) {
 
   'use strict';
   
   function split(entries) {
     var rootSegment = this;
-    var headerSegment = rootSegment.getSegment('audio/x-midi-header', 0, HeaderView.byteLength);
-    return headerSegment.getBytes().then(function(rawHeader) {
-      var header = new HeaderView(rawHeader.buffer, rawHeader.byteOffset, rawHeader.byteLength);
+    var headerSegment = rootSegment.getSegment('chunk/midi; which=header', 0, chunks.HeaderView.byteLength);
+    return headerSegment.getStruct().then(function(header) {
       if (!header.hasValidSignature) return Promise.reject('not a valid MIDI header');
       if (!header.hasValidDataLength) return Promise.reject('MIDI header is unexpected length');
-      if (entries.accepted('audio/x-midi-header')) {
-        entries.add(headerSegment);
-      }
-      var pos = HeaderView.byteLength;
+      entries.add(headerSegment);
+      var pos = chunks.HeaderView.byteLength;
       function onTrack(rawHeader) {
         if (rawHeader.length === 0) {
           return;
