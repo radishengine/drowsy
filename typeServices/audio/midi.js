@@ -14,61 +14,25 @@ define(function() {
       }
       var pos = HeaderView.byteLength;
       function onTrack(rawHeader) {
+        if (rawHeader.length === 0) {
+          return;
+        }
         if (String.fromCharCode(rawHeader[0], rawHeader[1], rawHeader[2], rawHeader[3]) !== 'MTrk') {
           return Promise.reject('not a valid MIDI track');
         }
         var trackLength = (rawHeader[4] << 24) | (rawHeader[5] << 16) | (rawHeader[6] << 8) | rawHeader[7];
         pos += 8;
-        if (entries.accepted('audio/x-midi-track')) {
-          entries.add(rootSegment.getSegment('audio/x-midi-track', pos, trackLength));
-        }
+        entries.add(rootSegment.getSegment('chunk/midi; which=track', pos, trackLength));
         pos += trackLength;
-        return rootSegment.getBytes(pos, 8).then(onTrack);
+        return rootSegment.getBytes(pos, 0, 8).then(onTrack);
       }
-      return rootSegment.getBytes(pos, 8).then(onTrack);
+      return rootSegment.getBytes(pos, 0, 8).then(onTrack);
     });
   }
   
-  function HeaderView(buffer, byteOffset, byteLength) {
-    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
-    this.dv = new DataView(buffer, byteOffset, byteLength);
-  }
-  HeaderView.prototype = {
-    get signature() {
-      return String.fromCharCode.apply(null, this.bytes.subarray(0, 4));
-    },
-    get hasValidSignature() {
-      return this.signature === 'MThd';
-    },
-    get dataLength() {
-      return this.dv.getUint32(4, false);
-    },
-    get hasValidDataLength() {
-      return this.dataLength === 6;
-    },
-    get format() {
-      var value = this.dv.getUint16(8, false);
-      switch (value) {
-        case 0: return 'singleTrack';
-        case 1: return 'multipleTrack';
-        case 2: return 'multipleSong';
-        default: return value;
-      }
-    },
-    get trackCount() {
-      return this.dv.getUint16(10, false);
-    },
-    get deltaTimeValue() {
-      return Math.abs(this.getUint16(12, false));
-    },
-    get deltaTimeUnits() {
-      return this.getUint16(12, false) >= 0 ? 'ticksPerBeat' : 'smpte';
-    },
-  };
-  HeaderView.byteLength = 8 + 6;
-  
   return {
     bytePattern: /^MThd\x00\x00\x00\x06.{6}MTrk.{4}/,
+    split: split,
   };
 
 });
