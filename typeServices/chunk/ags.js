@@ -1011,6 +1011,70 @@ define(function() {
     },
   };
   
+  function Glyph(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+  }
+  Glyph.prototype = {
+    get width() {
+      return this.dv.getUint16(0, true);
+    },
+    get height() {
+      return this.dv.getUint16(2, true);
+    },
+    get stride() {
+      return Math.ceil(this.width / 8);
+    },
+    getBitplanes: function() {
+      return this.bytes.slice(4, 4 + this.stride * this.height);
+    },
+    createImageData: function(ctx2d) {
+      var stride = this.stride, width = this.width, height = this.height;
+      var bitplanes = this.getBitplanes();
+      var imageData = ctx2d.createImageData(width, height);
+      for (var y = 0, y_max = this.height; y < y_max; y++) {
+        for (var x = 0; x < width; x++) {
+          var byte = bitplanes[y * stride + Math.floor(x/8)];
+          if (byte & (0x80 >>> (x & 7))) {
+            imageData.data[y*width + x + 3] = 0xff;
+          }
+        }
+      }
+      return imageData;
+    },
+  };
+  
+  function Font(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+  }
+  Font.prototype = {
+    get signature() {
+      return String.fromCharCode.apply(null, this.bytes.subarray(0, 15));
+    },
+    get hasValidSignature() {
+      return this.signature === "WGT Font File  ";
+    },
+    get addressesOffset() {
+      return this.dv.getUint16(15, true);
+    },
+    get characterCount() {
+      return (this.dv.byteLength - this.addressesOffset) / 2;
+    },
+    get characters() {
+      var list = new Array(this.characterCount);
+      var offset = this.addressesOffset;
+      var buffer = this.dv.buffer;
+      var byteLength = this.dv.byteLength;
+      for (var i = 0; i < list.length; i++) {
+        var glyphOffset = this.dv.getUint16(offset + i*2, true);
+        list[i] = new Glyph(buffer, glyphOffset, byteLength - glyphOffset);
+      }
+      Object.defineProperty(this, 'characters', {value:list});
+      return list;
+    },
+  };
+  
   return {
     getStructView: function(segment) {
       var v = +segment.getTypeParameter('v'), gv = +segment.getTypeParameter('gv');
@@ -1025,6 +1089,7 @@ define(function() {
         case 'slider': return getVersionedType(SliderView, v, gv);
         case 'text-box': return getVersionedType(TextBoxView, v, gv);
         case 'list-box': return getVersionedType(ListBoxView, v, gv);
+        case 'font': return Font;
         default: return null;
       }
     },
