@@ -33,6 +33,7 @@ define(function() {
       css: 'text/css',
       csv: 'text/csv',
       dll: 'application/x-exe-ambiguous',
+      dls: 'multipart/x-riff; expect=downloadable-sounds',
       dms: 'application/x-disk-masher-system',
       doc: 'application/x-doc-ambiguous',
       docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
