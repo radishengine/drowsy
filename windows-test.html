@@ -283,7 +283,16 @@
     <!--
     <feComposite in="color" in2="grayscale" operator="arithmetic" k1="1" />
     -->
+    <!--
     <feComposite in="color" in2="grayscale" operator="over" />
+    -->
+    
+    <!-- multiply pink -->
+    <feComposite in="grayscale" in2="pink" operator="arithmetic" k1="1" />
+    <!-- add blue -->
+    <feComposite in2="blue" operator="arithmetic" k3="1" />
+    <!-- composite onto gray -->
+    <feComposite in2="grayscale" operator="over"/>
     
   </filter>
 </svg>
