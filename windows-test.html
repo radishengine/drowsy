@@ -234,15 +234,11 @@
   
 </filter>
   
-  <filter id="filter-wb20">
-    <feComponentTransfer result="flat-alpha">
-      <feFuncA type="discrete" tableValues="0, 1"/>
-    </feComponentTransfer>
-    <feColorMatrix type="saturate" values="0"/>
+  <filter id="filter-magicwb">
     <feComponentTransfer>
-      <feFuncR type="discrete" tableValues="0, 0.25, 1"/>
-      <feFuncG type="discrete" tableValues="0, 0.25, 1"/>
-      <feFuncB type="discrete" tableValues="0, 0.25, 1"/>
+      <feFuncR type="discrete" tableValues="0, 0, 0.666, 1"/>
+      <feFuncG type="linear" tableValues="0, 1"/>
+      <feFuncB type="discrete" tableValues="0, 0, 0.666, 1"/>
     </feComponentTransfer>
   </filter>
   
@@ -756,7 +752,7 @@
   
 <img src='silk_full.png' style='image-rendering: pixelated'>
   
-<img src='silk_full.png' style='filter: url(#filter-wb20); image-rendering: pixelated'>
+<img src='silk_full.png' style='filter: url(#filter-magicwb); image-rendering: pixelated'>
 
   <!--
 <img src='silk_full.png' style='image-rendering: pixelated'>
