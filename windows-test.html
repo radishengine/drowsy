@@ -247,16 +247,18 @@
             0 0 0 0 0
             0 0 1 0 0
             0 0 1 0 0"/>
+    <feFlood flood-color="#3b67a2" />
+    <feComposite operator="in" in2="blue" result="blue"/>
     
-    <!--
     <feColorMatrix type="matrix" in="flat" result="pink"
     values="1 0 0 0 0
-            0.66 0 0 0 0
-            0.59 0 0 0 0
+            0 0 0 0 0
+            0 0 0 0 0
             1 0 0 0 0"/>
+    <feFlood flood-color="#ffa997"/>
+    <feComposite operator="in" in2="pink" result="pink"/>    
     
     <feComposite in="blue" in2="pink" operator="over"/>
--->
   </filter>
 </svg>
   
