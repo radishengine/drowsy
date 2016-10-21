@@ -280,7 +280,10 @@
     <feComposite in="grayscale" operator="in"/>
     <feComposite in2="outline" operator="over" result="grayscale"/>
     
+    <!--
     <feComposite in="color" in2="grayscale" operator="arithmetic" k1="1" />
+    -->
+    <feComposite in="color" in2="grayscale" operator="over" />
     
   </filter>
 </svg>
