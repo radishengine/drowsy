@@ -265,10 +265,19 @@
     <feColorMatrix in="flatalpha" type="saturate" values="0"/>
     
     <feComponentTransfer result="grayscale">
-      <feFuncR type="discrete" tableValues="0, 0, 0, 0.5, 0.5, 0.5, 0.6, 0.6, 0.6, 1, 1"/>
-      <feFuncG type="discrete" tableValues="0, 0, 0, 0.5, 0.5, 0.5, 0.6, 0.6, 0.6, 1, 1"/>
-      <feFuncB type="discrete" tableValues="0, 0, 0, 0.5, 0.5, 0.5, 0.6, 0.6, 0.6, 1, 1"/>
+      <feFuncR type="discrete" tableValues="0, 0, 0, 0, 0, 0.5, 0.6, 0.6, 0.6, 0.6, 1"/>
+      <feFuncG type="discrete" tableValues="0, 0, 0, 0, 0, 0.5, 0.6, 0.6, 0.6, 0.6, 1"/>
+      <feFuncB type="discrete" tableValues="0, 0, 0, 0, 0, 0.5, 0.6, 0.6, 0.6, 0.6, 1"/>
     </feComponentTransfer>
+    
+    <feColorMatrix in="flatalpha" type="saturate" values="0"/>
+    <feComponentTransfer result="outline">
+      <feFuncR type="discrete" tableValues="0, 1"/>
+      <feFuncG type="discrete" tableValues="0, 1"/>
+      <feFuncB type="discrete" tableValues="0, 1"/>
+    </feComponentTransfer>
+    <feMorphology in="grayscale" operator="erode" radius="1" result="grayscale"/>
+    <feComposite in2="outline" operator="over" result="grayscale"/>
     
   </filter>
 </svg>
