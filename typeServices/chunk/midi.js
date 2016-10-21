@@ -122,6 +122,7 @@ define(function() {
     }
     readTrack: while (pos < raw.length) {
       var delta = readNumber();
+      steps.push(['sync-delta', delta]);
       var event = raw[pos++];
       if (event < 0x80) {
         throw new Error('badly-formed track data');
