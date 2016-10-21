@@ -260,7 +260,7 @@
     <feFlood flood-color="#ffa997"/>
     <feComposite operator="in" in2="pink" result="pink"/>    
     
-    <feComposite in="blue" in2="pink" operator="over"/>
+    <feComposite in="blue" in2="pink" operator="over" result="color"/>
     
     <feColorMatrix in="flatalpha" type="saturate" values="0"/>
     
@@ -279,6 +279,8 @@
     <feMorphology in="grayscale" operator="erode" radius="1"/>
     <feComposite in="grayscale" operator="in"/>
     <feComposite in2="outline" operator="over" result="grayscale"/>
+    
+    <feComposite in="color" in2="grayscale" operator="arithmetic" k1="1" />
     
   </filter>
 </svg>
