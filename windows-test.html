@@ -235,8 +235,10 @@
 </filter>
   
   <filter id="filter-magicwb">
-    <feComponentTransfer result="flat">
+    <feComponentTransfer result="flatalpha">
       <feFuncA type="discrete" tableValues="0, 1, 1, 1"/>
+    </feComponentTransfer>
+    <feComponentTransfer result="flat">
       <feFuncR type="discrete" tableValues="0, 1"/>
       <feFuncG type="linear" slope="0"/>
       <feFuncB type="discrete" tableValues="0, 0, 1, 1"/>
@@ -259,6 +261,15 @@
     <feComposite operator="in" in2="pink" result="pink"/>    
     
     <feComposite in="blue" in2="pink" operator="over"/>
+    
+    <feColorMatrix in="flatalpha" type="saturate" values="0"/>
+    
+    <feComponentTransfer result="grayscale">
+      <feFuncR type="discrete" tableValues="0, 0, 0, 0.5, 0.5, 0.5, 0.6, 0.6, 0.6, 1, 1"/>
+      <feFuncG type="discrete" slope="0"/>
+      <feFuncB type="discrete" tableValues="0, 0, 1, 1"/>
+    </feComponentTransfer>
+    
   </filter>
 </svg>
   
