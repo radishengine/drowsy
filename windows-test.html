@@ -276,7 +276,8 @@
       <feFuncG type="discrete" tableValues="0, 1"/>
       <feFuncB type="discrete" tableValues="0, 1"/>
     </feComponentTransfer>
-    <feMorphology in="grayscale" operator="erode" radius="1" result="grayscale"/>
+    <feMorphology in="grayscale" operator="erode" radius="1"/>
+    <feComposite in="grayscale" operator="in"/>
     <feComposite in2="outline" operator="over" result="grayscale"/>
     
   </filter>
