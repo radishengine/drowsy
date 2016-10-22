@@ -328,16 +328,14 @@
     -->
     
     <!-- multiply pink -->
-    <feComposite in="grayscale" in2="pink" operator="arithmetic" k1="1" result="multpink" />
+    <feComposite in="pink" in2="grayscale" operator="arithmetic" k1="1" result="multpink" />
     
     <!-- add blue -->
     <feComposite in2="blue" operator="arithmetic" k3="1" />
-    <feComposite in2="blue" operator="in" result="multpink"/>
+    <feComposite in2="blue" operator="in" result="multblue"/>
     
     <feComposite in="multpink" in2="multblue" operator="over"/>
     <feComposite in2="grayscale" operator="over"/>
-    
-    <feComponentTransfer in="multpink"/>
     
   </filter>
 </svg>
