@@ -302,7 +302,7 @@
     
     <feComposite in="blue" in2="pink" operator="over" result="color"/>
     
-    <feColorMatrix in="flatalpha" type="saturate" values="0"/>
+    <feColorMatrix in="flatalpha" type="saturate" values="0" result="fullgray"/>
     
     <feComponentTransfer result="grayscale">
       <feFuncR type="discrete" tableValues="0, 0, 0, 0, 0.2, 0.2, 0.3, 0.3, 0.3, 1, 1"/>
@@ -328,7 +328,13 @@
     -->
     
     <!-- multiply pink -->
-    <feComposite in="pink" in2="grayscale" operator="arithmetic" k1="1" result="multpink" />
+    <feComponentTransfer result="hardgray" in="fullgray">
+      <feFuncR type="discrete" tableValues="0.6666666666666666, 1, 1"/>
+      <feFuncG type="discrete" tableValues="0.8520710059171598, 1, 1"/>
+      <feFuncB type="discrete" tableValues="0.8211920529801324, 1, 1"/>
+    </feComponentTransfer>
+    
+    <feComposite in="pink" in2="hardgray" operator="arithmetic" k1="1" result="multpink" />
     
     <!-- add blue -->
     <feComposite in2="blue" operator="arithmetic" k3="1" />
