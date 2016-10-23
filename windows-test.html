@@ -338,6 +338,25 @@
     <feComposite in2="grayscale" operator="over"/>
     
   </filter>
+  
+  <filter id="filter-dos-char">
+    <feColorMatrix type="saturation" values="0"/>
+    <feComponentTransfer>
+      <feFuncR type="discrete" values="0 1"/>
+      <feFuncG type="discrete" values="0 1"/>
+      <feFuncB type="discrete" values="0 1"/>
+      <feFuncA type="discrete" values="0 1 1 1"/>
+    </feComponentTransfer>
+    <feColorMatrix type="matrix" result="whiteout"
+     values=" 1 0 0 0 0
+              0 1 0 0 0
+              0 0 1 0 0
+             -1 0 0 1 0"/>
+    <feOffset dx="1"/>
+    <feComposite operator="over" in2="whiteout" result="symbol"/>
+    <feFlood flood-color="#008"/>
+    <feComposite operator="in" in2="symbol"/>
+  </filter>
 </svg>
   
 <style type='text/css'>
@@ -695,15 +714,15 @@
     font-family: ms-dos, monospace;
     font-size: 16px;
     box-shadow:
-      inset 8px 8px 0 #008,
-      inset -8px 8px 0 #008,
-      inset 8px -8px 0 #008,
-      inset -8px -8px 0 #008,
+      inset 7px 8px 0 #008,
+      inset -7px 8px 0 #008,
+      inset 7px -8px 0 #008,
+      inset -7px -8px 0 #008,
       
-      inset 10px 10px 0 #888,
-      inset -10px 10px 0 #888,
-      inset 10px -10px 0 #888,
-      inset -10px -10px 0 #888,
+      inset 9px 10px 0 #888,
+      inset -9px 10px 0 #888,
+      inset 9px -10px 0 #888,
+      inset -9px -10px 0 #888,
       
       16px 16px 0 #000;
   }
