@@ -341,6 +341,18 @@
 </svg>
   
 <style type='text/css'>
+  @font-face {
+    font-family: macintosh-system;
+    src: url(mac/ChicagoFLF.ttf);
+    font-weight: bold;
+  }
+
+  @font-face {
+    font-family: ms-dos;
+    src: url(MorePerfectDOSVGA.ttf);
+    font-weight: bold;
+  }
+
   body {
     background: #aaa;
   }
@@ -530,7 +542,7 @@
   .window-frame.mac-bw .title-text {
     color: black;
     background: white;
-    font-family: sans-serif;
+    font-family: macintosh-system, sans-serif;
     font-weight: bold;
   }
   
@@ -693,7 +705,7 @@
   
   .ms-dos.window-frame .title-bar {
     color: #ff0;
-    font-family: monospace;
+    font-family: ms-dos, monospace;
   }
   
   .ms-dos.window-frame .title-text {
