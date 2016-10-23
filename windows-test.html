@@ -341,12 +341,26 @@
   
   <filter id="filter-dos-char">
     <feColorMatrix type="saturate" values="0"/>
-    <feComponentTransfer>
+    <feComponentTransfer result="bw">
       <feFuncR type="discrete" tableValues="0 0 1"/>
       <feFuncG type="discrete" tableValues="0 0 1"/>
       <feFuncB type="discrete" tableValues="0 0 1"/>
       <feFuncA type="discrete" tableValues="0 1 1 1"/>
     </feComponentTransfer>
+    
+    <feColorMatrix result="whitebits" type="matrix"
+      values="1 0 0 0 0
+              1 0 0 0 0
+              1 0 0 0 0
+              1 0 0 0 0"
+      />
+    
+    <feMorphology operator="dilate" radius="1" result="outline"/>
+    
+    <feFlood flood-color="#000"/>
+    <feComposite in2="outline" operator="in"/>
+    <feComposite in="bw" operator="over"/>
+    <!--
     <feColorMatrix type="matrix" result="whiteout"
      values=" 1 0 0 0 0
               0 1 0 0 0
@@ -356,6 +370,7 @@
     <feComposite operator="over" in2="whiteout" result="symbol"/>
     <feFlood flood-color="#008"/>
     <feComposite operator="in" in2="symbol"/>
+-->
   </filter>
 </svg>
   
