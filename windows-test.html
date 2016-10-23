@@ -345,11 +345,11 @@
     
     <feOffset in="multpink" dx="-1" dy="-1" result="shine"/>
     <feFlood flood-color="white"/>
-    <feComposite in2="shine" result="shine"/>
+    <feComposite in2="shine" result="shine" operator="in"/>
     
     <feOffset in="multpink" dx="1" dy="1" result="antishine"/>
     <feFlood flood-color="black"/>
-    <feComposite in2="antishine" result="antishine"/>
+    <feComposite in2="antishine" result="antishine" operator="in"/>
     
     <feComposite in="main" in2="antishine" operator="over" result="main"/>
     <feComposite in="main" in2="shine" operator="over" result="main"/>
