@@ -676,9 +676,19 @@
   
   .ms-dos.window-frame {
     background: #008;
-    border: 2px solid #888;
-    box-shadow: 16px 16px 0 black;
     font-family: monospace;
+    box-shadow:
+      inset 10px 10px 0 #888,
+      inset -10px 10px 0 #888,
+      inset 10px -10px 0 #888,
+      inset -10px -10px 0 #888,
+      
+      inset 8px 8px 0 #008,
+      inset -8px 8px 0 #008,
+      inset 8px -8px 0 #008,
+      inset -8px -8px 0 #008,
+      
+      16px 16px 0 #000;
   }
   
   .ms-dos.window-frame .title-bar {
@@ -688,6 +698,8 @@
   
   .ms-dos.window-frame .content {
     background: #008;
+    margin: 20px;
+    margin-top: 0;
   }
   
   .ms-dos.window-frame .close-button {
