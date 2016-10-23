@@ -39,9 +39,9 @@
 </filter>
   
 <filter id="filter-bw">
-  <!-- 1-bit transparency -->
+  <!-- 1-bit transparency (33% cutoff) -->
   <feComponentTransfer result="flatalpha">
-   <feFuncA type="discrete" tableValues="0, 1"/>
+   <feFuncA type="discrete" tableValues="0, 1, 1, 1"/>
   </feComponentTransfer>
   
   <!-- grayscale -->
@@ -60,9 +60,9 @@
 </filter>
   
 <filter id="filter-bw-on-white">
-  <!-- 1-bit transparency -->
+  <!-- 1-bit transparency (33% cutoff) -->
   <feComponentTransfer result="flatalpha">
-   <feFuncA type="discrete" tableValues="0, 1"/>
+   <feFuncA type="discrete" tableValues="0, 1, 1, 1"/>
   </feComponentTransfer>
   
   <!-- grayscale -->
@@ -103,9 +103,9 @@
 </filter>
   
 <filter id="filter-bw-on-black">
-  <!-- 1-bit transparency -->
+  <!-- 1-bit transparency (33% cutoff) -->
   <feComponentTransfer result="flatalpha">
-   <feFuncA type="discrete" tableValues="0, 1"/>
+   <feFuncA type="discrete" tableValues="0, 1, 1, 1"/>
   </feComponentTransfer>
   
   <!-- grayscale -->
