@@ -2,7 +2,7 @@ if (typeof self === Worker) {
   importScripts('require.js');
 }
 
-define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
+define('DataSegment', ['Format', 'formats/dispatch'], function(Format, formatDispatch) {
   
   var emptyBuffer = new ArrayBuffer(0);
   var emptyBytes = new Uint8Array(emptyBuffer);
@@ -12,10 +12,10 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   
   var handlerCache = {};
   
-  function getTypeHandler(t) {
+  function getFormatHandler(t) {
     if (t in handlerCache) return handlerCache[t];
     return handlerCache[t] = new Promise(function(resolve, reject) {
-      var handlerModule = 'typeServices/' + t;
+      var handlerModule = 'formats/' + t;
       require([handlerModule],
       function(handler) {
         resolve(handler);
@@ -113,32 +113,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   function DataSegment() {
   }
   DataSegment.prototype = {
-    type: 'application/octet-stream',
-    get typeName() {
-      return this.type.match(/^[^;\s]*/)[0];
-    },
-    get typeCategory() {
-      return this.type.match(/^[^\/]*/)[0];
-    },
-    get typeParameters() {
-      var params = this.type.split(';');
-      var obj = {};
-      for (var i = 1; i < params.length; i++) {
-        var param = params[i].match(/^\s*([^\s=]+)\s*=\s*(.*?)\s*$/);
-        if (!param) throw new Error('malformed parameters: ' + this.type);
-        var key = param[1];
-        var value = param[2];
-        obj[key] = value;
-      }
-      Object.defineProperty(this, 'typeParameters', {value:obj});
-      return obj;
-    },
-    getTypeParameter: function(name) {
-      return this.typeParameters[name] || null;
-    },
-    get subtype() {
-      return this.type.replace(/^.*?\//, '').replace(/;.*/, '');
-    },
+    format: Format.generic,
     get fixedLength() {
       var min = this.minLength, max = this.maxLength;
       return (min === max) ? min : NaN;
@@ -153,8 +128,8 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       if (this.hasFixedLength) return Promise.resolve(this);
       throw new Error('withFixedLength not defined for ' + this);
     },
-    getSegmentNormalized: function(type, offset, minLength, maxLength) {
-      return new DataSegmentWrapper(this, type, offset, minLength, maxLength);
+    getSegmentNormalized: function(format, offset, minLength, maxLength) {
+      return new DataSegmentWrapper(this, format, offset, minLength, maxLength);
     },
     getBufferOrViewNormalized: function(offset, minLength, maxLength) {
       throw new Error('no method defined to get bytes');
@@ -169,12 +144,12 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         return borv.buffer.slice(borv.byteOffset, borv.byteOffset + borv.byteLength);
       });
     },
-    getSegment: function(type, offset, minLength, maxLength) {
+    getSegment: function(format, offset, minLength, maxLength) {
       var region = normalizeRegion(
         offset, minLength, maxLength,
         this.offset, this.minLength, this.maxLength);
-      if (region.maxLength === 0) return new EmptySegment(type);
-      return this.getSegmentNormalized(type, region.offset, region.minLength, region.maxLength);
+      if (region.maxLength === 0) return new EmptySegment(format);
+      return this.getSegmentNormalized(format, region.offset, region.minLength, region.maxLength);
     },
     getBytesNormalized: function(offset, minLength, maxLength) {
       return this.getBufferOrViewNormalized(offset, minLength, maxLength)
@@ -258,11 +233,11 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
     getBlob: function() {
       var blobParam = this.asBlobParameter;
-      if (blobParam) return Promise.resolve(new Blob([blobParam], this.type));
+      if (blobParam) return Promise.resolve(new Blob([blobParam], this.format.toString()));
       var self = this;
       return this.getBufferOrViewNormalized(0, this.minLength, this.maxLength)
       .then(function(borv) {
-        return new Blob([borv], self.type);
+        return new Blob([borv], self.format.toString());
       });
     },
     saveForTransfer: function(transferables) {
@@ -274,8 +249,8 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     toLocal: function() {
       return Promise.resolve(this);
     },
-    getTypeHandler: function() {
-      return getTypeHandler(this.typeName);
+    getFormatHandler: function() {
+      return getFormatHandler(this.format.name);
     },
     getStructView: function() {
       var self = this;
@@ -290,9 +265,9 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
     mount: function(volume) {
       var self = this;
-      return this.getTypeHandler().then(function(handler) {
+      return this.getFormatHandler().then(function(handler) {
         if (typeof handler.mount !== 'function') {
-          return Promise.reject('mount not implemented for ' + self.typeName);
+          return Promise.reject('mount not implemented for ' + self.format.name);
         }
         return handler.mount(self, volume);
       });
@@ -312,7 +287,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
     getCapabilities: function() {
       var self = this;
-      return this.getTypeHandler()
+      return this.getFormatHandler()
       .then(function(handler) {
         return {
           split: typeof handler.split === 'function',
@@ -333,9 +308,9 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         };
       }
       var self = this;
-      return this.getTypeHandler().then(function(handler) {
+      return this.getFormatHandler().then(function(handler) {
         if (typeof handler.split !== 'function') {
-          return Promise.reject('split operation not defined for ' + self.typeName);
+          return Promise.reject('split operation not defined for ' + self.format.name);
         }
         var entries = new SplitEntries(eachCallback);
         var result = handler.split(self, entries);
@@ -348,12 +323,12 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
   };
   
-  function EmptySegment(type) {
-    this.type = type;
+  function EmptySegment(format) {
+    this.format = format;
   }
   EmptySegment.prototype = Object.assign(new DataSegment, {
-    getSegmentNormalized: function(type, offset, minLength, maxLength) {
-      return (type === this.type) ? this : new EmptySegment(type);
+    getSegmentNormalized: function(format, offset, minLength, maxLength) {
+      return (format === this.format) ? this : new EmptySegment(format);
     },
     getArrayBufferNormalized: function(offset, minLength, maxLength) {
       return p_emptyBuffer;
@@ -362,7 +337,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       return p_emptyBytes;
     },
     saveForTransfer: function(transferables) {
-      return ['Empty', this.type];
+      return ['Empty', this.format.toString()];
     },
   });
   Object.defineProperties(EmptySegment.prototype, {
@@ -377,13 +352,13 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     this.blob = blob;
   }
   DataSegmentFromBlob.prototype = Object.assign(new DataSegment, {
-    getSegmentNormalized: function(type, offset, minLength, maxLength) {
+    getSegmentNormalized: function(format, offset, minLength, maxLength) {
       // in this normalized context, we should not have to worry about:
       // - 'suffix' ranges
       // - offset out of range
       // - offset+minLength out of range
-      if (offset === 0 && maxLength >= this.blob.size && type === this.type) return this;
-      return new DataSegmentFromBlob(this.blob.slice(offset, offset+maxLength, type));
+      if (offset === 0 && maxLength >= this.blob.size && format === this.format) return this;
+      return new DataSegmentFromBlob(this.blob.slice(offset, offset+maxLength, format));
     },
     getBufferOrViewNormalized: function(offset, minLength, maxLength) {
       return this.getArrayBufferNormalized(offset, minLength, maxLength);
@@ -420,8 +395,8 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   });
   Object.defineProperties(DataSegmentFromBlob.prototype, {
     hasFixedLength: {value:true},
-    type: {
-      get: function() { return this.blob.type || 'application/octet-stream'; },
+    format: {
+      get: function() { return Format(this.blob.type || 'application/octet-stream'); },
     },
     fixedLength: {
       get: function() { return this.blob.size; },
@@ -437,9 +412,9 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
   });
   
-  function DataSegmentWrapper(wrappedSegment, type, offset, minLength, maxLength) {
+  function DataSegmentWrapper(wrappedSegment, format, offset, minLength, maxLength) {
     this.wrappedSegment = wrappedSegment;
-    this.type = type;
+    this.format = format;
     var region = normalizeRegion(
       offset, minLength, maxLength,
       0, wrappedSegment.minLength, wrappedSegment.maxLength);
@@ -448,11 +423,11 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     this.maxLength = region.maxLength;
   }
   DataSegmentWrapper.prototype = Object.assign(new DataSegment, {
-    getSegmentNormalized: function(type, offset, minLength, maxLength) {
-      if (type === this.type && offset === this.offset && minLength <= this.minLength && maxLength >= this.maxLength) {
+    getSegmentNormalized: function(format, offset, minLength, maxLength) {
+      if (format === this.format && offset === this.offset && minLength <= this.minLength && maxLength >= this.maxLength) {
         return this;
       }
-      return new DataSegmentWrapper(this.wrappedSegment, type, offset, minLength, maxLength);
+      return new DataSegmentWrapper(this.wrappedSegment, format, offset, minLength, maxLength);
     },
     getBufferOrViewNormalized: function(offset, minLength, maxLength) {
       return this.wrappedSegment.getBufferOrViewNormalized(offset, minLength, maxLength);
@@ -464,7 +439,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       return this.wrappedSegment.getBytesNormalized(offset, minLength, maxLength);
     },
     saveForTransfer: function(transferables) {
-      return ['Wrapper', this.wrappedSegment.saveForTransfer(transferables), this.type, this.offset, this.minLength, this.maxLength];
+      return ['Wrapper', this.wrappedSegment.saveForTransfer(transferables), this.format, this.offset, this.minLength, this.maxLength];
     },
   });
   Object.defineProperties(DataSegmentWrapper.prototype, {
@@ -521,8 +496,8 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
   });
   
-  function DataSegmentFromArrayBuffer(type, buffer, byteOffset, byteLength) {
-    this.type = type;
+  function DataSegmentFromArrayBuffer(format, buffer, byteOffset, byteLength) {
+    this.format = format;
     var region = normalizeRegion(
       byteOffset, byteLength, byteLength,
       buffer.byteOffset || 0, buffer.byteLength, buffer.byteLength);
@@ -538,11 +513,11 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     });
   }
   DataSegmentFromArrayBuffer.prototype = Object.assign(new DataSegment, {
-    getSegmentNormalized: function(type, offset, minLength, maxLength) {
-      if (type === this.type && offset === this.offset && minLength <= this.fixedLength && maxLength >= this.fixedLength) {
+    getSegmentNormalized: function(format, offset, minLength, maxLength) {
+      if (format === this.format && offset === this.offset && minLength <= this.fixedLength && maxLength >= this.fixedLength) {
         return this;
       }
-      return new DataSegmentFromArrayBuffer(type, this.buffer, offset, minLength, maxLength);
+      return new DataSegmentFromArrayBuffer(format, this.buffer, offset, minLength, maxLength);
     },
     getBytesNormalized: function(offset, minLength, maxLength) {
       return Promise.resolve(new Uint8Array(this.buffer, offset, maxLength));
@@ -570,8 +545,8 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     hasFixedLength: {value:true},
   });
   
-  function DataSegmentSequence(type, segments) {
-    this.type = type;
+  function DataSegmentSequence(format, segments) {
+    this.format = format;
     this.segments = segments;
     var minLength = 0, maxLength = 0;
     for (var i = 0; i < segments.length; i++) {
@@ -587,15 +562,15 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       var self = this;
       return Promise.all(this.segments.map(function(seg){ return seg.withFixedLength(); }))
       .then(function(allFixed) {
-        return DataSegment.from(allFixed, type);
+        return DataSegment.from(allFixed, self.format);
       });
     },
-    getSegmentNormalized: function(type, offset, minLength, maxLength) {
+    getSegmentNormalized: function(format, offset, minLength, maxLength) {
       if (offset === 0 && minLength <= this.minLength && maxLength >= this.maxLength) {
-        if (type === this.type) {
+        if (format === this.format) {
           return this;
         }
-        return new DataSegmentSequence(type, this.segments);
+        return new DataSegmentSequence(format, this.segments);
       }
       var segments = this.segments;
       function onAddSegment(list, i) {
@@ -604,14 +579,14 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         }
         var segment = segments[i];
         if (segment.minLength >= minLength) {
-          list.push(segment.getSegmentNormalized(segment.type, 0, minLength, maxLength));
-          return DataSegment.from(list, type);
+          list.push(segment.getSegmentNormalized(segment.format, 0, minLength, maxLength));
+          return DataSegment.from(list, format);
         }
-        return segment.getSegmentNormalized(segment.type, 0, 0, maxLength).withFixedLength().then(function(segment) {
+        return segment.getSegmentNormalized(segment.format, 0, 0, maxLength).withFixedLength().then(function(segment) {
           list.push(segment);
           minLength -= segment.fixedLength;
           maxLength -= segment.fixedLength;
-          return (minLength > 0) ? onAddSegment(list, i + 1) : DataSegment.from(list, type);
+          return (minLength > 0) ? onAddSegment(list, i + 1) : DataSegment.from(list, format);
         });
       }
       function onAddSuffix(list, i) {
@@ -620,14 +595,14 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         }
         var segment = segments[i];
         if (segment.minLength >= minLength) {
-          list.unshift(segment.getSegmentNormalized(segment.type, 'suffix', minLength, maxLength));
-          return DataSegment.from(list, type);
+          list.unshift(segment.getSegmentNormalized(segment.format, 'suffix', minLength, maxLength));
+          return DataSegment.from(list, format);
         }
-        return segment.getSegmentNormalized(segment.type, 'suffix', 0, maxLength).withFixedLength().then(function(segment) {
+        return segment.getSegmentNormalized(segment.format, 'suffix', 0, maxLength).withFixedLength().then(function(segment) {
           list.unshift(segment);
           minLength -= segment.fixedLength;
           maxLength -= segment.fixedLength;
-          return (minLength > 0) ? onAddSuffix(list, i - 1) : DataSegment.from(list, type);
+          return (minLength > 0) ? onAddSuffix(list, i - 1) : DataSegment.from(list, format);
         });
       }
       function onSegment(i) {
@@ -636,7 +611,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         }
         var segment = segments[i];
         if ((offset + minLength) <= segment.minLength) {
-          return segment.getSegment(type, offset, minLength, maxLength);
+          return segment.getSegment(format, offset, minLength, maxLength);
         }
         return segment.withFixedLength().then(function(segment) {
           if (offset >= segment.fixedLength) {
@@ -645,9 +620,9 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
           }
           var availableLength = segment.fixedLength - offset;
           if (availableLength >= minLength) {
-            return segment.getSegmentNormalized(type, offset, Math.min(maxLength, availableLength));
+            return segment.getSegmentNormalized(format, offset, Math.min(maxLength, availableLength));
           }
-          segment = segment.getSegmentNormalized(segment.type, offset, availableLength);
+          segment = segment.getSegmentNormalized(segment.format, offset, availableLength);
           offset = 0;
           minLength -= availableLength;
           maxLength -= availableLength;
@@ -660,12 +635,12 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         }
         var segment = segments[i];
         if (minLength <= segment.minLength) {
-          return segment.getSegment(type, 'suffix', minLength, maxLength);
+          return segment.getSegment(format, 'suffix', minLength, maxLength);
         }
         return segment.withFixedLength().then(function(segment) {
           var availableLength = segment.fixedLength;
           if (availableLength >= minLength) {
-            return segment.getSegmentNormalized(type, 'suffix', minLength, Math.min(maxLength, availableLength));
+            return segment.getSegmentNormalized(format, 'suffix', minLength, Math.min(maxLength, availableLength));
           }
           minLength -= availableLength;
           maxLength -= availableLength;
@@ -674,7 +649,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       }
       return (offset === 'suffix') ? onSuffix(segments.length-1) : onSegment(0);
     },
-    getBufferOrViewNormalized: function(type, offset, minLength, maxLength) {
+    getBufferOrViewNormalized: function(format, offset, minLength, maxLength) {
       var segments = this.segments;
       function concatBuffers(buffers) {
         var totalLength = buffers.reduce(function(count, b){ return count + b.byteLength; }, 0);
@@ -696,10 +671,10 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         }
         var segment = segment[i];
         if (segment.minLength >= minLength) {
-          promises.push(segment.getSegment(segment.type, 0, minLength, maxLength));
+          promises.push(segment.getSegment(segment.format, 0, minLength, maxLength));
           return Promise.all(promises).then(concatBuffers);
         }
-        return segment.getSegment(segment.type, 0, maxLength).withFixedLength().then(function(segment) {
+        return segment.getSegment(segment.format, 0, maxLength).withFixedLength().then(function(segment) {
           promises.push(segment.getBufferOrViewNormalized(segment.offset, segment.minLength, segment.maxLength));
           minLength -= segment.fixedLength;
           maxLength -= segment.fixedLength;
@@ -714,13 +689,13 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         if (segment.minLength >= minLength) {
           maxLength = Math.min(segment.maxLength, maxLength);
           promises.unshift(segment.getBufferOrViewNormalized(
-            segment.type,
+            segment.format,
             'suffix',
             minLength,
             maxLength));
           return Promise.all(promises).then(concatBuffers);
         }
-        return segment.getSegmentNormalized(segment.type, 0, maxLength).withFixedLength().then(function(segment) {
+        return segment.getSegmentNormalized(segment.format, 0, maxLength).withFixedLength().then(function(segment) {
           promises.unshift(segment.getBufferOrViewNormalized(segment.offset, segment.minLength, segment.maxLength));
           minLength -= segment.fixedLength;
           maxLength -= segment.fixedLength;
@@ -744,7 +719,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
           if (availableLength >= minLength) {
             return segment.getBufferOrViewNormalized(offset, Math.min(maxLength, availableLength));
           }
-          segment = segment.getSegment(segment.type, offset, availableLength);
+          segment = segment.getSegment(segment.format, offset, availableLength);
           offset = 0;
           minLength -= availableLength;
           maxLength -= availableLength;
@@ -765,7 +740,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
             availableLength = Math.min(maxLength, availableLength);
             return segment.getBufferOrViewNormalized('suffix', availableLength, availableLength);
           }
-          segment = segment.getSegmentNormalized(segment.type, 'suffix', availableLength, availableLength);
+          segment = segment.getSegmentNormalized(segment.format, 'suffix', availableLength, availableLength);
           minLength -= availableLength;
           maxLength -= availableLength;
           return prependBorV([segment.getBufferOrView()], i + 1);
@@ -781,7 +756,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
       }
       var self = this;
       return Promise.all(promised).then(function(blobParts) {
-        return new Blob(blobParts, self.type);
+        return new Blob(blobParts, self.format.toString());
       });
     },
     saveForTransfer: function(transferables) {
@@ -799,22 +774,22 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         for (var i = 0; i < this.segments.length; i++) {
           if (!(blobParams[i] = this.segments[i].asBlobParameter)) return null;
         }
-        return new Blob(blobParams, this.type);
+        return new Blob(blobParams, this.format.toString());
       },
     },
   });
   
-  function DataSegmentFromURL(url, type, offset, minLength, maxLength) {
+  function DataSegmentFromURL(url, format, offset, minLength, maxLength) {
     this.url = url;
-    if (type) {
-      this.type = type;
+    if (format) {
+      this.format = format;
     }
     else {
       var extension = url.replace(/[?#].*/, '').match(/\.([^\.]+)$/);
       if (extension) {
         extension = extension[1].toLowerCase();
-        if (typeDispatch.byExtension.hasOwnProperty(extension)) {
-          this.type = typeDispatch.byExtension[extension];
+        if (formatDispatch.byExtension.hasOwnProperty(extension)) {
+          this.format = formatDispatch.byExtension[extension];
         }
       }
     }
@@ -826,8 +801,8 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     this.maxLength = region.maxLength;
   }
   DataSegmentFromURL.prototype = Object.assign(new DataSegment, {
-    getSegmentNormalized: function(type, offset, minLength, maxLength) {
-      return new DataSegmentFromURL(this.url, type, offset, minLength, maxLength);
+    getSegmentNormalized: function(format, offset, minLength, maxLength) {
+      return new DataSegmentFromURL(this.url, format, offset, minLength, maxLength);
     },
     runXHRNormalized: function(req, offset, minLength, maxLength) {
       var range;
@@ -874,7 +849,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     getBlob: function() {
       var req = new XMLHttpRequest();
       req.responseType = 'blob';
-      var type = this.type;
+      var type = this.format.toString();
       return this.runXHRNormalized(req, this.offset, this.minLength, this.maxLength)
       .then(function(blob) {
         return blob.slice(0, blob.size, type);
@@ -926,7 +901,7 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     },
   });
   
-  function BufferedSegment(wrappedSegment, type, offset, minLength, maxLength) {
+  function BufferedSegment(wrappedSegment, format, offset, minLength, maxLength) {
     var region;
     if (wrappedSegment instanceof BufferedSegment) {
       region = normalizeRegion(
@@ -950,17 +925,17 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
   }
   BufferedSegment.prototype = Object.assign(new DataSegment, {
     BUFSIZE: 32 * 1024,
-    getSegmentNormalized: function(type, offset, minLength, maxLength) {
-      if (type === this.type && offset === this.offset && minLength <= this.minLength && maxLength >= this.maxLength) {
+    getSegmentNormalized: function(format, offset, minLength, maxLength) {
+      if (format === this.format && offset === this.offset && minLength <= this.minLength && maxLength >= this.maxLength) {
         return this;
       }
-      return new BufferedSegment(this, type, offset, minLength, maxLength);
+      return new BufferedSegment(this, format, offset, minLength, maxLength);
     },
     withFixedLength: function() {
       var self = this;
       return this.wrappedSegment.withFixedLength().then(function(segment) {
         if (segment === self.wrappedSegment) return self;
-        return new BufferedSegment(segment, self.type, self.offset, self.minLength, self.maxLength);
+        return new BufferedSegment(segment, self.format, self.offset, self.minLength, self.maxLength);
       });
     },
     getIndex: function(offset) {
@@ -1176,33 +1151,33 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
     FromURL: DataSegmentFromURL,
     Remote: RemoteDataSegment,
     Buffered: BufferedSegment,
-    from: function(value, overrideType) {
+    from: function(value, overrideFormat) {
       if (value instanceof DataSegment) {
-        return overrideType ? value.getSegment(overrideType) : value;
+        return overrideFormat ? value.getSegment(overrideFormat) : value;
       }
       if (value instanceof Blob) {
-        if (!overrideType) {
+        if (!overrideFormat) {
           var ext = (value.name || '').match(/\.([^\.]+)$/);
           if (ext) {
             ext = ext[1].toLowerCase();
             if (typeDispatch.byExtension.hasOwnProperty(ext)) {
-              overrideType = typeDispatch.byExtension[ext];
+              overrideFormat = typeDispatch.byExtension[ext];
             }
           }
         }
-        if (overrideType) {
-          value = value.slice(0, value.size, overrideType);
+        if (overrideFormat) {
+          value = value.slice(0, value.size, overrideFormat);
         }
         if (value.size === 0) return new EmptySegment(value.type || 'application/octet-stream');
         return new DataSegmentFromBlob(value);
       }
       if (value instanceof ArrayBuffer || ArrayBuffer.isView(value)) {
-        overrideType = overrideType || 'application/octet-stream';
-        if (length === 0) return new EmptySegment(overrideType);
-        return new DataSegmentFromArrayBuffer(overrideType, value);
+        overrideFormat = overrideFormat || Format.generic;
+        if (length === 0) return new EmptySegment(overrideFormat);
+        return new DataSegmentFromArrayBuffer(overrideFormat, value);
       }
       if (Array.isArray(value)) {
-        if (value.length === 0) return new EmptySegment(overrideType || 'application/octet-stream');
+        if (value.length === 0) return new EmptySegment(overrideFormat || 'application/octet-stream');
         var blobParams = new Array(value.length);
         for (var i = 0; i < value.length; i++) {
           var blobParam = toBlobParameter(value[i]);
@@ -1213,23 +1188,23 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
           blobParams[i] = blobParam;
         }
         if (blobParams !== null) {
-          return new DataSegmentFromBlob(new Blob(blobParams, overrideType || 'application/octet-stream'));
+          return new DataSegmentFromBlob(new Blob(blobParams, overrideFormat || 'application/octet-stream'));
         }
         value = value.map(DataSegment.from);
-        return new DataSegmentFromSequence(overrideType || value[0].type, value);
+        return new DataSegmentFromSequence(overrideFormat || value[0].format, value);
       }
       if (value instanceof ImageData) {
-        overrideType = overrideType || ('image/x-pixels; format=r8g8b8a8; width='+value.width+'; height='+value.height);
-        return new DataSegmentFromArrayBuffer(value.data, overrideType);
+        overrideFormat = overrideFormat || ('image/x-pixels; format=r8g8b8a8; width='+value.width+'; height='+value.height);
+        return new DataSegmentFromArrayBuffer(value.data, overrideFormat);
       }
       if (typeof value === 'string') {
         throw new TypeError('please use DataSegment.fromURL() if this was intended');
       }
     },
-    fromURL: function(url, overrideType) {
+    fromURL: function(url, overrideFormat) {
       var asDataURL = value.match(/^data:([^,;]+)?(;base64)?,(.*)$/);
       if (asDataURL) {
-        overrideType = overrideType || asDataURL[1] || (asDataURL[2] ? 'application/octet-stream' : 'text/plain');
+        overrideFormat = overrideFormat || asDataURL[1] || (asDataURL[2] ? 'application/octet-stream' : 'text/plain');
         var data = asDataURL[3];
         if (asDataURL[2]) {
           data = atob(data);
@@ -1242,9 +1217,9 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         else {
           data = new TextDecode('utf-8').decode(decodeURIComponent(data));
         }
-        return new DataSegmentFromArrayBuffer(overrideType, data);
+        return new DataSegmentFromArrayBuffer(overrideFormat, data);
       }
-      return new DataSegmentFromURL(url, 0, Infinity, overrideType);
+      return new DataSegmentFromURL(url, 0, Infinity, overrideFormat);
     },
     loadAfterTransfer: function(serialized) {
       switch(serialized[0]) {
@@ -1257,10 +1232,10 @@ define('DataSegment', ['typeServices/dispatch'], function(typeDispatch) {
         default: throw new Error('unsupported segment type: ' + serialized[0]);
       }
     },
-    join: function(type, parts) {
-      return getTypeHandler(type).then(function(handler) {
+    join: function(format, parts) {
+      return getFormatHandler(format).then(function(handler) {
         if (typeof handler.join === 'function') return handler.join(parts);
-        return DataSegment.from(parts, type);
+        return DataSegment.from(parts, format);
       });
     },
   });
