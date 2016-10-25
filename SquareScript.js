@@ -2,10 +2,18 @@ define(function() {
 
   'use strict';
   
-  function SquareScript(src) {
-    if (this) {
-      throw new Error('Use SquareScript() as a function instead of a constructor');
+  function toStep(step, TStep, stepHandlers, scope) {
+    if (step[0] === '') {
+      return TStep.apply(Object.create(TStep.prototype), step);
     }
+    if (typeof step[0] !== 'string') {
+      for (var i = 0; i < step.length; i++) {
+        
+      }
+    }
+  }
+  
+  function parse(src, TStep) {
     switch (typeof src) {
       case 'string':
         src = JSON.parse(src);
@@ -23,11 +31,16 @@ define(function() {
             throw new SyntaxError('SquareScript source must be an Array');
           }
         }
-        this.load(src, this.constructor.steps, this.constructor.globalScope);
-        return;
-      default:
-        throw new SyntaxError('SquareScript source must be an Array');
+        return toStep(src, TStep, TStep.stepHandlers, Object.freeze({}));
+      default: throw new SyntaxError('SquareScript source must be an Array');
     }
+  }
+  
+  function SquareScript(src, TScript) {
+    if (this) {
+      throw new Error('Use SquareScript() as a function instead of a constructor');
+    }
+    return toScript(TScript || SquareScript, src);
   }
   SquareScript.prototype = {
     load: function(src, steps, scope) {
@@ -38,12 +51,12 @@ define(function() {
           for (var i = 0; i < src.length; i++) {
             properties[i] = {value:src[i]};
           }
-          Object.defineProperties(this, properties);
-          return;
+          return Object.defineProperties(this, properties);
         }
         if (stepName in steps) {
           var handler = steps[src[0]];
           if (handler.isMacro) {
+            return this.load(handler(src), steps, scope);
           }
         }
         else if (stepName in scope) {
