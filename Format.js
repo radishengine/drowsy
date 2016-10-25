@@ -52,7 +52,7 @@ define(function() {
     if (arguments.length === 0) return matchAny;
     if (arguments[0] instanceof TypeFilter) {
       if (arguments.length !== 1) {
-        if (arguments[0] instanceof TypeDescriptor) {
+        if (arguments[0] instanceof Format) {
           for (var i = 1; i < arguments.length; i++) {
             if (!(arguments[i] instanceof TypeDescriptor)) {
               throw new TypeError('filter(descriptor [, descriptor...]): every argument must be a descriptor object');
@@ -111,7 +111,7 @@ define(function() {
             parameterPatterns = EMPTY;
           }
         }
-        andList.push(new TypeDescriptor(namePattern, stringParameters));
+        andList.push(new Format(namePattern, stringParameters));
       }
     }
     else if (namePattern !== ANYSTRING) {
@@ -181,23 +181,23 @@ define(function() {
   
   var DEFAULT_TYPE;
   
-  function TypeDescriptor(typeName, typeParameters) {
+  function Format(typeName, typeParameters) {
     if (!this) {
-      if (typeName instanceof TypeDescriptor) {
+      if (typeName instanceof Format) {
         return typeName;
       }
       if (typeof typeName === 'object' && Array.isArray(typeName)) {
-        return TypeDescriptor.apply(null, typeName);
+        return Format.apply(null, typeName);
       }
       if (!typeName && !typeParameters) {
         return DEFAULT_TYPE;
       }
-      return new TypeDescriptor(typeName, typeParameters);
+      return new Format(typeName, typeParameters);
     }
     if (!typeName) typeName = DEFAULT_TYPE.typeName;
     var nameParts = typeName.match(/^\s*([a-z0-9_\-\.]+)\/([a-z0-9_\-\.]+)\s*(?:;(.*))?$/);
     if (!nameParts) {
-      throw new TypeError('Type name must take the form: category/subtype');
+      throw new TypeError('Format name must take the form: category/subtype');
     }
     this.category = nameParts[1];
     this.subtype = nameParts[2];
@@ -240,7 +240,7 @@ define(function() {
     this.parameters = typeParameters;
     Object.freeze(this);
   }
-  TypeDescriptor.prototype = Object.assign(new TypeFilter, {
+  Format.prototype = Object.assign(new TypeFilter, {
     toString: function() {
       var name = this.name, parameters = encodeTypeParameters(this.parameters);
       return parameters ? (name + '; ' + parameters) : name;
@@ -249,7 +249,7 @@ define(function() {
       return this.toString();
     },
     test: function() {
-      var other = TypeDescriptor.apply(null, arguments);
+      var other = Format.apply(null, arguments);
       if (other === this) return true;
       if (other.category !== this.category) return false;
       if (other.subtype !== this.subtype) return false;
@@ -266,13 +266,13 @@ define(function() {
       return true;
     },
   });
-  Object.defineProperty(TypeDescriptor.prototype, 'name', {
+  Object.defineProperty(Format.prototype, 'name', {
     get: function() {
       return this.category + '/' + this.subtype;
     },
   });
   
-  DEFAULT_TYPE = new TypeDescriptor('application/octet-stream');
+  DEFAULT_TYPE = Format.generic = new Format('application/octet-stream');
   
   matchAny = Object.freeze(Object.assign(new TypeFilter, {
     filter: function() { return TypeFilter.apply(null, arguments); },
@@ -332,7 +332,7 @@ define(function() {
       return newList ? new AndList(Object.freeze(newList)) : this;
     },
     test: function() {
-      var descriptor = TypeDescriptor.apply(null, arguments);
+      var descriptor = Format.apply(null, arguments);
       for (var i = 0; i < this.list.length; i++) {
         if (!this.list[i].test(descriptor)) return false;
       }
@@ -389,7 +389,7 @@ define(function() {
       return newList ? new OrList(newList) : this;
     },
     test: function() {
-      var descriptor = TypeDescriptor.apply(null, arguments);
+      var descriptor = Format.apply(null, arguments);
       for (var i = 0; i < this.list.length; i++) {
         if (this.list[i].test(descriptor)) return true;
       }
@@ -443,7 +443,7 @@ define(function() {
   NameMatch.prototype = Object.assign(new TypeFilter, {
     isInverted: false,
     test: function() {
-      var descriptor = TypeDescriptor.apply(null, arguments);
+      var descriptor = Format.apply(null, arguments);
       if (this.isInverted) {
         return !this.pattern.test(descriptor.name);
       }
@@ -474,7 +474,7 @@ define(function() {
   ParameterMatch.prototype = Object.assign(new TypeFilter, {
     isInverted: false,
     test: function() {
-      var descriptor = TypeDescriptor.apply(null, arguments);
+      var descriptor = Format.apply(null, arguments);
       if (this.isInverted) {
         if (this.name in descriptor.properties) {
           return true;
@@ -540,7 +540,7 @@ define(function() {
     },
   });
   
-  return Object.assign(TypeDescriptor, {
+  Object.assign(Format, {
     encodeString: encodeTypeString,
     decodeString: decodeTypeString,
     encodeParameters: encodeTypeParameters,
@@ -556,7 +556,7 @@ define(function() {
       return matchAny.count(number);
     },
     isDescriptorOrFilter: function(value) {
-      if (value instanceof TypeDescriptor) return 'descriptor';
+      if (value instanceof Format) return 'descriptor';
       if (value instanceof TypeFilter) return 'filter';
       return false;
     },
@@ -567,7 +567,7 @@ define(function() {
           json = JSON.parse(json);
         }
         else {
-          return new TypeDescriptor(json);
+          return new Format(json);
         }
       }
       if (typeof json !== 'object' || json === null) return null;
@@ -615,7 +615,7 @@ define(function() {
       }
       function fromValue(v) {
         if (typeof v === 'string') {
-          return new TypeDescriptor(v);
+          return new Format(v);
         }
         if (typeof v !== 'object' || v === null) {
           throw new Error('not a valid JSON-encoded type filter');
@@ -625,5 +625,7 @@ define(function() {
       return fromObject(json);
     },
   });
+  
+  return Format;
  
 });
