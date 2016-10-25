@@ -47,10 +47,10 @@ define(function() {
   
   var descriptorFilterCache = new WeakMap();
   
-  function TypeFilter() {
+  function FormatFilter() {
     if (this) return; // do nothing if used as a constructor
     if (arguments.length === 0) return matchAny;
-    if (arguments[0] instanceof TypeFilter) {
+    if (arguments[0] instanceof FormatFilter) {
       if (arguments.length !== 1) {
         if (arguments[0] instanceof Format) {
           for (var i = 1; i < arguments.length; i++) {
@@ -141,9 +141,9 @@ define(function() {
     if (andList.length === 1) return andList[0];
     return new AndList(Object.freeze(andList));
   }
-  TypeFilter.prototype = {
+  FormatFilter.prototype = {
     filter: function() {
-      var filter = TypeFilter.apply(null, arguments);
+      var filter = FormatFilter.apply(null, arguments);
       if (filter === matchAny) return this;
       if (filter === matchNone) return matchNone;
       if (filter instanceof AndList) {
@@ -152,10 +152,10 @@ define(function() {
       return new AndList(this, filter);
     },
     except: function() {
-      return this.filter(TypeFilter.apply(null, arguments).inverted());
+      return this.filter(FormatFilter.apply(null, arguments).inverted());
     },
     or: function() {
-      var filter = TypeFilter.apply(null, arguments);
+      var filter = FormatFilter.apply(null, arguments);
       if (filter === matchAny) return matchAny;
       if (filter === matchNone) return this;
       if (filter instanceof OrList) {
@@ -240,7 +240,7 @@ define(function() {
     this.parameters = typeParameters;
     Object.freeze(this);
   }
-  Format.prototype = Object.assign(new TypeFilter, {
+  Format.prototype = Object.assign(Object.create(FormatFilter.prototype), {
     toString: function() {
       var name = this.name, parameters = encodeTypeParameters(this.parameters);
       return parameters ? (name + '; ' + parameters) : name;
@@ -272,22 +272,22 @@ define(function() {
     },
   });
   
-  DEFAULT_TYPE = Format.generic = new Format('application/octet-stream');
+  DEFAULT_TYPE = new Format('application/octet-stream');
   
-  matchAny = Object.freeze(Object.assign(new TypeFilter, {
-    filter: function() { return TypeFilter.apply(null, arguments); },
-    except: function() { return TypeFilter.apply(null, arguments).inverted(); },
+  matchAny = Object.freeze(Object.assign(new FormatFilter, {
+    filter: function() { return FormatFilter.apply(null, arguments); },
+    except: function() { return FormatFilter.apply(null, arguments).inverted(); },
     inverted: function() { return matchNone; },
     or: function() { return this; },
     toJSON: function() { return {any: true}; },
     test: function() { return true; },
   }));
   
-  matchNone = Object.freeze(Object.assign(new TypeFilter, {
+  matchNone = Object.freeze(Object.assign(new FormatFilter, {
     filter: function() { return matchNone; },
     except: function() { return matchNone; },
     inverted: function() { return matchAny; },
-    or: function() { return TypeFilter.apply(null, arguments); },
+    or: function() { return FormatFilter.apply(null, arguments); },
     toJSON: function() { return {any: false}; },
     test: function() { return false; },
     count: function() { return matchNone; },
@@ -306,9 +306,9 @@ define(function() {
     this.list = list;
     Object.freeze(this);
   }
-  AndList.prototype = Object.assign(new TypeFilter, {
+  AndList.prototype = Object.assign(new FormatFilter, {
     filter: function() {
-      var filter = TypeFilter.apply(null, arguments);
+      var filter = FormatFilter.apply(null, arguments);
       if (filter === matchNone) return matchNone;
       if (filter === matchAny) return this;
       if (filter instanceof AndList) {
@@ -363,9 +363,9 @@ define(function() {
     this.list = list;
     Object.freeze(this);
   }
-  OrList.prototype = Object.assign(new TypeFilter, {
+  OrList.prototype = Object.assign(new FormatFilter, {
     or: function() {
-      var filter = TypeFilter.apply(null, arguments);
+      var filter = FormatFilter.apply(null, arguments);
       if (filter === matchAny) return matchAny;
       if (filter === matchNone) return this;
       if (filter instanceof OrList) {
@@ -413,7 +413,7 @@ define(function() {
     this.filter = filter;
     Object.freeze(this);
   }
-  Not.prototype = Object.assign(new TypeFilter, {
+  Not.prototype = Object.assign(new FormatFilter, {
     test: function() {
       return !this.filter.test.apply(this.filter, arguments);
     },
@@ -431,7 +431,7 @@ define(function() {
   });
   Object.defineProperty(Not, 'willNeverMatch', {
     get: function() {
-      return !this.filter.willNeverMatch;
+      return false;
     },
   });
   
@@ -440,7 +440,7 @@ define(function() {
     if (invert) this.isInverted = true;
     Object.freeze(this);
   }
-  NameMatch.prototype = Object.assign(new TypeFilter, {
+  NameMatch.prototype = Object.assign(new FormatFilter, {
     isInverted: false,
     test: function() {
       var descriptor = Format.apply(null, arguments);
@@ -471,7 +471,7 @@ define(function() {
     if (invert) this.isInverted = true;
     Object.freeze(this);
   }
-  ParameterMatch.prototype = Object.assign(new TypeFilter, {
+  ParameterMatch.prototype = Object.assign(new FormatFilter, {
     isInverted: false,
     test: function() {
       var descriptor = Format.apply(null, arguments);
@@ -510,7 +510,7 @@ define(function() {
     this.count = count;
     Object.seal(this);
   }
-  CountedMatch.prototype = Object.assign(new TypeFilter, {
+  CountedMatch.prototype = Object.assign(new FormatFilter, {
     test: function() {
       if (this.count < 1) return this.isInverted;
       var result = this.filter.test.apply(this.filter, arguments);
@@ -545,22 +545,17 @@ define(function() {
     decodeString: decodeTypeString,
     encodeParameters: encodeTypeParameters,
     decodeParameters: decodeTypeParameters,
-    filter: TypeFilter.bind(null),
-    Filter: TypeFilter,
+    filter: FormatFilter.bind(null),
+    Filter: FormatFilter,
     except: function() {
-      return TypeFilter.apply(null, arguments).inverted();
+      return FormatFilter.apply(null, arguments).inverted();
     },
     all: matchAny,
     none: matchNone,
     count: function(number) {
       return matchAny.count(number);
     },
-    isDescriptorOrFilter: function(value) {
-      if (value instanceof Format) return 'descriptor';
-      if (value instanceof TypeFilter) return 'filter';
-      return false;
-    },
-    default: DEFAULT_TYPE,
+    generic: DEFAULT_TYPE,
     fromJSON: function(json) {
       if (typeof json === 'string') {
         if (/^\s*\{/.test(json)) {
