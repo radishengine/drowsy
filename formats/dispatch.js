@@ -86,7 +86,7 @@ define(['Format'], function(Format) {
       swf: Format('application/x-shockwave-flash'),
       tar: Format('application/x-tar'),
       tga: Format('image/x-targa'),
-      tgz: Format('application/gzip; compressed-type=application/x-tar'),
+      tgz: Format('application/gzip; encoded="application/x-tar"'),
       tiff: Format('image/tiff'),
       ttf: Format('application/font-sfnt'),
       toast: Format('volume/optical-media'),
