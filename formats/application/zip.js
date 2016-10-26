@@ -1,6 +1,26 @@
-define(['DataSegment'], function(DataSegment) {
+define(['Format', 'DataSegment'], function(Format, DataSegment) {
 
   'use strict';
+  
+  var compressedFormats = {
+    shrunk: Format('application/x-lzw; variant=shrink'),
+    factor1: Format('application/x-reduced; factor=1'),
+    factor2: Format('application/x-reduced; factor=2'),
+    factor3: Format('application/x-reduced; factor=3'),
+    factor4: Format('application/x-reduced; factor=4'),
+    imploded: Format('application/x-ibm-terse; variant=old'),
+    deflated: Format('application/x-deflated'),
+    enhancedDeflated: Format('application/x-deflated; variant=deflate64'),
+    dclImploded: Format('application/x-imploded; variant=dcl'),
+    bzip2: Format('application/x-bzip2'),
+    lzma: Format('application/x-lzma'),
+    terse: Format('application/x-ibm-terse; variant=new'),
+    lz77: Format('application/x-lz77'),
+    jpeg: Format('image/jpeg'),
+    wavpack: Format('audio/x-wavpack'),
+    ppmd: Format('application/x-ppmd; version=i; rev=1'),
+    aes: Format('application/x-aes'),
+  };
   
   function mount(zip, volume) {
     var promises = [];
@@ -10,37 +30,26 @@ define(['DataSegment'], function(DataSegment) {
         var offset = +entry.getTypeParameter('offset');
         var headerSegment = entry.getSegment(entry.type, 0, offset);
         promises.push(headerSegment.getStruct().then(function(record) {
-          var type = volume.guessTypeForFilename(record.path);
+          var format = volume.guessTypeForFilename(record.path);
           if (record.compressionMethod !== 'none') {
-            var innerType = type;
-            switch (record.compressionMethod) {
-              case 'shrunk': type = 'application/x-lzw; variant=shrink'; break;
-              case 'factor1': type = 'application/x-reduced; factor=1'; break;
-              case 'factor2': type = 'application/x-reduced; factor=2'; break;
-              case 'factor3': type = 'application/x-reduced; factor=3'; break;
-              case 'factor4': type = 'application/x-reduced; factor=4'; break;
-              case 'imploded': type = 'application/x-ibm-terse; variant=old'; break;
-              case 'deflated': type = 'application/x-deflated'; break;
-              case 'enhancedDeflated': type = 'application/x-deflated; variant=deflate64'; break;
-              case 'dclImploded': type = 'application/x-imploded; variant=dcl'; break;
-              case 'bzip2': type = 'application/x-bzip2'; break;
-              case 'lzma': type = 'application/x-lzma'; break;
-              case 'terse': type = 'application/x-ibm-terse; variant=new'; break;
-              case 'lz77': type = 'application/x-lz77'; break;
-              case 'jpeg': type = 'image/jpeg'; break;
-              case 'wavpack': type = 'audio/x-wavpack'; break;
-              case 'ppmd': type = 'application/x-ppmd; version=i; rev=1'; break;
-              case 'aes': type = 'application/x-aes'; break;
-              default: return Promise.reject('unknown compression: ' + record.compressionMethod);
+            var encodedFormat = format;
+            if (record.compressionMethod in compressedFormats) {
+              format = compressedFormats[record.compressedMethod];
             }
-            if (innerType !== 'application/octet-stream') {
-              type += '; type='+innerType;
+            else {
+              throw new Error('unknown compression method: ' + record.compressedMethod);
             }
             var full = record.uncompressedByteLength32; // TODO: zip64
-            type += '; full='+full;
+            encodedFormat = encodedFormat.toString();
+            if (encodedFormat !== 'application/octet-stream') {
+              format = new Format(format, {encoded:encodedFormat, full:full});
+            }
+            else {
+              format = new Format(format, {full:full});
+            }
           }
           var normalizedPath = record.path.split('/').map(encodeURIComponent).join('/');
-          volume.addFile(normalizedPath, entry.getSegment(type, offset));
+          volume.addFile(normalizedPath, entry.getSegment(format, offset));
         }));
       },
       function() {
@@ -48,9 +57,9 @@ define(['DataSegment'], function(DataSegment) {
       });
   }
   
-  var TRAILER_TYPE = 'chunk/zip; type=trailer';
-  var CENTRAL_RECORD_TYPE = 'chunk/zip; type=central';
-  var LOCAL_RECORD_TYPE = 'chunk/zip; type=local';
+  var TRAILER_TYPE = Format('chunk/zip; type=trailer');
+  var CENTRAL_RECORD_TYPE = Format('chunk/zip; type=central');
+  var LOCAL_RECORD_TYPE = Format('chunk/zip; type=local');
   
   function join(parts) {
     var knownLengths = parts.map(function(part){ return part.getLength(); });
@@ -487,6 +496,7 @@ define(['DataSegment'], function(DataSegment) {
   }
   
   return {
+    splitTo: Format('chunk/zip'),
     split: split,
     join: join,
     mount: mount,
