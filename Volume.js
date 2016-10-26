@@ -57,7 +57,12 @@ define(function() {
           i_first = i + 1;
           continue;
         }
+        break;
       }
+      if (i_first < i_last) {
+        return null;
+      }
+      
     },
     pathCompare: function(p1, p2) {
       for (var i = 0, i_max = Math.max(p1.length, p2.length); i < i_max; i++) {
