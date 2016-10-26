@@ -12,6 +12,16 @@ define('DataSegment', ['Format', 'formats/dispatch'], function(Format, formatDis
   
   var handlerCache = {};
   
+  function toFormat(v) {
+    if (typeof v.length === 'number') {
+      return Format.apply(null, v);
+    }
+    if (typeof v === 'undefined' || v === null) {
+      return Format.generic;
+    }
+    return Format(v);
+  }
+  
   function getFormatHandler(t) {
     if (t in handlerCache) return handlerCache[t];
     return handlerCache[t] = new Promise(function(resolve, reject) {
@@ -145,6 +155,7 @@ define('DataSegment', ['Format', 'formats/dispatch'], function(Format, formatDis
       });
     },
     getSegment: function(format, offset, minLength, maxLength) {
+      format = toFormat(format);
       var region = normalizeRegion(
         offset, minLength, maxLength,
         this.offset, this.minLength, this.maxLength);
@@ -497,6 +508,7 @@ define('DataSegment', ['Format', 'formats/dispatch'], function(Format, formatDis
   });
   
   function DataSegmentFromArrayBuffer(format, buffer, byteOffset, byteLength) {
+    format = toFormat(format);
     this.format = format;
     var region = normalizeRegion(
       byteOffset, byteLength, byteLength,
@@ -546,6 +558,7 @@ define('DataSegment', ['Format', 'formats/dispatch'], function(Format, formatDis
   });
   
   function DataSegmentSequence(format, segments) {
+    format = toFormat(format);
     this.format = format;
     this.segments = segments;
     var minLength = 0, maxLength = 0;
@@ -782,6 +795,7 @@ define('DataSegment', ['Format', 'formats/dispatch'], function(Format, formatDis
   function DataSegmentFromURL(url, format, offset, minLength, maxLength) {
     this.url = url;
     if (format) {
+      format = toFormat(format);
       this.format = format;
     }
     else {
@@ -1194,7 +1208,7 @@ define('DataSegment', ['Format', 'formats/dispatch'], function(Format, formatDis
         return new DataSegmentFromSequence(overrideFormat || value[0].format, value);
       }
       if (value instanceof ImageData) {
-        overrideFormat = overrideFormat || ('image/x-pixels; format=r8g8b8a8; width='+value.width+'; height='+value.height);
+        overrideFormat = overrideFormat || Format('image/x-pixels; format=r8g8b8a8; width='+value.width+'; height='+value.height);
         return new DataSegmentFromArrayBuffer(value.data, overrideFormat);
       }
       if (typeof value === 'string') {
@@ -1233,6 +1247,7 @@ define('DataSegment', ['Format', 'formats/dispatch'], function(Format, formatDis
       }
     },
     join: function(format, parts) {
+      format = toFormat(format);
       return getFormatHandler(format).then(function(handler) {
         if (typeof handler.join === 'function') return handler.join(parts);
         return DataSegment.from(parts, format);
