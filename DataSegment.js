@@ -2,7 +2,7 @@ if (typeof self === Worker) {
   importScripts('require.js');
 }
 
-define('DataSegment', ['Format', 'formats/dispatch'], function(Format, formatDispatch) {
+define('DataSegment', ['Format', 'formats/byExtension'], function(Format, formatsByExtension) {
   
   var emptyBuffer = new ArrayBuffer(0);
   var emptyBytes = new Uint8Array(emptyBuffer);
@@ -802,8 +802,8 @@ define('DataSegment', ['Format', 'formats/dispatch'], function(Format, formatDis
       var extension = url.replace(/[?#].*/, '').match(/\.([^\.]+)$/);
       if (extension) {
         extension = extension[1].toLowerCase();
-        if (formatDispatch.byExtension.hasOwnProperty(extension)) {
-          this.format = formatDispatch.byExtension[extension];
+        if (formatsByExtension.hasOwnProperty(extension)) {
+          this.format = formatsByExtension[extension];
         }
       }
     }
@@ -1174,8 +1174,8 @@ define('DataSegment', ['Format', 'formats/dispatch'], function(Format, formatDis
           var ext = (value.name || '').match(/\.([^\.]+)$/);
           if (ext) {
             ext = ext[1].toLowerCase();
-            if (typeDispatch.byExtension.hasOwnProperty(ext)) {
-              overrideFormat = typeDispatch.byExtension[ext];
+            if (formatsByExtension.hasOwnProperty(ext)) {
+              overrideFormat = formatsByExtension[ext];
             }
           }
         }
