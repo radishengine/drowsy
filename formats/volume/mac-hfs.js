@@ -1,4 +1,4 @@
-define(['typeServices/dispatch', 'DataSegment'], function(dispatch, DataSegment) {
+define(['formats/dispatch', 'DataSegment'], function(dispatch, DataSegment) {
   
   'use strict';
   
