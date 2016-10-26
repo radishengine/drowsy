@@ -1,4 +1,4 @@
-define(['Format', 'DataSegment'], function(Format, DataSegment) {
+define(['Format', 'DataSegment', 'Volume'], function(Format, DataSegment, Volume) {
 
   'use strict';
   
@@ -60,18 +60,6 @@ define(['Format', 'DataSegment'], function(Format, DataSegment) {
   var TRAILER_TYPE = Format('chunk/zip; type=trailer');
   var CENTRAL_RECORD_TYPE = Format('chunk/zip; type=central');
   var LOCAL_RECORD_TYPE = Format('chunk/zip; type=local');
-  
-  function join(parts) {
-    var knownLengths = parts.map(function(part){ return part.getLength(); });
-    return Promise.all(knownLengths).then(function(lengths) {
-      var cumulativeOffsets = new Array(lengths.length);
-      cumulativeOffsets[0] = 0;
-      for (var i = 0; i < lengths.length - 1; i++) {
-        cumulativeOffsets[i+1] = cumulativeOffsets[i] + lengths[i];
-      }
-      return DataSegment.from(parts, 'application/zip; parts=' + cumulativeOffsets.join(','));
-    });
-  }
   
   function split(segment, entries) {
     var partOffsets = segment.getTypeParameter('parts');
@@ -498,8 +486,47 @@ define(['Format', 'DataSegment'], function(Format, DataSegment) {
   return {
     splitTo: Format('chunk/zip'),
     split: split,
-    join: join,
-    mount: mount,
+    createVolume: function(format) {
+      return new Volume();
+    },
+    populateVolume: function(format, volume, paths) {
+      var promises = [];
+      return zip.split(
+        Format('chunk/zip', {which:'local'}),
+        function(entry) {
+          var offset = +entry.format.parameters('offset');
+          var headerSegment = entry.getSegment(entry.format, 0, offset);
+          promises.push(headerSegment.getStruct().then(function(record) {
+            var path = record.path.split(/\//g);
+            if (!volume.testPathRange(paths, path)) {
+              return;
+            }
+            var format = volume.guessTypeForFilename(record.path);
+            if (record.compressionMethod !== 'none') {
+              var encodedFormat = format;
+              if (record.compressionMethod in compressedFormats) {
+                format = compressedFormats[record.compressedMethod];
+              }
+              else {
+                throw new Error('unknown compression method: ' + record.compressedMethod);
+              }
+              var full = record.uncompressedByteLength32; // TODO: zip64
+              encodedFormat = encodedFormat.toString();
+              if (encodedFormat !== 'application/octet-stream') {
+                format = new Format(format, {encoded:encodedFormat, full:full});
+              }
+              else {
+                format = new Format(format, {full:full});
+              }
+            }
+            var normalizedPath = record.path.split('/').map(encodeURIComponent).join('/');
+            volume.addFile(normalizedPath, entry.getSegment(format, offset));
+          }));
+        },
+        function() {
+          return Promise.all(promises);
+        });
+    },
     bytePattern: /PK\x05\x06.{18}.{0,65535}$/,
   };
 
