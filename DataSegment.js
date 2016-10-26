@@ -13,13 +13,19 @@ define('DataSegment', ['Format', 'formats/byExtension'], function(Format, format
   var handlerCache = {};
   
   function toFormat(v) {
-    if (typeof v.length === 'number') {
-      return Format.apply(null, v);
+    switch (typeof v) {
+      case 'string': return Format(v);
+      case 'undefined': return Format.generic;
+      case 'object':
+        if (v === null) return Format.generic;
+        if (v instanceof Format) return v;
+        if (typeof v.length === 'number') {
+          return Format.apply(null, v);
+        }
+        // fall through
+      default:
+        throw new TypeError('cannot create format for ' + v);
     }
-    if (typeof v === 'undefined' || v === null) {
-      return Format.generic;
-    }
-    return Format(v);
   }
   
   function getFormatHandler(t) {
