@@ -2,15 +2,13 @@ if (typeof self === Worker) {
   importScripts('require.js');
 }
 
-define('DataSegment', ['Format', 'formats/byExtension'], function(Format, formatsByExtension) {
+define('DataSegment', ['Format', 'formats/byExtension', 'Volume'], function(Format, formatsByExtension, Volume) {
   
   var emptyBuffer = new ArrayBuffer(0);
   var emptyBytes = new Uint8Array(emptyBuffer);
   var emptyBlob = new Blob([emptyBytes]);
   var p_emptyBuffer = Promise.resolve(emptyBuffer);
   var p_emptyBytes = Promise.resolve(emptyBytes);
-  
-  var handlerCache = {};
   
   function toFormat(v) {
     switch (typeof v) {
@@ -26,23 +24,6 @@ define('DataSegment', ['Format', 'formats/byExtension'], function(Format, format
       default:
         throw new TypeError('cannot create format for ' + v);
     }
-  }
-  
-  function getFormatHandler(t) {
-    if (t in handlerCache) return handlerCache[t];
-    return handlerCache[t] = new Promise(function(resolve, reject) {
-      var handlerModule = 'formats/' + t;
-      require([handlerModule],
-      function(handler) {
-        resolve(handler);
-      },
-      function() {
-        requirejs.undef(handlerModule);
-        var handler = {};
-        define(handlerModule, handler);
-        resolve(handler);
-      });
-    });
   }
   
   function normalizeRegion(
@@ -266,12 +247,9 @@ define('DataSegment', ['Format', 'formats/byExtension'], function(Format, format
     toLocal: function() {
       return Promise.resolve(this);
     },
-    getFormatHandler: function() {
-      return getFormatHandler(this.format.name);
-    },
     getStructView: function() {
       var self = this;
-      return this.getFormatHandler().then(function(handler) {
+      return this.format.getHandler().then(function(handler) {
         var TView;
         if (typeof handler.getStructView !== 'function'
         || !(TView = handler.getStructView(self))) {
@@ -280,13 +258,20 @@ define('DataSegment', ['Format', 'formats/byExtension'], function(Format, format
         return TView;
       });
     },
-    mount: function(volume) {
-      var self = this;
-      return this.getFormatHandler().then(function(handler) {
-        if (typeof handler.mount !== 'function') {
-          return Promise.reject('mount not implemented for ' + self.format.name);
+    createVolume: function() {
+      return this.format.getHandler().then(function(handler) {
+        if (typeof handler.createVolume === 'function') {
+          return handler.createVolume();
         }
-        return handler.mount(self, volume);
+        return new Volume();
+      });
+    },
+    populateVolume: function(volume, paths, finalAction) {
+      return this.format.getHandler().then(function(handler) {
+        if (typeof handler.populateVolume === 'function') {
+          return handler.populateVolume(volume, paths, finalAction);
+        }
+        volume.finalize(finalAction, paths);
       });
     },
     getStruct: function() {
@@ -304,7 +289,7 @@ define('DataSegment', ['Format', 'formats/byExtension'], function(Format, format
     },
     getCapabilities: function() {
       var self = this;
-      return this.getFormatHandler()
+      return this.format.getHandler()
       .then(function(handler) {
         return {
           split: typeof handler.split === 'function',
@@ -325,7 +310,7 @@ define('DataSegment', ['Format', 'formats/byExtension'], function(Format, format
         };
       }
       var self = this;
-      return this.getFormatHandler().then(function(handler) {
+      return this.format.getHandler().then(function(handler) {
         if (typeof handler.split !== 'function') {
           return Promise.reject('split operation not defined for ' + self.format.name);
         }
@@ -1254,7 +1239,7 @@ define('DataSegment', ['Format', 'formats/byExtension'], function(Format, format
     },
     join: function(format, parts) {
       format = toFormat(format);
-      return getFormatHandler(format).then(function(handler) {
+      return format.getHandler().then(function(handler) {
         if (typeof handler.join === 'function') return handler.join(parts);
         return DataSegment.from(parts, format);
       });
