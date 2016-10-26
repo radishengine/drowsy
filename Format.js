@@ -276,6 +276,9 @@ define(function() {
         require(
           [requirePath],
           function(handler) {
+            if (typeof handler.withParameters === 'function' && Object.keys(self.parameters).length !== 0) {
+              handler = handler.withParameters(self.parameters);
+            }
             formatHandlers.set(self, handler);
             resolve(handler);
           },
