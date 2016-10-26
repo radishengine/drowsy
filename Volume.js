@@ -62,7 +62,36 @@ define(function() {
       if (i_first < i_last) {
         return null;
       }
-      
+      if (i_first === i_last) {
+        var single = pathList[i_first];
+        var cmp = this.pathCompare(paths.firstPath, single.firstPath);
+        var part1, part2, part3;
+        if (cmp < 0 || (cmp === 0 && !paths.includeFirstPath)) {
+          
+        }
+      }
+      var slice = pathList.slice(i_first, i_last + 1);
+      var cmp = this.pathCompare(paths.firstPath, slice[0]);
+      if (cmp > 0 || (cmp === 0 && paths.includeFirstPath !== slice[0].includeFirstPath)) {
+        var part1, part2;
+        if (cmp === 0 && !paths.includeFirstPath) {
+          part1 = null;
+        }
+        else {
+          part1 = Object.freeze({
+            firstPath: slice[0].firstPath,
+            includeFirstPath: slice[0].includeFirstPath,
+            lastPath: paths.firstPath,
+            includeLastPath: !paths.includeFirstPath,
+            minDepthLevel: 0,
+            maxDepthLevel: Infinity,
+          });
+        }
+      }
+      if (this.pathCompare(paths.lastPath, slice[slice.length-1]) < 0) {
+        
+      }
+      return slice;
     },
     pathCompare: function(p1, p2) {
       for (var i = 0, i_max = Math.max(p1.length, p2.length); i < i_max; i++) {
