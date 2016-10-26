@@ -1,4 +1,4 @@
-define(['typeServices/dispatch'], function(dispatch) {
+define(['formats/dispatch'], function(dispatch) {
 
   'use strict';
   
