@@ -1,4 +1,4 @@
-define(function() {
+define(['Format'], function(Format) {
 
   'use strict';
   
