@@ -179,6 +179,8 @@ define(function() {
     },
   };
   
+  var formatHandlers = new WeakMap();
+  
   var DEFAULT_TYPE;
   
   function Format(typeName, typeParameters) {
@@ -264,6 +266,23 @@ define(function() {
         }
       }
       return true;
+    },
+    getHandler: function() {
+      var handler = formatHandlers.get(this);
+      if (handler) return Promise.resolve(handler);
+      var self = this;
+      return new Promise(function(resolve, reject) {
+        var requirePath = 'formats/' + self.formatName;
+        require(
+          [requirePath],
+          function(handler) {
+            formatHandlers.set(self, handler);
+            resolve(handler);
+          },
+          function() {
+            Format.generic.getHandler().then(resolve);
+          });
+      });
     },
   });
   Object.defineProperty(Format.prototype, 'name', {
