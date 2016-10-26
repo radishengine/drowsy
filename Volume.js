@@ -23,7 +23,7 @@ define(function() {
   });
   
   function Volume() {
-    this.paths = [ALL_PATHS];
+    this.pathList = [ALL_PATHS];
   }
   Volume.prototype = {
     getPaths: function(paths) {
@@ -43,6 +43,29 @@ define(function() {
           maxDepthLevel: paths.length,
         });
       }
+      var pathList = this.pathList;
+      var i_first = 0, i_last = pathList.length;
+      while (i_first < i_last) {
+        var i = Math.floor((i_first + i_last) / 2);
+        var cmp = this.pathCompare(paths.lastPath, pathList[i].firstPath);
+        if (cmp < 0 || (cmp === 0 && (paths.excludeLastPath || pathList[i].excludeFirstPath))) {
+          i_last = i - 1;
+          continue;
+        }
+        cmp = this.pathCompare(paths.firstPath, pathList[i].lastPath);
+        if (cmp > 0 || (cmp === 0 && (paths.excludeFirstPath || pathList[i].excludeLastPath))) {
+          i_first = i + 1;
+          continue;
+        }
+      }
+    },
+    pathCompare: function(p1, p2) {
+      for (var i = 0, i_max = Math.max(p1.length, p2.length); i < i_max; i++) {
+        var part1 = p1[i] || '', part2 = p2[i] || '';
+        if (part1 < part2) return -1;
+        if (part1 > part2) return 1;
+      }
+      return 0;
     },
     decodePathRange: function(encoded) {
       var path = this.decodePath(encoded);
