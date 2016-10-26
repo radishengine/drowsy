@@ -1,4 +1,4 @@
-define(['typeServices/dispatch', 'charset/macintosh'], function(dispatch, macRoman) {
+define(['formats/dispatch', 'charset/macintosh'], function(dispatch, macRoman) {
 
   'use strict';
   
