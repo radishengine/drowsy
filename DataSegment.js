@@ -271,7 +271,7 @@ define('DataSegment', ['Format', 'formats/byExtension'], function(Format, format
     },
     getStructView: function() {
       var self = this;
-      return this.getTypeHandler().then(function(handler) {
+      return this.getFormatHandler().then(function(handler) {
         var TView;
         if (typeof handler.getStructView !== 'function'
         || !(TView = handler.getStructView(self))) {
