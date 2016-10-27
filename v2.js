@@ -34,11 +34,11 @@ require(['Volume'], function(Volume) {
   }
   
   function onFrameMouseDown(e) {
+    e.stopPropagation();
     if (e.target.handle) {
       return onHandleMouseDown(this, e.target, e.pageX, e.pageY);
     }
     desktop.appendChild(this);
-    e.stopPropagation();
   }
   
   function onFrameClick(e) {
