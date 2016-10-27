@@ -10,6 +10,21 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
     return;
   }
   
+  function checkVisible(frame) {
+    var yDiff = frame.offsetTop - (desktop.clientHeight - 10);
+    if (yDiff > 0) {
+      frame.style.top = Math.max(0, desktop.clientHeight - 10) + 'px';
+    }
+    var xDiff = frame.offsetLeft - (desktop.clientWidth - 10);
+    if (xDiff > 0) {
+      frame.style.left = Math.max(0, desktop.clientWidth - 10) + 'px';
+    }
+  }
+  
+  document.addEventListener('resize', function(e) {
+    [].forEach.apply(desktop.children, checkVisible);
+  });
+  
   desktop.addEventListener('mousedown', function(e) {
     e.preventDefault();
   });
@@ -53,6 +68,7 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
     function onMouseUp(e) {
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
+      checkVisible(frame);
     }
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
