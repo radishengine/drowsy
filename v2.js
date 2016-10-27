@@ -53,7 +53,7 @@ require(['Volume'], function(Volume) {
     desktop.addEventListener('dragover', onDragOver);
     desktop.addEventListener('dragleave', onDragLeave);
     desktop.addEventListener('drop', onDrop);
-    desktop.addEventListener('mousemove', onMouseMove);
+    //desktop.addEventListener('mousemove', onMouseMove);
     
     desktop.appendChild(drop);
     drop.updatePosition(e.screenX, e.screenY);
