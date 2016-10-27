@@ -25,12 +25,12 @@ require(['Volume'], function(Volume) {
       document.removeEventListener('mouseup', onMouseUp);
     }
     if (handle.handle === 'x' || handle.handle === 'corner') {
-      document.addEventListener(onMouseMoveX);
+      document.addEventListener('mousemove', onMouseMoveX);
     }
     if (handle.handle === 'y' || handle.handle === 'corner') {
-      document.addEventListener(onMouseMoveY);
+      document.addEventListener('mousemove', onMouseMoveY);
     }
-    document.addEventListener(onMouseUp);
+    document.addEventListener('mouseup', onMouseUp);
   }
   
   function onFrameMouseDown(e) {
