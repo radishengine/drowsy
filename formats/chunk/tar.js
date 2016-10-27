@@ -104,7 +104,7 @@ define(function() {
 
   return {
     getStructView: function(segment) {
-      if (segment.getTypeParameter('which') === 'header') return TarHeaderChunk;
+      if (segment.format.parameters['which'] === 'header') return TarHeaderChunk;
       return TarChunk;
     },
   };
