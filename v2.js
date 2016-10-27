@@ -178,10 +178,15 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
       dataSegment.format.getHandler().then(function(handler) {
         console.log('lastHandler', window.lastHandler = handler);
         if (typeof handler.split === 'function') {
-          handler.split(
-            function(entry) {
-              loadDataSegmentToFrame(entry, frame);
-            });
+          var entries = {
+            add: function(splitSegment) {
+              loadDataSegmentToFrame(splitSegment, frame);
+            },
+            accepted: function() {
+              return true;
+            },
+          };
+          handler.split(dataSegment, entries);
         }
       });
     }
