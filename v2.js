@@ -64,6 +64,4 @@ require(['Volume'], function(Volume) {
     
   });
   
-  desktop.classList.add('drop-target');
-
 });
