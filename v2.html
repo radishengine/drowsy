@@ -37,6 +37,18 @@
       position: fixed;
       pointer-events: none;
     }
+    @keyframes drop {
+      from {
+        filter: blur(2px) brightness(90%);
+        transform: scale(1.1);
+        box-shadow: 100px 100px 0 rgba(0,0,0,0);
+      }
+      to {
+        filter: blur(0px) brightness(100%);
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(0,0,0,1);
+      }
+    }
     .frame {
       position: absolute;
       width: 500px;
@@ -46,6 +58,8 @@
       min-height: 29px;
       min-width: 50px;
       box-sizing: border-box;
+      animation-name: drop;
+      animation-duration: 0.3s;
     }
     .frame > .title-bar {
       padding: 1px;
