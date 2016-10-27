@@ -53,13 +53,13 @@ define(['formats/dispatch', 'DataSegment'], function(dispatch, DataSegment) {
       var mdb, allocation, catalog, overflow, chunkSize;
       for (var i = 0; i < parts.length; i++) {
         if (parts[i].typeName === 'chunk/mac-hfs') {
-          switch (parts[i].getTypeParameter('which')) {
+          switch (parts[i].format.parameters['which']) {
             case 'master-directory-block':
               mdb = parts[i];
               break;
             case 'allocation':
               allocation = parts[i];
-              chunkSize = +allocation.getTypeParameter('chunk');
+              chunkSize = +allocation.format.parameters['chunk'];
               if (isNaN(chunkSize)) return Promise.reject('chunk parameter must be set on allocation table');
               break;
           }
@@ -246,7 +246,7 @@ define(['formats/dispatch', 'DataSegment'], function(dispatch, DataSegment) {
       }
       
       return catalog.split(function(entry) {
-        if (entry.getTypeParameter('node') === 'leaf') {
+        if (entry.format.parameters['node'] === 'leaf') {
           entry.getStruct().then(onLeaf);
         }
       },
