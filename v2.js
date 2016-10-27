@@ -143,6 +143,9 @@ require(['Volume', 'Format', 'formats/byExtension'], function(Volume, Format, fo
       frame.titleText = file.name;
       var format = Format(file.type || formatByExtension[file.name.match(/[^\.]*$/)[0]] || Format.generic);
       console.log(window.lastFormat = format);
+      format.getHandler().then(function(handler) {
+        console.log(window.lastHandler = handler);
+      });
     }
   
     function onDrop(e) {
