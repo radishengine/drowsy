@@ -138,7 +138,7 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
       }
     }
     
-    function initFrameForDataSegment(frame, dataSegment) {
+    function loadDataSegmentToFrame(dataSegment, frame) {
       console.lost('lastDataSegment', window.lastDataSegment = dataSegment);
       dataSegment.format.getHandler().then(function(handler) {
         console.log('lastHandler', window.lastHandler = handler);
@@ -150,6 +150,7 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
       frame.titleText = file.name;
       var format = Format(file.type || formatByExtension[file.name.match(/[^\.]*$/)[0]] || Format.generic);
       var dataSegment = DataSegment.from(file, format);
+      loadDataSegmentToFrame(dataSegment, frame);
     }
   
     function onDrop(e) {
