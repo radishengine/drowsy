@@ -250,6 +250,9 @@ define(function() {
     toJSON: function() {
       return this.toString();
     },
+    valueOf: function() {
+      return this.toString();
+    },
     test: function() {
       var other = Format.apply(null, arguments);
       if (other === this) return true;
