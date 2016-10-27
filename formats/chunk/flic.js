@@ -48,7 +48,7 @@ define(function() {
   
   return {
     getStructView: function(segment) {
-      switch (segment.getTypeParameter('type')) {
+      switch (segment.format.parameters['type']) {
         case 'prefix': return PrefixChunk;
         case 'frame-type': return FrameTypeChunk;
         case 'segment-table': return SegmentTableChunk;
