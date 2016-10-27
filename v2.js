@@ -17,6 +17,7 @@ require(['Volume'], function(Volume) {
     var drop = document.createElement('DIV');
     drop.className = 'drop-outline';
     drop.updatePosition = function(mx, my) {
+      console.log(mx, my, this.offsetWidth, this.offsetHeight);
       this.style.left = Math.max(0, mx - this.offsetWidth / 2) + 'px';
       this.style.top = Math.max(0, my - this.offsetHeight / 2) + 'px';
     };
