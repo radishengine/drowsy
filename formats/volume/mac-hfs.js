@@ -52,7 +52,7 @@ define(['formats/dispatch', 'DataSegment'], function(dispatch, DataSegment) {
     return segment.split().then(function(parts) {
       var mdb, allocation, catalog, overflow, chunkSize;
       for (var i = 0; i < parts.length; i++) {
-        if (parts[i].typeName === 'chunk/mac-hfs') {
+        if (parts[i].format.name === 'chunk/mac-hfs') {
           switch (parts[i].format.parameters['which']) {
             case 'master-directory-block':
               mdb = parts[i];
@@ -64,7 +64,7 @@ define(['formats/dispatch', 'DataSegment'], function(dispatch, DataSegment) {
               break;
           }
         }
-        else if (parts[i].typeName === 'chunk/mac-hfs-btree') {
+        else if (parts[i].format.name === 'chunk/mac-hfs-btree') {
           switch(parts[i].getTypeParameter('tree')) {
             case 'catalog': catalog = parts[i]; break;
             case 'overflow': overflow = parts[i]; break;
