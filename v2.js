@@ -75,6 +75,8 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
       return onHandleMouseDown(this, e.target, e.pageX, e.pageY);
     }
     desktop.appendChild(this);
+    delete this.dataset.left;
+    delete this.dataset.top;
     var pageX = e.pageX, pageY = e.pageY;
     var top = this.offsetTop, left = this.offsetLeft;
     var frame = this;
