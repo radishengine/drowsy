@@ -15,7 +15,6 @@ require(['Volume'], function(Volume) {
   });
   
   function onHandleMouseDown(frame, handle, pageX, pageY) {
-    var onMouseMove;
     var width = frame.offsetWidth, height = frame.offsetHeight;
     function onMouseMoveX(e) {
       frame.style.width = (width + e.pageX - pageX) + 'px';
@@ -44,6 +43,18 @@ require(['Volume'], function(Volume) {
       return onHandleMouseDown(this, e.target, e.pageX, e.pageY);
     }
     desktop.appendChild(this);
+    var pageX = e.pageX, pageY = e.pageY;
+    var top = this.offsetTop, left = this.offsetLeft;
+    function onMouseMove(e) {
+      frame.style.top = Math.max(0, top + e.pageX - pageX) + 'px';
+      frame.style.left = Math.max(0, left + e.pageY - pageY) + 'px';
+    }
+    function onMouseUp(e) {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
   }
   
   function onFrameClick(e) {
