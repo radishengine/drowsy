@@ -24,8 +24,7 @@ require(['Volume'], function(Volume) {
     function onDragOver(e) {
       e.stopPropagation();
       e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
-      drop.updatePosition(e.clientX, e.clientY);
+      drop.updatePosition(e.screenX, e.screenY);
     }
     
     function onDragLeave(e) {
@@ -47,7 +46,7 @@ require(['Volume'], function(Volume) {
     }
     
     function onMouseMove(e) {
-      drop.updatePosition(e.clientX, e.clientY);
+      drop.updatePosition(e.screenX, e.screenY);
     }
     
     desktop.addEventListener('dragover', onDragOver);
@@ -55,8 +54,8 @@ require(['Volume'], function(Volume) {
     desktop.addEventListener('drop', onDrop);
     desktop.addEventListener('mousemove', onMouseMove);
     
-    drop.updatePosition(e.clientX, e.clientY);
     desktop.appendChild(drop);
+    drop.updatePosition(e.screenX, e.screenY);
     
   });
   
