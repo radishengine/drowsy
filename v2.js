@@ -20,10 +20,10 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
       delete frame.dataset.top;
     }
     if (isNaN(frame.dataset.left)) {
-      top = frame.offsetLeft;
+      left = frame.offsetLeft;
     }
     else {
-      top = +frame.dataset.left;
+      left = +frame.dataset.left;
       delete frame.dataset.left;
     }
     var yDiff = top - (desktop.clientHeight - 15);
