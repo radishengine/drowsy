@@ -49,7 +49,7 @@ define(function() {
   
   return {
     getStructView: function(segment) {
-      if (segment.getTypeParameter('which') === 'offset-table') {
+      if (segment.format.parameters['which'] === 'offset-table') {
         return OffsetTableView;
       }
       return null;
