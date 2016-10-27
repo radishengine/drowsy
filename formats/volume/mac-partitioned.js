@@ -15,7 +15,7 @@ define(function() {
           partitionInfo.partitionSegmentType,
           512 * partitionInfo.blockOffset,
           512 * partitionInfo.blockCount);
-        if (partitionSegment.typeName === 'volume/ambiguous') {
+        if (partitionSegment.format.name === 'volume/ambiguous') {
           promises.push(partitionSegment.split(function(entry) {
             entries.add(entry);
           }));
