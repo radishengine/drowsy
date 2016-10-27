@@ -1,4 +1,4 @@
-define(function() {
+define(['Format'], function(Format) {
 
   'use strict';
   
@@ -35,6 +35,7 @@ define(function() {
   }
   
   return {
+    splitTo: Format('volume/mac-partitioned').or('volume/iso-9660'),
     split: split,
     mount: mount,
   };
