@@ -22,7 +22,7 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
   }
   
   window.addEventListener('resize', function(e) {
-    [].forEach.apply(desktop.children, checkVisible);
+    [].forEach.call(desktop.children, checkVisible);
   });
   
   desktop.addEventListener('mousedown', function(e) {
