@@ -44,16 +44,24 @@
       border: 1px solid black;
       background: white;
     }
-    .frame .title-bar button {
+    .frame > .title-bar {
+      padding: 1px;
+      height: 20px;
+      overflow: hidden;
+    }
+    .frame > .title-bar .title-text {
+      text-overflow: ellipsis;
+    }
+    .frame > .title-bar button {
       padding: 0;
       margin: 0;
       height: 100%;
       font-weight: bold;
       float: right;
     }
-    .frame .title-bar {
-      padding: 1px;
-      height: 20px;
+    .frame > .content {
+      width: 100%;
+      height: calc(100% - 22px);
     }
   </style>
 </head>
