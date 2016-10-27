@@ -1,4 +1,4 @@
-require(['Volume', 'Format', 'formats/byExtension'], function(Volume, Format, formatByExtension) {
+require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Volume, Format, DataSegment, formatByExtension) {
   
   'use strict';
 
@@ -138,14 +138,18 @@ require(['Volume', 'Format', 'formats/byExtension'], function(Volume, Format, fo
       }
     }
     
+    function initFrameForDataSegment(frame, dataSegment) {
+      console.lost('lastDataSegment', window.lastDataSegment = dataSegment);
+      dataSegment.format.getHandler().then(function(handler) {
+        console.log('lastHandler', window.lastHandler = handler);
+      });
+    }
+    
     function createFrameForFile(file, x, y) {
       var frame = createFrame(x, y);
       frame.titleText = file.name;
       var format = Format(file.type || formatByExtension[file.name.match(/[^\.]*$/)[0]] || Format.generic);
-      console.log(window.lastFormat = format);
-      format.getHandler().then(function(handler) {
-        console.log(window.lastHandler = handler);
-      });
+      var dataSegment = DataSegment.from(file, format);
     }
   
     function onDrop(e) {
