@@ -26,8 +26,8 @@ define(['Format', 'DataSegment', 'Volume'], function(Format, DataSegment, Volume
     var promises = [];
     return zip.split(
       function(entry) {
-        if (entry.getTypeParameter('type') !== 'local') return;
-        var offset = +entry.getTypeParameter('offset');
+        if (entry.format.parameters['type'] !== 'local') return;
+        var offset = +entry.format.parameters['offset'];
         var headerSegment = entry.getSegment(entry.type, 0, offset);
         promises.push(headerSegment.getStruct().then(function(record) {
           var format = volume.guessTypeForFilename(record.path);
@@ -62,7 +62,7 @@ define(['Format', 'DataSegment', 'Volume'], function(Format, DataSegment, Volume
   var LOCAL_RECORD_TYPE = Format('chunk/zip; type=local');
   
   function split(segment, entries) {
-    var partOffsets = segment.getTypeParameter('parts');
+    var partOffsets = segment.format.parameters['parts'];
     partOffsets = partOffsets ? partOffsets.split(',').map(parseInt) : [0];
     var trailerSegment = segment.getSegment(TRAILER_TYPE, 'suffix', TrailerView.byteLength);
     return trailerSegment.getBytes().then(function(rawTrailer) {
