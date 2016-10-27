@@ -11,12 +11,29 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
   }
   
   function checkVisible(frame) {
-    var yDiff = frame.offsetTop - (desktop.clientHeight - 15);
+    var top, left;
+    if (isNaN(frame.dataset.top)) {
+      top = frame.offsetTop;
+    }
+    else {
+      top = +frame.dataset.top;
+      delete frame.dataset.top;
+    }
+    if (isNaN(frame.dataset.left)) {
+      top = frame.offsetLeft;
+    }
+    else {
+      top = +frame.dataset.left;
+      delete frame.dataset.left;
+    }
+    var yDiff = top - (desktop.clientHeight - 15);
     if (yDiff > 0) {
+      frame.dataset.top = top;
       frame.style.top = Math.max(0, desktop.clientHeight - 15) + 'px';
     }
-    var xDiff = frame.offsetLeft - (desktop.clientWidth - 10);
+    var xDiff = left - (desktop.clientWidth - 10);
     if (xDiff > 0) {
+      frame.dataset.left = left;
       frame.style.left = Math.max(0, desktop.clientWidth - 10) + 'px';
     }
   }
