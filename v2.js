@@ -21,7 +21,7 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
     }
   }
   
-  document.addEventListener('resize', function(e) {
+  window.addEventListener('resize', function(e) {
     [].forEach.apply(desktop.children, checkVisible);
   });
   
