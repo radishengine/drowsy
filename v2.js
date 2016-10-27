@@ -139,16 +139,19 @@ require(['Volume'], function(Volume) {
     }
   
     function onDrop(e) {
-      dragCount = 0;
-      desktop.removeChild(drop);
-      createFrame(drop.x, drop.y);
-      drop = null;
       e.stopPropagation();
       e.preventDefault();
+      dragCount = 0;
       desktop.removeEventListener('dragover', onDragOver);
       desktop.removeEventListener('dragleave', onDragLeave);
       desktop.removeEventListener('drop', onDrop);
       desktop.removeEventListener('mousemove', onMouseMove);
+      desktop.removeChild(drop);
+      if (e.dataTransfer.files.length > 0) {
+        var frame = createFrame(drop.x, drop.y);
+        frame.titleText = e.dataTransfer.files[0].name;
+      }
+      drop = null;
     }
     
     function onMouseMove(e) {
