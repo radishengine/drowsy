@@ -5,8 +5,8 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macRoman, macDate, Re
   var NODE_BYTES = 512;
   
   function split(segment, entries) {
-    if (segment.getTypeParameter('node')) return Promise.resolve(null);
-    var tree = segment.getTypeParameter('tree');
+    if (segment.format.parameters['node']) return Promise.resolve(null);
+    var tree = segment.format.parameters['tree'];
     var leafType = 'chunk/mac-hfs-btree; tree=' + tree + '; node=leaf';
     var headerSegment = segment.getSegment('chunk/mac-hfs-btree; tree=' + tree + '; node=header', 0, NODE_BYTES);
     return headerSegment.getStruct().then(function(header) {
@@ -473,11 +473,11 @@ define(['mac/roman', 'mac/date', 'mac/RectView'], function(macRoman, macDate, Re
   
   return {
     getStructView: function(segment) {
-      if (segment.getTypeParameter('node')) return BTreeNodeView;
+      if (segment.format.parameters['node']) return BTreeNodeView;
       return null;
     },
     canSplit: function(segment) {
-      return !segment.getTypeParameter('node');
+      return !segment.format.parameters['node'];
     },
     NodeView: BTreeNodeView,
     split: split,
