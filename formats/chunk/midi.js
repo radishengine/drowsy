@@ -279,7 +279,7 @@ define(function() {
   return {
     HeaderView: HeaderView,
     getStructView: function(segment) {
-      switch (segment.getTypeParameter('which')) {
+      switch (segment.format.parameters['which']) {
         case 'header': return HeaderView;
         default: return null;
       }
