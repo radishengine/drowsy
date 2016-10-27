@@ -45,7 +45,7 @@ define(function() {
   
   return {
     getTypeStruct: function(segment) {
-      switch (segment.getTypeParameter('which')) {
+      switch (segment.format.parameters['which']) {
         case 'articulator': return Articulator;
         default: return null;
       }
