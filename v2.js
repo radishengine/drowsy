@@ -44,7 +44,9 @@ require(['Volume'], function(Volume) {
     frame.addEventListener('mousedown', onFrameMouseDown);
     frame.addEventListener('click', onFrameClick);
     frame.titleBar = frame.appendChild(document.createElement('DIV'));
+    frame.titleBar.className = 'title-bar';
     frame.closeButton = frame.titleBar.appendChild(document.createElement('BUTTON'));
+    frame.closeButton.className = 'close-button';
     frame.closeButton.textContent = 'X';
     frame.titleTextContainer = frame.titleBar.appendChild(document.createElement('SPAN'));
     Object.defineProperties(frame, frameProperties);
