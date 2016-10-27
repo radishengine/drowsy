@@ -50,6 +50,8 @@ require(['Volume'], function(Volume) {
     frame.closeButton.textContent = 'X';
     frame.titleTextContainer = frame.titleBar.appendChild(document.createElement('SPAN'));
     frame.titleTextContainer.className = 'title-text';
+    frame.content = frame.appendChild(document.createElement('DIV'));
+    frame.content.className = 'content';
     Object.defineProperties(frame, frameProperties);
     return frame;
   }
