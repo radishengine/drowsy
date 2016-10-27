@@ -43,6 +43,12 @@ require(['Volume'], function(Volume) {
     }
     frame.addEventListener('mousedown', onFrameMouseDown);
     frame.addEventListener('click', onFrameClick);
+    frame.xHandle = frame.appendChild(document.createElement('DIV'));
+    frame.xHandle.className = 'x-handle';
+    frame.yHandle = frame.appendChild(document.createElement('DIV'));
+    frame.yHandle.className = 'y-handle';
+    frame.cornerHandle = frame.appendChild(document.createElement('DIV'));
+    frame.cornerHandler.className = 'corner-handle';
     frame.titleBar = frame.appendChild(document.createElement('DIV'));
     frame.titleBar.className = 'title-bar';
     frame.closeButton = frame.titleBar.appendChild(document.createElement('BUTTON'));
