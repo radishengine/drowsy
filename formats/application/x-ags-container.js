@@ -99,10 +99,10 @@ define(['../dispatch'], function(dispatch) {
   }
   
   function split(segment, entries) {
-    var bodyVersion = segment.getTypeParameter('body-version');
+    var bodyVersion = segment.format.parameters['body-version'];
     if (bodyVersion) return split_contents(bodyVersion, segment, entries, 0);
     
-    var mode = segment.getTypeParameter('mode');
+    var mode = segment.format.parameters['mode'];
     if (mode === 'prefix') return split_prefix(segment, entries, 0);
     if (mode === 'suffix') return split_suffix(segment, entries);
     
@@ -114,8 +114,8 @@ define(['../dispatch'], function(dispatch) {
   function mount(containerSegment, volume) {
     var promiseChain = Promise.resolve();
     return containerSegment.split(function(chunk) {
-      if (chunk.typeName === 'chunk/ags' && chunk.getTypeParameter('which') === 'file-list-v6') {
-        var base = chunk.getTypeParameter('base');
+      if (chunk.format.name === 'chunk/ags' && chunk.format.parameters['which'] === 'file-list-v6') {
+        var base = chunk.format.parameters['base'];
         if (!base) {
           throw new Error('base must be set');
         }
