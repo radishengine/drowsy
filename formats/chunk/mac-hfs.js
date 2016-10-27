@@ -137,7 +137,7 @@ define(['mac/date', 'mac/roman'], function(macDate, macRoman) {
 
   return {
     getStructView: function(segment) {
-      switch (segment.getTypeParameter('which')) {
+      switch (segment.format.parameters['which']) {
         case 'master-directory-block': return MasterDirectoryBlockView;
         default: return null;
       }
