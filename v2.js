@@ -10,6 +10,12 @@ require(['Volume'], function(Volume) {
     return;
   }
   
+  function createFrame() {
+    var frame = document.createElement('DIV');
+    frame.className = 'frame';
+    desktop.appendChild(frame);
+  }
+  
   desktop.addEventListener('dragenter', function(e) {
     
     var drop = document.createElement('DIV');
@@ -42,6 +48,7 @@ require(['Volume'], function(Volume) {
       desktop.removeEventListener('dragleave', onDragLeave);
       desktop.removeEventListener('drop', onDrop);
       desktop.removeEventListener('mousemove', onMouseMove);
+      createFrame();
     }
     
     function onMouseMove(e) {
