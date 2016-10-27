@@ -197,7 +197,7 @@ define(function() {
       return new Format(typeName, typeParameters);
     }
     if (!typeName) typeName = DEFAULT_TYPE.typeName;
-    var nameParts = typeName.match(/^\s*([a-z0-9_\-\.]+)\/([a-z0-9_\-\.]+)\s*(?:;(.*))?$/);
+    var nameParts = typeName.match(/^\s*([a-z0-9_\-\.\+]+)\/([a-z0-9_\-\.\+]+)\s*(?:;(.*))?$/);
     if (!nameParts) {
       throw new TypeError('Format name must take the form: category/subtype');
     }
