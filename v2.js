@@ -47,8 +47,8 @@ require(['Volume'], function(Volume) {
     var top = this.offsetTop, left = this.offsetLeft;
     var frame = this;
     function onMouseMove(e) {
-      frame.style.top = Math.max(0, top + e.pageX - pageX) + 'px';
-      frame.style.left = Math.max(0, left + e.pageY - pageY) + 'px';
+      frame.style.left = Math.max(0, left + e.pageX - pageX) + 'px';
+      frame.style.top = Math.max(0, top + e.pageY - pageY) + 'px';
     }
     function onMouseUp(e) {
       document.removeEventListener('mousemove', onMouseMove);
