@@ -137,6 +137,11 @@ require(['Volume'], function(Volume) {
         desktop.removeEventListener('mousemove', onMouseMove);
       }
     }
+    
+    function createFrameForFile(file, x, y) {
+      var frame = createFrame(x, y);
+      frame.titleText = file.name;
+    }
   
     function onDrop(e) {
       e.stopPropagation();
@@ -147,10 +152,8 @@ require(['Volume'], function(Volume) {
       desktop.removeEventListener('drop', onDrop);
       desktop.removeEventListener('mousemove', onMouseMove);
       desktop.removeChild(drop);
-      console.log(window.lastDataTransfer = {items: [].slice.apply(e.dataTransfer.items || []), files: [].slice.apply(e.dataTransfer.files || [])});
-      if (e.dataTransfer.files.length > 0) {
-        var frame = createFrame(drop.x, drop.y);
-        frame.titleText = e.dataTransfer.files[0].name;
+      for (var i = 0; i < e.dataTransfer.files.length; i++) {
+        createFrameForFile(e.dataTransfer.files[i], drop.x + (i % 3) * 20, drop.y + (i % 3) * 20);
       }
       drop = null;
     }
