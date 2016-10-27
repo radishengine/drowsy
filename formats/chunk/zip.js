@@ -300,7 +300,7 @@ define(['../../msdos/util.js'], function(dosUtil) {
   
   return {
     getStructView: function(segment) {
-      switch (segment.getTypeParameter('type')) {
+      switch (segment.format.parameters['type']) {
         case 'trailer': return TrailerView;
         case 'central': return CentralRecordView;
         case 'local': return LocalRecordView;
