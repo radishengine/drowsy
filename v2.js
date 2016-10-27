@@ -33,7 +33,7 @@ require(['Volume'], function(Volume) {
       e.stopPropagation();
       e.preventDefault();
       e.dataTransfer.dropEffect = 'copy';
-      drop.updatePosition(e.screenX, e.screenY);
+      drop.updatePosition(e.pageX, e.pageY);
     }
     
     function onDragLeave(e) {
@@ -57,7 +57,7 @@ require(['Volume'], function(Volume) {
     }
     
     function onMouseMove(e) {
-      drop.updatePosition(e.screenX, e.screenY);
+      drop.updatePosition(e.pageX, e.pageY);
     }
     
     desktop.addEventListener('dragover', onDragOver);
@@ -66,7 +66,7 @@ require(['Volume'], function(Volume) {
     desktop.addEventListener('mousemove', onMouseMove);
     
     desktop.appendChild(drop);
-    drop.updatePosition(e.screenX, e.screenY);
+    drop.updatePosition(e.pageX, e.pageY);
     
   });
   
