@@ -1,4 +1,4 @@
-require(['Volume'], function(Volume) {
+require(['Volume', 'Format', 'formats/byExtension'], function(Volume, Format, formatByExtension) {
   
   'use strict';
 
@@ -141,6 +141,8 @@ require(['Volume'], function(Volume) {
     function createFrameForFile(file, x, y) {
       var frame = createFrame(x, y);
       frame.titleText = file.name;
+      var format = Format(file.type || formatByExtension[file.name.match(/[^\.]*$/)[0]] || Format.generic);
+      console.log(window.lastFormat = format);
     }
   
     function onDrop(e) {
