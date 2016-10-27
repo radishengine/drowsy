@@ -10,7 +10,7 @@ require(['Volume'], function(Volume) {
     return;
   }
   
-  function onClickFrame(e) {
+  function onFrameMouseDown(e) {
     desktop.appendChild(this);
   }
   
@@ -22,7 +22,7 @@ require(['Volume'], function(Volume) {
       frame.style.left = x + 'px';
       frame.style.top = y + 'px';
     }
-    frame.addEventListener('click', onClickFrame);
+    frame.addEventListener('mousedown', onFrameMouseDown);
   }
   
   var dragCount = 0;
