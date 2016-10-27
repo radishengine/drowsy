@@ -139,7 +139,7 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
     }
     
     function loadDataSegmentToFrame(dataSegment, frame) {
-      console.lost('lastDataSegment', window.lastDataSegment = dataSegment);
+      console.log('lastDataSegment', window.lastDataSegment = dataSegment);
       dataSegment.format.getHandler().then(function(handler) {
         console.log('lastHandler', window.lastHandler = handler);
       });
