@@ -284,7 +284,7 @@ define(function() {
 
   return {
     getStructView: function(segment) {
-      switch (segment.getTypeParameter('which')) {
+      switch (segment.format.parameters['which']) {
         case 'volume-descriptor': return VolumeDescriptorView;
         case 'path-table-entry': return PathTableEntryView;
         case 'boot-record': return BootRecordView;
