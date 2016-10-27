@@ -173,6 +173,8 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
       }
     }
     
+    var notChunkFormat = Format.all.except('chunk/*');
+    
     function loadDataSegmentToFrame(dataSegment, frame) {
       console.log('lastDataSegment', dataSegment.format.toString(), window.lastDataSegment = dataSegment);
       dataSegment.format.getHandler().then(function(handler) {
@@ -180,10 +182,12 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
         if (typeof handler.split === 'function') {
           var entries = {
             add: function(splitSegment) {
-              loadDataSegmentToFrame(splitSegment, frame);
+              if (notChunkFormat.test(splitSegment.format)) {
+                loadDataSegmentToFrame(splitSegment, frame);
+              }
             },
-            accepted: function() {
-              return true;
+            accepted: function(type) {
+              return notChunkFormat.test(type);
             },
           };
           handler.split(dataSegment, entries);
