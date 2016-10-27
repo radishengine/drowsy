@@ -174,9 +174,15 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
     }
     
     function loadDataSegmentToFrame(dataSegment, frame) {
-      console.log('lastDataSegment', window.lastDataSegment = dataSegment);
+      console.log('lastDataSegment', dataSegment.format.toString(), window.lastDataSegment = dataSegment);
       dataSegment.format.getHandler().then(function(handler) {
         console.log('lastHandler', window.lastHandler = handler);
+        if (typeof handler.split === 'function') {
+          handler.split(
+            function(entry) {
+              loadDataSegmentToFrame(entry, frame);
+            });
+        }
       });
     }
     
