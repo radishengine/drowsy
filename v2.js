@@ -12,8 +12,6 @@ require(['Volume'], function(Volume) {
   
   desktop.addEventListener('dragenter', function(e) {
     
-    e.dataTransfer.dropEffect = 'copy';
-    
     var drop = document.createElement('DIV');
     drop.className = 'drop-outline';
     drop.updatePosition = function(mx, my) {
@@ -24,6 +22,7 @@ require(['Volume'], function(Volume) {
     function onDragOver(e) {
       e.stopPropagation();
       e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
       drop.updatePosition(e.screenX, e.screenY);
     }
     
