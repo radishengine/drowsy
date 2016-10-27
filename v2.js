@@ -10,7 +10,33 @@ require(['Volume'], function(Volume) {
     return;
   }
   
+  function onHandleMouseDown(frame, handle, pageX, pageY) {
+    var onMouseMove;
+    var width = frame.offsetWidth, height = frame.offsetHeight;
+    function onMouseMoveX(e) {
+      frame.style.width = (width + e.pageX - pageX) + 'px';
+    }
+    function onMouseMoveY(e) {
+      frame.style.height = (height + e.pageY - pageY) + 'px';
+    }
+    function onMouseUp(e) {
+      document.removeEventListener('mousemove', onMouseMoveX);
+      document.removeEventListener('mousemove', onMouseMoveY);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+    if (handle.handle === 'x' || handle.handle === 'corner') {
+      document.addEventListener(onMouseMoveX);
+    }
+    if (handle.handle === 'y' || handle.handle === 'corner') {
+      document.addEventListener(onMouseMoveY);
+    }
+    document.addEventListener(onMouseUp);
+  }
+  
   function onFrameMouseDown(e) {
+    if (e.target.handle) {
+      return onHandleMouseDown(this, e.target, e.pageX, e.pageY);
+    }
     desktop.appendChild(this);
     e.stopPropagation();
   }
@@ -44,10 +70,13 @@ require(['Volume'], function(Volume) {
     frame.addEventListener('mousedown', onFrameMouseDown);
     frame.addEventListener('click', onFrameClick);
     frame.xHandle = frame.appendChild(document.createElement('DIV'));
+    frame.xHandle.handle = 'x';
     frame.xHandle.className = 'x-handle';
     frame.yHandle = frame.appendChild(document.createElement('DIV'));
+    frame.yHandle.handle = 'y';
     frame.yHandle.className = 'y-handle';
     frame.cornerHandle = frame.appendChild(document.createElement('DIV'));
+    frame.cornerHandle.handle = 'corner';
     frame.cornerHandle.className = 'corner-handle';
     frame.titleBar = frame.appendChild(document.createElement('DIV'));
     frame.titleBar.className = 'title-bar';
