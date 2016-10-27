@@ -97,7 +97,7 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
       gotPrimaryVolumeSegment = new Promise(function(resolve, reject) {
         segment.split(function(segment) {
           if (resolve !== null
-          && segment.typeName === 'volume/iso-9660'
+          && segment.format.name === 'volume/iso-9660'
           && segment.format.parameters['volume'] === 'primary') {
             var _resolve = resolve;
             resolve = null;
