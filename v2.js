@@ -12,7 +12,26 @@ require(['Volume'], function(Volume) {
   
   function onFrameMouseDown(e) {
     desktop.appendChild(this);
+    e.stopPropagation();
   }
+  
+  function onFrameClick(e) {
+    if (e.target === this.closeButton) {
+      desktop.removeChild(this);
+    }
+    e.stopPropagation();
+  }
+  
+  const frameProperties = {
+    titleText: {
+      get: function() {
+        return this.titleTextContainer.textContent;
+      },
+      set: function(newTitle) {
+        this.titleTextContainer.textContent = newTitle;
+      },
+    },
+  };
   
   function createFrame(x, y) {
     var frame = document.createElement('DIV');
@@ -23,6 +42,13 @@ require(['Volume'], function(Volume) {
       frame.style.top = y + 'px';
     }
     frame.addEventListener('mousedown', onFrameMouseDown);
+    frame.addEventListener('click', onFrameClick);
+    frame.titleBar = frame.appendChild(document.createElement('DIV'));
+    frame.closeButton = frame.titleBar.appendChild(document.createElement('BUTTON'));
+    frame.closeButton.textContent = 'X';
+    frame.titleTextContainer = frame.titleBar.appendChild(document.createElement('SPAN'));
+    Object.defineProperties(frame, frameProperties);
+    return frame;
   }
   
   var dragCount = 0;
