@@ -275,7 +275,7 @@ define(function() {
       if (handler) return Promise.resolve(handler);
       var self = this;
       return new Promise(function(resolve, reject) {
-        var requirePath = 'formats/' + self.formatName;
+        var requirePath = 'formats/' + self.name;
         require(
           [requirePath],
           function(handler) {
