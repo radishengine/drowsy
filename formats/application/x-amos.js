@@ -39,7 +39,7 @@ define(function() {
   return {
     split: split,
     getStructView: function(segment) {
-      switch (segment.getTypeParameter('chunk')) {
+      switch (segment.format.parameters['chunk']) {
         case 'header': return AmosHeaderView;
       }
     },
