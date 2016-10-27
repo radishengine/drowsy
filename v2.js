@@ -5,10 +5,14 @@ require(['Volume'], function(Volume) {
   window.Volume = Volume;
   
   var desktop = document.getElementById('desktop');
-   if (!desktop) {
+  if (!desktop) {
     console.error('desktop element not found');
     return;
   }
+  
+  desktop.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+  });
   
   function onHandleMouseDown(frame, handle, pageX, pageY) {
     var onMouseMove;
