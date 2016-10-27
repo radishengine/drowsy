@@ -11,9 +11,9 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
   }
   
   function checkVisible(frame) {
-    var yDiff = frame.offsetTop - (desktop.clientHeight - 10);
+    var yDiff = frame.offsetTop - (desktop.clientHeight - 15);
     if (yDiff > 0) {
-      frame.style.top = Math.max(0, desktop.clientHeight - 10) + 'px';
+      frame.style.top = Math.max(0, desktop.clientHeight - 15) + 'px';
     }
     var xDiff = frame.offsetLeft - (desktop.clientWidth - 10);
     if (xDiff > 0) {
