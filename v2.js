@@ -139,6 +139,8 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
     frame.titleTextContainer.className = 'title-text';
     frame.content = frame.appendChild(document.createElement('DIV'));
     frame.content.className = 'content';
+    frame.watermark = frame.content.appendChild(document.createElement('DIV'));
+    frame.watermark.className = 'watermark';
     Object.defineProperties(frame, frameProperties);
     return frame;
   }
