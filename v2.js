@@ -20,7 +20,11 @@ require(['Volume'], function(Volume) {
     }
   }
   
+  var dragCount = 0;
+
   desktop.addEventListener('dragenter', function(e) {
+    
+    if (++dragCount > 1) return;
     
     var drop = document.createElement('DIV');
     drop.className = 'drop-outline';
@@ -37,11 +41,13 @@ require(['Volume'], function(Volume) {
     }
     
     function onDragLeave(e) {
-      desktop.removeChild(drop);
-      desktop.removeEventListener('dragover', onDragOver);
-      desktop.removeEventListener('dragleave', onDragLeave);
-      desktop.removeEventListener('drop', onDrop);
-      desktop.removeEventListener('mousemove', onMouseMove);
+      if (--dragCount < 1) {
+        desktop.removeChild(drop);
+        desktop.removeEventListener('dragover', onDragOver);
+        desktop.removeEventListener('dragleave', onDragLeave);
+        desktop.removeEventListener('drop', onDrop);
+        desktop.removeEventListener('mousemove', onMouseMove);
+      }
     }
   
     function onDrop(e) {
