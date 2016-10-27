@@ -10,10 +10,14 @@ require(['Volume'], function(Volume) {
     return;
   }
   
-  function createFrame() {
+  function createFrame(x, y) {
     var frame = document.createElement('DIV');
     frame.className = 'frame';
     desktop.appendChild(frame);
+    if (!isNaN(x) && !isNaN(y)) {
+      frame.style.left = x + 'px';
+      frame.style.top = y + 'px';
+    }
   }
   
   desktop.addEventListener('dragenter', function(e) {
@@ -21,8 +25,8 @@ require(['Volume'], function(Volume) {
     var drop = document.createElement('DIV');
     drop.className = 'drop-outline';
     drop.updatePosition = function(mx, my) {
-      this.style.left = Math.max(0, mx - this.offsetWidth / 2) + 'px';
-      this.style.top = Math.max(0, my - this.offsetHeight / 2) + 'px';
+      this.style.left = (this.x = Math.max(0, mx - this.offsetWidth / 2)) + 'px';
+      this.style.top = (this.y = Math.max(0, my - this.offsetHeight / 2)) + 'px';
     };
     
     function onDragOver(e) {
@@ -42,13 +46,14 @@ require(['Volume'], function(Volume) {
   
     function onDrop(e) {
       desktop.removeChild(drop);
+      createFrame(drop.x, drop.y);
+      drop = null;
       e.stopPropagation();
       e.preventDefault();
       desktop.removeEventListener('dragover', onDragOver);
       desktop.removeEventListener('dragleave', onDragLeave);
       desktop.removeEventListener('drop', onDrop);
       desktop.removeEventListener('mousemove', onMouseMove);
-      createFrame();
     }
     
     function onMouseMove(e) {
