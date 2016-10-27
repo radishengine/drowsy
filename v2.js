@@ -147,6 +147,7 @@ require(['Volume'], function(Volume) {
       desktop.removeEventListener('drop', onDrop);
       desktop.removeEventListener('mousemove', onMouseMove);
       desktop.removeChild(drop);
+      console.log(window.lastDataTransfer = e.dataTransfer);
       if (e.dataTransfer.files.length > 0) {
         var frame = createFrame(drop.x, drop.y);
         frame.titleText = e.dataTransfer.files[0].name;
