@@ -38,9 +38,9 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
   }
   
   function split_directory_tree(segment, entries) {
-    var root = (segment.getTypeParameter('root') || '').match(/^(\d+)\s*,\s*(\d+)$/);
+    var root = (segment.format.parameters['root'] || '').match(/^(\d+)\s*,\s*(\d+)$/);
     if (!root) return Promise.reject('root must be specified as a block,length pair');
-    var blockSize = +(segment.getTypeParameter('block-size') || 2048);
+    var blockSize = +(segment.format.parameters['block-size'] || 2048);
     var rootFolderSegment = segment.getSegment('chunk/iso-9660; which=folder; parent=-1', +root[1], +root[2]);
     function doFolderSegment(folderSegment, parentBlock) {
       entries.add(folderSegment);
@@ -82,7 +82,7 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
   }
   
   function split(segment, entries) {
-    if (segment.getTypeParameter('root') !== null) {
+    if (segment.format.parameters['root'] !== null) {
       return split_directory_tree(segment, entries);
     }
     return split_descriptors(segment, entries);
@@ -90,7 +90,7 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
   
   function mount(segment, volume) {
     var gotPrimaryVolumeSegment;
-    if (segment.getTypeParameter('root')) {
+    if (segment.format.parameters['root']) {
       gotPrimaryVolumeSegment = Promise.resolve(segment);
     }
     else {
@@ -98,7 +98,7 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
         segment.split(function(segment) {
           if (resolve !== null
           && segment.typeName === 'volume/iso-9660'
-          && segment.getTypeParameter('volume') === 'primary') {
+          && segment.format.parameters['volume'] === 'primary') {
             var _resolve = resolve;
             resolve = null;
             _resolve(segment);
@@ -110,12 +110,12 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
       });
     }
     return gotPrimaryVolumeSegment.then(function(primaryVolumeSegment) {
-      var blockSize = +(primaryVolumeSegment.getTypeParameter('block-size') || 2048);
+      var blockSize = +(primaryVolumeSegment.format.parameters['block-size'] || 2048);
       var promiseChain = Promise.resolve(null);
       var parentPaths = {};
       return primaryVolumeSegment.split(function(entry) {
-        var parentID = entry.getTypeParameter('parent');
-        if (entry.getTypeParameter('which') === 'folder') {
+        var parentID = entry.format.parameters['parent'];
+        if (entry.format.parameters['which'] === 'folder') {
           promiseChain = promiseChain.then(function() {
             return entry.getStruct()
             .then(function(folderInfo) {
