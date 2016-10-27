@@ -23,12 +23,14 @@ require(['Volume'], function(Volume) {
     };
     
     function onDragOver(e) {
+      console.log(e.type, e.target);
       e.stopPropagation();
       e.preventDefault();
       drop.updatePosition(e.screenX, e.screenY);
     }
     
     function onDragLeave(e) {
+      console.log(e.type, e.target);
       desktop.removeChild(drop);
       desktop.removeEventListener('dragover', onDragOver);
       desktop.removeEventListener('dragleave', onDragLeave);
@@ -37,6 +39,7 @@ require(['Volume'], function(Volume) {
     }
   
     function onDrop(e) {
+      console.log(e.type, e.target);
       desktop.removeChild(drop);
       e.stopPropagation();
       e.preventDefault();
@@ -47,6 +50,7 @@ require(['Volume'], function(Volume) {
     }
     
     function onMouseMove(e) {
+      console.log(e.type, e.target);
       drop.updatePosition(e.screenX, e.screenY);
     }
     
