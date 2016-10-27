@@ -45,6 +45,7 @@ require(['Volume'], function(Volume) {
     desktop.appendChild(this);
     var pageX = e.pageX, pageY = e.pageY;
     var top = this.offsetTop, left = this.offsetLeft;
+    var frame = this;
     function onMouseMove(e) {
       frame.style.top = Math.max(0, top + e.pageX - pageX) + 'px';
       frame.style.left = Math.max(0, left + e.pageY - pageY) + 'px';
