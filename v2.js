@@ -51,6 +51,7 @@ require(['Volume'], function(Volume) {
     }
   
     function onDrop(e) {
+      dragCount = 0;
       desktop.removeChild(drop);
       createFrame(drop.x, drop.y);
       drop = null;
