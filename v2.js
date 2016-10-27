@@ -10,6 +10,10 @@ require(['Volume'], function(Volume) {
     return;
   }
   
+  function onClickFrame(e) {
+    desktop.appendChild(this);
+  }
+  
   function createFrame(x, y) {
     var frame = document.createElement('DIV');
     frame.className = 'frame';
@@ -18,6 +22,7 @@ require(['Volume'], function(Volume) {
       frame.style.left = x + 'px';
       frame.style.top = y + 'px';
     }
+    frame.addEventListener('click', onClickFrame);
   }
   
   var dragCount = 0;
