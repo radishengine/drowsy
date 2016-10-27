@@ -12,10 +12,6 @@ require(['Volume'], function(Volume) {
   
   desktop.addEventListener('dragenter', function(e) {
     
-    if (e.dataTransfer.files.length === 0) {
-      return;
-    }
-    
     e.dataTransfer.dropEffect = 'copy';
     
     var drop = document.createElement('DIV');
