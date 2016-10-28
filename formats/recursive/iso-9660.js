@@ -24,7 +24,7 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
             raw.byteLength - pos);
           if (record.isDirectory) {
             if (record.dataBlockAddress !== parentBlock && record.dataBlockAddress !== folderBlock) {
-              entries.add(segment.getSegment(['folder/iso-9660', {
+              entries.add(segment.getSegment(['recursive/iso-9660', {
                 offset: blockSize * folderBlock + pos,
                 length: record.byteLength,
               }]));
