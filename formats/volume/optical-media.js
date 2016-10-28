@@ -21,7 +21,7 @@ define(['Format'], function(Format) {
     }, NO_OP);
     
     return Promise.all([
-      macPartitioned,
+      //macPartitioned,
       iso9660,
     ]);
     
