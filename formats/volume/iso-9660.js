@@ -16,7 +16,7 @@ define(['Format', '../chunk/iso-9660'], function(Format, chunkTypes) {
             // i.e. don't call doVolumeDescriptor for the next n
             return;
           case 'volume':
-            var formatName = 'folder/iso-9660';
+            var formatName = 'recursive/iso-9660';
             var formatParameters = {
               volume: descriptor.isPrimaryVolume ? 'primary' : 'supplementary',
               offset: descriptorOffset + descriptor.body.offsetof_rootDirectory,
