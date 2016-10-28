@@ -299,6 +299,26 @@ define('DataSegment', ['Format', 'formats/byExtension', 'Volume'], function(Form
         };
       });
     },
+    getDisplayName: function() {
+      var self = this;
+      return this.format.getHandler()
+      .then(function(handler) {
+        if (typeof handler.getDisplayName === 'function') {
+          return handler.getDisplayName(self);
+        }
+        return self.format.name;
+      });
+    },
+    getTimestamp: function() {
+      var self = this;
+      return this.format.getHandler()
+      .then(function(handler) {
+        if (typeof handler.getTimestamp === 'function') {
+          return handler.getTimestamp(self);
+        }
+        return null;
+      });
+    },
     split: function(filter, eachCallback, endCallback) {
       if (arguments.length > 0 && typeof arguments[0] === 'function') {
         endCallback = eachCallback;
