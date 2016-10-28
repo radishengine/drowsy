@@ -1,4 +1,4 @@
-define(['../chunk/iso-9660'], function(chunkTypes) {
+define(['./chunk'], function(chunkTypes) {
 
   'use strict';
 
