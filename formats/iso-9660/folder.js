@@ -1,17 +1,22 @@
-define(['./chunk'], function(chunkTypes) {
+define(['Format', './chunk'], function(Format, chunkTypes) {
 
   'use strict';
 
   function split(segment, entries) {
-    var offset = +segment.format.parameters['offset'];
-    var length = +segment.format.parameters['length'];
-    var parentBlock = +(segment.format.parameters['parent'] || -1);
+    var root = (segment.format.parameters['root-segment'] || '').match(/^\s*(\d+)\s*,(\d+)\s*$/);
+    if (!root) {
+      return Promise.reject('root-segment parameter must be specified as a pair of decimal numbers');
+    }
+    var rootOffset = +root[1], rootLength = +root[2];
+    var parentBlockAddress = +(segment.format.parameters['parent'] || -1);
     var blockSize = +(segment.format.parameters['block-size'] || 2048);
-    var rootFolderSegment = segment.getSegment(['chunk/iso-9660', {which:'folder'}], offset, length);
-    entries.add(rootFolderSegment);
-    return rootFolderSegment.getStruct().then(function(folder) {
-      var folderBlock = folder.dataBlockAddress;
-      return segment.getBytes(blockSize * folderBlock, folder.dataByteLength)
+    var rootSegment = segment.getSegment(
+      Format('iso-9660/chunk', {which:'folder', 'is-root':'true'}),
+      rootOffset, rootLength);
+    entries.add(rootSegment);
+    return rootSegment.getStruct().then(function(folder) {
+      var folderBlockAddress = folder.dataBlockAddress;
+      return segment.getBytes(blockSize * folderBlockAddress, folder.dataByteLength)
       .then(function(raw) {
         for (var pos = 0; pos < raw.length; ) {
           if (raw[pos] === 0) {
@@ -23,18 +28,21 @@ define(['./chunk'], function(chunkTypes) {
             raw.byteOffset + pos,
             raw.byteLength - pos);
           if (record.isDirectory) {
-            if (record.dataBlockAddress !== parentBlock && record.dataBlockAddress !== folderBlock) {
-              entries.add(segment.getSegment(['recursive/iso-9660', {
-                offset: blockSize * folderBlock + pos,
-                length: record.byteLength,
-              }]));
+            if (record.dataBlockAddress !== parentBlockAddress && record.dataBlockAddress !== folderBlockAddress) {
+              var format = Format('iso-9660/folder', {
+                'root-segment': (record.dataBlockAddress * blockSize) + ',' + record.byteLength,
+                'block-size': blockSize,
+                'parent': folderBlockAddress,
+              });
+              entries.add(segment.getSegment(format));
             }
           }
           else {
-            entries.add(segment.getSegment(
-              ['chunk/iso-9660', {which:'file'}],
-              blockSize * folderBlock + pos,
-              record.byteLength));
+            var format = Format('iso-9660/file', {
+              'record-segment': (record.dataBlockAddress * blockSize) + ',' + record.byteLength,
+              'data-segment': (blockSize * folder.dataBlockAddress) + ',' + folder.dataByteLength,
+            });
+            entries.add(segment.getSegment(format));
           }
           pos += record.byteLength;
         }
