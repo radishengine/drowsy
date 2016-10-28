@@ -6,12 +6,14 @@ define(['Format'], function(Format) {
   
   function split(segment, entries) {
   
+    /*
     var macPartitioned = segment.getBytes(512, 4).then(function(sig) {
       if (String.fromCharCode(sig[0], sig[1], sig[2], sig[3]) !== 'PM\0\0') {
         return;
       }
       entries.add(segment.getSegment('volume/mac-partitioned'));
     }, NO_OP);
+    */
     
     var iso9660 = segment.getBytes(2048 * 16 + 1, 5).then(function(sig) {
       if (String.fromCharCode(sig[0], sig[1], sig[2], sig[3], sig[4]) !== 'CD001') {
