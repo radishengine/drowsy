@@ -175,7 +175,7 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
       }
     }
     
-    var notChunkFormat = Format.all.except('chunk/*');
+    var notChunkFormat = Format.all.except('chunk/*').except('folder/*');
     
     function loadDataSegmentToFrame(dataSegment, frame) {
       console.log('lastDataSegment', dataSegment.format.toString(), window.lastDataSegment = dataSegment);
