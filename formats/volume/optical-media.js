@@ -19,7 +19,7 @@ define(['Format'], function(Format) {
       if (String.fromCharCode(sig[0], sig[1], sig[2], sig[3], sig[4]) !== 'CD001') {
         return;
       }
-      entries.add(segment.getSegment('volume/iso-9660'));
+      entries.add(segment.getSegment('iso-9660/partitioned'));
     }, NO_OP);
     
     return Promise.all([
@@ -37,7 +37,7 @@ define(['Format'], function(Format) {
   }
   
   return {
-    splitTo: Format('volume/mac-partitioned').or('volume/iso-9660'),
+    splitTo: Format('volume/mac-partitioned').or('iso-9660/partitioned'),
     split: split,
     mount: mount,
   };
