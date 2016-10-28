@@ -10,7 +10,9 @@ define(['Format'], function(Format) {
         if (partitions.length === 0) {
           return Promise.reject('no partition record found');
         }
-        return partitions[0].body.identifier;
+        return partitions[0].getStruct().then(function(partition) {
+          return partition.body.identifier;
+        });
       });
     },
     getTimestamp: function(segment) {
@@ -18,7 +20,9 @@ define(['Format'], function(Format) {
         if (partitions.length === 0) {
           return Promise.reject('no partition record found');
         }
-        return partitions[0].body.modifiedAt;
+        return partitions[0].getStruct().then(function(partition) {
+          return partition.body.modifiedAt;
+        });
       });
     },
     split: function split(segment, entries) {
