@@ -10,7 +10,7 @@ define(['Format'], function(Format) {
       if (String.fromCharCode(sig[0], sig[1], sig[2], sig[3]) !== 'PM\0\0') {
         return;
       }
-      return segment.getSegment('volume/mac-partitioned').split(function(entry) {
+      return segment.getSegment('mac/partitioned').split(function(entry) {
         entries.add(entry);
       });
     }, NO_OP);
