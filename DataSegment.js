@@ -299,8 +299,14 @@ define('DataSegment', ['Format', 'formats/byExtension', 'Volume'], function(Form
         };
       });
     },
-    split: function(eachCallback, endCallback) {
-      if (arguments.length === 0) {
+    split: function(filter, eachCallback, endCallback) {
+      if (arguments.length > 0 && typeof arguments[0] === 'function') {
+        endCallback = eachCallback;
+        eachCallback = filter;
+        filter = Format.all;
+      }
+      filter = filter || Format.all;
+      if (!eachCallback) {
         var list = [];
         eachCallback = function(entry) {
           list.push(entry);
@@ -314,7 +320,7 @@ define('DataSegment', ['Format', 'formats/byExtension', 'Volume'], function(Form
         if (typeof handler.split !== 'function') {
           return Promise.reject('split operation not defined for ' + self.format.name);
         }
-        var entries = new SplitEntries(eachCallback);
+        var entries = new SplitEntries(eachCallback, filter);
         var result = handler.split(self, entries);
         return endCallback ? result.then(endCallback) : result;
       });
@@ -1129,15 +1135,16 @@ define('DataSegment', ['Format', 'formats/byExtension', 'Volume'], function(Form
     },
   });
   
-  function SplitEntries(cb) {
+  function SplitEntries(cb, filter) {
     this.callback = cb;
+    this.filter = filter || Format.all;
   }
   SplitEntries.prototype = {
     add: function(entry) {
       this.callback(entry);
     },
     accepted: function() {
-      return true;
+      return this.filter.test.apply(this.filter, arguments);
     },
   };
   
