@@ -66,8 +66,7 @@ define(function() {
     var hundredths = String.fromCharCode(bytes[offset + 14], bytes[offset + 15]);
     var timeZone = decodeTimeZoneSuffix(bytes[offset + 16]);
     var dateString = year+'-'+month+'-'+day+'T'+hour+':'+minute+':'+second+'.'+hundredths+timeZone;
-    console.log(dateString);
-    return new Date(dateString);
+    return dateString;
   }
   
   function readBinaryDateTime(bytes, offset) {
@@ -80,8 +79,7 @@ define(function() {
     var second = ('0' + bytes[offset + 5]).slice(-2);
     var timeZone = decodeTimeZoneSuffix(bytes[offset + 6]);
     var dateString = year + '-' + month + '-' + day + 'T' + hour + ':' + minute + ':' + second + timeZone;
-    console.log(dateString);
-    return new Date(dateString);
+    return dateString;
   }
   
   function BootRecordView(buffer, byteOffset, byteLength) {
