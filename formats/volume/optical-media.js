@@ -19,7 +19,9 @@ define(['Format'], function(Format) {
       if (String.fromCharCode(sig[0], sig[1], sig[2], sig[3], sig[4]) !== 'CD001') {
         return;
       }
-      entries.add(segment.getSegment('iso-9660/partitioned'));
+      segment.getSegment('iso-9660/partitioned').split(function(entry) {
+        entries.add(entry);
+      });
     }, NO_OP);
     
     return Promise.all([
