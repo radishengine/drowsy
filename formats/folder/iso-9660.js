@@ -5,9 +5,10 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
   function split(segment, entries) {
     var offset = +segment.format.parameters['offset'];
     var length = +segment.format.parameters['length'];
+    var parentBlock = +(segment.format.parameters['parent'] || -1);
     var blockSize = +(segment.format.parameters['block-size'] || 2048);
-    var rootFolderSegment = segment.getSegment('chunk/iso-9660; which=folder', offset, length);
-    entries.add(folderSegment);
+    var rootFolderSegment = segment.getSegment(['chunk/iso-9660', {which:'folder'}], offset, length);
+    entries.add(rootFolderSegment);
     return rootFolderSegment.getStruct().then(function(folder) {
       var folderBlock = folder.dataBlockAddress;
       return segment.getBytes(blockSize * folderBlock, folder.dataByteLength)
@@ -21,21 +22,22 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
             raw.buffer,
             raw.byteOffset + pos,
             raw.byteLength - pos);
-          if (!record.isDirectory) {
-            entries.add(segment.getSegment(
-              'chunk/iso-9660; which=file',
-              blockSize * folderBlock + pos,
-              record.byteLength));
+          if (record.isDirectory) {
+            if (record.dataBlockAddress !== parentBlock && record.dataBlockAddress !== folderBlock) {
+              entries.add(segment.getSegment(['folder/iso-9660', {
+                offset: blockSize * folderBlock + pos,
+                length: record.byteLength,
+              }]));
+            }
           }
-          else if (record.dataBlockAddress !== parentBlock && record.dataBlockAddress !== folderBlock) {
+          else {
             entries.add(segment.getSegment(
-              'chunk/iso-9660; which=folder',
+              ['chunk/iso-9660', {which:'file'}],
               blockSize * folderBlock + pos,
               record.byteLength));
           }
           pos += record.byteLength;
         }
-        if (promises) return Promise.all(promises);
       });
     });
   }
