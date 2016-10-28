@@ -184,9 +184,15 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
         if (typeof handler.split === 'function') {
           var entries = {
             add: function(splitSegment) {
-              if (notChunkFormat.test(splitSegment.format)) {
-                loadDataSegmentToFrame(splitSegment, frame);
-              }
+              var gotDisplayName = splitSegment.getDisplayName();
+              var gotTimestamp = splitSegment.getTimestamp();
+              Promise.all([gotDisplayName, gotTimestamp])
+              .then(function(values) {
+                var displayName = values[0], timestamp = values[1];
+                var label = document.createElement('DIV');
+                label.textContent = displayName + (timestamp ? ' (' + timestamp + ')' : '');
+                frame.content.appendChild(label);
+              });
             },
             accepted: function(type) {
               return notChunkFormat.test(type);
