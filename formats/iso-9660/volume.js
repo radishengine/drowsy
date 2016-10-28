@@ -5,6 +5,22 @@ define(['Format'], function(Format) {
   const PARTITION_FMT = Format('iso-9660/chunk', {which:'volume-descriptor'});
   
   return {
+    getDisplayName: function(segment) {
+      return segment.split(PARTITION_FMT).then(function(partitions) {
+        if (partitions.length === 0) {
+          return Promise.reject('no partition record found');
+        }
+        return partitions[0].body.identifier;
+      });
+    },
+    getTimestamp: function(segment) {
+      return segment.split(PARTITION_FMT).then(function(partitions) {
+        if (partitions.length === 0) {
+          return Promise.reject('no partition record found');
+        }
+        return partitions[0].body.modifiedAt;
+      });
+    },
     split: function split(segment, entries) {
       var root = (segment.format.parameters['root-segment'] || '').match(/^\s*(\d+)\s*,\s*(\d+)\s*$/);
       if (!root) {
