@@ -82,10 +82,10 @@ define(['../chunk/iso-9660'], function(chunkTypes) {
   }
   
   function split(segment, entries) {
-    if (segment.format.parameters['root'] !== null) {
-      return split_directory_tree(segment, entries);
+    if ('root' in segment.format.parameters) {
+      return split_descriptors(segment, entries);
     }
-    return split_descriptors(segment, entries);
+    return split_directory_tree(segment, entries);
   }
   
   function mount(segment, volume) {
