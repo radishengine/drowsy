@@ -13,21 +13,26 @@ define(['Format'], function(Format) {
         if (!partitionInfo.hasValidTag) {
           return Promise.reject('invalid partition map signature');
         }
-        entries.add(partitionMapSegment);
-        /*
-        var partitionSegment = segment.getSegment(
-          partitionInfo.partitionSegmentType,
-          512 * partitionInfo.blockOffset,
-          512 * partitionInfo.blockCount);
-        if (partitionSegment.format.name === 'volume/ambiguous') {
-          promises.push(partitionSegment.split(function(entry) {
-            entries.add(entry);
-          }));
+        if (partitionInfo.blockOffset === n) {
+          // this "partition" is the partition map itself
         }
         else {
-          entries.add(partitionSegment);
+          entries.add(partitionMapSegment);
+          /*
+          var partitionSegment = segment.getSegment(
+            partitionInfo.partitionSegmentType,
+            512 * partitionInfo.blockOffset,
+            512 * partitionInfo.blockCount);
+          if (partitionSegment.format.name === 'volume/ambiguous') {
+            promises.push(partitionSegment.split(function(entry) {
+              entries.add(entry);
+            }));
+          }
+          else {
+            entries.add(partitionSegment);
+          }
+          */
         }
-        */
         if (n < partitionInfo.totalPartitionCount) {
           return doPartition(n + 1);
         }
