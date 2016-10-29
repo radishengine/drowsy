@@ -13,12 +13,10 @@ define(['Format'], function(Format) {
         if (!partitionInfo.hasValidTag) {
           return Promise.reject('invalid partition map signature');
         }
-        if (partitionInfo.blockOffset === n) {
-          // this "partition" is the partition map itself
+        if (partitionInfo.type.toLowerCase() === 'iso' || partitionInfo.type.toLowerCase() === 'apple_partition_map') {
+          // don't include
         }
         else {
-          entries.add(partitionMapSegment);
-          /*
           var partitionSegment = segment.getSegment(
             partitionInfo.partitionSegmentType,
             512 * partitionInfo.blockOffset,
@@ -31,7 +29,6 @@ define(['Format'], function(Format) {
           else {
             entries.add(partitionSegment);
           }
-          */
         }
         if (n < partitionInfo.totalPartitionCount) {
           return doPartition(n + 1);
