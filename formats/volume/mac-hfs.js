@@ -1,6 +1,8 @@
-define(['formats/dispatch', 'DataSegment'], function(dispatch, DataSegment) {
+define(['Format', 'formats/dispatch', 'DataSegment'], function(Format, dispatch, DataSegment) {
   
   'use strict';
+  
+  const MDB_FMT = Format('chunk/mac-hfs', {which:'master-directory-block'});
   
   function getSegmentFromExtents(allocationSegment, chunkSize, type, byteLength, extents) {
     if (byteLength === 0) return new DataSegment.Empty(type);
@@ -19,13 +21,14 @@ define(['formats/dispatch', 'DataSegment'], function(dispatch, DataSegment) {
   }
   
   function split(segment, entries) {
-    var mdbSegment = segment.getSegment('chunk/mac-hfs; which=master-directory-block', 512 * 2, 512);
+    var mdbSegment = segment.getSegment(MDB_FMT, 512 * 2, 512);
     return mdbSegment.getStruct()
     .then(function(masterDirectoryBlock) {
       if (!masterDirectoryBlock.hasValidSignature) {
         return Promise.reject('not an HFS volume');
       }
       entries.add(mdbSegment);
+      /*
       var allocationType = 'chunk/mac-hfs; which=allocation';
       var allocChunkSize = masterDirectoryBlock.allocationChunkByteLength;
       allocationType += '; chunk=' + allocChunkSize;
@@ -45,6 +48,7 @@ define(['formats/dispatch', 'DataSegment'], function(dispatch, DataSegment) {
         'chunk/mac-hfs-btree; tree=overflow',
         masterDirectoryBlock.extentsOverflowFileByteLength,
         masterDirectoryBlock.extentsOverflowFileExtentRecord));
+      */
     });
   }
   
@@ -259,6 +263,26 @@ define(['formats/dispatch', 'DataSegment'], function(dispatch, DataSegment) {
   return {
     split: split,
     mount: mount,
+    getDisplayName: function getDisplayName(segment) {
+      return segment.split(MDB_FMT).then(function(mdbs) {
+        if (mdbs.length === 0) {
+          return Promise.reject('master directory block not found');
+        }
+        return mdbs[0].getStruct().then(function(mdb) {
+          return mdb.name;
+        });
+      });
+    },
+    getTimestamp: function getDisplayName(segment) {
+      return segment.split(MDB_FMT).then(function(mdbs) {
+        if (mdbs.length === 0) {
+          return Promise.reject('master directory block not found');
+        }
+        return mdbs[0].getStruct().then(function(mdb) {
+          return mdb.lastModifiedAt;
+        });
+      });
+    },
   };
   
 });
