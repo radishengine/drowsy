@@ -30,37 +30,37 @@ define(['mac/roman'], function(macRoman) {
       return nullTerminate(macRoman(this.bytes, 48, 32));
     },
     get partitionSegmentType() {
-      var t = this.type;
+      var t = this.type.toLowerCase();
       switch (t) {
-        default: return 'volume/unknown; type=' + t.toLowerCase(); break;
-        case 'Apple_Boot': return 'boot/mac; type=openfirmware-3'; break;
-        case 'Apple_Boot_RAID': return 'boot/mac; type=raid'; break;
-        case 'Apple_Bootstrap': return 'boot/mac; type=new-world'; break;
-        case 'Apple_Driver': return 'volume/mac-drivers'; break;
-        case 'Apple_Driver43': return 'volume/mac-drivers; for=scsi-manager-4.3'; break;
-        case 'Apple_Driver43_CD': return 'volume/mac-drivers; for=scsi-manager-4.3-cd'; break;
-        case 'Apple_Driver_ATA': return 'volume/mac-drivers; for=ata'; break;
-        case 'Apple_Driver_ATAPI': return 'volume/mac-drivers; for=atapi'; break;
-        case 'Apple_Driver_IOKit': return 'volume/mac-drivers; for=io-kit';
-        case 'Apple_Driver_OpenFirmware': return 'volume/mac-drivers; for=openfirmware';
-        case 'Apple_Extra': return 'application/octet-stream; unused=true';
-        case 'Apple_Free': return 'application/octet-stream; unused=true';
-        case 'Apple_FWDriver': return 'volume/mac-drivers; for=firewire';
-        case 'Apple_HFS': return 'volume/ambiguous; possible=hfs,hfsplus,fat';
-        case 'Apple_HFSX': return 'volume/hfsplus; variant=no-wrapper';
-        case 'Apple_Loader': return 'boot/mac; type=xcoff';
-        case 'Apple_MFS': return 'volume/mac; filesystem=mfs'; // macintosh 128K in 1984
-        case 'Apple_Partition_Map': return 'chunk/apple-partition-map; count=' + this.blockCount;
-        case 'Apple_Patches': return 'volume/mac-patches';
-        case 'Apple_ProDOS': return 'volume/prodos';
-        case 'Apple_RAID': return 'volume/apple-raid';
-        case 'Apple_Rhapsody_UFS': return 'volume/unix-file-system; for=apple-rhapsody';
-        case 'Apple_Scratch': return 'application/octet-stream; unused=true';
-        case 'Apple_Second': return 'boot/mac; stage=second';
-        case 'Apple_UFS': return 'volume/unix-file-system; for=mac';
-        case 'Apple_UNIX_SVR2': return 'volume/system-v-release-2; for=mac';
-        case 'Apple_Void': return 'application/octet-stream; unused=true';
-        case 'Be_BFS': return 'volume/beos';
+        default: return 'volume/unknown; type=' + t; break;
+        case 'apple_boot': return 'boot/mac; type=openfirmware-3'; break;
+        case 'apple_boot_raid': return 'boot/mac; type=raid'; break;
+        case 'apple_bootstrap': return 'boot/mac; type=new-world'; break;
+        case 'apple_driver': return 'volume/mac-drivers'; break;
+        case 'apple_driver43': return 'volume/mac-drivers; for=scsi-manager-4.3'; break;
+        case 'apple_driver43_cd': return 'volume/mac-drivers; for=scsi-manager-4.3-cd'; break;
+        case 'apple_driver_ata': return 'volume/mac-drivers; for=ata'; break;
+        case 'apple_driver_atapi': return 'volume/mac-drivers; for=atapi'; break;
+        case 'apple_driver_iokit': return 'volume/mac-drivers; for=io-kit';
+        case 'apple_driver_openfirmware': return 'volume/mac-drivers; for=openfirmware';
+        case 'apple_extra': return 'application/octet-stream; unused=true';
+        case 'apple_free': return 'application/octet-stream; unused=true';
+        case 'apple_fwdriver': return 'volume/mac-drivers; for=firewire';
+        case 'apple_hfx': return 'volume/ambiguous; possible=hfs,hfsplus,fat';
+        case 'apple_hfsx': return 'volume/hfsplus; variant=no-wrapper';
+        case 'apple_loader': return 'boot/mac; type=xcoff';
+        case 'apple_mfs': return 'volume/mac; filesystem=mfs'; // macintosh 128K in 1984
+        case 'apple_partition_map': return 'chunk/apple-partition-map; count=' + this.blockCount;
+        case 'apple_patches': return 'volume/mac-patches';
+        case 'apple_prodos': return 'volume/prodos';
+        case 'apple_raid': return 'volume/apple-raid';
+        case 'apple_rhapsody_ufs': return 'volume/unix-file-system; for=apple-rhapsody';
+        case 'apple_scratch': return 'application/octet-stream; unused=true';
+        case 'apple_second': return 'boot/mac; stage=second';
+        case 'apple_ufs': return 'volume/unix-file-system; for=mac';
+        case 'apple_unix_svr2': return 'volume/system-v-release-2; for=mac';
+        case 'apple_void': return 'application/octet-stream; unused=true';
+        case 'be_bfs': return 'volume/beos';
       }
     },
     get status() {
