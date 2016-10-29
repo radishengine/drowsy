@@ -46,7 +46,7 @@ define(['mac/roman'], function(macRoman) {
         case 'apple_extra': return 'application/octet-stream; unused=true';
         case 'apple_free': return 'application/octet-stream; unused=true';
         case 'apple_fwdriver': return 'volume/mac-drivers; for=firewire';
-        case 'apple_hfx': return 'volume/ambiguous; possible=hfs,hfsplus,fat';
+        case 'apple_hfs': return 'volume/ambiguous; possible=hfs,hfsplus,fat';
         case 'apple_hfsx': return 'volume/hfsplus; variant=no-wrapper';
         case 'apple_loader': return 'boot/mac; type=xcoff';
         case 'apple_mfs': return 'volume/mac; filesystem=mfs'; // macintosh 128K in 1984
