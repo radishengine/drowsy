@@ -39,7 +39,9 @@ define(['Format'], function(Format) {
             (partitionOffset + partition.body.offsetof_rootDirectory)
             + ',' + partition.body.sizeof_rootDirectory,
         }));
-        entries.add(rootFolder);
+        return rootFolder.split(function(entry) {
+          entries.add(entry);
+        });
       });
     },
   };
