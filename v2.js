@@ -199,7 +199,7 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
                 label.displayName = displayName;
                 label.segment = splitSegment;
                 label.textContent = displayName + (timestamp ? ' (' + timestamp + ')' : '');
-                label.addEventListener(label, onLabelClick);
+                label.addEventListener('click', onLabelClick);
                 frame.content.appendChild(label);
               });
             },
