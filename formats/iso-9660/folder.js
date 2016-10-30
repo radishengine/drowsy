@@ -1,6 +1,8 @@
 define(['Format', './chunk'], function(Format, chunkTypes) {
 
   'use strict';
+  
+  const RECORD_FMT = Format('iso-9660/chunk', {which:'folder', 'is-root':'true'});
 
   function split(segment, entries) {
     var root = (segment.format.parameters['root-segment'] || '').match(/^\s*(\d+)\s*,(\d+)\s*$/);
@@ -11,7 +13,7 @@ define(['Format', './chunk'], function(Format, chunkTypes) {
     var parentBlockAddress = +(segment.format.parameters['parent'] || -1);
     var blockSize = +(segment.format.parameters['block-size'] || 2048);
     var rootSegment = segment.getSegment(
-      Format('iso-9660/chunk', {which:'folder', 'is-root':'true'}),
+      RECORD_FMT,
       rootOffset, rootLength);
     entries.add(rootSegment);
     return rootSegment.getStruct().then(function(folder) {
@@ -52,6 +54,18 @@ define(['Format', './chunk'], function(Format, chunkTypes) {
 
   return {
     split: split,
+    getDisplayName: function(segment) {
+      return segment.split(RECORD_FMT)
+      .then(function(records) {
+        if (records.length === 0) {
+          return Promise.reject('record not found');
+        }
+        return records[0].getStruct();
+      })
+      .then(function(record) {
+        return record.name;
+      });
+    },
   };
 
 });
