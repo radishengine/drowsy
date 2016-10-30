@@ -177,6 +177,12 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
     
     var notChunkFormat = Format.all.except('chunk/*').except('folder/*');
     
+    function onLabelClick(e) {
+      var frame = createFrame(0, 0);
+      frame.titleText = this.displayName;
+      loadDataSegmentToFrame(this.segment, frame);
+    }
+    
     function loadDataSegmentToFrame(dataSegment, frame) {
       console.log('lastDataSegment', dataSegment.format.toString(), window.lastDataSegment = dataSegment);
       dataSegment.format.getHandler().then(function(handler) {
@@ -190,7 +196,10 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
               .then(function(values) {
                 var displayName = values[0], timestamp = values[1];
                 var label = document.createElement('DIV');
+                label.displayName = displayName;
+                label.segment = splitSegment;
                 label.textContent = displayName + (timestamp ? ' (' + timestamp + ')' : '');
+                label.addEventListener(label, onLabelClick);
                 frame.content.appendChild(label);
               });
             },
