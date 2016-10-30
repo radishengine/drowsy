@@ -44,7 +44,7 @@ define(['Format', './chunk'], function(Format, chunkTypes) {
             });
             entries.add(segment.getSegment(format));
           }
-          pos += record.byteLength;
+          pos += record.length;
         }
       });
     });
