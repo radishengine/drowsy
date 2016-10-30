@@ -16,7 +16,7 @@ define(['Format', 'formats/byExtension'], function(Format, formatsByExtension) {
         var ext = record.name.match(/\.([^\.]+)$/);
         ext = ext && ext[1];
         var dataFormat = formatsByExtension[ext || ''] || Format.generic;
-        var dataSegment = (segment.format.parameters['data-segment'] || '').match(/^\s*(\d+)\s*,\*s(\d+)\s*$/);
+        var dataSegment = (segment.format.parameters['data-segment'] || '').match(/^\s*(\d+)\s*,\s*(\d+)\s*$/);
         if (!dataSegment) {
           return Promise.reject('missing or invalid data-segment parameter');
         }
