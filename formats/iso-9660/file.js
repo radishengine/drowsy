@@ -6,7 +6,7 @@ define(['Format', 'formats/byExtension'], function(Format, formatsByExtension) {
   
   return {
     split: function split(segment, entries) {
-      var recordSegment = (segment.format.parameters['record-segment'] || '').match(/^\s*(\d+)\s*,\*s(\d+)\s*$/);
+      var recordSegment = (segment.format.parameters['record-segment'] || '').match(/^\s*(\d+)\s*,\s*(\d+)\s*$/);
       if (!recordSegment) {
         return Promise.reject('missing or invalid record-segment parameter');
       }
