@@ -183,8 +183,24 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
       loadDataSegmentToFrame(this.segment, frame);
     }
     
+    const PLAINTEXT_FMT = Format('text/plain');
+    
     function loadDataSegmentToFrame(dataSegment, frame) {
       console.log('lastDataSegment', dataSegment.format.toString(), window.lastDataSegment = dataSegment);
+      if (PLAINTEXT_FMT.test(dataSegment.format)) {
+        frame.content.append(frame.contentText = document.createElement('PRE'));
+        dataSegment.getBytes().then(function(bytes) {
+          var charset = dataSegment.format.parameters['charset'];
+          if (charset && 'TextDecoder' in window) {
+            var decoder = new TextDecoder(charset);
+            frame.contentText.textContent = decoder.decode(bytes);
+          }
+          else {
+            frame.contentText.textContent = String.fromCharCode.apply(null, bytes);
+          }
+        });
+        return;
+      }
       dataSegment.format.getHandler().then(function(handler) {
         console.log('lastHandler', window.lastHandler = handler);
         if (typeof handler.split === 'function') {
