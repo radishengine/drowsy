@@ -40,7 +40,7 @@ define(['Format', 'formats/byExtension'], function(Format, formatsByExtension) {
           return Promise.reject('split failed to find info record');
         }
         return records[0].getStruct().then(function(record) {
-          return record.name;
+          return record.modifiedAt || record.createdAt;
         });
       });
     },
