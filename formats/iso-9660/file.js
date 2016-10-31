@@ -29,7 +29,9 @@ define(['Format', 'formats/byExtension'], function(Format, formatsByExtension) {
         if (records.length === 0) {
           return Promise.reject('split failed to find info record');
         }
-        return records[0].name;
+        return records[0].getStruct().then(function(record) {
+          return record.name;
+        });
       });
     },
     getTimestamp: function(segment) {
@@ -37,7 +39,9 @@ define(['Format', 'formats/byExtension'], function(Format, formatsByExtension) {
         if (records.length === 0) {
           return Promise.reject('split failed to find info record');
         }
-        return records[0].recordedAt;
+        return records[0].getStruct().then(function(record) {
+          return record.name;
+        });
       });
     },
   };
