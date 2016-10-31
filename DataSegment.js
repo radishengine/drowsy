@@ -1205,7 +1205,7 @@ define('DataSegment', ['Format', 'formats/byExtension', 'Volume'], function(Form
       }
       if (value instanceof ArrayBuffer || ArrayBuffer.isView(value)) {
         overrideFormat = overrideFormat || Format.generic;
-        if (length === 0) return new EmptySegment(overrideFormat);
+        if (value.byteLength === 0) return new EmptySegment(overrideFormat);
         return new DataSegmentFromArrayBuffer(overrideFormat, value);
       }
       if (Array.isArray(value)) {
