@@ -4,8 +4,7 @@ define(function() {
   
   var PAGE_BYTES = 128;
   
-  function split(entries) {
-    var context = this;
+  function split(context, entries) {
     return context.getBytes(0, FileHeaderView.byteLength).then(function(rawHeader) {
       var header = new FileHeaderView(rawHeader.buffer, rawHeader.byteOffset, rawHeader.byteLength);
       if (!header.hasValidSignature) return Promise.reject('not a valid Write file');
