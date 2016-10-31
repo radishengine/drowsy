@@ -14,7 +14,7 @@ define(['Format', 'formats/byExtension'], function(Format, formatsByExtension) {
       entries.add(recordSegment);
       return recordSegment.getStruct().then(function(record) {
         var ext = record.name.match(/\.([^\.]+)$/);
-        ext = ext ? ext[1].toString() : '';
+        ext = ext ? ext[1].toLowerCase() : '';
         var dataFormat = formatsByExtension[ext] || Format.generic;
         var dataSegment = (segment.format.parameters['data-segment'] || '').match(/^\s*(\d+)\s*,\s*(\d+)\s*$/);
         if (!dataSegment) {
