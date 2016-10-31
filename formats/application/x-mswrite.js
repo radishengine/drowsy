@@ -10,42 +10,42 @@ define(function() {
       if (!header.hasValidSignature) return Promise.reject('not a valid Write file');
       if (header.isWordFile) return Promise.reject('Word documents not yet supported'); // TODO
       var promises = [];
-      if (entries.accepts('application/x-mswrite-text') && header.textLength > 0) {
+      if (entries.accepts('chunk/mswrite') && header.textLength > 0) {
         /* windows-1252 text with binary/OLE stuff mixed in */
         entries.add(context.getSegment('application/x-mswrite-text', header.textOffset, header.textLength));
       }
       var pos, end;
-      if (entries.accepts('application/x-mswrite-page; type=chars')) {
+      if (entries.accepted('chunk/mswrite; which=chars')) {
         for (pos = header.characterInfoOffset, end = header.paragraphInfoOffset; pos < end; pos += PAGE_BYTES) {
           entries.add(context.getSegment('application/x-mswrite-page; type=charinfo', pos, PAGE_BYTES));
         }
       }
-      if (entries.accepts('application/x-mswrite-page; type=paragraphs')) {
+      if (entries.accepted('chunk/mswrite; which=paragraphs')) {
         for (pos = header.paragraphInfoOffset, end = header.footnoteTableOffset; pos < end; pos += PAGE_BYTES) {
           entries.add(context.getSegment('application/x-mswrite-page; type=paragraphs', pos, PAGE_BYTES));
         }
       }
-      if (entries.accepts('application/x-mswrite-page; type=footnotes')) {
+      if (entries.accepted('chunk/mswrite; which=footnotes')) {
         for (pos = header.footnoteTableOffset, end = header.sectionTableOffset; pos < end; pos += PAGE_BYTES) {
           entries.add(context.getSegment('application/x-mswrite-page; type=footnotes', pos, PAGE_BYTES));
         }
       }
-      if (entries.accepts('application/x-mswrite-page; type=sections')) {
+      if (entries.accepted('chunk/mswrite; which=sections')) {
         for (pos = header.sectionTableOffset, end = header.pageTableOffset; pos < end; pos += PAGE_BYTES) {
           entries.add(context.getSegment('application/x-mswrite-page; type=sections', pos, PAGE_BYTES));
         }
       }
-      if (entries.accepts('application/x-mswrite-page; type=sections')) {
+      if (entries.accepted('chunk/mswrite; which=sections')) {
         for (pos = header.sectionTableOffset, end = header.pageTableOffset; pos < end; pos += PAGE_BYTES) {
           entries.add(context.getSegment('application/x-mswrite-page; type=sections', pos, PAGE_BYTES));
         }
       }
-      if (entries.accepts('application/x-mswrite-page; type=pages')) {
+      if (entries.accepted('chunk/mswrite; which=pages')) {
         for (pos = header.pageTableOffset, end = header.fontNameTableOffset; pos < end; pos += PAGE_BYTES) {
           entries.add(context.getSegment('application/x-mswrite-page; type=pages', pos, PAGE_BYTES));
         }
       }
-      if (entries.accepts('application/x-mswrite-page; type=fonts')) {
+      if (entries.accepted('chunk/mswrite; which=fonts')) {
         for (pos = header.fontNameTableOffset, end = header.totalLength; pos < end; pos += PAGE_BYTES) {
           entries.add(context.getSegment('application/x-mswrite-page; type=fonts', pos, PAGE_BYTES));
         }
