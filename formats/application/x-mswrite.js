@@ -1,4 +1,4 @@
-define(function() {
+define(['DataSegment', 'Format'], function(DataSegment, Format) {
 
   'use strict';
   
@@ -49,6 +49,14 @@ define(function() {
         for (pos = header.fontNameTableOffset, end = header.totalLength; pos < end; pos += PAGE_BYTES) {
           entries.add(context.getSegment('application/x-mswrite-page; type=fonts', pos, PAGE_BYTES));
         }
+      }
+      if (entries.accepted('text/html')) {
+        var htmlbuf = [];
+        htmlbuf.push('<h1>Hello</h1>');
+        htmlbuf = htmlbuf.join('');
+        var enc = new TextEncoder('utf-8');
+        var data = enc.encode(htmlbuf);
+        entries.add(DataSegment.from(data, Format('text/html', {charset:'utf-8'})));
       }
     });
   }
