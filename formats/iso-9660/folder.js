@@ -42,7 +42,7 @@ define(['Format', './chunk'], function(Format, chunkTypes) {
           else {
             var format = Format('iso-9660/file', {
               'record-segment': (folderBlockAddress * blockSize + pos) + ',' + record.length,
-              'data-segment': (blockSize * folder.dataBlockAddress) + ',' + folder.dataByteLength,
+              'data-segment': (blockSize * record.dataBlockAddress) + ',' + record.dataByteLength,
             });
             entries.add(segment.getSegment(format));
           }
