@@ -126,7 +126,7 @@ define(function() {
   
   return {
     split: split,
-    bytePattern: /^[\x31\x32]\xBE.{94}(?!\x00\x00\x00\x00).{32}.{128}*$/,
+    // bytePattern: /^[\x31\x32]\xBE.{94}(?!\x00\x00\x00\x00).{32}.{128}*$/,
   };
 
 });
