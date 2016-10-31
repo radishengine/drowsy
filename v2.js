@@ -184,6 +184,7 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
     }
     
     const PLAINTEXT_FMT = Format('text/plain');
+    const HTML_FMT = Format('text/html');
     
     function loadDataSegmentToFrame(dataSegment, frame) {
       console.log('lastDataSegment', dataSegment.format.toString(), window.lastDataSegment = dataSegment);
@@ -197,6 +198,20 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
           }
           else {
             frame.contentText.textContent = String.fromCharCode.apply(null, bytes);
+          }
+        });
+        return;
+      }
+      if (HTML_FMT.test(dataSegment.format)) {
+        frame.content.append(frame.contentIframe = document.createElement('IFRAME'));
+        dataSegment.getBytes().then(function(bytes) {
+          var charset = dataSegment.format.parameters['charset'];
+          if (charset && 'TextDecoder' in window) {
+            var decoder = new TextDecoder(charset);
+            frame.contentIframe.srcdoc = decoder.decode(bytes);
+          }
+          else {
+            frame.contentIframe.srcdoc = String.fromCharCode.apply(null, bytes);
           }
         });
         return;
