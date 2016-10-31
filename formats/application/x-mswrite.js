@@ -10,7 +10,7 @@ define(function() {
       if (!header.hasValidSignature) return Promise.reject('not a valid Write file');
       if (header.isWordFile) return Promise.reject('Word documents not yet supported'); // TODO
       var promises = [];
-      if (entries.accepts('chunk/mswrite') && header.textLength > 0) {
+      if (entries.accepted('chunk/mswrite') && header.textLength > 0) {
         /* windows-1252 text with binary/OLE stuff mixed in */
         entries.add(context.getSegment('application/x-mswrite-text', header.textOffset, header.textLength));
       }
