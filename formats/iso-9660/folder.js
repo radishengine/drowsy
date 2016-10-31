@@ -32,7 +32,7 @@ define(['Format', './chunk'], function(Format, chunkTypes) {
           if (record.isDirectory) {
             if (record.dataBlockAddress !== parentBlockAddress && record.dataBlockAddress !== folderBlockAddress) {
               var format = Format('iso-9660/folder', {
-                'root-segment': (record.dataBlockAddress * blockSize) + ',' + record.byteLength,
+                'root-segment': (folderBlockAddress * blockSize + pos) + ',' + record.length,
                 'block-size': blockSize,
                 'parent': folderBlockAddress,
               });
@@ -41,7 +41,7 @@ define(['Format', './chunk'], function(Format, chunkTypes) {
           }
           else {
             var format = Format('iso-9660/file', {
-              'record-segment': (record.dataBlockAddress * blockSize) + ',' + record.byteLength,
+              'record-segment': (folderBlockAddress * blockSize + pos) + ',' + record.length,
               'data-segment': (blockSize * folder.dataBlockAddress) + ',' + folder.dataByteLength,
             });
             entries.add(segment.getSegment(format));
