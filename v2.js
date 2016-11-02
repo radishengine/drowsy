@@ -221,6 +221,9 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
         if (typeof handler.split === 'function') {
           var entries = {
             add: function(splitSegment) {
+              if (!notChunkFormat.test(splitSegment.format)) {
+                return;
+              }
               var gotDisplayName = splitSegment.getDisplayName();
               var gotTimestamp = splitSegment.getTimestamp();
               Promise.all([gotDisplayName, gotTimestamp])
