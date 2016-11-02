@@ -175,7 +175,7 @@ require(['Volume', 'Format', 'DataSegment', 'formats/byExtension'], function(Vol
       }
     }
     
-    var notChunkFormat = Format.all.except('chunk/*').except('folder/*');
+    var notChunkFormat = Format.all.except('chunk/*').except('folder/*').except('*/chunk');
     
     function onLabelClick(e) {
       var frame = createFrame(0, 0);
