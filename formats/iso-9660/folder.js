@@ -40,11 +40,16 @@ define(['Format', './chunk'], function(Format, chunkTypes) {
             }
           }
           else {
-            var format = Format('iso-9660/file', {
-              'record-segment': (folderBlockAddress * blockSize + pos) + ',' + record.length,
-              'data-segment': (blockSize * record.dataBlockAddress) + ',' + record.dataByteLength,
-            });
-            entries.add(segment.getSegment(format));
+            if (record.isAssociatedFile) {
+              // TODO: handle associated files
+            }
+            else {
+              var format = Format('iso-9660/file', {
+                'record-segment': (folderBlockAddress * blockSize + pos) + ',' + record.length,
+                'data-segment': (blockSize * record.dataBlockAddress) + ',' + record.dataByteLength,
+              });
+              entries.add(segment.getSegment(format));
+            }
           }
           pos += record.length;
         }
