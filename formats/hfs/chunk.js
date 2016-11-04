@@ -93,10 +93,10 @@ define(['mac/date', 'mac/roman'], function(macDate, macRoman) {
     get writeCount() {
       return this.dv.getInt32(70, false);
     },
-    get extentsOverflowFileClumpSize() {
+    get overflowClumpSize() {
       return this.dv.getInt32(74, false);
     },
-    get catalogFileClumpSize() {
+    get catalogClumpSize() {
       return this.dv.getInt32(78, false);
     },
     get rootFolderCount() {
@@ -120,16 +120,16 @@ define(['mac/date', 'mac/roman'], function(macDate, macRoman) {
     get commonCacheBlockCount() {
       return this.dv.getUint16(128, false); // used internally
     },
-    get extentsOverflowFileByteLength() {
+    get overflowByteLength() {
       return this.dv.getInt32(130, false);
     },
-    get extentsOverflowFileExtentRecord() {
+    get overflowFirstExtents() {
       return extentDataRecord(this.dv, 134);
     },
-    get catalogFileByteLength() {
+    get catalogByteLength() {
       return this.dv.getInt32(146, false);
     },
-    get catalogFileExtentRecord() {
+    get catalogFirstExtents() {
       return extentDataRecord(this.dv, 150);
     },
   };
