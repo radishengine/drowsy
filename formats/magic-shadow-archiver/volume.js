@@ -4,8 +4,6 @@ define(['Format'], function(Format) {
   
   const SECTOR_BYTES = 512;
   const HEADER_FORMAT = Format('magic-shadow-archiver/header');
-  const TRACK_FORMAT = Format('magic-shadow-archiver/track');
-  const COMPRESSED_TRACK_FORMAT = Format('magic-shadow-archiver/compressed-track');
   
   return {
     split: function(segment, entries) {
@@ -20,15 +18,16 @@ define(['Format'], function(Format) {
           if (n > header.lastTrack) return;
           return segment.getUint16(offset, false)
           .then(function(trackLength) {
+            var trackFormat;
             if (trackLength === TRACK_BYTES) {
-              // uncompressed
-              entries.add(segment.getSegment(TRACK_FORMAT, offset + 2, trackLength));
+              trackFormat = Format('magic-shadow-archiver/track', {which:n});
             }
             else {
-              entries.add(segment.getSegment(COMPRESSED_TRACK_FORMAT, offset + 2, trackLength));
+              trackFormat = Format('magic-shadow-archiver/compressed-track', {which:n, full:TRACK_BYTES});
             }
+            entries.add(segment.getSegment(trackFormat, offset + 2, trackLength));
             offset += 2 + trackLength;
-            doTrack(n + 1);
+            return doTrack(n + 1);
           });
         }
         return doTrack(header.firstTrack);
