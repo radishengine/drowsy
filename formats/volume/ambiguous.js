@@ -24,10 +24,17 @@ define(function() {
     }, RFALSE);
     
     var maybeFAT = segment.getBytes(0, 36).then(function(raw) {
-      if (raw[0] !== 0xEB || raw[1] < 0x34 || raw[2] !== 0x90) {
+      if (raw[0] === 0xEB) {
+        if (raw[1] < 0x34 || raw[2] !== 0x90) {
+          return false;
+        }
+      }
+      else if (raw[0] === 0xE9) {
+      }
+      else {
         return false;
       }
-      entries.add(segment.getSegment('volume/fat'));
+      entries.add(segment.getSegment('fat/volume'));
       return true;
     }, RFALSE);
     
