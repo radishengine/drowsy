@@ -7,19 +7,19 @@ define(function(){
   }
   HeaderView.prototype = {
     get hasValidSignature() {
-      return this.dataView.getUint16(0, true) === 0x0E0F;
+      return this.dataView.getUint16(0, false) === 0x0E0F;
     },
     get sectorsPerTrack() {
-      return this.dataView.getUint16(2, true);
+      return this.dataView.getUint16(2, false);
     },
     get sideCount() {
-      return this.dataView.getUint16(4, true) + 1;
+      return this.dataView.getUint16(4, false) + 1;
     },
     get firstTrack() {
-      return this.dataView.getUint16(6, true);
+      return this.dataView.getUint16(6, false);
     },
     get lastTrack() {
-      return this.dataView.getUint16(8, true);
+      return this.dataView.getUint16(8, false);
     },
   };
   
