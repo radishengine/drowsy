@@ -56,6 +56,7 @@ define(['Format'], function(Format) {
     mp1: Format('audio/mpeg; layer=1'),
     mp2: Format('audio/mpeg; layer=2'),
     mp3: Format('audio/mpeg; layer=3'),
+    msa: Format('magic-shadow-archiver/volume'),
     mov: Format('video/quicktime'),
     ogg: Format('application/ogg'),
     otf: Format('application/font-sfnt'),
