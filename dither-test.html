@@ -1,0 +1,20 @@
+<html>
+
+<body>
+
+  <svg height="0">
+    <filter id="dither">
+    <!-- grayscale -->
+    <feColorMatrix type="matrix" result="gray" values="
+      0.6666 0.6666 0.6666 0 -0.5
+      0.6666 0.6666 0.6666 0 -0.5
+      0.6666 0.6666 0.6666 0 -0.5
+      0 0 0 1 0"/>
+    </filter>
+  </svg>
+  
+  <img src="https://pbs.twimg.com/media/Cyg1jqXWgAAGmIJ.jpg" style="filter: url(#dither);">
+  
+</body>
+
+</html>
