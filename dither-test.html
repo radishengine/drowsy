@@ -6,6 +6,12 @@
     <filter id="dither">
       <!-- grayscale -->
       <feColorMatrix type="saturate" values="0" result="gray" />
+      
+      <feComponentTransfer result="main">
+        <feFuncR type="discrete" tableValues="0, 0.5, 1"/>
+        <feFuncG type="discrete" tableValues="0, 0.5, 1"/>
+        <feFuncB type="discrete" tableValues="0, 0.5, 1"/>
+      </feComponentTransfer>  
     </filter>
   </svg>
   
